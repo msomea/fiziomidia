@@ -1,0 +1,51 @@
+# Node modules
+backend/node_modules/
+frontend/node_modules/
+
+# Environment variables
+backend/.env
+frontend/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/backend/logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Build output
+frontend/build/
+backend/dist/
+frontend/.next/
+frontend/out/  
+
+# IDE/Editor settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Optional npm package lock
+# If you want to manage via lock files, you can keep or ignore
+package-lock.json
+yarn.lock
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+*.backup
+*.seed

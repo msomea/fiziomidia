@@ -1,0 +1,34 @@
+import User from "../models/User.js";
+
+// Get current user's profile
+export const getProfile = async (req, res) => {
+  res.json({ user: req.user });
+};
+
+// Update current user's profile
+export const updateProfile = async (req, res) => {
+  const { fullName, contactPhone, profileImage } = req.body;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (fullName) user.fullName = fullName;
+    if (contactPhone) user.contactPhone = contactPhone;
+    if (profileImage) user.profileImage = profileImage;
+
+    await user.save();
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update profile" });
+  }
+};
+
+// List all users (admin only)
+export const listUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-passwordHash").limit(100);
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
