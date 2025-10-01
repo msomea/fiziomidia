@@ -86,3 +86,84 @@ export const listPosts = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch posts" });
   }
 };
+
+// Vote on a post (upvote = 1, downvote = -1)
+export const votePost = async (req, res) => {
+  const { id } = req.params; // post ID
+  const { vote } = req.body; // 1 = upvote, -1 = downvote
+
+  if (![1, -1].includes(vote)) {
+    return res.status(400).json({ error: "Vote must be 1 (upvote) or -1 (downvote)" });
+  }
+
+  try {
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const userId = req.user._id.toString();
+
+    // Remove user from both arrays first
+    post.upvotes = post.upvotes.filter(u => u.toString() !== userId);
+    post.downvotes = post.downvotes.filter(u => u.toString() !== userId);
+
+    // Add to the appropriate array
+    if (vote === 1) {
+      post.upvotes.push(req.user._id);
+    } else if (vote === -1) {
+      post.downvotes.push(req.user._id);
+    }
+
+    await post.save();
+
+    // Calculate total score
+    const totalScore = post.upvotes.length - post.downvotes.length;
+
+    res.json({
+      postId: post._id,
+      totalScore,
+      userVote: vote,
+      upvotesCount: post.upvotes.length,
+      downvotesCount: post.downvotes.length,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to vote on post" });
+  }
+};
+
+// Get a single post by ID, including user's vote status
+export const getPostById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const post = await Post.findById(id).populate("author", "fullName email");
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const userId = req.user?._id?.toString(); // optional, if authenticated
+    let userVote = 0;
+
+    if (userId) {
+      if (post.upvotes.map(u => u.toString()).includes(userId)) userVote = 1;
+      else if (post.downvotes.map(u => u.toString()).includes(userId)) userVote = -1;
+    }
+
+    const totalScore = post.upvotes.length - post.downvotes.length;
+
+    res.json({
+      postId: post._id,
+      title: post.title,
+      body: post.body,
+      author: post.author,
+      totalScore,
+      upvotesCount: post.upvotes.length,
+      downvotesCount: post.downvotes.length,
+      userVote,
+      createdAt: post.createdAt,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch post" });
+  }
+};
+
+

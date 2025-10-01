@@ -1,17 +1,20 @@
 import express from "express";
 import { authenticate } from "../middlewares/auth.js";
-import { requireRole } from "../middlewares/roles.js";
 import {
+  createPromotionCheckout,
   getPromotions,
-  createPromotion,
+  stripeWebhook,
 } from "../controllers/promotionController.js";
 
 const router = express.Router();
 
-// Public: view promotions
+// List promotions
 router.get("/", getPromotions);
 
-// PT only: create promotion
-router.post("/", authenticate, requireRole("physiotherapist"), createPromotion);
+// Create a promotion (requires authentication)
+router.post("/create-checkout-session", authenticate, createPromotionCheckout);
+
+// Stripe webhook (no auth needed)
+router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
 export default router;

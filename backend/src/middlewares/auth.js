@@ -18,3 +18,19 @@ export const authenticate = async (req, res, next) => {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 };
+
+export const authenticateOptional = async (req, res, next) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.split(" ")[1];
+
+  if (!token) return next(); // anonymous user allowed
+
+  try {
+    const payload = jwt.verify(token, config.jwt.accessSecret);
+    const user = await User.findById(payload.sub).select("-passwordHash");
+    if (user) req.user = user;
+  } catch (err) {
+    // ignore invalid token, treat as anonymous
+  }
+  next();
+};
