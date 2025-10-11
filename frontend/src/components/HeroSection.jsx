@@ -1,13 +1,14 @@
 import { Link } from "react-router";
 import { ArrowRight } from "lucide-react";
+import hero_img from "../assets/hero_pt.jpg";
 
 export default function HeroSection() {
   return (
-    <section className="hero min-h-screen bg-alice mt-[64px] md:mt-[80px]">
+    <section className="hero min-h-screen bg-alice mt-[64px] md:mt-[40px]">
       <div className="hero-content flex-col md:flex-row-reverse gap-8">
         {/* Hero Image */}
         <img
-          src="/assets/hero_pt.png"
+          src={hero_img}
           alt="Physiotherapy session"
           className="max-w-xs sm:max-w-sm md:max-w-md rounded-2xl shadow-lg"
         />

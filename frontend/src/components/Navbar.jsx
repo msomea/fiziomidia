@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router";
 import { Menu, X } from "lucide-react";
+import logo from "../assets/fm-bg.svg";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,7 +20,11 @@ export default function Navbar() {
       <div className="container mx-auto px-4 flex justify-between items-center py-3">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-caribbean rounded-full"></div>
+          <img
+            src={logo}
+            alt="FizioMidia Logo"
+            className="w-8 h-8 md:w-10 md:h-10 object-contain"
+          />
           <span className="text-xl font-bold text-black">
             Fizio<span className="text-caribbean">Midia</span>
           </span>
