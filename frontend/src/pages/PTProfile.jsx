@@ -14,7 +14,7 @@ import avatar from "../assets/avatar.jpg";
 
 const PTProfile = () => {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
       {/* Header Section */}
       <div className="relative bg-white shadow-md rounded-b-3xl">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
@@ -39,10 +39,10 @@ const PTProfile = () => {
 
             {/* Contact / Book */}
             <div className="mt-4 flex flex-wrap gap-3">
-              <button className="bg-gold text-white px-4 py-2 rounded-lg hover:bg-yellow-600">
+              <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts">
                 Book Appointment
               </button>
-              <button className="border border-gold text-gold px-4 py-2 rounded-lg hover:bg-gold hover:text-white">
+              <button className="btn btn-outline border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
                 Message
               </button>
             </div>

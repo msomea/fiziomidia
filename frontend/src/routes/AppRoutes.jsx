@@ -7,6 +7,7 @@ import Contact from "../pages/Contact";
 import PTProfile from "../pages/PTProfile";
 import MemberProfile from "../pages/MemberProfile";
 import Education from "../pages/Education";
+import PTDashboard from "../pages/PTDashboard";
 
 export default function AppRoutes() {
   return (
@@ -22,6 +23,7 @@ export default function AppRoutes() {
       {/* Dynamic Profile Routes */}
       <Route path="/profile/pt/:id" element={<PTProfile />} />
       <Route path="/profile/member/:id" element={<MemberProfile />} />
+      <Route path="/my-profile/pt/:id" element={<PTDashboard/>} />
     </Routes>
   );
 }
