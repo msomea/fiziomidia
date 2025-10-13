@@ -12,6 +12,7 @@ import MemberDashboard from "../pages/member/MemberDashboard";
 import PTDashboard from "../pages/pt/PTDashboard";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
+import CreatePost from "../pages/CreatePost";
 
 export default function AppRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function AppRoutes() {
       <Route path="/about" element={<About />} />
       <Route path="/services" element={<Services />} />
       <Route path="/forum" element={<Forum />} />
+      <Route path="/forum/create" element={<CreatePost />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/education" element={<Education />} />
 
