@@ -10,7 +10,7 @@ export default function UpcomingAppointments({ appointments }) {
       <div className="overflow-x-auto">
         <table className="table table-zebra w-full">
           <thead>
-            <tr className="bg-alice">
+            <tr className="bg-alice text-caribbean">
               <th>Patient</th>
               <th>Time</th>
               <th>Type</th>

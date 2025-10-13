@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import hero from "../assets/hero_pt.jpg";
+import about from "../assets/about_pt.jpg";
 
 export default function AboutSection() {
   return (
@@ -7,7 +7,7 @@ export default function AboutSection() {
       <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
         {/* Left: Image */}
         <img
-          src={hero}
+          src={about}
           alt="About physiotherapy"
           className="rounded-2xl shadow-lg max-w-sm mx-auto"
         />
