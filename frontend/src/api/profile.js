@@ -11,3 +11,9 @@ export const updateProfile = async (data) => {
   const res = await API.put("/users/profile", data);
   return res.data;
 };
+
+// Fetch any user's profile by ID (for public profile pages)
+export const getUserById = async (id) => {
+  const res = await API.get(`/users/${id}`);
+  return res.data;
+};

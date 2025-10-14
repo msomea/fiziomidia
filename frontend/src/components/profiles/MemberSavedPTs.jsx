@@ -1,69 +1,34 @@
-import React from "react";
-import { getProfile, updateProfile, getUserById } from "../api/profile";
+import React, { useEffect, useState } from "react";
+import { getProfile, getUserById } from "../../api/profile";
+import { getSavedPTsByMember } from "../../api/users";
 
-// Fetch current member profile
-useEffect(() => {
-  const fetchProfile = async () => {
-    const data = await getProfile();
-    setProfile(data);
-  };
-  fetchProfile();
-}, []);
+const MemberSavedPTs = ({ memberId }) => {
+  const [savedPTs, setSavedPTs] = useState([]);
 
-const handleSave = async (updatedData) => {
-  await updateProfile(updatedData);
-};
-
-// Fetch any member profile by ID (for public profile pages)
-useEffect(() => {
-  const fetchMemberProfile = async () => {
-    const data = await getUserById(memberId); // memberId from route param
-    setProfile(data.user);
-  };
-  fetchMemberProfile();
-}, [memberId]);
-
-// Sample saved PTs data
-const MemberSavedPTs = () => {
-  const saved = [
-    {
-      name: "Dr. Jane Mwita",
-      specialty: "Orthopedic Rehabilitation",
-      img: "/images/pt_avatar.jpg",
-    },
-    {
-      name: "Dr. Kelvin Nyalusi",
-      specialty: "Sports Injury Recovery",
-      img: "/images/pt2.jpg",
-    },
-  ];
+  useEffect(() => {
+    const fetchSavedPTs = async () => {
+      const id = memberId || (await getProfile())._id;
+      const data = await getSavedPTsByMember(id);
+      setSavedPTs(data || []);
+    };
+    fetchSavedPTs();
+  }, [memberId]);
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
-      <h2 className="text-xl font-semibold text-black mb-3">
-        Saved Physiotherapists
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {saved.map((pt, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-3 border rounded-lg p-3 hover:shadow-md transition"
-          >
-            <img
-              src={pt.img}
-              alt={pt.name}
-              className="w-14 h-14 rounded-full object-cover border"
-            />
-            <div>
-              <h3 className="font-medium text-black">{pt.name}</h3>
-              <p className="text-sm text-gray-600">{pt.specialty}</p>
-              <button className="mt-1 text-caribbean text-xs font-medium hover:underline">
-                View Profile
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <h2 className="text-xl font-semibold text-black mb-3">Saved Physiotherapists</h2>
+      {savedPTs.length ? (
+        <ul className="space-y-3">
+          {savedPTs.map((pt) => (
+            <li key={pt._id} className="border p-2 rounded">
+              <p className="text-sm text-gray-700">{pt.name}</p>
+              <p className="text-xs text-gray-500">{pt.title}</p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No saved physiotherapists yet.</p>
+      )}
     </section>
   );
 };

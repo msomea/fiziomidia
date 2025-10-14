@@ -1,49 +1,38 @@
-import React from "react";
-import { getProfile, updateProfile, getUserById } from "../api/profile";
+import React, { useEffect, useState } from "react";
+import { getProfile, getUserById } from "../../api/profile";
 
-// Fetch current PT profile
-useEffect(() => {
-  const fetchProfile = async () => {
-    const data = await getProfile();
-    setProfile(data);
+const PTGallery = ({ ptId, formData, setFormData }) => {
+  const [gallery, setGallery] = useState([]);
+
+  useEffect(() => {
+    if (formData?.gallery) setGallery(formData.gallery);
+    else {
+      const fetchProfile = async () => {
+        const data = ptId ? await getUserById(ptId) : await getProfile();
+        setGallery(data.user?.gallery || data.gallery || []);
+      };
+      fetchProfile();
+    }
+  }, [ptId, formData]);
+
+  const handleChange = (e) => {
+    const files = Array.from(e.target.files);
+    setGallery(files);
+    setFormData?.({ ...formData, gallery: files });
   };
-  fetchProfile();
-}, []);
-
-const handleSave = async (updatedData) => {
-  await updateProfile(updatedData);
-};
-
-// Fetch any PT profile by ID (for public profile pages)
-useEffect(() => {
-  const fetchPTProfile = async () => {
-    const data = await getUserById(ptId); // ptId from route param
-    setProfile(data.user);
-  };
-  fetchPTProfile();
-}, [ptId]);
-
-// Sample gallery data
-const PTGallery = () => {
-  const images = [
-    "/images/gallery1.jpg",
-    "/images/gallery2.jpg",
-    "/images/gallery3.jpg",
-  ];
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <h2 className="text-xl font-semibold text-black mb-3">Gallery</h2>
-      <div className="grid grid-cols-3 gap-2">
-        {images.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            alt={`Gallery ${i + 1}`}
-            className="rounded-lg object-cover w-full h-28 md:h-40"
-          />
-        ))}
-      </div>
+      {setFormData ? (
+        <input type="file" multiple onChange={handleChange} className="file-input file-input-bordered w-full" />
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {gallery.map((img, i) => (
+            <img key={i} src={img.url || URL.createObjectURL(img)} alt="gallery" className="w-full h-24 object-cover rounded" />
+          ))}
+        </div>
+      )}
     </section>
   );
 };

@@ -23,3 +23,9 @@ export const listUsers = async () => {
   const res = await API.get("/users");
   return res.data;
 };
+
+// Get saved PTs for a member (admin or the member themselves)
+export const getSavedPTsByMember = async (memberId) => {
+  const res = await API.get(`/users/${memberId}/saved-pts`);
+  return res.data;
+};

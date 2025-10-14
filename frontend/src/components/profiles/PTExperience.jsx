@@ -1,59 +1,37 @@
-import React from "react";
-import { getProfile, updateProfile, getUserById } from "../api/profile";
+import React, { useEffect, useState } from "react";
+import { getProfile, getUserById } from "../../api/profile";
 
-// Fetch current PT profile
-useEffect(() => {
-  const fetchProfile = async () => {
-    const data = await getProfile();
-    setProfile(data);
+const PTExperience = ({ ptId, formData, setFormData }) => {
+  const [experience, setExperience] = useState("");
+
+  useEffect(() => {
+    if (formData?.experience) setExperience(formData.experience);
+    else {
+      const fetchProfile = async () => {
+        const data = ptId ? await getUserById(ptId) : await getProfile();
+        setExperience(data.user?.experience || data.experience || "");
+      };
+      fetchProfile();
+    }
+  }, [ptId, formData]);
+
+  const handleChange = (e) => {
+    setExperience(e.target.value);
+    setFormData?.({ ...formData, experience: e.target.value });
   };
-  fetchProfile();
-}, []);
-
-const handleSave = async (updatedData) => {
-  await updateProfile(updatedData);
-};
-
-// Fetch any PT profile by ID (for public profile pages)
-useEffect(() => {
-  const fetchPTProfile = async () => {
-    const data = await getUserById(ptId); // ptId from route param
-    setProfile(data.user);
-  };
-  fetchPTProfile();
-}, [ptId]);
-
-
-// Sample experience data
-const PTExperience = () => {
-  const experiences = [
-    {
-      title: "Senior Physiotherapist",
-      place: "Tanzania Orthopaedic Institute",
-      years: "2018 – Present",
-      details: "Leading rehabilitation programs for orthopedic patients.",
-    },
-    {
-      title: "Physiotherapist",
-      place: "Muhimbili National Hospital",
-      years: "2014 – 2018",
-      details: "Worked with multidisciplinary teams for patient recovery plans.",
-    },
-  ];
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <h2 className="text-xl font-semibold text-black mb-3">Experience</h2>
-      <div className="space-y-4">
-        {experiences.map((exp, i) => (
-          <div key={i} className="border-l-4 border-caribbean pl-4">
-            <h3 className="text-lg font-medium text-black">{exp.title}</h3>
-            <p className="text-sm text-gray-600">{exp.place}</p>
-            <p className="text-xs text-gray-500">{exp.years}</p>
-            <p className="text-sm text-gray-700 mt-1">{exp.details}</p>
-          </div>
-        ))}
-      </div>
+      {setFormData ? (
+        <textarea
+          value={experience}
+          onChange={handleChange}
+          className="textarea textarea-bordered w-full h-24"
+        />
+      ) : (
+        <p>{experience}</p>
+      )}
     </section>
   );
 };

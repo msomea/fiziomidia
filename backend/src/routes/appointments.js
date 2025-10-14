@@ -7,6 +7,7 @@ import {
   updateAppointmentStatus,
   deleteAppointment,
   getAppointmentById,
+  getAppointmentsByMember,
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
@@ -25,5 +26,8 @@ router.put("/:id/status", authenticate, requireRole("physiotherapist", "admin"),
 
 // Requester, PT, or admin can delete an appointment
 router.delete("/:id", authenticate, deleteAppointment);
+
+// Get appointments by member
+router.get("/member/:id", authenticate, getAppointmentsByMember);
 
 export default router;

@@ -29,3 +29,26 @@ export const updatePTProfile = async (req, res) => {
   );
   res.json({ pt });
 };
+
+// Get saved PTs for a member
+export const getSavedPTsByMember = async (req, res) => {
+  try {
+    const memberId = req.params.id;
+
+    // Only allow admin or the member themselves
+    if (req.user.role !== "admin" && req.user._id.toString() !== memberId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const member = await User.findById(memberId).populate({
+      path: "savedPTs",
+      select: "name title location services",
+    });
+
+    if (!member) return res.status(404).json({ error: "Member not found" });
+
+    res.json({ savedPTs: member.savedPTs || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

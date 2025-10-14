@@ -2,6 +2,7 @@ import express from "express";
 import { authenticate } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
 import * as userController from "../controllers/userController.js";
+import { getSavedPTsByMember } from "../controllers/ptController.js";
 
 const router = express.Router();
 
@@ -17,4 +18,6 @@ router.put("/profile", authenticate, userController.updateProfile);
 // List all users (admin only)
 router.get("/", authenticate, requireRole("admin"), userController.listUsers);
 
+// Get saved PTs for a member
+router.get("/:id/saved-pts", authenticate, requireRole("member", "admin"), getSavedPTsByMember );
 export default router;

@@ -1,38 +1,57 @@
-import React from "react";
-import { getProfile, updateProfile, getUserById } from "../api/profile";
+import React, { useEffect, useState } from "react";
+import { getProfile, getUserById } from "../../api/profile";
 
-// Fetch current member profile
-useEffect(() => {
-  const fetchProfile = async () => {
-    const data = await getProfile();
-    setProfile(data);
+const MemberDetails = ({ memberId, formData, setFormData }) => {
+  const [details, setDetails] = useState({});
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      const data = memberId ? await getUserById(memberId) : await getProfile();
+      setDetails(data.user || data);
+    };
+    fetchDetails();
+  }, [memberId]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setDetails({ ...details, [name]: value });
+    setFormData?.({ ...formData, [name]: value });
   };
-  fetchProfile();
-}, []);
 
-const handleSave = async (updatedData) => {
-  await updateProfile(updatedData);
-};
-
-// Fetch any member profile by ID (for public profile pages)
-useEffect(() => {
-  const fetchMemberProfile = async () => {
-    const data = await getUserById(memberId); // memberId from route param
-    setProfile(data.user);
-  };
-  fetchMemberProfile();
-}, [memberId]);
-
-
-// Sample member details data
-const MemberDetails = () => {
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
-      <h2 className="text-xl font-semibold text-black mb-3">About</h2>
-      <p className="text-gray-700 leading-relaxed text-sm md:text-base">
-        Hi, I’m Brian — passionate about fitness and recovery. I use FizioMidia
-        to connect with physiotherapists and track my recovery journey.
-      </p>
+      <h2 className="text-xl font-semibold text-black mb-3">Member Details</h2>
+      {setFormData ? (
+        <div className="space-y-3">
+          <input
+            type="text"
+            name="name"
+            value={details.name || ""}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+          />
+          <input
+            type="email"
+            name="email"
+            value={details.email || ""}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+          />
+          <input
+            type="text"
+            name="location"
+            value={details.location || ""}
+            onChange={handleChange}
+            className="input input-bordered w-full"
+          />
+        </div>
+      ) : (
+        <div className="space-y-2 text-gray-700">
+          <p>Name: {details.name}</p>
+          <p>Email: {details.email}</p>
+          <p>Location: {details.location}</p>
+        </div>
+      )}
     </section>
   );
 };
