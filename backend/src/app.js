@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import { CLIENT_URL } from "./config/env.js";
+import { ENV } from "./config/env.js";
 
 // Routes
 import authRoutes from "./routes/auth.js";
@@ -15,15 +15,16 @@ import messageRoutes from "./routes/message.js";
 // Middleware
 import { errorHandler } from "./middlewares/errorHandler.js";
 
+// Initialize Express
 const app = express();
 
-// Middleware
-app.use(cors({ origin: CLIENT_URL }));
+// --- Middleware ---
+app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(morgan("dev"));
+app.use(morgan(ENV.debug ? "dev" : "combined"));
 
-// Routes
+// --- Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/pts", ptRoutes);
@@ -32,12 +33,12 @@ app.use("/api/forum", forumRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/messages", messageRoutes);
 
-// Health check
+// --- Health check ---
 app.get("/health", (req, res) => {
-  res.json({ ok: true, env: process.env.NODE_ENV });
+  res.json({ ok: true, env: ENV.env });
 });
 
-// Error handler
+// --- Error handler ---
 app.use(errorHandler);
 
 export default app;

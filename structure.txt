@@ -1,0 +1,126 @@
+├── backend
+│   ├── Dockerfile
+│   ├── node_modules/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── src
+│       ├── app.js
+│       ├── config
+│       │   ├── db.js
+│       │   ├── env.js
+│       │   ├── index.js
+│       │   └── socket.js
+│       ├── controllers
+│       │   ├── appointmentController.js
+│       │   ├── authController.js
+│       │   ├── forumController.js
+│       │   ├── messageController.js
+│       │   ├── promotionController.js
+│       │   ├── ptController.js
+│       │   └── userController.js
+│       ├── middlewares
+│       │   ├── auth.js
+│       │   ├── errorHandler.js
+│       │   └── roles.js
+│       ├── models
+│       │   ├── Appointment.js
+│       │   ├── Clinic.js
+│       │   ├── Conversation.js
+│       │   ├── ForumSub.js
+│       │   ├── Message.js
+│       │   ├── Post.js
+│       │   ├── Promotion.js
+│       │   └── User.js
+│       ├── routes
+│       │   ├── appointments.js
+│       │   ├── auth.js
+│       │   ├── forum.js
+│       │   ├── message.js
+│       │   ├── promotions.js
+│       │   ├── pts.js
+│       │   ├── users.js
+│       │   └── webhook.js
+│       ├── server.js
+│       └── services
+│           ├── paymentService.js
+│           └── uploadService.js
+├── frontend
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── node_modules/
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── fm-bg.svg
+│   │   ├── fm-logo.png
+│   │   ├── fm-trans.svg
+│   │   └── vite.svg
+│   ├── README.md
+│   ├── src
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   ├── about_pt.jpg
+│   │   │   ├── avatar.jpg
+│   │   │   ├── fiziomidia-bg.svg
+│   │   │   ├── fiziomidia-trans.svg
+│   │   │   ├── fm-bg.svg
+│   │   │   ├── fm-trans.svg
+│   │   │   ├── hero_pt.jpg
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── Dadge.jsx
+│   │   │   ├── dashboard
+│   │   │   │   ├── ForumPosts.jsx
+│   │   │   │   ├── PromotionStatus.jsx
+│   │   │   │   ├── Statistics.jsx
+│   │   │   │   └── UpcomingAppointments.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── forum
+│   │   │   │   ├── ForumList.jsx
+│   │   │   │   └── ForumTopics.jsx
+│   │   │   ├── HeroSection.jsx
+│   │   │   ├── home
+│   │   │   │   ├── CallToAction.jsx
+│   │   │   │   ├── FindProfessionals.jsx
+│   │   │   │   ├── HeroSection.jsx
+│   │   │   │   └── SponsoredContent.jsx
+│   │   │   ├── MobileMenu.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── profiles
+│   │   │   │   ├── index.js
+│   │   │   │   ├── MemberAppointments.jsx
+│   │   │   │   ├── MemberDetails.jsx
+│   │   │   │   ├── MemberSavedPTs.jsx
+│   │   │   │   ├── PTAvailability.jsx
+│   │   │   │   ├── PTEducation.jsx
+│   │   │   │   ├── PTExperience.jsx
+│   │   │   │   ├── PTGallery.jsx
+│   │   │   │   ├── PTOverview.jsx
+│   │   │   │   ├── PTReviews.jsx
+│   │   │   │   └── PTServices.jsx
+│   │   │   ├── ServiceCards.jsx
+│   │   │   └── ToastNotification.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── About.jsx
+│   │   │   ├── Conversation.jsx
+│   │   │   ├── CreatePost.jsx
+│   │   │   ├── Education.jsx
+│   │   │   ├── Forum.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── member
+│   │   │   │   ├── MemberDashboard.jsx
+│   │   │   │   └── MemberProfileSettings.jsx
+│   │   │   ├── MemberProfile.jsx
+│   │   │   ├── Messages.jsx
+│   │   │   ├── pt
+│   │   │   │   ├── PTDashboard.jsx
+│   │   │   │   └── PTProfileSettings.jsx
+│   │   │   └── PTProfile.jsx
+│   │   └── routes
+│   │       └── AppRoutes.jsx
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── README.md
