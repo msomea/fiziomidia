@@ -5,7 +5,7 @@ import Conversation from "../models/Conversation.js";
 export const sendMessage = async (req, res) => {
   try {
     const { receiverId, content } = req.body;
-    const senderId = req.user._id; // user comes from auth middleware
+    const senderId = req.user._id;
 
     // Create or find conversation
     let conversation = await Conversation.findOne({
@@ -23,6 +23,7 @@ export const sendMessage = async (req, res) => {
       sender: senderId,
       receiver: receiverId,
       content,
+      conversation: conversation._id,
     });
 
     // Update conversation
@@ -42,17 +43,35 @@ export const sendMessage = async (req, res) => {
 export const getMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
+
     const messages = await Message.find({
+      conversation: conversationId,
       $or: [
-        { sender: { $in: req.user._id } },
-        { receiver: { $in: req.user._id } },
+        { sender: req.user._id },
+        { receiver: req.user._id },
       ],
-    })
-      .where("conversation")
-      .equals(conversationId)
-      .sort({ createdAt: 1 });
+    }).sort({ createdAt: 1 });
 
     res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete a message (owner or admin)
+export const deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const message = await Message.findById(id);
+    if (!message) return res.status(404).json({ message: "Message not found" });
+
+    // Only sender or admin can delete
+    if (message.sender.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    await message.deleteOne();
+    res.json({ message: "Message deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

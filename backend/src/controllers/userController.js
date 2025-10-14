@@ -5,6 +5,19 @@ export const getProfile = async (req, res) => {
   res.json({ user: req.user });
 };
 
+// Get a single user by ID (public profile)
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("-password"); // hide password
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 // Update current user's profile
 export const updateProfile = async (req, res) => {
   const { fullName, contactPhone, profileImage } = req.body;

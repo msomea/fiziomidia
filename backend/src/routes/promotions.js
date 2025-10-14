@@ -11,6 +11,9 @@ const router = express.Router();
 // List promotions
 router.get("/", getPromotions);
 
+// Get a specific promotion by ID
+router.get("/:id", getPromotions);
+
 // Create a promotion (requires authentication)
 router.post("/create-checkout-session", authenticate, createPromotionCheckout);
 

@@ -1,5 +1,28 @@
 import React from "react";
 import { Calendar, Clock } from "lucide-react";
+import { getProfile, updateProfile, getUserById } from "../api/profile";
+
+// Fetch current member profile
+useEffect(() => {
+  const fetchProfile = async () => {
+    const data = await getProfile();
+    setProfile(data);
+  };
+  fetchProfile();
+}, []);
+
+const handleSave = async (updatedData) => {
+  await updateProfile(updatedData);
+};
+
+// Fetch any member profile by ID (for public profile pages)
+useEffect(() => {
+  const fetchMemberProfile = async () => {
+    const data = await getUserById(memberId); // memberId from route param
+    setProfile(data.user);
+  };
+  fetchMemberProfile();
+}, [memberId]);
 
 const MemberAppointments = () => {
   const appointments = [

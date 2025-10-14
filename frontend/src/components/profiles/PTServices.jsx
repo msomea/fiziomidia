@@ -1,6 +1,30 @@
 import React from "react";
 import { CheckCircle } from "lucide-react";
+import { getProfile, updateProfile, getUserById } from "../api/profile";
 
+// Fetch current PT profile
+useEffect(() => {
+  const fetchProfile = async () => {
+    const data = await getProfile();
+    setProfile(data);
+  };
+  fetchProfile();
+}, []);
+
+const handleSave = async (updatedData) => {
+  await updateProfile(updatedData);
+};
+
+// Fetch any PT profile by ID (for public profile pages)
+useEffect(() => {
+  const fetchPTProfile = async () => {
+    const data = await getUserById(ptId); // ptId from route param
+    setProfile(data.user);
+  };
+  fetchPTProfile();
+}, [ptId]);
+
+// Sample services data
 const PTServices = () => {
   const services = [
     "Orthopedic Rehabilitation",

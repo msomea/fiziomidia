@@ -5,6 +5,9 @@ import * as userController from "../controllers/userController.js";
 
 const router = express.Router();
 
+// Public: get profile by ID
+router.get("/:id", userController.getUserById);
+
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);
 

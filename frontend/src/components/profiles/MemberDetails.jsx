@@ -1,5 +1,30 @@
 import React from "react";
+import { getProfile, updateProfile, getUserById } from "../api/profile";
 
+// Fetch current member profile
+useEffect(() => {
+  const fetchProfile = async () => {
+    const data = await getProfile();
+    setProfile(data);
+  };
+  fetchProfile();
+}, []);
+
+const handleSave = async (updatedData) => {
+  await updateProfile(updatedData);
+};
+
+// Fetch any member profile by ID (for public profile pages)
+useEffect(() => {
+  const fetchMemberProfile = async () => {
+    const data = await getUserById(memberId); // memberId from route param
+    setProfile(data.user);
+  };
+  fetchMemberProfile();
+}, [memberId]);
+
+
+// Sample member details data
 const MemberDetails = () => {
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
