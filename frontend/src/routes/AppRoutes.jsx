@@ -8,6 +8,8 @@ import MemberProfile from "../pages/MemberProfile";
 import PTProfile from "../pages/PTProfile";
 import MemberDashboard from "../pages/member/MemberDashboard";
 import PTDashboard from "../pages/pt/PTDashboard";
+import MessagesPage from "../pages/Messages";
+import ConversationPage from "../pages/Conversation";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
 import CreatePost from "../pages/CreatePost";
@@ -29,6 +31,8 @@ export default function AppRoutes() {
       {/* Protected Routes - To be implemented with authentication */ }
       <Route path="/dashboard/pt/:id" element={<PTDashboard/>} />
       <Route path="/dashboard/member/:id" element={<MemberDashboard  />} />
+      <Route path="/messages" element={<MessagesPage />} />
+      <Route path="/messages/:conversationId" element={<ConversationPage />} />
 
       {/* Profile Settings Routes */}
       <Route path="/settings/pt/:id" element={<PTProfileSettings />} />

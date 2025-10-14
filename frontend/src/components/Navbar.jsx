@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router";
-import { Menu, X } from "lucide-react";
+import { Menu, X, MessageCircle } from "lucide-react";
 import logo from "../assets/fm-bg.svg";
 
 export default function Navbar() {
@@ -43,12 +43,21 @@ export default function Navbar() {
               {link.name}
             </NavLink>
           ))}
+          {/* Message */}
+          <Link to="/messages" className="btn btn-ghost btn-circle hover:bg-tufts">
+            <div className="indicator ">
+              <MessageCircle className="w-5 h-5" />
+              <span className="badge badge-sm badge-primary indicator-item">3</span>
+            </div>
+          </Link>
+          
           <Link
             to="/dashboard/pt/:id"
             className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
           >
             Dashboard
           </Link>
+          
         </div>
 
         {/* Mobile Menu Button */}
@@ -78,12 +87,20 @@ export default function Navbar() {
                 {link.name}
               </NavLink>
             ))}
+            {/* Message */}
+            <Link to="/messages" className="btn btn-ghost btn-circle hover:bg-tufts">
+              <div className="indicator ">
+                <MessageCircle className="w-5 h-5" />
+                <span className="badge badge-sm badge-primary indicator-item">3</span>
+              </div>
+            </Link>
+            
             <Link
               to="/profile"
               className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
               onClick={() => setMenuOpen(false)}
             >
-              My Profile
+              Dashboard
             </Link>
           </ul>
         </div>
