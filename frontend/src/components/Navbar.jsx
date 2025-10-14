@@ -46,7 +46,7 @@ export default function Navbar() {
           {/* Message */}
           <Link to="/messages" className="btn btn-ghost btn-circle hover:bg-tufts">
             <div className="indicator ">
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-5 h-5 text-black" />
               <span className="badge badge-sm badge-primary indicator-item">3</span>
             </div>
           </Link>
@@ -90,7 +90,7 @@ export default function Navbar() {
             {/* Message */}
             <Link to="/messages" className="btn btn-ghost btn-circle hover:bg-tufts">
               <div className="indicator ">
-                <MessageCircle className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5 text-black" />
                 <span className="badge badge-sm badge-primary indicator-item">3</span>
               </div>
             </Link>
