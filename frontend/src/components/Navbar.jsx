@@ -9,10 +9,8 @@ export default function Navbar() {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
-    { name: "Services", path: "/services" },
     { name: "Forum", path: "/forum" },
     { name: "Education", path: "/education" },
-    { name: "Contact", path: "/contact" },
   ];
 
   return (
@@ -46,10 +44,10 @@ export default function Navbar() {
             </NavLink>
           ))}
           <Link
-            to="/profile"
+            to="/dashboard/pt/:id"
             className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
           >
-            My Profile
+            Dashboard
           </Link>
         </div>
 

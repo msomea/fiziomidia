@@ -3,19 +3,19 @@ import { Stethoscope, GraduationCap, Users } from "lucide-react";
 export default function ServiceCards() {
   const services = [
     {
-      title: "Book Physiotherapy",
+      title: "Appointment System",
       icon: <Stethoscope size={32} className="text-caribbean" />,
-      desc: "Schedule physiotherapy sessions with verified professionals anywhere in Tanzania.",
+      desc: "Easily book appointments with verified physiotherapists in your area or online.",
     },
     {
-      title: "Learn & Grow",
+      title: "Educational Resources",
       icon: <GraduationCap size={32} className="text-tufts" />,
-      desc: "Access educational resources and workshops to enhance your professional skills.",
+      desc: "Access Access verified educational content created by physiotherapy professionals.",
     },
     {
-      title: "Join the Community",
+      title: "Community Forum",
       icon: <Users size={32} className="text-caribbean" />,
-      desc: "Engage with other physiotherapists and clients through FizioMidia’s interactive forum.",
+      desc: "Discuss conditions, treatments, and get advice from professionals and peers",
     },
   ];
 
@@ -23,7 +23,7 @@ export default function ServiceCards() {
     <section className="py-12 bg-white" id="services">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-black mb-8">
-          Our <span className="text-caribbean">Services</span>
+          Everything you need for<span className="text-caribbean"> Physiotherapy </span>
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -42,7 +42,8 @@ const ForumList = ({ posts }) => {
           {/* Post Content */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-1">
-              <span className="font-semibold text-black">{post.author.name}</span>
+              <span className="font-semibold text-black">{post.author.name}
+              </span>
               <span className="text-gray-400 text-sm">{post.timeAgo}</span>
             </div>
             <h3 className="text-lg font-bold text-caribbean mb-2">{post.title}</h3>

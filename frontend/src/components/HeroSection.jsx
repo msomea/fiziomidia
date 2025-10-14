@@ -4,7 +4,7 @@ import hero_img from "../assets/hero_pt.jpg";
 
 export default function HeroSection() {
   return (
-    <section className="hero min-h-screen bg-alice mt-[64px] md:mt-[40px]">
+    <section className="hero min-h-screen bg-gradient-to-b from-caribbean to-tufts mt-[64px] md:mt-[40px]">
       <div className="hero-content flex-col md:flex-row-reverse gap-8">
         {/* Hero Image */}
         <img

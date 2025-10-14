@@ -1,9 +1,7 @@
 import { Routes, Route } from "react-router";
 import Home from "../pages/Home";
 import About from "../pages/About";
-import Services from "../pages/Services";
 import Forum from "../pages/Forum";
-import Contact from "../pages/Contact";
 import Education from "../pages/Education";
 
 import MemberProfile from "../pages/MemberProfile";
@@ -20,10 +18,8 @@ export default function AppRoutes() {
       {/* Public Pages */}
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
-      <Route path="/services" element={<Services />} />
       <Route path="/forum" element={<Forum />} />
       <Route path="/forum/create" element={<CreatePost />} />
-      <Route path="/contact" element={<Contact />} />
       <Route path="/education" element={<Education />} />
 
       {/* Dynamic Public Profile Routes */}
