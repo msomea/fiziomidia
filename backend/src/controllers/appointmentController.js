@@ -89,18 +89,19 @@ export const getAppointmentsByMember = async (req, res) => {
   try {
     const memberId = req.params.id;
 
-    // Only allow if admin or the member themselves
+    // Only allow admin or the member themselves
     if (req.user.role !== "admin" && req.user._id.toString() !== memberId) {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    const appointments = await Appointment.find({ requester: memberId })
-      .populate("pt clinic requester")
-      .sort({ scheduledAt: -1 });
+    const appts = await Appointment.find({ requester: memberId })
+      .populate("requester pt clinic")
+      .sort({ createdAt: -1 });
 
-    res.json({ appointments });
+    return res.status(200).json({ appts });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    return res.status(500).json({ error: err.message });
   }
 };
 

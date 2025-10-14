@@ -32,21 +32,12 @@ export const fetchAppointmentById = async (id) => {
 };
 
 // GET /api/appointments/member/:id
-export const getAppointmentsByMember = async (req, res) => {
+export const getAppointmentsByMember = async (memberId) => {
   try {
-    const memberId = req.params.id;
-
-    // Only allow access if requester is admin or the member themselves
-    if (req.user.role !== "admin" && req.user._id.toString() !== memberId) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const appointments = await Appointment.find({ requester: memberId })
-      .populate("pt clinic requester")
-      .sort({ scheduledAt: -1 });
-
-    res.json(appointments);
+    const res = await API.get(`/appointments/member/${memberId}`);
+    return res.data.appts; // backend returns { appts: [...] }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Failed to fetch member appointments:", err);
+    throw err;
   }
 };

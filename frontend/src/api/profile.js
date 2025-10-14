@@ -17,3 +17,5 @@ export const getUserById = async (id) => {
   const res = await API.get(`/users/${id}`);
   return res.data;
 };
+
+export default { getProfile, updateProfile, getUserById };

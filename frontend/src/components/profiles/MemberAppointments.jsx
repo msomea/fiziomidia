@@ -1,37 +1,64 @@
 import React, { useEffect, useState } from "react";
-import { getProfile, getUserById } from "../../api/profile";
 import { getAppointmentsByMember } from "../../api/appointments";
+import { useParams } from "react-router";
 
-const MemberAppointments = ({ memberId, formData, setFormData }) => {
-  const [appointments, setAppointments] = useState([]);
+const MemberAppointments = () => {
+  const { id } = useParams();
+  const [appointments, setAppointments] = useState([]); // ✅ starts as empty array
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAppointments = async () => {
-      const id = memberId || (await getProfile())._id;
-      const data = await getAppointmentsByMember(id);
-      setAppointments(data || []);
+      try {
+        setLoading(true);
+        const data = await getAppointmentsByMember(id);
+        setAppointments(data || []); // ✅ fallback to empty array
+      } catch (err) {
+        console.error("Error fetching appointments:", err);
+        setError("Failed to load appointments");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchAppointments();
-  }, [memberId]);
+  }, [id]);
+
+  if (loading) {
+    return <p className="text-gray-600 text-center">Loading appointments...</p>;
+  }
+
+  if (error) {
+    return <p className="text-red-600 text-center">{error}</p>;
+  }
 
   return (
-    <section className="bg-white shadow-sm rounded-2xl p-5">
-      <h2 className="text-xl font-semibold text-black mb-3">Appointments</h2>
-      {appointments.length ? (
-        <ul className="space-y-3">
+    <div className="p-6">
+      <h2 className="text-xl font-bold mb-4 text-caribbean">My Appointments</h2>
+
+      {appointments.length > 0 ? (
+        <ul>
           {appointments.map((appt) => (
-            <li key={appt._id} className="border p-2 rounded">
-              <p className="text-sm text-gray-700">
-                PT: {appt.pt.name} | Date: {new Date(appt.scheduledAt).toLocaleString()}
+            <li key={appt._id} className="p-4 mb-3 bg-white rounded-lg shadow-sm">
+              <p>
+                <strong>Physiotherapist:</strong> {appt.pt?.name || "Unknown"}
               </p>
-              <p className="text-xs text-gray-500">Status: {appt.status}</p>
+              <p>
+                <strong>Status:</strong> {appt.status || "Pending"}
+              </p>
+              <p>
+                <strong>Date:</strong>{" "}
+                {appt.createdAt
+                  ? new Date(appt.createdAt).toLocaleDateString()
+                  : "N/A"}
+              </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p>No appointments found.</p>
+        <p className="text-gray-600">No appointments found.</p>
       )}
-    </section>
+    </div>
   );
 };
 

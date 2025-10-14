@@ -28,6 +28,6 @@ router.put("/:id/status", authenticate, requireRole("physiotherapist", "admin"),
 router.delete("/:id", authenticate, deleteAppointment);
 
 // Get appointments by member
-router.get("/member/:id", authenticate, getAppointmentsByMember);
+router.get("/member/:id", authenticate, requireRole("member", "admin"), getAppointmentsByMember);
 
 export default router;
