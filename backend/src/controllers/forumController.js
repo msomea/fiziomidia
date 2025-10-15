@@ -241,3 +241,61 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ error: "Failed to delete post" });
   }
 };
+
+
+// Add sponsorship (Admin only)
+export const addSponsorship = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res
+      .status(403)
+      .json({ error: "Only Admins can manage sub sponsorships" });
+  }
+
+  const { id } = req.params;
+  const { sponsorName, sponsorLogo, sponsorMessage } = req.body;
+
+  try {
+    const sub = await ForumSub.findById(id);
+    if (!sub) return res.status(404).json({ error: "Sub not found" });
+
+    sub.isSponsored = true;
+    sub.sponsorName = sponsorName;
+    sub.sponsorLogo = sponsorLogo;
+    sub.sponsorMessage = sponsorMessage;
+
+    await sub.save();
+
+    res.json({ message: "Sponsorship added successfully", sub });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to add sponsorship" });
+  }
+};
+
+// Remove sponsorship
+export const removeSponsorship = async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res
+      .status(403)
+      .json({ error: "Only Admins can remove sponsorships" });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const sub = await ForumSub.findById(id);
+    if (!sub) return res.status(404).json({ error: "Sub not found" });
+
+    sub.isSponsored = false;
+    sub.sponsorName = undefined;
+    sub.sponsorLogo = undefined;
+    sub.sponsorMessage = undefined;
+
+    await sub.save();
+
+    res.json({ message: "Sponsorship removed successfully", sub });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to remove sponsorship" });
+  }
+};

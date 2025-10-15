@@ -9,7 +9,9 @@ import {
   listPosts,
   votePost,
   getPostById,
-  deleteSub
+  deleteSub,
+  addSponsorship,
+  removeSponsorship,
 } from "../controllers/forumController.js";
 
 import {
@@ -34,6 +36,10 @@ router.post("/posts/:id/vote", authenticate, votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), createSub);
 router.post("/posts", authenticate, createPost);
 router.delete("/subs/:id", authenticate, deleteSub); // Admin only
+
+// Sub Sponsoship
+router.put("/subs/:id/sponsor", authenticate, addSponsorship);
+router.delete("/subs/:id/sponsor", authenticate, removeSponsorship);
 
 // --- Comments ---
 // Get comments for a post (public)
