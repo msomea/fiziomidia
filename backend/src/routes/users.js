@@ -20,4 +20,8 @@ router.get("/", authenticate, requireRole("admin"), userController.listUsers);
 
 // Get saved PTs for a member
 router.get("/:id/saved-pts", authenticate, requireRole("member", "admin"), getSavedPTsByMember );
+
+// Get all physiotherapists (PTs) with active promotions
+router.get("/pts/promotions", userController.getPTsWithActivePromotions);
+
 export default router;

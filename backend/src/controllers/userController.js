@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Promotion from "../models/Promotion.js";
 
 // Get current user's profile
 export const getProfile = async (req, res) => {
@@ -43,5 +44,29 @@ export const listUsers = async (req, res) => {
     res.json({ users });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
+
+// Get all physiotherapists (PTs) with active promotions
+export const getPTsWithActivePromotions = async (req, res) => {
+  try {
+    // Find all active promotions
+    const activePromotions = await Promotion.find({ status: "active" });
+
+    // Get all physiotherapists linked to active promotions
+    const ptIds = activePromotions.map((promo) => promo.pt);
+    console.log("Active Promotions →", activePromotions);
+
+    const pts = await User.find({
+      _id: { $in: ptIds },
+      role: "physiotherapist",
+    }).select("-password");
+    console.log("PTs with Active Promotions →", pts);
+    res.status(200).json(pts);
+    
+
+  } catch (error) {
+    console.error("Error fetching PTs with promotions:", error);
+    res.status(500).json({ message: "Server Error" });
   }
 };

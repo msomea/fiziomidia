@@ -13,6 +13,7 @@ import ConversationPage from "../pages/Conversation";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
 import CreatePost from "../pages/CreatePost";
+import FindProfessionals from "../components/home/FindProfessionals";
 
 export default function AppRoutes() {
   return (
@@ -27,6 +28,7 @@ export default function AppRoutes() {
       {/* Dynamic Public Profile Routes */}
       <Route path="/profile/pt/:id" element={<PTProfile />} />
       <Route path="/profile/member/:id" element={<MemberProfile />} />
+      <Route path="/find-professionals" element={<FindProfessionals />} />
 
       {/* Protected Routes - To be implemented with authentication */ }
       <Route path="/dashboard/pt/:id" element={<PTDashboard/>} />

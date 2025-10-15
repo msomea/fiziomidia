@@ -19,7 +19,7 @@ const PtProfileSchema = new Schema(
     licenseNumber: String,
     licenseVerified: { type: Boolean, default: false },
     bio: String,
-    specialties: [String],
+    speciality: [String],
     yearsOfExperience: Number,
     workingHours: [WorkingHoursSchema],
     promotionActiveUntil: Date,

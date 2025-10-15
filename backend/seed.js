@@ -68,7 +68,7 @@ async function seed() {
             institution: faker.company.companyName(),
             isPrivatePractice: faker.datatype.boolean(),
             bio: faker.lorem.sentences(2),
-            specialties: faker.helpers.shuffle(["Orthopedics", "Neurology", "Sports", "Pediatrics"]).slice(0, 2),
+            speciality: faker.helpers.shuffle(["Orthopedics", "Neurology", "Sports", "Pediatrics"]).slice(0, 2),
             yearsOfExperience: faker.datatype.number({ min: 1, max: 20 }),
             workingHours: [
               { dayOfWeek: 1, from: "09:00", to: "17:00" },
