@@ -55,8 +55,7 @@ export const getPTsWithActivePromotions = async (req, res) => {
 
     // Get all physiotherapists linked to active promotions
     const ptIds = activePromotions.map((promo) => promo.pt);
-    console.log("Active Promotions →", activePromotions);
-
+  
     const pts = await User.find({
       _id: { $in: ptIds },
       role: "physiotherapist",

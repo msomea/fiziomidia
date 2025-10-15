@@ -41,6 +41,16 @@ const ForumSubSchema = new Schema(
       type: String,
       trim: true,
     },
+    sponsorWebsite: {
+      type: String, // image URL
+      trim: true,
+    },
+    startDate: {
+      type: Date,
+    },
+    endDate: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
