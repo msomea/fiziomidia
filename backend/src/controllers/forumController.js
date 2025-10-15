@@ -8,6 +8,7 @@ export const listSubs = async (req, res) => {
   try {
     const subs = await ForumSub.find().limit(100).sort({ createdAt: -1 });
     res.json({ subs });
+    console.log('Returned Subs', subs)
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch subs" });
   }

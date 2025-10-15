@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import mongoose from "mongoose";
 import API from "../../api/axios";
-
-const api = API;
 
 const FindProfessionals = () => {
   const [pts, setPts] = useState([]);
@@ -11,7 +8,7 @@ const FindProfessionals = () => {
   useEffect(() => {
     const fetchPTs = async () => {
       try {
-        const res = await api.get("http://localhost:4000/api/users/pts/promotions");
+        const res = await API.get("http://localhost:4000/api/users/pts/promotions");
         console.log("PTs API response:", res.data);
         setPts(res.data || []); // safe array handling
         console.log("Loaded PTs:", res.data);

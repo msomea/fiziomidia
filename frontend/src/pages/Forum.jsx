@@ -2,41 +2,52 @@ import React, { useState, useEffect } from "react";
 import ForumTopics from "../components/forum/ForumTopics";
 import ForumList from "../components/forum/ForumList";
 import { useNavigate } from "react-router";
+import API from "../api/axios";
 
 const Forum = () => {
   const navigate = useNavigate();
-  const [topics, setTopics] = useState([]);
+  const [subs, setSubs] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [selectedSub, setSelectedSub] = useState(null);
 
+  // Fetch Forum Topics (Subs)
   useEffect(() => {
-    // Simulate fetching topics
-    setTopics([
-      { _id: "1", name: "Rehab", totalPosts: 34 },
-      { _id: "2", name: "Exercise", totalPosts: 21 },
-      { _id: "3", name: "Nutrition", totalPosts: 45 },
-      { _id: "4", name: "Injury Prevention", totalPosts: 12 },
-    ]);
+    const fetchSubs = async () => {
+      try {
+        const res = await API.get("http://localhost:4000/api/forum/subs");
+        const subsData = res.data.subs || [];
+        setSubs(subsData);
+        console.log("Fetched subs:", subsData);
+        if (subsData.length > 0) {
+          setSelectedSub(subsData[0]); // load first sub by default
+        }
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+      }
+    };
 
-    // Simulate fetching posts
-    setPosts([
-      {
-        _id: "p1",
-        title: "Stretching for lower back pain",
-        body: "Here is some content...",
-        author: { name: "Dr. Jane Mwita", avatar: "/avatar.jpg" },
-        timeAgo: "2 hours ago",
-        upvotes: [1, 2],
-        downvotes: [],
-        comments: [1],
-      },
-      // Add more posts...
-    ]);
+    fetchSubs();
   }, []);
 
-  // Filter posts based on selected topic (for demo)
-  const filteredPosts = selectedTopic
-    ? posts.filter((p) => p.topicId === selectedTopic)
+  // Fetch Posts for Selected Topic
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!selectedSub) return;
+      try {
+        const res = await API.get(`http://localhost:4000/api/forum/subs/${selectedSub._id}/posts`);
+        setPosts(res.data.posts || []);
+        console.log("Fetched posts:", res.data.posts);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchPosts();
+  }, [selectedSub]);
+
+  // Filter posts by selected topic (if any)
+  const filteredPosts = selectedSub
+    ? posts.filter((p) => p.sub === selectedSub._id)
     : posts;
 
   return (
@@ -54,9 +65,12 @@ const Forum = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
+          {/* Forum Topics (Subs) */}
           <div className="md:col-span-1">
-            <ForumTopics topics={topics} onSelectTopic={setSelectedTopic} />
+            <ForumTopics topics={subs} onSelectTopic={setSelectedSub} />
           </div>
+
+          {/* Forum Posts */}
           <div className="md:col-span-2">
             <ForumList posts={filteredPosts} />
           </div>

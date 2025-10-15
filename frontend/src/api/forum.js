@@ -27,20 +27,26 @@ export const fetchPostById = async (id) => {
 };
 
 // Vote on a post (auth required)
-export const votePost = async (postId, voteType) => {
-  const res = await API.post(`/forum/posts/${postId}/vote`, { vote: voteType });
+export const votePost = async (postId, voteType, token) => {
+  const res = await API.post(`/forum/posts/${postId}/vote`, { vote: voteType }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
 
 // Create new sub (auth + PT/Admin)
-export const createSub = async (data) => {
-  const res = await API.post("/forum/subs", data);
+export const createSub = async (data, token) => {
+  const res = await API.post("/forum/subs", data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
 
 // Create new post (auth required)
-export const createPost = async (data) => {
-  const res = await API.post("/forum/posts", data);
+export const createPost = async (data, token) => {
+  const res = await API.post("/forum/posts", data, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
 
@@ -52,13 +58,17 @@ export const fetchComments = async (postId) => {
 };
 
 // Add a comment to a post (auth required)
-export const addComment = async (postId, content) => {
-  const res = await API.post(`/forum/posts/${postId}/comments`, { content });
+export const addComment = async (postId, content, token) => {
+  const res = await API.post(`/forum/posts/${postId}/comments`, { content }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
 
 // Delete a comment by ID (auth required, owner or admin)
-export const deleteComment = async (commentId) => {
-  const res = await API.delete(`/forum/comments/${commentId}`);
+export const deleteComment = async (commentId, token) => {
+  const res = await API.delete(`/forum/comments/${commentId}`,{
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return res.data;
 };
