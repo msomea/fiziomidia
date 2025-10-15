@@ -9,6 +9,7 @@ import {
   listPosts,
   votePost,
   getPostById,
+  deleteSub
 } from "../controllers/forumController.js";
 
 import {
@@ -32,6 +33,7 @@ router.get("/posts/:id", getPostById);
 router.post("/posts/:id/vote", authenticate, votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), createSub);
 router.post("/posts", authenticate, createPost);
+router.delete("/subs/:id", authenticate, deleteSub); // Admin only
 
 // --- Comments ---
 // Get comments for a post (public)
