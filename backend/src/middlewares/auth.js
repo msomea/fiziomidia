@@ -4,7 +4,7 @@ import User from "../models/User.js";
 
 export const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.trim().split(" ")[1];
 
   if (!token) return res.status(401).json({ error: "No token provided" });
 
@@ -21,7 +21,7 @@ export const authenticate = async (req, res, next) => {
 
 export const authenticateOptional = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.trim().split(" ")[1];
 
   if (!token) return next(); // anonymous user allowed
 
@@ -31,6 +31,13 @@ export const authenticateOptional = async (req, res, next) => {
     if (user) req.user = user;
   } catch (err) {
     // ignore invalid token, treat as anonymous
+  }
+  next();
+};
+
+export const authenticateAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin access only" });
   }
   next();
 };

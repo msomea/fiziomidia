@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
 import {
   listSubs,
@@ -10,8 +10,8 @@ import {
   votePost,
   getPostById,
   deleteSub,
-  addSponsorship,
-  removeSponsorship,
+  updateSubSponsorship,
+  removeSubSponsorship,
 } from "../controllers/forumController.js";
 
 import {
@@ -21,7 +21,9 @@ import {
 } from "../controllers/forumCommentController.js";
 
 const router = express.Router();
+// router.use(authenticate, authenticateAdmin);
 
+// /api/forum
 // --- Forum Subs & Posts ---
 // Public routes
 router.get("/subs", listSubs);
@@ -35,11 +37,14 @@ router.get("/posts/:id", getPostById);
 router.post("/posts/:id/vote", authenticate, votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), createSub);
 router.post("/posts", authenticate, createPost);
-router.delete("/subs/:id", authenticate, deleteSub); // Admin only
+router.delete("/subs/:id", authenticateAdmin, deleteSub); // Admin only
 
 // Sub Sponsoship
-router.put("/subs/:id/sponsor", authenticate, addSponsorship);
-router.delete("/subs/:id/sponsor", authenticate, removeSponsorship);
+// Update / Add sponsorship
+router.put("/subs/:id/sponsorship", updateSubSponsorship);
+// Remove sponsorship
+router.put("/subs/:id/sponsorship/remove", removeSubSponsorship);
+
 
 // --- Comments ---
 // Get comments for a post (public)

@@ -14,7 +14,7 @@ const Forum = () => {
   useEffect(() => {
     const fetchSubs = async () => {
       try {
-        const res = await API.get("http://localhost:4000/api/forum/subs");
+        const res = await API.get("/api/forum/subs");
         const subsData = res.data.subs || [];
         setSubs(subsData);
         if (subsData.length > 0) {
@@ -33,7 +33,7 @@ const Forum = () => {
     const fetchPosts = async () => {
       if (!selectedSub) return;
       try {
-        const res = await API.get(`http://localhost:4000/api/forum/subs/${selectedSub._id}/posts`);
+        const res = await API.get(`/api/forum/subs/${selectedSub._id}/posts`);
         setPosts(res.data.posts || []);
       } catch (error) {
         console.error("Error fetching posts:", error);

@@ -243,59 +243,60 @@ export const deletePost = async (req, res) => {
 };
 
 
-// Add sponsorship (Admin only)
-export const addSponsorship = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ error: "Only Admins can manage sub sponsorships" });
-  }
+// ===== SUB SPONSORSHIP  =====
 
+// 🔹 Update or Add Sponsorship
+export const updateSubSponsorship = async (req, res) => {
   const { id } = req.params;
-  const { sponsorName, sponsorLogo, sponsorMessage } = req.body;
+  const {
+    sponsorName,
+    sponsorLogo,
+    sponsorMessage,
+    sponsorWebsite,
+    startDate,
+    endDate,
+  } = req.body;
 
   try {
     const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ error: "Sub not found" });
+    if (!sub) return res.status(404).json({ error: "Forum sub not found" });
 
     sub.isSponsored = true;
-    sub.sponsorName = sponsorName;
-    sub.sponsorLogo = sponsorLogo;
-    sub.sponsorMessage = sponsorMessage;
+    sub.sponsorName = sponsorName || "";
+    sub.sponsorLogo = sponsorLogo || "";
+    sub.sponsorMessage = sponsorMessage || "";
+    sub.sponsorWebsite = sponsorWebsite || "";
+    sub.startDate = startDate ? new Date(startDate) : undefined;
+    sub.endDate = endDate ? new Date(endDate) : undefined;
 
     await sub.save();
-
-    res.json({ message: "Sponsorship added successfully", sub });
+    res.json({ message: "Sponsorship updated successfully", sub });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to add sponsorship" });
+    console.error("Error updating sponsorship:", err);
+    res.status(500).json({ error: "Failed to update sponsorship" });
   }
 };
 
-// Remove sponsorship
-export const removeSponsorship = async (req, res) => {
-  if (req.user.role !== "admin") {
-    return res
-      .status(403)
-      .json({ error: "Only Admins can remove sponsorships" });
-  }
-
+// 🔹 Remove Sponsorship
+export const removeSubSponsorship = async (req, res) => {
   const { id } = req.params;
 
   try {
     const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ error: "Sub not found" });
+    if (!sub) return res.status(404).json({ error: "Forum sub not found" });
 
     sub.isSponsored = false;
-    sub.sponsorName = undefined;
-    sub.sponsorLogo = undefined;
-    sub.sponsorMessage = undefined;
+    sub.sponsorName = "";
+    sub.sponsorLogo = "";
+    sub.sponsorMessage = "";
+    sub.sponsorWebsite = "";
+    sub.startDate = undefined;
+    sub.endDate = undefined;
 
     await sub.save();
-
     res.json({ message: "Sponsorship removed successfully", sub });
   } catch (err) {
-    console.error(err);
+    console.error("Error removing sponsorship:", err);
     res.status(500).json({ error: "Failed to remove sponsorship" });
   }
 };

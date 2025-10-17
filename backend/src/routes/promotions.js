@@ -8,6 +8,9 @@ import {
 
 const router = express.Router();
 
+
+// routes /api/promotions
+
 // List promotions
 router.get("/", getPromotions);
 

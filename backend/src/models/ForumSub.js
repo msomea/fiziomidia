@@ -68,4 +68,45 @@ ForumSubSchema.pre("remove", async function (next) {
   }
 });
 
+
+// Auto-deactivate expired sponsorships
+ForumSubSchema.pre("save", function (next) {
+  const now = new Date();
+  if (this.endDate && this.endDate < now) {
+    this.isSponsored = false;
+    this.sponsorName = "";
+    this.sponsorLogo = "";
+    this.sponsorMessage = "";
+    this.sponsorWebsite = "";
+    this.startDate = null;
+    this.endDate = null;
+  }
+  next();
+});
+
+// Optional: when fetching subs, clean expired ones
+ForumSubSchema.statics.cleanExpiredSponsorships = async function () {
+  const now = new Date();
+  const expiredSubs = await this.find({
+    isSponsored: true,
+    endDate: { $lt: now },
+  });
+
+  for (const sub of expiredSubs) {
+    sub.isSponsored = false;
+    sub.sponsorName = "";
+    sub.sponsorLogo = "";
+    sub.sponsorMessage = "";
+    sub.sponsorWebsite = "";
+    sub.startDate = null;
+    sub.endDate = null;
+    await sub.save();
+  }
+
+  if (expiredSubs.length > 0) {
+    console.log(`🕓 Deactivated ${expiredSubs.length} expired sponsorship(s).`);
+  }
+};
+
+
 export default mongoose.model("ForumSub", ForumSubSchema);

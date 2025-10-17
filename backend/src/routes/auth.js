@@ -3,6 +3,7 @@ import { register, login, refresh } from "../controllers/authController.js"; // 
 
 const router = express.Router();
 
+// routes /api/auth
 router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);

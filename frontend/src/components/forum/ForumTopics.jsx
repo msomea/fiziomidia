@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 
-const ForumTopics = ({ topics = [], onSelectTopic }) => {
+const ForumTopics = ({ topics, onSelectTopic }) => {
   const [sortType, setSortType] = useState("alphabet");
   const [activeTopic, setActiveTopic] = useState(null);
 
-  // Sort topics by title or by total posts (if available)
   const sortedTopics = [...topics].sort((a, b) => {
     if (sortType === "alphabet") return a.title.localeCompare(b.title);
     if (sortType === "posts") return (b.totalPosts || 0) - (a.totalPosts || 0);
@@ -13,7 +12,7 @@ const ForumTopics = ({ topics = [], onSelectTopic }) => {
 
   const handleTopicClick = (topic) => {
     setActiveTopic(topic._id);
-    onSelectTopic(topic); // Pass full topic object to parent
+    onSelectTopic(topic);
   };
 
   return (
@@ -23,7 +22,7 @@ const ForumTopics = ({ topics = [], onSelectTopic }) => {
         <h2 className="text-xl font-bold text-caribbean">Topics</h2>
         <fieldset className="fieldset w-24 text-white">
           <select
-            className="select select-bordered select-sm text-black"
+            className="select select-bordered select-sm"
             value={sortType}
             onChange={(e) => setSortType(e.target.value)}
           >
@@ -34,28 +33,46 @@ const ForumTopics = ({ topics = [], onSelectTopic }) => {
       </div>
 
       {/* Topics List */}
-      <ul className="space-y-2">
-        {sortedTopics.length > 0 ? (
-          sortedTopics.map((topic) => (
-            <li
-              key={topic._id}
-              onClick={() => handleTopicClick(topic)}
-              className={`flex justify-between items-center p-3 rounded-lg cursor-pointer transition-colors duration-200
-                ${activeTopic === topic._id ? "bg-caribbean text-white" : "hover:bg-alice"}`}
-            >
-              <span className="font-medium">{topic.title}</span>
-              <span
-                className={`text-sm ${
-                  activeTopic === topic._id ? "text-white/80" : "text-gray-500"
-                }`}
-              >
+      <ul className="space-y-3">
+        {sortedTopics.map((topic) => (
+          <li
+            key={topic._id}
+            className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 border 
+              ${activeTopic === topic._id ? "bg-caribbean text-white" : "hover:bg-alice"}`}
+            onClick={() => handleTopicClick(topic)}
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-medium flex items-center gap-2">
+                {topic.sponsor?.isActive && (
+                  <img
+                    src={topic.sponsor.logoUrl}
+                    alt={topic.sponsor.name}
+                    className="w-5 h-5 rounded-full"
+                  />
+                )}
+                {topic.sponsor?.isActive
+                  ? `${topic.sponsor.name} ${topic.title}`
+                  : topic.title}
+              </span>
+              <span className={`text-sm ${activeTopic === topic._id ? "text-white/80" : "text-gray-500"}`}>
                 {topic.totalPosts || 0} posts
               </span>
-            </li>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm text-center py-4">No topics found.</p>
-        )}
+            </div>
+            {topic.sponsor?.isActive && (
+              <p className="text-xs text-gray-400 mt-1">
+                Sponsored by{" "}
+                <a
+                  href={topic.sponsor.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-caribbean underline"
+                >
+                  {topic.sponsor.name}
+                </a>
+              </p>
+            )}
+          </li>
+        ))}
       </ul>
     </div>
   );

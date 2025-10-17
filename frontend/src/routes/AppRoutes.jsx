@@ -14,6 +14,7 @@ import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
 import CreatePost from "../pages/CreatePost";
 import FindProfessionals from "../components/home/FindProfessionals";
+import AdminSponsorships from "../pages/admin/AdminSponsorships";
 
 export default function AppRoutes() {
   return (
@@ -39,6 +40,9 @@ export default function AppRoutes() {
       {/* Profile Settings Routes */}
       <Route path="/settings/pt/:id" element={<PTProfileSettings />} />
       <Route path="/settings/member/:id" element={<MemberProfileSettings  />} />
+
+      {/* Admin Routes */}
+      <Route path="/subs/:id/sponsor" element={<AdminSponsorships />} />
     </Routes>
   );
 }

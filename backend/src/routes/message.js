@@ -4,6 +4,8 @@ import { getMessages, sendMessage, deleteMessage } from "../controllers/messageC
 
 const router = express.Router();
 
+// routes /api/messages
+
 // Authenticated users only
 router.get("/:chatId", authenticate, getMessages);
 router.post("/", authenticate, sendMessage);
