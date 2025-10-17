@@ -15,10 +15,22 @@ import PTProfileSettings from "../pages/pt/PTProfileSettings";
 import CreatePost from "../pages/CreatePost";
 import FindProfessionals from "../components/home/FindProfessionals";
 import AdminSponsorships from "../pages/admin/AdminSponsorships";
+import Login from "../pages/auth/Login";
+import Signup from "../pages/auth/Signup";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
+import VerifyEmail from "../pages/auth/VerifyEmail"; 
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 export default function AppRoutes() {
   return (
     <Routes>
+      {/* Auth Routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       {/* Public Pages */}
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
@@ -33,7 +45,7 @@ export default function AppRoutes() {
 
       {/* Protected Routes - To be implemented with authentication */ }
       <Route path="/dashboard/pt/:id" element={<PTDashboard/>} />
-      <Route path="/dashboard/member/:id" element={<MemberDashboard  />} />
+      <Route path="/dashboard/member/:id" element={<MemberDashboard />} />
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/messages/:conversationId" element={<ConversationPage />} />
 
@@ -43,6 +55,8 @@ export default function AppRoutes() {
 
       {/* Admin Routes */}
       <Route path="/subs/:id/sponsor" element={<AdminSponsorships />} />
+      <Route path="/dashboard/admin" element={<AdminDashboard />} />
+      
     </Routes>
   );
 }

@@ -13,7 +13,7 @@ const HeroSection = () => {
           Book appointments, access educational resources, and promote your physiotherapy services — all in one platform.
         </p>
         <div className="flex justify-center gap-4">
-          <Link to="/register" className="btn bg-white text-caribbean hover:bg-alice border-none">
+          <Link to="/signup" className="btn bg-white text-caribbean hover:bg-alice border-none">
             Get Started
           </Link>
           <Link to="/forum" className="btn btn-outline text-white border-white hover:bg-white hover:text-caribbean">

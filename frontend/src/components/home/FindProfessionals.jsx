@@ -8,7 +8,7 @@ const FindProfessionals = () => {
   useEffect(() => {
     const fetchPTs = async () => {
       try {
-        const res = await API.get("/api/pts/promotions");
+        const res = await API.get("/pts/promotions");
         setPts(res.data || []); // safe array handling
       } catch (err) {
         console.error("Failed to load PTs:", err);

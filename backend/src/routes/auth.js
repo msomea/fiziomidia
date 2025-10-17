@@ -1,18 +1,15 @@
 import express from "express";
-import { register, login, refresh } from "../controllers/authController.js"; // named imports
+import * as auth from "../controllers/authController.js";
+import { authenticate } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// routes /api/auth
-router.post("/register", register);
-router.post("/login", login);
-router.post("/refresh", refresh);
-router.post("/logout", (req, res) => {
-  res.json({ message: "Logged out successfully" });
-});
+// /api/auth routes
+router.post("/register", auth.registerUser);
+router.post("/login", auth.loginUser);
+router.post("/refresh", auth.refreshToken);
+router.post("/logout", authenticate, auth.logoutUser);
 
-router.get("/me", (req, res) => {
-  res.json({ id: 1, username: "testuser", email: "user@gmail.com" });
-});              
+router.get("/me", authenticate, auth.getCurrentUser);
 
-export default router; 
+export default router;

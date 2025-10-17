@@ -25,7 +25,7 @@ export default function CallToAction() {
             and promote better health today
           </p>
         <div className="flex justify-center gap-4">
-          <Link to="/register" className="btn bg-white text-tufts hover:bg-alice hover:border-tufts border-2">
+          <Link to="/signup" className="btn bg-white text-tufts hover:bg-alice hover:border-tufts border-2">
             Sign Up
           </Link>
           <Link to="/login" className="btn btn-outline border-tufts border-2 text-tufts hover:bg-white hover:text-tufts hover:border-white">

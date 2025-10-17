@@ -23,6 +23,7 @@ const PtProfileSchema = new Schema(
     yearsOfExperience: Number,
     workingHours: [WorkingHoursSchema],
     promotionActiveUntil: Date,
+  
   },
   { _id: false }
 );
@@ -41,6 +42,7 @@ const UserSchema = new Schema({
   ptProfile: PtProfileSchema,
   createdAt: { type: Date, default: Date.now },
   lastLogin: Date,
+  isLoggedIn: { type: Boolean, default: false },
 });
 
 export default mongoose.model("User", UserSchema);

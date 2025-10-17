@@ -1,31 +1,31 @@
 import API from "./axios";
 
-// Register user
 export const registerUser = async (data) => {
   const res = await API.post("/auth/register", data);
+  if (res.data.accessToken) {
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+  }
   return res.data;
 };
 
-// Login user
 export const loginUser = async (data) => {
   const res = await API.post("/auth/login", data);
+  if (res.data.accessToken) {
+    localStorage.setItem("accessToken", res.data.accessToken);
+    localStorage.setItem("refreshToken", res.data.refreshToken);
+  }
   return res.data;
 };
 
-// Logout
 export const logoutUser = async () => {
   const res = await API.post("/auth/logout");
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
   return res.data;
 };
 
-// Fetch current user
 export const fetchCurrentUser = async () => {
   const res = await API.get("/auth/me");
-  return res.data;
-};
-
-// Refresh JWT
-export const refreshToken = async () => {
-  const res = await API.post("/auth/refresh");
   return res.data;
 };

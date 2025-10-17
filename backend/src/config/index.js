@@ -77,5 +77,6 @@ if (process.env.DEBUG_MODE === "true" && process.env.NODE_ENV === "development")
     NODE_ENV: process.env.NODE_ENV,
     MONGO_URI: process.env.MONGO_URI,
     CLIENT_URL: process.env.CLIENT_URL,
+    SERVER_URL: process.env.SERVER_URL,
   });
 }
