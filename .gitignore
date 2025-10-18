@@ -3,8 +3,9 @@ backend/node_modules/
 frontend/node_modules/
 
 # Environment variables
-backend/.env
-frontend/.env
+/backend/.env
+/frontend/.env
+*.env
 
 # Logs
 *.log
