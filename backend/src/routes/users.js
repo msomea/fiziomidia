@@ -16,7 +16,7 @@ router.get("/:id", userController.getUserById);
 router.get("/profile", authenticate, userController.getProfile);
 
 // Update current user profile
-router.put("/profile", authenticate, userController.updateProfile);
+router.put("/profile", authenticate, userController.uploadAvatar.single("avatar"), userController.updateProfile);
 
 // List all users (admin only)
 router.get("/", authenticate, requireRole("admin"), userController.listUsers);

@@ -1,57 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { getProfile, getUserById } from "../../api/profile";
+import { getUserById } from "../../api/profile";
+import { useAuth } from "../../context/AuthContext";
 
-const MemberDetails = ({ memberId, formData, setFormData }) => {
-  const [details, setDetails] = useState({});
+const MemberDetails = () => {
+  const { user } = useAuth();
+  const [details, setDetails] = useState({}); 
 
   useEffect(() => {
     const fetchDetails = async () => {
-      const data = memberId ? await getUserById(memberId) : await getProfile();
-      setDetails(data.user || data);
+      if (!user?._id) return;
+      try {
+        const data = await getUserById(user._id);
+        setDetails(data);
+        console.log("Member Details fetched:", data);
+      } catch (err) {
+        console.error("Failed to fetch Member Details:", err);
+      }
     };
     fetchDetails();
-  }, [memberId]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setDetails({ ...details, [name]: value });
-    setFormData?.({ ...formData, [name]: value });
-  };
+  }, [user]);
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <h2 className="text-xl font-semibold text-black mb-3">Member Details</h2>
-      {setFormData ? (
-        <div className="space-y-3">
-          <input
-            type="text"
-            name="name"
-            value={details.name || ""}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-          />
-          <input
-            type="email"
-            name="email"
-            value={details.email || ""}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-          />
-          <input
-            type="text"
-            name="location"
-            value={details.location || ""}
-            onChange={handleChange}
-            className="input input-bordered w-full"
-          />
-        </div>
-      ) : (
-        <div className="space-y-2 text-gray-700">
-          <p>Name: {details.name}</p>
-          <p>Email: {details.email}</p>
-          <p>Location: {details.location}</p>
-        </div>
-      )}
+
+      <div className="space-y-2 text-gray-700">
+        <p>Name: {user.fullName || "No name provided"}</p>
+        <p>Email: {user.email || "No email provided"}</p>
+        <p> Bio: {user.bio || "No Bio"}</p>
+        <p>Location: {user.location || "No Location provided"}</p>
+      </div>
     </section>
   );
 };

@@ -1,32 +1,48 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { registerUser } from "../../api/auth";
 import toast from "react-hot-toast";
+import { EyeOff, Eye } from "lucide-react";
+import API from "../../api/axios"; // use same axios instance
+import { useAuth } from "../../context/AuthContext"; // optional for auto-login
 
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState(""); // rename
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
+  const { login } = useAuth(); // optional — for auto login after signup
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Send "password"
-      await registerUser({ fullName: name, email, password });
-      toast.success("Registration successful! Please login.");
-      setLoading(false);
-      localStorage.setItem("accessToken", res.accessToken);
-      localStorage.setItem("refreshToken", res.refreshToken);
-      localStorage.setItem("user", JSON.stringify(res.user));
-      navigate("/login"); // redirect to login after signup
+      // ✅ Send registration data
+      const res = await API.post("/auth/register", {
+        fullName: name,
+        email,
+        password,
+      });
+
+      toast.success("Registration successful!");
+
+      // ✅ If your backend returns tokens on signup, auto-login:
+      if (res.data?.accessToken) {
+        const { user, accessToken, refreshToken } = res.data;
+        login(user, { accessToken, refreshToken });
+        navigate("/");
+      } else {
+        // Otherwise, redirect to login
+        navigate("/login");
+      }
+
     } catch (err) {
-      console.error(err);
+      console.error("Signup error:", err);
       toast.error(err.response?.data?.error || "Registration failed");
+    } finally {
       setLoading(false);
     }
   };
@@ -34,14 +50,17 @@ export default function Signup() {
   return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
       <form
-        className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md"
         onSubmit={handleSubmit}
+        className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md"
       >
-        <h2 className="text-2xl text-black font-bold mb-6 text-center">Sign Up</h2>
+        <h2 className="text-2xl text-black font-bold mb-6 text-center">
+          Sign Up
+        </h2>
 
+        {/* ✅ Full Name */}
         <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2">
-            Name
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Full Name
           </label>
           <input
             type="text"
@@ -52,6 +71,7 @@ export default function Signup() {
           />
         </div>
 
+        {/* ✅ Email */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Email
@@ -65,6 +85,7 @@ export default function Signup() {
           />
         </div>
 
+        {/* ✅ Password */}
         <div className="mb-4 relative">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Password
@@ -72,8 +93,8 @@ export default function Signup() {
           <input
             type={showPassword ? "text" : "password"}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700"
-            value={password} // updated
-            onChange={(e) => setPassword(e.target.value)} // updated
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           <button
@@ -81,10 +102,11 @@ export default function Signup() {
             className="absolute right-2 top-9 text-gray-500"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? "Hide" : "Show"}
+            {showPassword ? <EyeOff /> : <Eye />}
           </button>
         </div>
 
+        {/* ✅ Submit */}
         <button
           type="submit"
           className="w-full bg-caribbean text-white font-bold py-2 px-4 rounded hover:bg-tufts"

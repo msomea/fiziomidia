@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import {
   Menu,
@@ -9,49 +9,24 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import API from "../api/axios";
 import logo from "../assets/fm-bg.svg";
+import { useAuth } from "../context/AuthContext"; // ✅ Global auth context
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // ✅ Load current user using accessToken
-  const loadCurrentUser = async () => {
-    try {
-      const res = await API.get("/auth/me");
-      setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
-    } catch (err) {
-      console.warn("User not authenticated:", err.response?.status);
-      setUser(null);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-    }
-  };
+  // ✅ Get user + logout directly from global AuthContext
+  const { user, logout } = useAuth();
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) loadCurrentUser();
-  }, []);
-
-  // ✅ Logout
-  const handleLogout = async () => {
-    try {
-      await API.post("/auth/logout");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-      setUser(null);
-      toast.success("Logged out successfully!");
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout failed:", err);
-      toast.error("Logout failed. Try again.");
-    }
+  // ✅ Determine dashboard path based on role
+  const getDashboardPath = () => {
+    if (!user) return "/login";
+    if (user.role === "physiotherapist") return `/dashboard/pt/${user._id}`;
+    if (user.role === "member") return `/dashboard/member/${user._id}`;
+    if (user.role === "admin") return `/dashboard/admin`;
+    return "/";
   };
 
   // ✅ Navbar links
@@ -62,13 +37,16 @@ export default function Navbar() {
     { name: "Education", path: "/education" },
   ];
 
-  // ✅ Determine dashboard path based on user role
-  const getDashboardPath = () => {
-    if (!user) return "/login";
-    if (user.role === "physiotherapist") return `/dashboard/pt/${user._id}`;
-    if (user.role === "member") return `/dashboard/member/${user._id}`;
-    if (user.role === "admin") return `/dashboard/admin`;
-    return "/";
+  // ✅ Handle logout globally
+  const handleLogout = async () => {
+    try {
+      await logout(); // from context
+      toast.success("Logged out successfully!");
+      navigate("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      toast.error("Logout failed. Try again.");
+    }
   };
 
   return (
@@ -105,7 +83,7 @@ export default function Navbar() {
           {/* ✅ When user logged in */}
           {user ? (
             <>
-              {/* Messages */}
+              {/* Messages Icon */}
               <Link
                 to="/messages"
                 className="btn btn-ghost btn-circle hover:bg-tufts"
@@ -126,7 +104,7 @@ export default function Navbar() {
                 >
                   <UserCircle className="w-6 h-6" />
                   <span className="font-medium capitalize">
-                    {user.name || user.fullName || "User"}
+                    {user.fullName || "User"}
                   </span>
                 </button>
 
@@ -164,7 +142,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* ✅ Mobile Menu Button */}
+        {/* ✅ Mobile Menu Toggle */}
         <button
           className="md:hidden text-black"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -173,7 +151,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* ✅ Mobile Dropdown Menu */}
+      {/* ✅ Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-lg border-t border-gray-200">
           {navLinks.map((link) => (

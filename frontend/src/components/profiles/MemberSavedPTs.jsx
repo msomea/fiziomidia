@@ -1,57 +1,44 @@
 import React, { useEffect, useState } from "react";
-import { getSavedPTsByMember } from "../../api/users";
+import { getSavedPTsByMember  } from "../../api/users";
+import { useAuth } from "../../context/AuthContext";
 
 const MemberSavedPTs = () => {
+  const { user } = useAuth(); 
   const [savedPTs, setSavedPTs] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSavedPTs = async () => {
+    const fetchPTs = async () => {
+      if (!user?._id) return;
       try {
-        const response = await getSavedPTsByMember();
-
-        // ✅ Normalize the data
-        const data = response?.data;
-        if (Array.isArray(data)) {
-          setSavedPTs(data);
-        } else if (Array.isArray(data?.savedPTs)) {
-          setSavedPTs(data.savedPTs);
-        } else {
-          setSavedPTs([]);
-          console.warn("Unexpected API response for saved PTs:", data);
-        }
-      } catch (error) {
-        console.error("Error fetching saved PTs:", error);
-        setSavedPTs([]);
-      } finally {
-        setLoading(false);
+        const PTs = await getSavedPTsByMember(user._id);
+        setSavedPTs(PTs);
+      } catch (err) {
+        console.error("Failed to fetch appointments:", err);
       }
     };
-
-    fetchSavedPTs();
-  }, []);
-
-  if (loading) return <p>Loading saved physiotherapists...</p>;
+    fetchPTs();
+  }, [user]);
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Saved Physiotherapists</h2>
-      {savedPTs.length === 0 ? (
-        <p>No saved physiotherapists found.</p>
-      ) : (
-        <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <section className="bg-white shadow-sm rounded-2xl p-5">
+      <h2 className="text-xl font-semibold text-black mb-3">Saved PTs</h2>
+      {savedPTs.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {savedPTs.map((pt) => (
-            <li
+            <div
               key={pt._id}
-              className="border rounded-lg p-3 shadow hover:shadow-md transition"
+              className="border border-gray-100 rounded-xl p-4 hover:shadow-md transition"
             >
-              <h3 className="font-semibold">{pt.name || pt.fullName}</h3>
-              <p>{pt.specialty || "Physiotherapist"}</p>
-            </li>
+              <h3 className="font-semibold text-gray-800">{pt.name}</h3>
+              <p className="text-gray-600 text-sm">{pt.specialty}</p>
+              <p className="text-gray-500 text-sm">{pt.location}</p>
+            </div>
           ))}
-        </ul>
+        </div>
+      ) : (
+        <p className="text-gray-500">You haven’t saved any physiotherapists yet.</p>
       )}
-    </div>
+    </section>
   );
 };
 

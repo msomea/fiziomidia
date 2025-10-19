@@ -1,64 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { getAppointmentsByMember } from "../../api/appointments";
-import { useParams } from "react-router";
+import { useAuth } from "../../context/AuthContext"; // ✅ import auth context
 
 const MemberAppointments = () => {
-  const { id } = useParams();
-  const [appointments, setAppointments] = useState([]); // ✅ starts as empty array
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user } = useAuth(); 
+  const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
-    const fetchAppointments = async () => {
+    const fetchData = async () => {
+      if (!user?._id) return;
       try {
-        setLoading(true);
-        const data = await getAppointmentsByMember(id);
-        setAppointments(data || []); // ✅ fallback to empty array
+        const data = await getAppointmentsByMember(user._id);
+        setAppointments(data);
       } catch (err) {
-        console.error("Error fetching appointments:", err);
-        setError("Failed to load appointments");
-      } finally {
-        setLoading(false);
+        console.error("Failed to fetch appointments:", err);
       }
     };
-    fetchAppointments();
-  }, [id]);
-
-  if (loading) {
-    return <p className="text-gray-600 text-center">Loading appointments...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-600 text-center">{error}</p>;
-  }
+    fetchData();
+  }, [user]);
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold mb-4 text-caribbean">My Appointments</h2>
-
+    <section className="bg-white p-5 rounded-2xl shadow-sm">
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">
+        Upcoming Appointments
+      </h2>
       {appointments.length > 0 ? (
-        <ul>
-          {appointments.map((appt) => (
-            <li key={appt._id} className="p-4 mb-3 bg-white rounded-lg shadow-sm">
-              <p>
-                <strong>Physiotherapist:</strong> {appt.pt?.name || "Unknown"}
-              </p>
-              <p>
-                <strong>Status:</strong> {appt.status || "Pending"}
-              </p>
-              <p>
-                <strong>Date:</strong>{" "}
-                {appt.createdAt
-                  ? new Date(appt.createdAt).toLocaleDateString()
-                  : "N/A"}
-              </p>
+        <ul className="space-y-3">
+          {appointments.map((a) => (
+            <li
+              key={a._id}
+              className="flex justify-between border-b border-gray-100 pb-2"
+            >
+              <span>{a.physiotherapist?.name || "Physiotherapist"}</span>
+              <span>{new Date(a.date).toLocaleDateString()}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-gray-600">No appointments found.</p>
+        <p className="text-gray-500">No upcoming appointments.</p>
       )}
-    </div>
+    </section>
   );
 };
 

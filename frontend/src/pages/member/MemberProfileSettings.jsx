@@ -1,24 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+import { updateProfile } from "../../api/profile";
 
 export default function MemberProfileSettings() {
+  const { user, setUser } = useAuth();
   const [formData, setFormData] = useState({
-    name: "Brian Kileo",
-    email: "brian.kileo@example.com",
-    phone: "+255 712 345 678",
-    location: "Dar es Salaam",
-    bio: "Enthusiastic about fitness and community wellness.",
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    bio: "",
     password: "",
     confirmPassword: "",
+    profileImageUrl: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        location: user.location || "",
+        bio: user.bio || "",
+        profileImageUrl: user.profileImageUrl || "",
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setFormData((prev) => ({ ...prev, profileImageUrl: URL.createObjectURL(file) }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    window.alert("Profile updated successfully!");
+    setLoading(true);
+
+    if (formData.password && formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const dataToSend = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== "confirmPassword") dataToSend.append(key, value);
+      });
+
+      if (imageFile) dataToSend.append("avatar", imageFile);
+
+      const updatedUser = await updateProfile(dataToSend);
+
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      console.error("Profile update failed:", err);
+      toast.error(err.response?.data?.error || "Profile update failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,11 +83,38 @@ export default function MemberProfileSettings() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex items-center gap-4">
+
+            {/* <img
+              src={formData.profileImageUrl || user.profileImageUrl}
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover border"
+            /> */}
+
+            <img
+              src={
+                formData.profileImageUrl
+                  ? formData.profileImageUrl.startsWith("http")
+                    ? formData.profileImageUrl
+                    : `http://localhost:4000${formData.profileImageUrl}`
+                  : user?.profileImageUrl
+                  ? user.profileImageUrl.startsWith("http")
+                    ? user.profileImageUrl
+                    : `http://localhost:4000${user.profileImageUrl}`
+                  : "/default-avatar.png"
+              }
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover border"
+            />
+
+            <input type="file" accept="image/*" onChange={handleImageChange} />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
               label="Full Name"
-              name="name"
-              value={formData.name}
+              name="fullName"
+              value={formData.fullName}
               onChange={handleChange}
             />
             <InputField
@@ -90,9 +171,12 @@ export default function MemberProfileSettings() {
 
           <button
             type="submit"
-            className="btn bg-caribbean hover:bg-tufts text-white w-full font-semibold"
+            className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+            disabled={loading}
           >
-            Save Changes
+            {loading ? "Saving..." : "Save Changes"}
           </button>
         </form>
       </div>

@@ -32,6 +32,8 @@ app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
+app.use("/uploads", express.static("uploads"));
+
 
 // --- Routes ---
 app.use("/api/admin", adminRoutes);

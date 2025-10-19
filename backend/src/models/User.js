@@ -43,6 +43,8 @@ const UserSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
   lastLogin: Date,
   isLoggedIn: { type: Boolean, default: false },
+  location: { type: String },
+  bio: String,
 });
 
 export default mongoose.model("User", UserSchema);

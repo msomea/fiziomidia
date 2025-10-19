@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router";
+import axios from "axios";
 import {
   Home,
   Calendar,
@@ -17,9 +18,51 @@ import {
 } from "../../components/profiles";
 
 import avatar from "../../assets/avatar.jpg";
+import { useAuth} from "../../context/AuthContext"; 
 
 const MemberDashboard = () => {
+  const { user, logout } = useAuth();
+  const [memberData, setMemberData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    axios
+      .get("/api/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        setMemberData(res.data);
+      })
+      .catch((err) => {
+        console.error("Error fetching member data:", err);
+        if (err.response?.status === 401) {
+          logout();
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-caribbean">
+        Loading your profile...
+      </div>
+    );
+  }
+
+  if (!memberData) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500">
+        Unable to load profile. Please login again.
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
@@ -28,7 +71,13 @@ const MemberDashboard = () => {
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
           {/* Member Avatar */}
           <img
-            src={avatar}
+            src={
+              memberData.profileImageUrl
+                ? memberData.profileImageUrl.startsWith("http")
+                  ? memberData.profileImageUrl
+                  : `http://localhost:4000${memberData.profileImageUrl}`
+                : avatar
+            }
             alt="Member Profile"
             className="w-28 h-28 rounded-full object-cover border-4 border-caribbean"
           />
@@ -36,24 +85,23 @@ const MemberDashboard = () => {
           {/* Basic Info */}
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-black">
-              Brian Kileo
+              {memberData.fullName}
             </h1>
             <p className="text-sm md:text-base text-gray-600">
-              Member since January 2024
-            </p>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Dar es Salaam, Tanzania
+              Member since {new Date(memberData.createdAt).toLocaleDateString()}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
-                to="/settings/member/:id"
+                to={`/settings/member/${memberData._id}`}
                 className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"
               >
                 Edit Profile
               </Link>
-              <button className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
+              <button
+                onClick={logout}
+                className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white"
+              >
                 Log Out
               </button>
             </div>
@@ -65,18 +113,17 @@ const MemberDashboard = () => {
       <div className="max-w-5xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          <MemberDetails />
-          <MemberAppointments />
-          <MemberSavedPTs />
+          <MemberDetails member={memberData} />
+          <MemberAppointments memberId={memberData._id} />
+          <MemberSavedPTs memberId={memberData._id} />
         </div>
 
-        {/* Right Sidebar (optional) */}
+        {/* Right Sidebar */}
         <div className="space-y-6">
           <div className="bg-white shadow-sm rounded-2xl p-5">
             <h2 className="text-lg font-semibold text-black mb-3">Reminders</h2>
             <p className="text-sm text-gray-600">
-              Stay consistent with your exercises. Your next appointment is in 2
-              days!
+              Stay consistent with your exercises. Your next appointment is in 2 days!
             </p>
           </div>
         </div>
@@ -95,7 +142,7 @@ const MemberDashboard = () => {
           <div className="absolute bottom-16 right-0 bg-white shadow-lg rounded-2xl p-4 w-56 flex flex-col gap-3">
             <MemberNavLink to="/" icon={<Home size={18} />} label="Home" />
             <MemberNavLink
-              to="/appointments/:id"
+              to={`/appointments/${memberData._id}`}
               icon={<Calendar size={18} />}
               label="Appointments"
             />
@@ -105,11 +152,17 @@ const MemberDashboard = () => {
               label="Forum"
             />
             <MemberNavLink
-              to="/settings/member/:id"
+              to={`/settings/member/${memberData._id}`}
               icon={<Settings size={18} />}
               label="Settings"
             />
-            <MemberNavLink to="/logout" icon={<LogOut size={18} />} label="Logout" />
+            <button
+              onClick={logout}
+              className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
           </div>
         )}
       </div>
