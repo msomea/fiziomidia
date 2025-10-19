@@ -16,7 +16,7 @@ const HeroSection = () => {
           <Link to="/signup" className="btn bg-white text-caribbean hover:bg-alice border-none">
             Get Started
           </Link>
-          <Link to="/forum" className="btn btn-outline text-white border-white hover:bg-white hover:text-caribbean">
+          <Link to="/forum" className="btn btn-outline text-white border border-white hover:bg-white hover:text-caribbean">
             Visit Forum
           </Link>
         </div>

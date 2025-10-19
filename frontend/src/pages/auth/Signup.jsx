@@ -28,17 +28,8 @@ export default function Signup() {
       });
 
       toast.success("Registration successful!");
-
-      // ✅ If your backend returns tokens on signup, auto-login:
-      if (res.data?.accessToken) {
-        const { user, accessToken, refreshToken } = res.data;
-        login(user, { accessToken, refreshToken });
-        navigate("/");
-      } else {
-        // Otherwise, redirect to login
-        navigate("/login");
-      }
-
+      navigate("/login");
+      
     } catch (err) {
       console.error("Signup error:", err);
       toast.error(err.response?.data?.error || "Registration failed");

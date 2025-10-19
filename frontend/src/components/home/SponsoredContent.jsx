@@ -45,13 +45,13 @@ const SponsoredContent = () => {
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="btn btn-sm bg-black btn-outline p-1 mx-1"
+            className="btn btn-outline btn-sm bg-gray-600 text-white border-caribbean border p-1 mx-1 disabled:opacity-50"
           >
             Prev
           </button>
           <button
             onClick={() => setPage(page + 1)}
-            className="btn btn-sm bg-caribbean text-white p-1 mx-1"
+            className="btn btn-sm bg-caribbean text-white p-1 mx-1 hover:bg-tufts"
           >
             Next
           </button>

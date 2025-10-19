@@ -20,9 +20,9 @@ const ForumTopics = ({ topics, onSelectTopic }) => {
       {/* Header with Sorting */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-caribbean">Topics</h2>
-        <fieldset className="fieldset w-24 text-white">
+        <fieldset className="fieldset w-32 p-1 text-white">
           <select
-            className="select select-bordered select-sm"
+            className="select p-1 bg-gray-500 select-bordered select-sm"
             value={sortType}
             onChange={(e) => setSortType(e.target.value)}
           >

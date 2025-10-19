@@ -72,7 +72,7 @@ const FindProfessionals = () => {
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="btn btn-sm bg-black text-white btn-outline p-1 mx-1 disabled:opacity-50"
+          className="btn btn-outline btn-sm bg-gray-600 text-white border-caribbean border p-1 mx-1 disabled:opacity-50"
         >
           Prev
         </button>

@@ -56,7 +56,7 @@ async function seed() {
     );
 
     // Physiotherapists
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       users.push(
         await User.create({
           email: `pt${i}@fiziomidia.com`,
@@ -139,7 +139,7 @@ async function seed() {
 
     // 4. Create ForumSubs
     const forumSubs = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 10; i++) {
       const createdBy = randomItem(users);
       forumSubs.push(
         await ForumSub.create({
@@ -233,7 +233,7 @@ async function seed() {
 
     // 9. Create Promotions
     const promotions = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 10; i++) {
       promotions.push(
         await Promotion.create({
           pt: randomItem(pts)._id,

@@ -30,7 +30,7 @@ export default function PTDashboard() {
   const promotion = { daysLeft: 7, renewalDate: "Oct 20, 2025" };
 
   return (
-    <div className="relative min-h-screen bg-alice text-black p-4 md:p-6">
+    <div className="relative min-h-screen bg-alice mt-10 text-black p-4 md:p-6">
       {/* Header */}
       <h1 className="text-2xl font-bold mb-4">My Dashboard</h1>
 
