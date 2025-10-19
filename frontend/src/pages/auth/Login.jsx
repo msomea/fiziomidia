@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
-import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
@@ -21,15 +20,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await API.post("/auth/login", { email, password });
-
-      const { user, accessToken, refreshToken } = res.data;
-
-      // ✅ Save to Auth Context (updates Navbar automatically)
-      login(user, { accessToken, refreshToken });
+      // ✅ Call AuthContext login with credentials
+      const user = await login({ email, password });
 
       toast.success("Login successful!");
-      setLoading(false);
 
       // ✅ Redirect based on role
       if (user.role === "physiotherapist")
@@ -38,9 +32,11 @@ export default function Login() {
         navigate(`/dashboard/member/${user._id}`);
       else if (user.role === "admin") navigate(`/dashboard/admin`);
       else navigate("/");
+
     } catch (err) {
       console.error("Login failed:", err);
-      toast.error(err.response?.data?.error || "Invalid credentials");
+      toast.error(err.response?.data?.error || err.message || "Invalid credentials");
+    } finally {
       setLoading(false);
     }
   };

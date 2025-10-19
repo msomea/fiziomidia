@@ -4,6 +4,9 @@ import User from "../models/User.js";
 
 export const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  return res.status(401).json({ error: "Unauthorized" });
+}
   const token = authHeader.trim().split(" ")[1];
 
   if (!token) return res.status(401).json({ error: "No token provided" });

@@ -40,11 +40,19 @@ const UserSchema = new Schema({
   phone: String,
   profileImageUrl: String,
   ptProfile: PtProfileSchema,
+  location: { type: String },
+  bio: String,
   createdAt: { type: Date, default: Date.now },
   lastLogin: Date,
   isLoggedIn: { type: Boolean, default: false },
-  location: { type: String },
-  bio: String,
-});
+
+  // 🔹 Refresh token storage
+  refreshTokens: [
+    {
+      token: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+});;
 
 export default mongoose.model("User", UserSchema);

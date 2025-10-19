@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../api/profile";
+import avatar from "../../assets/avatar.jpg";
 
 export default function MemberProfileSettings() {
   const { user, setUser } = useAuth();
@@ -38,11 +39,12 @@ export default function MemberProfileSettings() {
   };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setImageFile(file);
-    setFormData((prev) => ({ ...prev, profileImageUrl: URL.createObjectURL(file) }));
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+  const previewUrl = URL.createObjectURL(file);
+  setImageFile(file);
+  setFormData((prev) => ({ ...prev, profileImageUrl: previewUrl }));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,10 +65,14 @@ export default function MemberProfileSettings() {
       if (imageFile) dataToSend.append("avatar", imageFile);
 
       const updatedUser = await updateProfile(dataToSend);
-
+      
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Profile updated successfully!");
+      setFormData((prev) => ({
+  ...prev,
+  profileImageUrl: updatedUser.profileImageUrl,
+}));
     } catch (err) {
       console.error("Profile update failed:", err);
       toast.error(err.response?.data?.error || "Profile update failed");
@@ -101,7 +107,7 @@ export default function MemberProfileSettings() {
                   ? user.profileImageUrl.startsWith("http")
                     ? user.profileImageUrl
                     : `http://localhost:4000${user.profileImageUrl}`
-                  : "/default-avatar.png"
+                  : avatar
               }
               alt="Avatar"
               className="w-20 h-20 rounded-full object-cover border"

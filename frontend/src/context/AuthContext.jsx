@@ -1,48 +1,70 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
+import { toast } from "react-hot-toast";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-  const saved = localStorage.getItem("user");
-  return saved ? JSON.parse(saved) : null;
-}); 
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [loading, setLoading] = useState(true);
 
-  // Fetch current user
+  // Load current user on app start
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    axios.get("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => setUser(res.data))
-      .catch(() => {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-      })
-      .finally(() => setLoading(false));
+    const loadUser = async () => {
+      try {
+        const stored = localStorage.getItem("user");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.accessToken) {
+            const data = await fetchCurrentUser();
+            setUser({ ...parsed, ...data });
+            localStorage.setItem("user", JSON.stringify({ ...parsed, ...data }));
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch user:", err);
+        setUser(null);
+        localStorage.clear();
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadUser();
   }, []);
 
-  const login = (userData, tokens) => {
-    localStorage.setItem("accessToken", tokens.accessToken);
-    localStorage.setItem("refreshToken", tokens.refreshToken);
-    setUser(userData);
+  const login = async ({ email, password }) => {
+    try {
+      if (!email || !password) throw new Error("Email and password required");
+
+      const data = await loginUser({ email, password });
+
+      const newUser = { ...data.user, accessToken: data.accessToken };
+
+      setUser(newUser);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+
+      return data.user;
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Login failed");
+      throw err;
+    }
   };
 
   const logout = async () => {
-    const token = localStorage.getItem("accessToken");
-    await axios.post("/api/auth/logout", {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    localStorage.clear();
-    setUser(null);
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setUser(null);
+      localStorage.clear();
+      window.location.href = "/";
+    }
   };
 
   return (
