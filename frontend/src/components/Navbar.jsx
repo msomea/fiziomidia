@@ -17,10 +17,10 @@ export default function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Get user + logout directly from global AuthContext
+  // Get user + logout directly from global AuthContext
   const { user, logout } = useAuth();
 
-  // ✅ Determine dashboard path based on role
+  //  Determine dashboard path based on role
   const getDashboardPath = () => {
     if (!user) return "/login";
     if (user.role === "physiotherapist") return `/dashboard/pt/${user._id}`;
@@ -29,7 +29,7 @@ export default function Navbar() {
     return "/";
   };
 
-  // ✅ Navbar links
+  // Navbar links
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
@@ -37,7 +37,7 @@ export default function Navbar() {
     { name: "Education", path: "/education" },
   ];
 
-  // ✅ Handle logout globally
+  // Handle logout globally
   const handleLogout = async () => {
     try {
       await logout(); // from context
@@ -52,7 +52,7 @@ export default function Navbar() {
   return (
     <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center py-3">
-        {/* ✅ Logo */}
+        {/*  Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img
             src={logo}
@@ -64,7 +64,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        {/* ✅ Desktop Menu */}
+        {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <NavLink
@@ -80,7 +80,7 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-          {/* ✅ When user logged in */}
+          {/* When user logged in */}
           {user ? (
             <>
               {/* Messages Icon */}
@@ -132,7 +132,7 @@ export default function Navbar() {
               </div>
             </>
           ) : (
-            // ✅ When not logged in
+            // When not logged in
             <Link
               to="/login"
               className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
@@ -142,7 +142,7 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* ✅ Mobile Menu Toggle */}
+        {/*  Mobile Menu Toggle */}
         <button
           className="md:hidden text-black"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -151,7 +151,7 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* ✅ Mobile Menu */}
+      {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white shadow-lg border-t border-gray-200">
           {navLinks.map((link) => (
