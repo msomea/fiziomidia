@@ -1,19 +1,23 @@
 import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
-import {
-  updateSponsorship,
-  removeSponsorship
-} from "../controllers/adminController.js";
+import * as admin from "../controllers/adminController.js";
 
 const router = express.Router();
 // route /api/admin
-// 🔹 All routes require admin authentication
+// All routes require admin authentication
 // router.use(authenticate, authenticateAdmin);
 
+// List all users (admin only)
+router.get("/users", admin.listUsers);
+
+// admin can all view appointments
+router.get("/appointments", admin.getAllAppointments);
+
 // Update / Add sponsorship
-router.put("/subs/:id/sponsorship", updateSponsorship);
+router.put("/subs/:id/sponsorship", admin.updateSponsorship);
 
 // Remove sponsorship
-router.put("/subs/:id/sponsorship/remove", removeSponsorship);
+router.put("/subs/:id/sponsorship/remove", admin.removeSponsorship);
+
 
 export default router;

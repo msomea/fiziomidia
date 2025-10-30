@@ -11,7 +11,7 @@ import {
 } from "../controllers/appointmentController.js";
 
 const router = express.Router();
-
+// api/appointments
 // Members can request appointments
 router.post("/", authenticate, requireRole("member"), requestAppointment);
 

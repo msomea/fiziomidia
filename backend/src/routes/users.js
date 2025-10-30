@@ -18,9 +18,6 @@ router.get("/profile", authenticate, userController.getProfile);
 // Update current user profile
 router.put("/profile", authenticate, userController.uploadAvatar.single("avatar"), userController.updateProfile);
 
-// List all users (admin only)
-router.get("/", authenticate, requireRole("admin"), userController.listUsers);
-
 // Get saved PTs for a member
 router.get("/:id/saved-pts", authenticate, requireRole("member", "admin"), getSavedPTsByMember );
 

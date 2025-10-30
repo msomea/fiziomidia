@@ -1,4 +1,27 @@
 import ForumSub from "../models/ForumSub.js";
+import User from "../models/User.js";
+
+// List all users (admin only)
+export const listUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-passwordHash").limit(100);
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
+
+// List all Appointments
+export const getAllAppointments = async (req, res) => {
+  try {
+    const appts = await Appointment.find()
+    .sort({ createdAt: -1 });
+    res.json({ appts });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch Appointments" });
+  }
+  
+};
 
 // 🔹 Update or Add Sponsorship
 export const updateSponsorship = async (req, res) => {
