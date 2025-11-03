@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { profile } from "console";
 
 const SALT_ROUNDS = 10;
 
@@ -44,6 +43,7 @@ export const getUserById = async (req, res) => {
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
+
     const {
       fullName,
       email,
@@ -51,7 +51,17 @@ export const updateProfile = async (req, res) => {
       location,
       bio,
       password,
-      profileImageUrl
+      profileImageUrl,
+      // Upgrade to physiotherapist
+      upgradeToPhysiotherapist, // boolean or string "true"
+      institution,
+      isPrivatePractice,
+      clinicIds,
+      licenseImageUrl,
+      licenseNumber,
+      speciality,
+      yearsOfExperience,
+      workingHours,
     } = req.body;
 
     const updateData = {
@@ -60,34 +70,69 @@ export const updateProfile = async (req, res) => {
       ...(phone && { phone }),
       ...(location && { location }),
       ...(bio && { bio }),
-      ...(profileImageUrl && { profileImageUrl }), // for direct URL updates
+      ...(profileImageUrl && { profileImageUrl }),
     };
 
-    // Handle avatar upload (from multer)
+    // Handle avatar upload (if multer used)
     if (req.file) {
       updateData.profileImageUrl = `/uploads/avatars/${req.file.filename}`;
     }
 
-    // Hash password if provided
+    // Hash new password if provided
     if (password) {
       const hash = await bcrypt.hash(password, SALT_ROUNDS);
       updateData.passwordHash = hash;
     }
 
+    // 🔹 Handle Member → Physiotherapist upgrade
+    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      if (user.role === "physiotherapist") {
+        return res
+          .status(400)
+          .json({ error: "User is already a Physiotherapist" });
+      }
+
+      updateData.role = "physiotherapist";
+      updateData.ptProfile = {
+        institution,
+        isPrivatePractice: isPrivatePractice !== undefined ? isPrivatePractice : true,
+        clinicIds: clinicIds ? [].concat(clinicIds) : [],
+        licenseImageUrl,
+        licenseNumber,
+        bio,
+        speciality: speciality ? [].concat(speciality) : [],
+        yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
+        workingHours: workingHours || [],
+        licenseVerified: false,
+        promotionActiveUntil: null,
+      };
+    }
+
+    // Perform update
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true, // return updated document
-    }).select("-passwordHash"); // exclude password hash from response
+      new: true,
+    }).select("-passwordHash");
 
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(updatedUser);
+    res.json({
+      message:
+        upgradeToPhysiotherapist
+          ? "Profile updated and upgraded to Physiotherapist"
+          : "Profile updated successfully",
+      user: updatedUser,
+    });
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
+
 
 
 

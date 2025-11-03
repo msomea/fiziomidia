@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import axios from "axios";
 import {
   Home,
@@ -18,14 +18,28 @@ import {
 } from "../../components/profiles";
 
 import avatar from "../../assets/avatar.jpg";
-import { useAuth} from "../../context/AuthContext"; 
+import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
+
+
 
 const MemberDashboard = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUpgradeForm, setShowUpgradeForm] = useState(false);
+  const [formData, setFormData] = useState({
+    institution: "",
+    isPrivatePractice: true,
+    licenseNumber: "",
+    speciality: "",
+    yearsOfExperience: "",
+    bio: "",
+  });
 
+  // Fetch member data
   useEffect(() => {
     if (!user) return;
 
@@ -64,6 +78,32 @@ const MemberDashboard = () => {
     );
   }
 
+  // Submit PT Upgrade Form
+  const handleUpgradeSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("accessToken");
+    try {
+      const res = await axios.put(
+        "/api/users/profile",
+        {
+          upgradeToPhysiotherapist: true,
+          institution: formData.institution,
+          isPrivatePractice: formData.isPrivatePractice,
+          licenseNumber: formData.licenseNumber,
+          speciality: formData.speciality.split(",").map((s) => s.trim()),
+          yearsOfExperience: Number(formData.yearsOfExperience),
+          bio: formData.bio,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("You are now a Physiotherapist!");
+      navigate(`/dashboard/pt/${memberData._id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Upgrade failed");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
       {/* Header Section */}
@@ -98,6 +138,17 @@ const MemberDashboard = () => {
               >
                 Edit Profile
               </Link>
+
+              {/* Show upgrade button only if member */}
+              {memberData.role === "member" && (
+                <button
+                  onClick={() => setShowUpgradeForm(true)}
+                  className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"
+                >
+                  Become a Physiotherapist
+                </button>
+              )}
+
               <button
                 onClick={logout}
                 className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white"
@@ -166,6 +217,82 @@ const MemberDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Upgrade to PT Modal */}
+      {showUpgradeForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-lg w-96">
+            <h2 className="text-lg font-semibold mb-4 text-center">
+              Upgrade to Physiotherapist
+            </h2>
+            <form onSubmit={handleUpgradeSubmit} className="space-y-3">
+              <input
+                type="text"
+                placeholder="Institution"
+                value={formData.institution}
+                onChange={(e) =>
+                  setFormData({ ...formData, institution: e.target.value })
+                }
+                className="w-full border rounded-lg p-2"
+                required
+              />
+              <input
+                type="text"
+                placeholder="License Number"
+                value={formData.licenseNumber}
+                onChange={(e) =>
+                  setFormData({ ...formData, licenseNumber: e.target.value })
+                }
+                className="w-full border rounded-lg p-2"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Speciality (comma separated)"
+                value={formData.speciality}
+                onChange={(e) =>
+                  setFormData({ ...formData, speciality: e.target.value })
+                }
+                className="w-full border rounded-lg p-2"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Years of Experience"
+                value={formData.yearsOfExperience}
+                onChange={(e) =>
+                  setFormData({ ...formData, yearsOfExperience: e.target.value })
+                }
+                className="w-full border rounded-lg p-2"
+                required
+              />
+              <textarea
+                placeholder="Short Bio"
+                value={formData.bio}
+                onChange={(e) =>
+                  setFormData({ ...formData, bio: e.target.value })
+                }
+                className="w-full border rounded-lg p-2"
+              />
+              <div className="flex justify-between mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowUpgradeForm(false)}
+                  className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-caribbean text-white rounded-lg hover:bg-[#03bb74]"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
