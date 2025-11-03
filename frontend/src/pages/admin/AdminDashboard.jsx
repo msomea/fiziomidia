@@ -1,22 +1,37 @@
 import { useEffect, useState } from "react";
-import { fetchCurrentUser } from "../../api/auth";
 import toast from "react-hot-toast";
+import { fetchCurrentUser } from "../../api/auth";
+import { fetchAppointments } from "../../api/appointments";
+
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
-
+  // const [appointments, setAppointments] = useState([]);
   useEffect(() => {
     const loadUser = async () => {
       try {
         const currentUser = await fetchCurrentUser();
         setUser(currentUser);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error(error);
         toast.error("Failed to load admin data");
       }
     };
     loadUser();
+
+    // const loadAppointment = async () => {
+    //   try {
+    //     const currentAppointments = await fetchAppointments();
+    //     setAppointments(currentAppointments);
+    //   } catch (error) {
+    //     console.error(error);
+    //     toast.error("Failed to fetch Appointments");
+    //   }
+    // };
+    // loadAppointment();
+
   }, []);
+
 
   return (
     <div className="p-6 mt-16">
@@ -33,8 +48,21 @@ export default function AdminDashboard() {
           <p className="text-gray-600 mt-2">Manage registered users  here.</p>
         </div>
         <div className="p-4 bg-white shadow rounded">
-          <h2 className="font-bold text-caribbean text-lg">Promotions</h2>
-          <p className="text-gray-600 mt-2">View or approve active promotions.</p>
+          <h2 className="font-bold text-caribbean text-lg">Appointments</h2>
+          <h2 className="font-bold text-caribbean text-lg">Clinic: </h2>
+          <p className="text-gray-600 mt-2">PT: </p>
+          <p className="text-gray-600 mt-2">Requester: </p>
+
+          {/* {appointments.map((appointment) => {
+            return (
+              <>
+              <h2 className="font-bold text-caribbean text-lg">Clinic: {appointment.clinic}</h2>
+              <p className="text-gray-600 mt-2">PT: {appointment.pt}</p>
+              <p className="text-gray-600 mt-2">Requester: {appointment.requester}</p>
+              </>
+            )
+          })} */}
+
         </div>
         <div className="p-4 bg-white shadow rounded">
           <h2 className="font-bold text-caribbean text-lg">Reports</h2>

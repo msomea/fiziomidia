@@ -8,24 +8,24 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  // ✅ Local states
+  // Local states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // ✅ Handle login form submission
+  // Handle login form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // ✅ Call AuthContext login with credentials
+      // Call AuthContext login with credentials
       const user = await login({ email, password });
 
       toast.success("Login successful!");
 
-      // ✅ Redirect based on role
+      // Redirect based on role
       if (user.role === "physiotherapist")
         navigate(`/dashboard/pt/${user._id}`);
       else if (user.role === "member")
@@ -51,7 +51,7 @@ export default function Login() {
           Login
         </h2>
 
-        {/* ✅ Email */}
+        {/* Email */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Email
@@ -65,7 +65,7 @@ export default function Login() {
           />
         </div>
 
-        {/* ✅ Password */}
+        {/* Password */}
         <div className="mb-4 relative">
           <label className="block text-gray-700 text-sm font-bold mb-2">
             Password

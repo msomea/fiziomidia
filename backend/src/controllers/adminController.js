@@ -1,5 +1,6 @@
 import ForumSub from "../models/ForumSub.js";
 import User from "../models/User.js";
+import Appointment from "../models/Appointment.js";
 
 // List all users (admin only)
 export const listUsers = async (req, res) => {
@@ -14,8 +15,7 @@ export const listUsers = async (req, res) => {
 // List all Appointments
 export const getAllAppointments = async (req, res) => {
   try {
-    const appts = await Appointment.find()
-    .sort({ createdAt: -1 });
+    const appts = await Appointment.find().sort({ createdAt: -1 });
     res.json({ appts });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch Appointments" });
