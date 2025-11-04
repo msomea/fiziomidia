@@ -98,6 +98,35 @@ export const stripeWebhook = async (req, res) => {
   }
 };
 
+// GET /api/promotions?ptId=<id> Returns active promotion
+export const getPTPromotion = async (req, res) => {
+  try {
+    const { ptId } = req.query;
+
+    if (!ptId) return res.status(400).json({ error: "ptId is required" });
+
+    const promotion = await Promotion.findOne({
+      pt: ptId,
+      status: "active",
+    });
+
+    if (!promotion) {
+      return res.json({ active: false });
+    }
+
+    const daysLeft = Math.ceil((promotion.endDate - new Date()) / (1000 * 60 * 60 * 24));
+
+    res.json({
+      active: true,
+      promotion,
+      daysLeft,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch promotion" });
+  }
+};
+
 // List all promotions (admin or general view)
 export const getPromotions = async (req, res) => {
   try {

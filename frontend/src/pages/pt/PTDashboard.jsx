@@ -1,52 +1,122 @@
-import { useState } from "react";
-import Statistics from "../../components/dashboard/Statistics";
-import UpcomingAppointments from "../../components/dashboard/UpcomingAppointments";
-import ForumPosts from "../../components/dashboard/ForumPosts";
-import PromotionStatus from "../../components/dashboard/PromotionStatus";
-import { Menu, X, Home, Calendar, Users, MessageSquare, Megaphone, Settings, LogOut } from "lucide-react";
-import { Link } from "react-router";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, useNavigate, Link } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+
+import Statistics from "../../components/dashboard/pt/Statistics";
+import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
+import ForumPosts from "../../components/dashboard/pt/ForumPosts";
+import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
+
+import {
+  Menu,
+  X,
+  Home,
+  Calendar,
+  Users,
+  MessageSquare,
+  Megaphone,
+  Settings,
+  LogOut,
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function PTDashboard() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { _id } = useParams(); // PT ID
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const stats = [
-    { title: "Today’s Appointments", value: 4 },
-    { title: "Upcoming", value: 12 },
-    { title: "Pending Requests", value: 3 },
-    { title: "Promotion Days Left", value: 7 },
-  ];
+  const [ptProfile, setPtProfile] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [forumPosts, setForumPosts] = useState([]);
+  const [promotion, setPromotion] = useState(null);
+  const [stats, setStats] = useState({
+    totalAppointments: 0,
+    pendingRequests: 0,
+    totalForumPosts: 0,
+    promotionDaysLeft: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const appointments = [
-    { patient: "Jane Doe", time: "10:30 AM", type: "Rehab", status: "Confirmed" },
-    { patient: "Mark Elias", time: "11:00 AM", type: "Exercise Therapy", status: "Pending" },
-    { patient: "Asha Mushi", time: "1:00 PM", type: "Home Visit", status: "Confirmed" },
-  ];
+  useEffect(() => {
+    if (!user || !_id) return;
 
-  const posts = [
-    { title: "The role of balance training in elderly care", date: "2 days ago" },
-    { title: "Stretching for lower back pain relief", date: "5 days ago" },
-  ];
+    const token = localStorage.getItem("accessToken");
+    const headers = { Authorization: `Bearer ${token}` };
 
-  const promotion = { daysLeft: 7, renewalDate: "Oct 20, 2025" };
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [ptRes, apptRes, forumRes, promoRes, statsRes] = await Promise.all([
+          axios.get(`/api/pts/${_id}`, { headers }),
+          axios.get(`/api/appointments?ptId=${_id}&limit=3`, { headers }),
+          axios.get(`/api/forum?ptId=${_id}&limit=3`, { headers }),
+          axios.get(`/api/promotions?ptId=${_id}`, { headers }),
+          axios.get(`/api/pts/${_id}/dashboard-stats`, { headers }),
+        ]);
+
+        setPtProfile(ptRes.data); // PT profile object
+        setAppointments(apptRes.data.appointments || []);
+        setForumPosts(forumRes.data.posts || []);
+        setPromotion(promoRes.data || null);
+        setStats(statsRes.data || statsRes); // dashboard stats
+        console.log(token)
+      } catch (err) {
+        console.error("Error loading PT dashboard:", err.response?.data || err.message);
+        toast.error("Failed to load dashboard. Check console for details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [user, _id]);
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-caribbean">
+        Loading PT Dashboard...
+      </div>
+    );
+  }
+
+  if (!ptProfile) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500">
+        Unable to load PT profile.
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-alice mt-10 text-black p-4 md:p-6">
       {/* Header */}
-      <h1 className="text-2xl font-bold mb-4">My Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4">{ptProfile.fullName}'s Dashboard</h1>
 
-      {/* Dashboard Content */}
+      {/* Statistics Widget */}
       <Statistics stats={stats} />
-      <UpcomingAppointments appointments={appointments} />
 
-      <div className="grid md:grid-cols-2 gap-4">
-        <ForumPosts posts={posts} />
-        <PromotionStatus promotion={promotion} />
+      {/* Upcoming Appointments */}
+      <UpcomingAppointments
+        appointments={appointments}
+        viewMore={`/appointments/${_id}`}
+      />
+
+      {/* Forum Posts & Promotion */}
+      <div className="grid md:grid-cols-2 gap-4 mt-4">
+        <ForumPosts posts={forumPosts} viewAll={`/forum/pt/${_id}`} />
+        <PromotionStatus
+          promotion={promotion}
+          extendLink={`/promotions/pt/${_id}`}
+          addLink={`/promotions/pt/${_id}/add`}
+        />
       </div>
 
       {/* Collapsible Bottom Navigation */}
       <div className="fixed bottom-4 right-4 md:right-8 z-40">
         <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          onClick={() => setIsMenuOpen((prev) => !prev)}
           className="btn bg-caribbean text-white rounded-full shadow-md"
         >
           {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -55,12 +125,18 @@ export default function PTDashboard() {
         {isMenuOpen && (
           <div className="absolute bottom-16 right-0 bg-white shadow-lg rounded-2xl p-4 w-56 flex flex-col gap-3">
             <PTNavLink to="/" icon={<Home size={18} />} label="Home" />
-            <PTNavLink to="/dashboard/pt/:id" icon={<Calendar size={18} />} label="Appointments" />
+            <PTNavLink to={`/appointments/${_id}`} icon={<Calendar size={18} />} label="Appointments" />
             <PTNavLink to="/patients" icon={<Users size={18} />} label="Patients" />
-            <PTNavLink to="/forum" icon={<MessageSquare size={18} />} label="Forum" />
-            <PTNavLink to="/promotions" icon={<Megaphone size={18} />} label="Promotions" />
-            <PTNavLink to="/settings/pt/:id" icon={<Settings size={18} />} label="Settings" />
-            <PTNavLink to="/logout" icon={<LogOut size={18} />} label="Logout" />
+            <PTNavLink to={`/forum/pt/${_id}`} icon={<MessageSquare size={18} />} label="Forum" />
+            <PTNavLink to={`/promotions/pt/${_id}`} icon={<Megaphone size={18} />} label="Promotions" />
+            <PTNavLink to={`/settings/pt/${_id}`} icon={<Settings size={18} />} label="Settings" />
+            <button
+              onClick={() => navigate("/logout")}
+              className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
           </div>
         )}
       </div>

@@ -12,6 +12,7 @@ import {
   deleteSub,
   updateSubSponsorship,
   removeSubSponsorship,
+  getPTPosts
 } from "../controllers/forumController.js";
 
 import {
@@ -56,4 +57,7 @@ router.post("/posts/:postId/comments", authenticate, addComment);
 // Delete comment (owner/admin)
 router.delete("/comments/:id", authenticate, deleteComment);
 
+// Get last N forum posts by PT
+// ?ptId=<id>&limit=3
+router.get("/", authenticate, getPTPosts);
 export default router;

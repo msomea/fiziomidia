@@ -1,6 +1,5 @@
 import Appointment from "../models/Appointment.js";
-import User from "../models/User.js";
-
+import Clinic from "../models/Clinic.js";
 // Request a new appointment
 export const requestAppointment = async (req, res) => {
   const { ptId, clinicId, scheduledAt, notes, durationMinutes } = req.body;
@@ -18,18 +17,49 @@ export const requestAppointment = async (req, res) => {
 
 // Get appointments
 export const getAppointments = async (req, res) => {
-  const { role } = req.query;
-  let filter = {};
-  if (req.user.role === "physiotherapist") filter = { pt: req.user._id };
-  if (req.user.role === "member") filter = { requester: req.user._id };
-  if (req.user.role === "admin" && role === "all") filter = {};
+  try {
+    console.log("🔹 Incoming request to getAppointments");
 
-  const appts = await Appointment.find(filter)
-    .populate("requester pt clinic")
-    .sort({ createdAt: -1 });
+    const { ptId, limit } = req.query;
+    console.log("Query:", req.query);
 
-  res.json({ appts });
+    // Ensure req.user exists
+    if (!req.user) {
+      console.log("⚠️ No req.user found");
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    console.log("Authenticated user:", req.user.role, req.user._id);
+
+    let filter = {};
+
+    if (req.user.role === "physiotherapist") {
+      filter.pt = req.user._id;
+    } else if (req.user.role === "member") {
+      filter.requester = req.user._id;
+    } else if (req.user.role === "admin" && ptId) {
+      filter.pt = ptId;
+    } else if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    console.log("Filter used:", filter);
+
+    const appts = await Appointment.find(filter)
+      .populate("requester pt clinic")
+      .sort({ createdAt: -1 })
+      .limit(Number(limit) || 3);
+
+    console.log("Fetched appointments:", appts.length);
+
+    res.json({ appointments: appts });
+  } catch (err) {
+    console.error("❌ Appointments API error:", err.message, err.stack);
+    res.status(500).json({ error: "Failed to fetch appointments" });
+  }
 };
+
+
 
 // Update appointment status
 export const updateAppointmentStatus = async (req, res) => {

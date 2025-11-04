@@ -43,6 +43,10 @@ export default function AppRoutes() {
       <Route path="/profile/member/:id" element={<MemberProfile />} />
       <Route path="/find-professionals" element={<FindProfessionals />} />
 
+      {/* Dashboard Routes */}
+      <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />
+
+
       {/* Protected Routes - To be implemented with authentication */ }
       <Route path="/dashboard/pt/:id" element={<PTDashboard/>} />
       <Route path="/dashboard/member/:id" element={<MemberDashboard />} />

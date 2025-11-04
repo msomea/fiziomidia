@@ -1,6 +1,6 @@
 export default function UpcomingAppointments({ appointments }) {
   return (
-    <div className="bg-white rounded-xl shadow p-4 mb-6">
+    <div className="bg-white rounded-xl shadow p-4 m-6">
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-semibold text-lg">Upcoming Appointments</h2>
         <button className="btn btn-sm bg-caribbean text-white hover:bg-tufts">

@@ -18,4 +18,6 @@ router.get("/:id", ptController.getPTById);
 // update pt (owner or admin)
 router.put("/:id", authenticate, requireRole("physiotherapist", "admin"), ptController.updatePTProfile);
 
+// get pt dashboard
+router.get("/:id/dashboard-stats",  ptController.getPTDashboardStats)
 export default router;

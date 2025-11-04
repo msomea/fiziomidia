@@ -4,6 +4,7 @@ import {
   createPromotionCheckout,
   getPromotions,
   stripeWebhook,
+  getPTPromotion
 } from "../controllers/promotionController.js";
 
 const router = express.Router();
@@ -23,4 +24,6 @@ router.post("/create-checkout-session", authenticate, createPromotionCheckout);
 // Stripe webhook (no auth needed)
 router.post("/webhook", express.raw({ type: "application/json" }), stripeWebhook);
 
+// Get promotions by PT
+router.get("/")
 export default router;

@@ -215,6 +215,27 @@ export const getPostById = async (req, res) => {
   }
 };
 
+// GET /api/forum?ptId=<id>&limit=3 → returns last 3 posts
+// GET /api/forum?ptId=<id> → returns all posts
+export const getPTPosts = async (req, res) => {
+  try {
+    const { ptId, limit } = req.query;
+
+    if (!ptId) return res.status(400).json({ error: "ptId is required" });
+
+    let query = Post.find({ author: ptId }).sort({ createdAt: -1 });
+
+    if (limit) query = query.limit(parseInt(limit));
+
+    const posts = await query.exec();
+
+    res.json(posts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch forum posts" });
+  }
+};
+
 // Delete post (author or admin)
 export const deletePost = async (req, res) => {
   const { id } = req.params;

@@ -19,7 +19,7 @@ router.post("/", authenticate, requireRole("member"), requestAppointment);
 router.get("/:id", authenticate, getAppointmentById);
 
 // PTs/admin can view appointments
-router.get("/", authenticate, requireRole("physiotherapist", "admin"), getAppointments);
+router.get("/", authenticate, getAppointments);
 
 // PT/admin can update appointment status
 router.put("/:id/status", authenticate, requireRole("physiotherapist", "admin"), updateAppointmentStatus);
@@ -29,5 +29,6 @@ router.delete("/:id", authenticate, deleteAppointment);
 
 // Get appointments by member
 router.get("/member/:id", authenticate, requireRole("member", "admin"), getAppointmentsByMember);
+
 
 export default router;
