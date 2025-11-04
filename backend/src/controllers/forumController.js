@@ -3,11 +3,14 @@ import Post from "../models/Post.js";
 import User from "../models/User.js";
 
 // ===== SUBS =====
-
-// List all forum subs with totalPosts dynamically calculated
+// List all forum subs with totalPosts dynamically calculated and pagination
 export const listSubs = async (req, res) => {
   try {
-    const subs = await ForumSub.aggregate([
+    const page = parseInt(req.query.page) || 1;      // default page 1
+    const limit = parseInt(req.query.limit) || 5;   // default 10 per page
+    const skip = (page - 1) * limit;
+
+    const subsAggregation = [
       {
         $lookup: {
           from: "posts",
@@ -21,21 +24,29 @@ export const listSubs = async (req, res) => {
           totalPosts: { $size: "$posts" },
         },
       },
-      {
-        $project: {
-          posts: 0,
-        },
-      },
+      { $project: { posts: 0 } },
       { $sort: { createdAt: -1 } },
-      { $limit: 100 },
-    ]);
+      { $skip: skip },
+      { $limit: limit },
+    ];
 
-    res.json({ subs });
+    const subs = await ForumSub.aggregate(subsAggregation);
+
+    // Count total subs for pagination info
+    const totalSubs = await ForumSub.countDocuments();
+
+    res.json({
+      subs,
+      page,
+      totalPages: Math.ceil(totalSubs / limit),
+      totalSubs,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch subs" });
   }
 };
+
 
 // Get single sub
 export const getSubById = async (req, res) => {
@@ -125,20 +136,36 @@ export const createPost = async (req, res) => {
   }
 };
 
-// List posts in a sub
+// List all posts in a sub (public view, paginated)
 export const listPosts = async (req, res) => {
   const { subId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
   try {
+    const totalPosts = await Post.countDocuments({ sub: subId });
+
     const posts = await Post.find({ sub: subId })
       .populate("author", "fullName email")
       .sort({ createdAt: -1 })
-      .limit(100);
-    res.json({ posts });
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({
+      posts,
+      meta: {
+        totalPosts,
+        currentPage: page,
+        totalPages: Math.ceil(totalPosts / limit),
+        perPage: limit,
+      },
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching posts:", err);
     res.status(500).json({ error: "Failed to fetch posts" });
   }
 };
+
 
 // Vote on a post
 export const votePost = async (req, res) => {

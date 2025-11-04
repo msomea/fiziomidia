@@ -11,49 +11,45 @@ import {
 
 const router = express.Router();
 
-// /api/forum
-// --- Forum Subs & Posts ---
-// Public routes
+/* -------------------------------
+   Forum Subforums & Posts
+--------------------------------*/
+
+// 📖 Public routes
 router.get("/subs", forum.listSubs);
 router.get("/subs/:id", forum.getSubById);
 router.get("/subs/:subId/posts", forum.listPosts);
+router.get("/posts/:id", forum.getPostById); 
 
-// Optional auth for getting single post
-router.get("/posts/:id", forum.getPostById);
-
-// Authenticated actions (vote, create)
+// 🧠 Authenticated actions
 router.post("/posts/:id/vote", authenticate, forum.votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), forum.createSub);
 router.post("/posts", authenticate, forum.createPost);
-router.delete("/subs/:id", authenticateAdmin, forum.deleteSub); // Admin only
-
-// Routes for Posts
+router.delete("/subs/:id", authenticateAdmin, forum.deleteSub); // admin only
 router.delete("/posts/:id", authenticate, forum.deletePost);
 router.put("/posts/:id", authenticate, forum.updatePost);
 
-// Sub Sponsoship
-// Update / Add sponsorship
-router.put("/subs/:id/sponsorship", forum.updateSubSponsorship);
-// Remove sponsorship
-router.put("/subs/:id/sponsorship/remove", forum.removeSubSponsorship);
+/* -------------------------------
+   Sponsorship Management
+--------------------------------*/
+router.put("/subs/:id/sponsorship", authenticate, forum.updateSubSponsorship);
+router.put("/subs/:id/sponsorship/remove", authenticate, forum.removeSubSponsorship);
 
-// Get last N forum posts by PT
-// ?ptId=<id>&limit=3
+/* -------------------------------
+   Physiotherapist Forum Activity
+--------------------------------*/
+
+// 🔹 Get all PT posts (paginated, e.g. PT forum page)
+router.get("/pt/:ptId", authenticate, forum.getPostsByPTId);
+
+// 🔹 Get last N posts by PT (dashboard view)
 router.get("/", authenticate, forum.getPTPosts);
-export default router;
 
-// Get all PT posts with pagination
-// GET /api/forum/pt/:ptId
-router.get("/pt/:ptId", authenticate, forum.getPostsByPTId)
-
-
-// --- Comments ---
-// Get comments for a post (public)
+/* -------------------------------
+   Comments
+--------------------------------*/
 router.get("/posts/:postId/comments", listComments);
-
-// Add comment (auth required)
 router.post("/posts/:postId/comments", authenticate, addComment);
-
-// Delete comment (owner/admin)
 router.delete("/comments/:id", authenticate, deleteComment);
 
+export default router;

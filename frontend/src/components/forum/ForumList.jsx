@@ -1,16 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, MessageCircle, Share2 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 
-const ForumList = ({ posts = [] }) => {
+const ForumList = ({ posts = [], loading }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1); // reset page when posts change
+  }, [posts]);
+
+  if (loading) return <p className="text-center mt-6 text-gray-500">Loading posts...</p>;
+  if (!posts.length) return <p className="text-center mt-6 text-gray-500">No posts yet.</p>;
 
   const totalPosts = posts.length;
   const totalPages = Math.ceil(totalPosts / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
   const endIndex = Math.min(startIndex + postsPerPage, totalPosts);
-
   const currentPosts = posts.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => setCurrentPage(page);

@@ -1,8 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import API from "../../api/axios";
 
-const ForumTopics = ({ topics, onSelectTopic }) => {
-  const [sortType, setSortType] = useState("alphabet");
+const ForumTopics = ({ onSelectTopic }) => {
+  const [topics, setTopics] = useState([]);
   const [activeTopic, setActiveTopic] = useState(null);
+  const [sortType, setSortType] = useState("alphabet");
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 5;
+
+  // Fetch subs from backend
+  const fetchSubs = async (pageNum = 1) => {
+    try {
+      const res = await API.get(`/forum/subs?page=${pageNum}&limit=${limit}`);
+      setTopics(res.data.subs || []);
+      setTotalPages(res.data.totalPages || 1);
+      setPage(res.data.page || 1);
+
+      if ((res.data.subs || []).length > 0 && !activeTopic) {
+        setActiveTopic(res.data.subs[0]._id);
+        onSelectTopic(res.data.subs[0]);
+      }
+    } catch (err) {
+      console.error("Error fetching forum topics:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubs(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const sortedTopics = [...topics].sort((a, b) => {
     if (sortType === "alphabet") return a.title.localeCompare(b.title);
@@ -13,6 +41,14 @@ const ForumTopics = ({ topics, onSelectTopic }) => {
   const handleTopicClick = (topic) => {
     setActiveTopic(topic._id);
     onSelectTopic(topic);
+  };
+
+  const handlePrev = () => {
+    if (page > 1) fetchSubs(page - 1);
+  };
+
+  const handleNext = () => {
+    if (page < totalPages) fetchSubs(page + 1);
   };
 
   return (
@@ -74,6 +110,27 @@ const ForumTopics = ({ topics, onSelectTopic }) => {
           </li>
         ))}
       </ul>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          className="btn btn-sm border border-red-50"
+          disabled={page <= 1}
+          onClick={handlePrev}
+        >
+          Previous
+        </button>
+        <span className="text-sm text-gray-500">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          className="btn btn-sm"
+          disabled={page >= totalPages}
+          onClick={handleNext}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };
