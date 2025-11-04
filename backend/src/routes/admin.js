@@ -19,5 +19,8 @@ router.put("/subs/:id/sponsorship", admin.updateSponsorship);
 // Remove sponsorship
 router.put("/subs/:id/sponsorship/remove", admin.removeSponsorship);
 
+// List all promotions
+router.get("/promotions", admin.getAllPromotions);
+
 
 export default router;

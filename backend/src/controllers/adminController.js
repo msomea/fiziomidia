@@ -1,6 +1,7 @@
 import ForumSub from "../models/ForumSub.js";
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
+import Promotion from "../models/Promotion.js";
 
 // List all users (admin only)
 export const listUsers = async (req, res) => {
@@ -21,6 +22,20 @@ export const getAllAppointments = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch Appointments" });
   }
   
+};
+
+// List all promotions
+export const getAllPromotions = async (req, res) => {
+  try {
+    const promotions = await Promotion.find()
+      .populate("pt", "fullName email")
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    res.json({ promotions });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch promotions" });
+  }
 };
 
 // 🔹 Update or Add Sponsorship
@@ -78,3 +93,4 @@ export const removeSponsorship = async (req, res) => {
     res.status(500).json({ error: "Failed to remove sponsorship" });
   }
 };
+

@@ -100,7 +100,6 @@ export const stripeWebhook = async (req, res) => {
 export const getPTPromotion = async (req, res) => {
   try {
     const { ptId } = req.query;
-
     if (!ptId) return res.status(400).json({ error: "ptId is required" });
 
     const promotion = await Promotion.findOne({
@@ -114,27 +113,38 @@ export const getPTPromotion = async (req, res) => {
 
     const daysLeft = Math.ceil((promotion.endDate - new Date()) / (1000 * 60 * 60 * 24));
 
-    res.json({
+    const data = res.json({
       active: true,
       promotion,
       daysLeft,
     });
+    console.log("Returned data", data)
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch promotion" });
   }
 };
 
-// List all promotions (admin or general view)
-export const getPromotions = async (req, res) => {
+// Returns a single promotion by its _id
+export const getPromotionById = async (req, res) => {
   try {
-    const promotions = await Promotion.find()
-      .populate("pt", "fullName email")
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const promotionId = req.params.id;
 
-    res.json({ promotions });
+    if (!promotionId) {
+      return res.status(400).json({ error: "Promotion ID is required" });
+    }
+
+    const promotion = await Promotion.findById(promotionId).populate("pt", "fullName email"); // optional: include PT info
+
+    if (!promotion) {
+      return res.status(404).json({ error: "Promotion not found" });
+    }
+
+    res.json({ promotion });
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch promotions" });
+    console.error("Failed to fetch promotion:", err);
+    res.status(500).json({ error: "Failed to fetch promotion" });
   }
 };
+
+
