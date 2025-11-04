@@ -180,6 +180,29 @@ export const votePost = async (req, res) => {
   }
 };
 
+// Update a post
+export const updatePost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const { title, body } = req.body;
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+    if (req.user.role !== "admin" && post.author.toString() !== req.user._id.toString())
+      return res.status(403).json({ error: "Forbidden" });
+
+    post.title = title ?? post.title;
+    post.body = body ?? post.body;
+    post.updatedAt = new Date();
+
+    await post.save();
+    res.json({ post });
+  } catch (err) {
+    console.error("Update post error:", err);
+    res.status(500).json({ error: "Failed to update post" });
+  }
+};
+
 // Get single post (with vote info)
 export const getPostById = async (req, res) => {
   const { id } = req.params;

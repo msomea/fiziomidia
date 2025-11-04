@@ -52,7 +52,7 @@ export default function AppRoutes() {
 
       {/* Forum Routes */}
       <Route path="/forum/pt/posts/:id" element={<PTForumPage />} />
-      <Route path="/forum/edit/posts/:id" element={<EditPostPage />} />
+      <Route path="/forum/edit/:ptId/:postId" element={<EditPostPage />} />
 
       {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />

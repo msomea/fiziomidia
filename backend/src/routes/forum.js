@@ -26,8 +26,11 @@ router.post("/posts/:id/vote", authenticate, forum.votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), forum.createSub);
 router.post("/posts", authenticate, forum.createPost);
 router.delete("/subs/:id", authenticateAdmin, forum.deleteSub); // Admin only
-// Delete post
-router.delete("/posts/:id", authenticate, forum.deletePost)
+
+// Routes for Posts
+router.delete("/posts/:id", authenticate, forum.deletePost);
+router.put("/posts/:id", authenticate, forum.updatePost);
+
 // Sub Sponsoship
 // Update / Add sponsorship
 router.put("/subs/:id/sponsorship", forum.updateSubSponsorship);

@@ -89,7 +89,7 @@ const PTForumPage = () => {
                   <td className="py-3 text-black px-4">{new Date(post.createdAt).toLocaleDateString()}</td>
                   <td className="py-3 px-4 space-x-2 ">
                     <Link
-                      to={`/forum/edit/posts/${post._id}`}
+                      to={`/forum/edit/${pt._id}/${post._id}`}
                       className="text-blue-600 hover:underline"
                     >
                       <NotebookPen />
