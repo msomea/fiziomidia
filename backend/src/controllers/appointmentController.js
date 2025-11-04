@@ -18,19 +18,11 @@ export const requestAppointment = async (req, res) => {
 // Get appointments
 export const getAppointments = async (req, res) => {
   try {
-    console.log("🔹 Incoming request to getAppointments");
-
     const { ptId, limit } = req.query;
-    console.log("Query:", req.query);
-
     // Ensure req.user exists
     if (!req.user) {
-      console.log("⚠️ No req.user found");
       return res.status(401).json({ error: "User not authenticated" });
     }
-
-    console.log("Authenticated user:", req.user.role, req.user._id);
-
     let filter = {};
 
     if (req.user.role === "physiotherapist") {
@@ -43,18 +35,14 @@ export const getAppointments = async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    console.log("Filter used:", filter);
-
     const appts = await Appointment.find(filter)
       .populate("requester pt clinic")
       .sort({ createdAt: -1 })
       .limit(Number(limit) || 3);
 
-    console.log("Fetched appointments:", appts.length);
-
     res.json({ appointments: appts });
   } catch (err) {
-    console.error("❌ Appointments API error:", err.message, err.stack);
+    console.error("Appointments API error:", err.message, err.stack);
     res.status(500).json({ error: "Failed to fetch appointments" });
   }
 };

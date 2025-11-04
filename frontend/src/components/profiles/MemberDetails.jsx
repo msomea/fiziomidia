@@ -12,7 +12,6 @@ const MemberDetails = () => {
       try {
         const data = await getUserById(user._id);
         setDetails(data);
-        console.log("Member Details fetched:", data);
       } catch (err) {
         console.error("Failed to fetch Member Details:", err);
       }

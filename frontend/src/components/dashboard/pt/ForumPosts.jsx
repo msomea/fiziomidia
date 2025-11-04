@@ -1,4 +1,5 @@
 import React from "react";
+import dayjs from "dayjs"
 
 const ForumPosts = ({ posts }) => (
   <div className="bg-white p-4 rounded-xl shadow mt-6">
@@ -8,7 +9,7 @@ const ForumPosts = ({ posts }) => (
         <div key={post._id} className="border-b pb-2 mb-2">
           <h3 className="font-medium">{post.title}</h3>
           <p className="text-sm text-gray-500">
-            {new Date(post.createdAt).toLocaleDateString()}
+            { dayjs(post.createdAt).format("ddd, DD/MM/YYYY")}
           </p>
         </div>
       ))

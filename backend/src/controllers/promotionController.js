@@ -87,8 +87,6 @@ export const stripeWebhook = async (req, res) => {
         user.ptProfile.promotionActiveUntil = endAt;
         await user.save();
       }
-
-      console.log(`Promotion ${promotionId} activated for PT ${ptId}`);
     }
 
     res.json({ received: true });

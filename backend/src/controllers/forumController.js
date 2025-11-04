@@ -1,5 +1,6 @@
 import ForumSub from "../models/ForumSub.js";
 import Post from "../models/Post.js";
+import User from "../models/User.js";
 
 // ===== SUBS =====
 
@@ -223,13 +224,13 @@ export const getPTPosts = async (req, res) => {
 
     if (!ptId) return res.status(400).json({ error: "ptId is required" });
 
-    let query = Post.find({ author: ptId }).sort({ createdAt: -1 });
+    let query =   Post.find({ author: ptId }).sort({ createdAt: -1 });
 
     if (limit) query = query.limit(parseInt(limit));
 
     const posts = await query.exec();
 
-    res.json(posts);
+    res.json({posts: posts});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch forum posts" });
