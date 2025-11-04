@@ -21,6 +21,8 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail"; 
 import AdminDashboard from "../pages/admin/AdminDashboard";
+import PTForumPage from "../pages/pt/PTForumPage";
+import EditPostPage from "../pages/forum/EditPostPage";
 
 export default function AppRoutes() {
   return (
@@ -31,7 +33,8 @@ export default function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
-      {/* Public Pages */}
+
+      {/* Public Pages Routes */}
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/forum" element={<Forum />} />
@@ -45,11 +48,13 @@ export default function AppRoutes() {
 
       {/* Dashboard Routes */}
       <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />
-
-
-      {/* Protected Routes - To be implemented with authentication */ }
-      <Route path="/dashboard/pt/:id" element={<PTDashboard/>} />
       <Route path="/dashboard/member/:id" element={<MemberDashboard />} />
+
+      {/* Forum Routes */}
+      <Route path="/forum/pt/posts/:id" element={<PTForumPage />} />
+      <Route path="/forum/edit/posts/:id" element={<EditPostPage />} />
+
+      {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/messages/:conversationId" element={<ConversationPage />} />
 

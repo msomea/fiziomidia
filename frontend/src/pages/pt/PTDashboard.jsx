@@ -106,7 +106,10 @@ export default function PTDashboard() {
 
       {/* Forum Posts & Promotion */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
-        <ForumPosts posts={forumPosts} viewAll={`/forum/pt/${_id}`} />
+        <ForumPosts 
+        posts={forumPosts}
+        id={_id} 
+        viewAll={`/forum/pt/${_id}`} />
         <PromotionStatus
           promotion={promotion}
           extendLink={`/promotions/pt/${_id}`}

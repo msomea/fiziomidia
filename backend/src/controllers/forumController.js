@@ -237,6 +237,29 @@ export const getPTPosts = async (req, res) => {
   }
 };
 
+// List posts by PT with pagination
+export const getPostsByPTId = async (req, res) => {
+  try {
+    const ptId = req.params.ptId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    console.log("Req Params", req.params)
+
+    if (!ptId) return res.status(400).json({ error: "PT ID required" });
+
+    const totalPosts = await Post.countDocuments({ author: ptId });
+    const posts = await Post.find({ author: ptId })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({ posts, totalPosts, page, totalPages: Math.ceil(totalPosts / limit) });
+  } catch (err) {
+    console.error("Failed to fetch posts:", err);
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
+};
+
 // Delete post (author or admin)
 export const deletePost = async (req, res) => {
   const { id } = req.params;

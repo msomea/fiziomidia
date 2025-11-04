@@ -121,7 +121,6 @@ export const getPTPromotion = async (req, res) => {
       promotion,
       daysLeft,
     });
-    console.log("Returned data", promotion)
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch promotion" });

@@ -1,7 +1,9 @@
 import React from "react";
 import dayjs from "dayjs"
+import { Link } from "react-router";
 
-const ForumPosts = ({ posts }) => (
+const ForumPosts = ({ posts, id }) => (
+  
   <div className="bg-white p-4 rounded-xl shadow mt-6">
     <h2 className="text-lg font-semibold mb-3">Recent Forum Activity</h2>
     {posts.length > 0 ? (
@@ -16,9 +18,9 @@ const ForumPosts = ({ posts }) => (
     ) : (
       <p className="text-gray-500 text-sm">No recent forum posts</p>
     )}
-    <a href="/forum/my-posts" className="text-blue-500 text-sm mt-3 block">
+    <Link to={`/forum/pt/posts/${id}`} className="text-blue-500 text-sm mt-3 block">
       View all forum posts →
-    </a>
+    </Link>
   </div>
 );
 
