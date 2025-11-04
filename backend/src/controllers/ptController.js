@@ -110,6 +110,7 @@ export const getPTDashboardStats = async (req, res) => {
       totalForumPosts,
       promotionDaysLeft,
     });
+
   } catch (err) {
     console.error("Dashboard stats error:", err);
     res.status(500).json({ error: "Failed to fetch dashboard stats" });

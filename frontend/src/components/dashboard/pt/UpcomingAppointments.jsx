@@ -1,3 +1,4 @@
+import dayjs from "dayjs"
 export default function UpcomingAppointments({ appointments }) {
   return (
     <div className="bg-white rounded-xl shadow p-4 m-6">
@@ -13,7 +14,7 @@ export default function UpcomingAppointments({ appointments }) {
             <tr className="bg-alice text-caribbean">
               <th>Patient</th>
               <th>Time</th>
-              <th>Type</th>
+              <th>Clinic</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -21,15 +22,19 @@ export default function UpcomingAppointments({ appointments }) {
           <tbody>
             {appointments.map((appt, i) => (
               <tr key={i}>
-                <td>{appt.patient}</td>
-                <td>{appt.time}</td>
-                <td>{appt.type}</td>
+                <td>{appt.requester.fullName}</td>
+                <td>{dayjs(appt.scheduledAt).format("ddd, DD/MM/YYYY")}</td>
+                <td>{appt.clinic.name}</td>
                 <td
                   className={`font-semibold ${
-                    appt.status === "Confirmed"
+                    appt.status === "accepted"
                       ? "text-caribbean"
-                      : appt.status === "Pending"
+                      : appt.status === "pending"
                       ? "text-tufts"
+                      : appt.status === "cancelled"
+                      ? "text-red-400"
+                      : appt.status === "declined"
+                      ? "text-red-800"
                       : "text-gray-500"
                   }`}
                 >
