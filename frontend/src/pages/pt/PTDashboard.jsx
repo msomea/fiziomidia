@@ -62,6 +62,7 @@ export default function PTDashboard() {
         setPromotion(promoRes.data || null);
         setStats(statsRes.data || statsRes); // dashboard stats
         console.log(token)
+        console.log("Returned Promotion", promotion)
       } catch (err) {
         console.error("Error loading PT dashboard:", err.response?.data || err.message);
         toast.error("Failed to load dashboard. Check console for details.");

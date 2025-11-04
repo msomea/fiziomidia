@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Promotion from "../models/Promotion.js";
 import Post from "../models/Post.js";
 import Appointment from "../models/Appointment.js";
+import dayjs from "dayjs";
 
 
 // GET /api/pts
@@ -97,12 +98,11 @@ export const getPTDashboardStats = async (req, res) => {
     const totalAppointments = await Appointment.countDocuments({ pt: ptId });
     const pendingRequests = await Appointment.countDocuments({ pt: ptId, status: "pending" });
     const totalForumPosts = await Post.countDocuments({ author: ptId });
-
     const activePromotion = await Promotion.findOne({ pt: ptId, status: "active" });
-    const currentDate = new Date()
-    const promotionDaysLeft = activePromotion
-      ? Math.ceil((activePromotion.endAt - currentDate) / (1000 * 60 * 60 * 24))
-      : 0;
+
+    const endDate = activePromotion.endAt;
+    const today = dayjs();
+    const promotionDaysLeft = dayjs(endDate).diff(today, "day");
 
     res.json({
       totalAppointments,
@@ -110,6 +110,7 @@ export const getPTDashboardStats = async (req, res) => {
       totalForumPosts,
       promotionDaysLeft,
     });
+    
 
   } catch (err) {
     console.error("Dashboard stats error:", err);

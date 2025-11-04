@@ -2,6 +2,7 @@ import Promotion from "../models/Promotion.js";
 import User from "../models/User.js";
 import Stripe from "stripe";
 import config from "../config/index.js";
+import dayjs from "dayjs"
 
 const stripe = new Stripe(config.stripe.secretKey);
 
@@ -111,14 +112,16 @@ export const getPTPromotion = async (req, res) => {
       return res.json({ active: false });
     }
 
-    const daysLeft = Math.ceil((promotion.endDate - new Date()) / (1000 * 60 * 60 * 24));
+    const endDate = promotion.endAt;
+    const today = dayjs();
+    const daysLeft = dayjs(endDate).diff(today, "day");
 
-    const data = res.json({
+    res.json({
       active: true,
       promotion,
       daysLeft,
     });
-    console.log("Returned data", data)
+    console.log("Returned data", promotion)
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch promotion" });
