@@ -302,7 +302,6 @@ export const getPostsByPTId = async (req, res) => {
     const ptId = req.params.ptId;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    console.log("Req Params", req.params)
 
     if (!ptId) return res.status(400).json({ error: "PT ID required" });
 
@@ -322,6 +321,7 @@ export const getPostsByPTId = async (req, res) => {
 // Delete post (author or admin)
 export const deletePost = async (req, res) => {
   const { id } = req.params;
+
 
   try {
     const post = await Post.findById(id);

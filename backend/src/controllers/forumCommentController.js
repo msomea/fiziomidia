@@ -63,27 +63,26 @@ export const updateComment = async (req, res) => {
 };
 
 
-// Delete a comment (owner or admin)
+// Delete a comment (owner only or admin)
 export const deleteComment = async (req, res) => {
   try {
-    const { id, commentId } = req.params;
+    const { id, commentId } = req.params; // id = postId, commentId = comment._id
+
+    // Optional: check if post exists
     const post = await Post.findById(id);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    if (!post) return res.status(404).json({ message: "Post not found" });
 
+    // Find comment by its own collection
     const comment = await Comment.findById(commentId);
-    if (!comment) {
-      return res.status(404).json({ message: "Comment not found" });
-    }
+    if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    // check owner
+    // Check ownership
     if (comment.author._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized to delete this comment" });
     }
 
-    comment.deleteOne(); // removes the subdocument
-    await post.save();
+    // Delete the comment
+    await Comment.findByIdAndDelete(commentId);
 
     res.json({ message: "Comment deleted successfully" });
   } catch (error) {
@@ -91,4 +90,6 @@ export const deleteComment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
