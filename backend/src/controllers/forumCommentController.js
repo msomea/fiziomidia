@@ -19,20 +19,23 @@ export const addComment = async (req, res, next) => {
   try {
     const { postId } = req.params;
     const { content } = req.body;
-
+    const author = req.user._id;
     // Optional: check if post exists
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     const comment = await Comment.create({
       post: postId,
-      author: req.user._id,
+      author,
       content,
     });
 
-    res.status(201).json(comment);
+    await Post.findByIdAndUpdate(postId, { $push: { comments: comment._id } });
+
+    res.status(201).json({comment});
   } catch (err) {
-    next(err);
+    console.error(err);
+    res.status(500).json({ error: "Failed to add comment" });
   }
 };
 

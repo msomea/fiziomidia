@@ -50,7 +50,7 @@ const PTForumPage = () => {
   const handleDelete = async (postId) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
     try {
-      await API.delete(`/api/forum/${postId}`);
+      await API.delete(`/forum/posts/${postId}`);
       toast.success("Post deleted");
       setPosts(posts.filter((p) => p._id !== postId));
     } catch (err) {
@@ -87,7 +87,7 @@ const PTForumPage = () => {
                 <tr key={post._id} className="border-b hover:bg-gray-50">
                   <td className="py-3 text-black px-4">{post.title}</td>
                   <td className="py-3 text-black px-4">{new Date(post.createdAt).toLocaleDateString()}</td>
-                  <td className="py-3 px-4 space-x-2 ">
+                  <td className="py-3 px-4 space-x-2 flex items-center gap-1">
                     <Link
                       to={`/forum/edit/${pt._id}/${post._id}`}
                       className="text-blue-600 hover:underline"

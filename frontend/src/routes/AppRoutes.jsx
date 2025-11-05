@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router";
 import Home from "../pages/Home";
 import About from "../pages/About";
-import Forum from "../pages/Forum";
+import Forum from "../pages/forum/Forum";
 import Education from "../pages/Education";
 
 import MemberProfile from "../pages/MemberProfile";
@@ -12,7 +12,6 @@ import MessagesPage from "../pages/Messages";
 import ConversationPage from "../pages/Conversation";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
-import CreatePost from "../pages/CreatePost";
 import FindProfessionals from "../components/home/FindProfessionals";
 import AdminSponsorships from "../pages/admin/AdminSponsorships";
 import Login from "../pages/auth/Login";
@@ -23,6 +22,7 @@ import VerifyEmail from "../pages/auth/VerifyEmail";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import PTForumPage from "../pages/pt/PTForumPage";
 import EditPostPage from "../pages/forum/EditPostPage";
+import CreatePostPage from "../pages/forum/CreatePostPage"
 
 export default function AppRoutes() {
   return (
@@ -38,7 +38,6 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/forum" element={<Forum />} />
-      <Route path="/forum/create" element={<CreatePost />} />
       <Route path="/education" element={<Education />} />
 
       {/* Dynamic Public Profile Routes */}
@@ -53,6 +52,7 @@ export default function AppRoutes() {
       {/* Forum Routes */}
       <Route path="/forum/pt/posts/:id" element={<PTForumPage />} />
       <Route path="/forum/edit/:ptId/:postId" element={<EditPostPage />} />
+      <Route path="/forum/create" element={<CreatePostPage />} />
 
       {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />

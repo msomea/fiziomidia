@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import ForumTopics from "../components/forum/ForumTopics";
-import ForumList from "../components/forum/ForumList";
+import ForumTopics from "../../components/forum/ForumTopics";
+import ForumList from "../../components/forum/ForumList";
 import { useNavigate } from "react-router";
-import API from "../api/axios";
+import API from "../../api/axios";
 
 const Forum = () => {
   const navigate = useNavigate();

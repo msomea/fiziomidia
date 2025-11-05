@@ -5,6 +5,7 @@ const PostSchema = new Schema(
   {
     sub: { type: Schema.Types.ObjectId, ref: "ForumSub", required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    comments: [{ type: Schema.Types.ObjectId, ref: "Comment"}],
     title: String,
     body: String,
     upvotes: [{ type: Schema.Types.ObjectId, ref: "User" }],

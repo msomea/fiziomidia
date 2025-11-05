@@ -3,14 +3,14 @@ import Post from "../models/Post.js";
 import User from "../models/User.js";
 
 // ===== SUBS =====
-// List all forum subs with totalPosts dynamically calculated and pagination
+// List all forum subs with pagination and totalPosts dynamically calculated
 export const listSubs = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;      // default page 1
-    const limit = parseInt(req.query.limit) || 5;   // default 10 per page
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
 
-    const subsAggregation = [
+    const subs = await ForumSub.aggregate([
       {
         $lookup: {
           from: "posts",
@@ -24,28 +24,33 @@ export const listSubs = async (req, res) => {
           totalPosts: { $size: "$posts" },
         },
       },
-      { $project: { posts: 0 } },
+      {
+        $project: {
+          posts: 0,
+        },
+      },
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit },
-    ];
+    ]);
 
-    const subs = await ForumSub.aggregate(subsAggregation);
-
-    // Count total subs for pagination info
-    const totalSubs = await ForumSub.countDocuments();
+    const totalCount = await ForumSub.countDocuments();
 
     res.json({
       subs,
-      page,
-      totalPages: Math.ceil(totalSubs / limit),
-      totalSubs,
+      pagination: {
+        total: totalCount,
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit),
+      },
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch subs" });
   }
 };
+
 
 
 // Get single sub
@@ -118,16 +123,13 @@ export const deleteSub = async (req, res) => {
 
 // Create a post under a sub
 export const createPost = async (req, res) => {
-  const { subId, title, body } = req.body;
-
+ 
   try {
-    const post = new Post({
-      sub: subId,
-      author: req.user._id,
-      title,
-      body,
-    });
+    const { title, body, sub } = req.body;
+    const author = req.user._id; 
+    if (!sub) return res.status(400).json({ error: "Sub (topic) is required" });
 
+    const post = new Post({ title, body, sub, author });
     await post.save();
     res.status(201).json({ post });
   } catch (err) {
@@ -327,8 +329,7 @@ export const deletePost = async (req, res) => {
         .status(403)
         .json({ error: "Only author or admin can delete this post" });
     }
-
-    await post.remove();
+    await Post.findByIdAndDelete(req.params.id);
 
     res.json({ message: "Post deleted successfully" });
   } catch (err) {

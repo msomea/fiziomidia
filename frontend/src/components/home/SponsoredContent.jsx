@@ -1,3 +1,4 @@
+import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import React, { useState, useEffect } from "react";
 
 const SponsoredContent = () => {
@@ -45,15 +46,15 @@ const SponsoredContent = () => {
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="btn btn-outline btn-sm bg-gray-600 text-white border-caribbean border p-1 mx-1 disabled:opacity-50"
+            className="btn btn-outline btn-sm bg-gray-200 text-accent border-caribbean border p-1 mx-1 disabled:opacity-50"
           >
-            Prev
+            <ArrowBigLeftIcon />
           </button>
           <button
             onClick={() => setPage(page + 1)}
             className="btn btn-sm bg-caribbean text-white p-1 mx-1 hover:bg-tufts"
           >
-            Next
+            <ArrowBigRightIcon />
           </button>
         </div>
       </div>
