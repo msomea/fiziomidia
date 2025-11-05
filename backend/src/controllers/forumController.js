@@ -172,43 +172,52 @@ export const listPosts = async (req, res) => {
 
 // Vote on a post
 export const votePost = async (req, res) => {
-  const { id } = req.params;
-  const { vote } = req.body;
-
-  if (![1, -1].includes(vote)) {
-    return res
-      .status(400)
-      .json({ error: "Vote must be 1 (upvote) or -1 (downvote)" });
-  }
-
   try {
-    const post = await Post.findById(id);
-    if (!post) return res.status(404).json({ error: "Post not found" });
-
+    const { id } = req.params;
+    const { vote } = req.body;
     const userId = req.user._id.toString();
 
-    post.upvotes = post.upvotes.filter((u) => u.toString() !== userId);
-    post.downvotes = post.downvotes.filter((u) => u.toString() !== userId);
+    if (![1, -1].includes(vote)) {
+      return res.status(400).json({ error: "Vote must be 1 (upvote) or -1 (downvote)" });
+    }
 
-    if (vote === 1) post.upvotes.push(req.user._id);
-    else post.downvotes.push(req.user._id);
+    const post = await Post.findById(id)
+      .populate("upvotes", "fullName")
+      .populate("downvotes", "fullName");
+
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+
+    // Remove existing vote if user already voted
+    post.upvotes = post.upvotes.filter((u) => u._id.toString() !== userId);
+    post.downvotes = post.downvotes.filter((u) => u._id.toString() !== userId);
+
+    // Apply new vote
+    if (vote === 1) {
+      post.upvotes.push(req.user._id);
+    } else {
+      post.downvotes.push(req.user._id);
+    }
+
+    // Update score (for sorting later)
+    post.score = post.upvotes.length - post.downvotes.length;
 
     await post.save();
 
-    const totalScore = post.upvotes.length - post.downvotes.length;
-
     res.json({
+      message: "Vote recorded",
       postId: post._id,
-      totalScore,
-      userVote: vote,
       upvotesCount: post.upvotes.length,
       downvotesCount: post.downvotes.length,
+      score: post.score,
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error voting on post:", err);
     res.status(500).json({ error: "Failed to vote on post" });
   }
 };
+
 
 // Update a post
 export const updatePost = async (req, res) => {

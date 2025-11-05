@@ -84,10 +84,8 @@ const PostDetailPage = () => {
         </div>
 
         <PostVote
-          userVote={userVote}
-          upvotesCount={upvotesCount}
-          downvotesCount={downvotesCount}
-          handleVote={handleVote}
+          post={post}
+          refreshPost={fetchPost} 
           user={user}
         />
       </div>
