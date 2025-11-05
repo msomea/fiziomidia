@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ThumbsUp, ThumbsDown, MessageCircle, Share2 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
+import { Link } from "react-router";
 
 const ForumList = ({ posts = [], loading }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,7 +51,7 @@ const ForumList = ({ posts = [], loading }) => {
               <span className="font-semibold text-black">{post.author.fullName}</span>
               <span className="text-gray-400 text-sm">{formatDate(post.createdAt)}</span>
             </div>
-            <h3 className="text-lg font-bold text-caribbean mb-2">{post.title}</h3>
+            <Link to={`/forum/post/${post._id}`} className="text-lg font-bold text-caribbean mb-2">{post.title}</Link>
             <p className="text-gray-700 text-sm line-clamp-3">{post.body}</p>
 
             {/* Actions */}

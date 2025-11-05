@@ -42,7 +42,7 @@ export const getAppointments = async (req, res) => {
 
     res.json({ appointments: appts });
   } catch (err) {
-    console.error("Appointments API error:", err.message, err.stack);
+    console.error("❌ Appointments API error:", err.message, err.stack);
     res.status(500).json({ error: "Failed to fetch appointments" });
   }
 };
@@ -118,7 +118,7 @@ export const getAppointmentsByMember = async (req, res) => {
 
     return res.status(200).json({ appts });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Failed to fetch data", err);
     return res.status(500).json({ error: err.message });
   }
 };

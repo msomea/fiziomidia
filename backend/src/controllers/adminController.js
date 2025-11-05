@@ -65,7 +65,7 @@ export const updateSponsorship = async (req, res) => {
     await sub.save();
     res.json({ message: "Sponsorship updated successfully", sub });
   } catch (err) {
-    console.error("Error updating sponsorship:", err);
+    console.error("❌ Error updating sponsorship:", err);
     res.status(500).json({ error: "Failed to update sponsorship" });
   }
 };
@@ -89,7 +89,7 @@ export const removeSponsorship = async (req, res) => {
     await sub.save();
     res.json({ message: "Sponsorship removed successfully", sub });
   } catch (err) {
-    console.error("Error removing sponsorship:", err);
+    console.error("❌ Error removing sponsorship:", err);
     res.status(500).json({ error: "Failed to remove sponsorship" });
   }
 };

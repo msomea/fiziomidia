@@ -23,6 +23,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import PTForumPage from "../pages/pt/PTForumPage";
 import EditPostPage from "../pages/forum/EditPostPage";
 import CreatePostPage from "../pages/forum/CreatePostPage"
+import PostDetailPage from "../pages/forum/PostDetailPage";
 
 export default function AppRoutes() {
   return (
@@ -38,6 +39,7 @@ export default function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/forum" element={<Forum />} />
+      <Route path="/forum/post/:id" element={<PostDetailPage />} />
       <Route path="/education" element={<Education />} />
 
       {/* Dynamic Public Profile Routes */}

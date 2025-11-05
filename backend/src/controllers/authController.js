@@ -68,7 +68,7 @@ export async function registerUser(req, res) {
       refreshToken,
     });
   } catch (err) {
-    console.error("Register error:", err);
+    console.error(" Register error:", err);
     res.status(500).json({ error: "Server error" });
   }
 }

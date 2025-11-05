@@ -48,8 +48,8 @@ router.get("/", authenticate, forum.getPTPosts);
 /* -------------------------------
    Comments
 --------------------------------*/
-router.get("/posts/:postId/comments", listComments);
-router.post("/posts/:postId/comments", authenticate, addComment);
+router.get("/posts/:id/comments", listComments);
+router.post("/posts/:id/comments", authenticate, addComment);
 router.delete("/comments/:id", authenticate, deleteComment);
 
 export default router;

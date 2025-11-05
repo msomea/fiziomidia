@@ -159,16 +159,16 @@ async function seed() {
     const posts = [];
     for (let i = 0; i < 10; i++) {
       const author = randomItem(users);
-      posts.push(
-        await Post.create({
-          sub: randomItem(forumSubs)._id,
-          author: author._id,
-          title: faker.lorem.sentence(),
-          body: faker.lorem.paragraph(),
-          upvotes: [],
-          downvotes: [],
-        })
-      );
+      const post = await Post.create({
+        sub: randomItem(forumSubs)._id,
+        author: author._id,
+        comments: [], // Will fill after creating comments
+        title: faker.lorem.sentence(),
+        body: faker.lorem.paragraph(),
+        upvotes: [],
+        downvotes: [],
+      });
+      posts.push(post);
     }
 
     console.log("Posts created.");
@@ -177,14 +177,20 @@ async function seed() {
     const comments = [];
     for (let i = 0; i < 20; i++) {
       const author = randomItem(users);
-      comments.push(
-        await Comment.create({
-          post: randomItem(posts)._id,
-          author: author._id,
-          content: faker.lorem.sentences(2),
-          votes: faker.datatype.number({ min: 0, max: 10 }),
-        })
-      );
+      const post = randomItem(posts);
+
+      const comment = await Comment.create({
+        post: post._id,
+        author: author._id,
+        content: faker.lorem.sentences(2),
+        votes: faker.datatype.number({ min: 0, max: 10 }),
+      });
+
+      // Push comment reference into post.comments array
+      post.comments.push(comment._id);
+      await post.save();
+
+      comments.push(comment);
     }
 
     console.log("Comments created.");

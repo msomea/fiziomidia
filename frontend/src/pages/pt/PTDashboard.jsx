@@ -18,6 +18,7 @@ import {
   Megaphone,
   Settings,
   LogOut,
+  LoaderIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -55,14 +56,14 @@ export default function PTDashboard() {
           axios.get(`/api/promotions?ptId=${_id}`, { headers }),
           axios.get(`/api/pts/${_id}/dashboard-stats`, { headers }),
         ]);
-
+        
         setPtProfile(ptRes.data); // PT profile object
         setAppointments(apptRes.data.appointments || []);
         setForumPosts(forumRes.data.posts || []);
         setPromotion(promoRes.data || null);
-        setStats(statsRes.data || statsRes); // dashboard stats
+        setStats(statsRes.data || statsRes);
+        
         console.log(token)
-        console.log("Returned Promotion", promotion)
       } catch (err) {
         console.error("Error loading PT dashboard:", err.response?.data || err.message);
         toast.error("Failed to load dashboard. Check console for details.");
@@ -77,6 +78,7 @@ export default function PTDashboard() {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-caribbean">
+        <LoaderIcon className='animate-spin size-10' />
         Loading PT Dashboard...
       </div>
     );

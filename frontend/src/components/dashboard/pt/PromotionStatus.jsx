@@ -15,10 +15,8 @@ const PromotionStatus = ({ promotion }) => {
   }
 
   // Determine progress bar color
-  console.log("Promotion at component", promotion)
   const { daysLeft } = promotion;
   const endsAt = promotion.promotion.endAt
-  console.log(`Days left: ${daysLeft} Ends at: ${endsAt}`)
   let barColor = "bg-red-500";
   if (daysLeft > 15) barColor = "bg-caribbean"; // green
   else if (daysLeft > 7) barColor = "bg-yellow-400"; // yellow
