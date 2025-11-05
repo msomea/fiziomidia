@@ -3,12 +3,32 @@ import ForumTopics from "../../components/forum/ForumTopics";
 import ForumList from "../../components/forum/ForumList";
 import { useNavigate } from "react-router";
 import API from "../../api/axios";
+import { toast } from "react-hot-toast";
 
 const Forum = () => {
   const navigate = useNavigate();
   const [subs, setSubs] = useState([]);
   const [posts, setPosts] = useState([]);
   const [selectedSub, setSelectedSub] = useState(null);
+
+  const [user, setUser] = useState(null); 
+  const [loadingUser, setLoadingUser] = useState(true); 
+  // Fetch current user
+  const fetchUser = async () => {
+    try {
+      const res = await API.get("/auth/me");
+      setUser(res.data.user || res.data);
+    } catch (err) {
+      console.error("Failed to fetch user:", err);
+      toast.error("Failed to fetch user info");
+    } finally {
+      setLoadingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   // Fetch posts for selected topic
   const fetchPosts = async (subId) => {
@@ -49,7 +69,12 @@ const Forum = () => {
 
           {/* Forum Posts */}
           <div className="md:col-span-2">
-            <ForumList posts={posts} subId={selectedSub?._id} />
+            <ForumList
+              user={user}
+              loading={loadingUser || !selectedSub} 
+              posts={posts}
+              subId={selectedSub?._id}
+            />
           </div>
         </div>
       </div>
