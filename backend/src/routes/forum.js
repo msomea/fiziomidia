@@ -2,12 +2,7 @@ import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
 import * as forum from "../controllers/forumController.js";
-
-import {
-  listComments,
-  addComment,
-  deleteComment,
-} from "../controllers/forumCommentController.js";
+import * as comment from "../controllers/forumCommentController.js";
 
 const router = express.Router();
 
@@ -48,8 +43,9 @@ router.get("/", authenticate, forum.getPTPosts);
 /* -------------------------------
    Comments
 --------------------------------*/
-router.get("/posts/:id/comments", listComments);
-router.post("/posts/:id/comments", authenticate, addComment);
-router.delete("/comments/:id", authenticate, deleteComment);
+router.get("/posts/:id/comments", comment.listComments);
+router.post("/posts/:id/comments", authenticate, comment.addComment);
+router.put("/posts/:id/comments/:commentId", authenticate, comment.updateComment);
+router.delete("/posts/:id/comments/:commentId", authenticate, comment.deleteComment);
 
 export default router;

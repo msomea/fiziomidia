@@ -85,7 +85,10 @@ const PTForumPage = () => {
             <tbody>
               {posts.map((post) => (
                 <tr key={post._id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 text-black px-4">{post.title}</td>
+                  <td className="py-3 text-black px-4">
+                    <Link to={`/forum/post/${post._id}`}>
+                    {post.title}</Link>
+                  </td>
                   <td className="py-3 text-black px-4">{new Date(post.createdAt).toLocaleDateString()}</td>
                   <td className="py-3 px-4 space-x-2 flex items-center gap-1">
                     <Link

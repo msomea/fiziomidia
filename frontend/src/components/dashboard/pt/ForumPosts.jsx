@@ -9,7 +9,7 @@ const ForumPosts = ({ posts, id }) => (
     {posts.length > 0 ? (
       posts.map((post) => (
         <div key={post._id} className="border-b pb-2 mb-2">
-          <h3 className="font-medium">{post.title}</h3>
+          <Link to={`/forum/post/${post._id}`} className="text-caribbean font-medium">{post.title}</Link>
           <p className="text-sm text-gray-500">
             { dayjs(post.createdAt).format("ddd, DD/MM/YYYY")}
           </p>

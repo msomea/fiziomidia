@@ -1,5 +1,6 @@
 import ForumSub from "../models/ForumSub.js";
 import Post from "../models/Post.js";
+import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 
 // ===== SUBS =====
@@ -234,41 +235,42 @@ export const updatePost = async (req, res) => {
 
 // Get single post (with vote info)
 export const getPostById = async (req, res) => {
-  const { id } = req.params;
-
   try {
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({ error: "Post ID is required" });
+
+    // Fetch post and populate author
     const post = await Post.findById(id)
-    .populate("author", "fullName email")
-    .populate({
-      path: "comments",
-      populate: {path:"author", select: "fullName"}
-    });
+      .populate("author", "fullName email avatar") // include avatar if needed
+      .lean();
+
     if (!post) return res.status(404).json({ error: "Post not found" });
 
-    const userId = req.user?._id?.toString();
-    let userVote = 0;
+    // Fetch comments for this post, populate author info
+    const comments = await Comment.find({ post: post._id })
+      .populate("author", "fullName email avatar")
+      .sort({ createdAt: -1 }) // newest first
+      .lean();
 
-    if (userId) {
-      if (post.upvotes.map((u) => u.toString()).includes(userId)) userVote = 1;
-      else if (post.downvotes.map((u) => u.toString()).includes(userId))
-        userVote = -1;
-    }
-
-    const totalScore = post.upvotes.length - post.downvotes.length;
+    // Calculate totalScore or counts if needed
+    const upvotesCount = post.upvotes?.length || 0;
+    const downvotesCount = post.downvotes?.length || 0;
+    const totalScore = upvotesCount - downvotesCount;
 
     res.json({
       postId: post._id,
       title: post.title,
       body: post.body,
       author: post.author,
-      totalScore,
-      upvotesCount: post.upvotes.length,
-      downvotesCount: post.downvotes.length,
-      userVote,
       createdAt: post.createdAt,
+      comments, 
+      upvotesCount,
+      downvotesCount,
+      totalScore,
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error fetching post:", err);
     res.status(500).json({ error: "Failed to fetch post" });
   }
 };
