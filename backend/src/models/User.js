@@ -12,18 +12,25 @@ const WorkingHoursSchema = new Schema(
 
 const PtProfileSchema = new Schema(
   {
+    title: String, // Professional title
     institution: String,
     isPrivatePractice: { type: Boolean, default: true },
     clinicIds: [{ type: Schema.Types.ObjectId, ref: "Clinic" }],
     licenseImageUrl: String,
     licenseNumber: String,
     licenseVerified: { type: Boolean, default: false },
+    licenseVerificationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    licenseVerificationNotes: String, // Admin feedback on verification
+    licenseSubmittedAt: Date,
     bio: String,
     speciality: [String],
     yearsOfExperience: Number,
     workingHours: [WorkingHoursSchema],
     promotionActiveUntil: Date,
-  
   },
   { _id: false }
 );
