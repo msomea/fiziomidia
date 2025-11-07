@@ -110,26 +110,38 @@ const MemberDashboard = () => {
   // Submit PT Upgrade Form
   const handleUpgradeSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("accessToken");
+    setLoading(true);
     try {
-      const res = await axios.put(
-        "/api/users/profile",
-        {
-          upgradeToPhysiotherapist: true,
-          institution: formData.institution,
-          isPrivatePractice: formData.isPrivatePractice,
-          licenseNumber: formData.licenseNumber,
-          speciality: formData.speciality.split(",").map((s) => s.trim()),
-          yearsOfExperience: Number(formData.yearsOfExperience),
-          bio: formData.bio,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const upgradeData = {
+        upgradeToPhysiotherapist: true,
+        institution: formData.institution,
+        isPrivatePractice: formData.isPrivatePractice,
+        licenseNumber: formData.licenseNumber,
+        speciality: formData.speciality.split(",").map(s => s.trim()),
+        yearsOfExperience: Number(formData.yearsOfExperience),
+        bio: formData.bio
+      };
+
+      const response = await API.put("/users/profile", upgradeData);
+      const updatedUser = response.data.user;
+
+      // Update both local state and auth context with the updated user data
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      // Update member data state
+      setMemberData(updatedUser);
+      
       toast.success("You are now a Physiotherapist!");
+      setShowUpgradeForm(false);
+      
+      // Navigate to PT dashboard
       navigate(`/dashboard/pt/${memberData._id}`);
     } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.error || "Upgrade failed");
+      console.error("Upgrade failed:", err);
+      toast.error(err.response?.data?.error || "Failed to upgrade to Physiotherapist");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -312,14 +324,25 @@ const MemberDashboard = () => {
                   type="button"
                   onClick={() => setShowUpgradeForm(false)}
                   className="px-4 py-2 border rounded-lg hover:bg-gray-100"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-caribbean text-white rounded-lg hover:bg-[#03bb74]"
+                  className={`px-4 py-2 bg-caribbean text-white rounded-lg hover:bg-[#03bb74] flex items-center gap-2 ${
+                    loading ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
+                  disabled={loading}
                 >
-                  Submit
+                  {loading ? (
+                    <>
+                      <span className="inline-block animate-spin">⌛</span>
+                      Processing...
+                    </>
+                  ) : (
+                    'Submit'
+                  )}
                 </button>
               </div>
             </form>
