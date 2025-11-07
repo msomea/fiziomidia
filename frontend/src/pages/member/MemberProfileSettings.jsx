@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import { updateProfile } from "../../api/profile";
+import { updateProfile, getProfile } from "../../api/profile";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 
@@ -103,39 +103,48 @@ export default function MemberProfileSettings() {
       if (formData.previewUrl) {
         URL.revokeObjectURL(formData.previewUrl);
       }
-      
-      // Update both the local storage and auth context with the complete user data
+
+      // Add timestamp to force image refresh
+      const timestamp = new Date().getTime();
+      const newProfileImageUrl = updatedUser.profileImageUrl
+        ? updatedUser.profileImageUrl.includes('?')
+          ? `${updatedUser.profileImageUrl}&t=${timestamp}`
+          : `${updatedUser.profileImageUrl}?t=${timestamp}`
+        : null;
+
+      // Create the complete updated user data
       const updatedUserData = {
         ...user,
         ...updatedUser,
-        profileImageUrl: updatedUser.profileImageUrl // Ensure we use the new image URL from server
+        profileImageUrl: newProfileImageUrl
       };
       
+      // Update auth context
       setUser(updatedUserData);
+
+      // Update localStorage with the same data
       localStorage.setItem("user", JSON.stringify(updatedUserData));
+
+      // Fetch fresh profile data to ensure everything is in sync
+      const freshProfileData = await getProfile();
       
-      // Update form data with new values, clearing sensitive/temporary fields
+      // Update form data with fresh values
       setFormData(prev => ({
         ...prev,
-        ...updatedUser,
+        ...freshProfileData,
         password: "",
         confirmPassword: "",
-        previewUrl: null
+        previewUrl: null,
+        profileImageUrl: newProfileImageUrl
       }));
 
       // Reset the image file state
       setImageFile(null);
       
-      // Force a re-render of the image by adding a timestamp to the URL
-      const timestamp = new Date().getTime();
-      if (updatedUser.profileImageUrl) {
-        const imageUrl = updatedUser.profileImageUrl.includes('?') 
-          ? `${updatedUser.profileImageUrl}&t=${timestamp}`
-          : `${updatedUser.profileImageUrl}?t=${timestamp}`;
-        updatedUser.profileImageUrl = imageUrl;
-      }
-      
       toast.success("Profile updated successfully!");
+
+      // Force a re-render of other components that might be showing the profile image
+      window.dispatchEvent(new Event('profileUpdated'));
     } catch (err) {
       console.error("Profile update failed:", err);
       toast.error(err.response?.data?.error || "Profile update failed");

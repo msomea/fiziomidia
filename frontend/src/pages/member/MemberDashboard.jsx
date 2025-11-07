@@ -40,37 +40,56 @@ const MemberDashboard = () => {
     bio: "",
   });
 
-  // Fetch member data
+  const fetchUserData = async () => {
+    try {
+      // Fetch complete profile data
+      const response = await API.get("/users/profile");
+      const fullUserData = response.data;
+      
+      // Add timestamp to force image refresh
+      const timestamp = new Date().getTime();
+      if (fullUserData.profileImageUrl) {
+        fullUserData.profileImageUrl = fullUserData.profileImageUrl.includes('?')
+          ? `${fullUserData.profileImageUrl}&t=${timestamp}`
+          : `${fullUserData.profileImageUrl}?t=${timestamp}`;
+      }
+      
+      // Update both local state and auth context
+      setMemberData(fullUserData);
+      
+      // Update the stored user data with complete profile
+      const updatedUser = { ...user, ...fullUserData };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+    } catch (err) {
+      console.error("Error fetching member data:", err);
+      if (err.response?.status === 401) {
+        logout();
+      }
+      toast.error(err.response?.data?.error || "Failed to load profile data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch when component mounts
   useEffect(() => {
     if (!user) return;
+    fetchUserData();
+  }, [user]);
 
-    const fetchUserData = async () => {
-      try {
-        // Fetch complete profile data
-        const response = await API.get("/users/profile");
-        const fullUserData = response.data;
-        
-        // Update both local state and auth context
-        setMemberData(fullUserData);
-        
-        // Update the stored user data with complete profile
-        const updatedUser = { ...user, ...fullUserData };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        
-      } catch (err) {
-        console.error("Error fetching member data:", err);
-        if (err.response?.status === 401) {
-          logout();
-        }
-        toast.error(err.response?.data?.error || "Failed to load profile data");
-      } finally {
-        setLoading(false);
-      }
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      fetchUserData();
     };
 
-    fetchUserData();
-  }, [user, logout, setUser]);
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   if (loading) {
     return (
