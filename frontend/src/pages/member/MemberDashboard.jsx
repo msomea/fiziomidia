@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import axios from "axios";
+import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import {
   Home,
   Calendar,
@@ -25,7 +26,7 @@ import toast from "react-hot-toast";
 
 const MemberDashboard = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
   const [memberData, setMemberData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,24 +44,33 @@ const MemberDashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    const token = localStorage.getItem("accessToken");
-    if (!token) return;
-
-    axios
-      .get("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setMemberData(res.data);
-      })
-      .catch((err) => {
+    const fetchUserData = async () => {
+      try {
+        // Fetch complete profile data
+        const response = await API.get("/users/profile");
+        const fullUserData = response.data;
+        
+        // Update both local state and auth context
+        setMemberData(fullUserData);
+        
+        // Update the stored user data with complete profile
+        const updatedUser = { ...user, ...fullUserData };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+      } catch (err) {
         console.error("Error fetching member data:", err);
         if (err.response?.status === 401) {
           logout();
         }
-      })
-      .finally(() => setLoading(false));
-  }, [user]);
+        toast.error(err.response?.data?.error || "Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user, logout, setUser]);
 
   if (loading) {
     return (
@@ -115,11 +125,15 @@ const MemberDashboard = () => {
               memberData.profileImageUrl
                 ? memberData.profileImageUrl.startsWith("http")
                   ? memberData.profileImageUrl
-                  : `http://localhost:4000${memberData.profileImageUrl}`
+                  : `${API_URL}${memberData.profileImageUrl}`
                 : avatar
             }
             alt="Member Profile"
             className="w-28 h-28 rounded-full object-cover border-4 border-caribbean"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = avatar;
+            }}
           />
 
           {/* Basic Info */}

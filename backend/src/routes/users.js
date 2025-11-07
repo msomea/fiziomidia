@@ -9,14 +9,14 @@ const router = express.Router();
 
 // routes /api/users
 
-// Public: get profile by ID
-router.get("/:id", userController.getUserById);
-
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);
 
 // Update current user profile
 router.put("/profile", authenticate, userController.uploadAvatar.single("avatar"), userController.updateProfile);
+
+// Public: get profile by ID
+router.get("/:id", userController.getUserById);
 
 // Get saved PTs for a member
 router.get("/:id/saved-pts", authenticate, requireRole("member", "admin"), getSavedPTsByMember );

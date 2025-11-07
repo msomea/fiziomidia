@@ -150,7 +150,7 @@ export const listPosts = async (req, res) => {
 
     const posts = await Post.find({ sub: subId })
       .populate("author", "fullName email")
-      .sort({ createdAt: -1 })
+      .sort({ score: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 

@@ -22,7 +22,19 @@ export const uploadAvatar = multer({ storage });
 
 // Get current user's profile
 export const getProfile = async (req, res) => {
-  res.json({ user: req.user });
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).select(
+      "-passwordHash -refreshTokens"
+    );
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(user);
+  } catch (err) {
+    console.error("Error fetching profile:", err);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
 };
 
 // Get a single user by ID (public profile)

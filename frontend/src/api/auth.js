@@ -46,6 +46,12 @@ export const logoutUser = async () => {
 // Fetch current user
 // ---------------------------
 export const fetchCurrentUser = async () => {
-  const res = await API.get("/auth/me");
-  return res.data;
+  // Fetch both basic auth data and complete profile
+  const [authData, profileData] = await Promise.all([
+    API.get("/auth/me"),
+    API.get("/users/profile"),
+  ]);
+
+  // Combine the data, preferring profile data for overlapping fields
+  return { ...authData.data, ...profileData.data };
 };
