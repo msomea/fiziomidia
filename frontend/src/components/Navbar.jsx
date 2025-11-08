@@ -40,9 +40,8 @@ export default function Navbar() {
   // Handle logout globally
   const handleLogout = async () => {
     try {
-      await logout(); // from context
+      await logout(navigate); 
       toast.success("Logged out successfully!");
-      navigate("/login");
     } catch (err) {
       console.error("Logout failed:", err);
       toast.error("Logout failed. Try again.");

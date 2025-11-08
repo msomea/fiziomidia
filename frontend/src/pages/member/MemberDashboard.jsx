@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
+import { Loader2 } from "lucide-react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import {
@@ -65,7 +66,7 @@ const MemberDashboard = () => {
     } catch (err) {
       console.error("Error fetching member data:", err);
       if (err.response?.status === 401) {
-        logout();
+        logout(navigate);
       }
       toast.error(err.response?.data?.error || "Failed to load profile data");
     } finally {
@@ -94,8 +95,11 @@ const MemberDashboard = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-caribbean">
-        Loading your profile...
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          Loading your profile...
+        </p>
       </div>
     );
   }
@@ -196,7 +200,7 @@ const MemberDashboard = () => {
               )}
 
               <button
-                onClick={logout}
+                onClick={() => logout(navigate)}
                 className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white"
               >
                 Log Out
@@ -254,7 +258,7 @@ const MemberDashboard = () => {
               label="Settings"
             />
             <button
-              onClick={logout}
+              onClick={() => logout(navigate)}
               className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
             >
               <LogOut size={18} />

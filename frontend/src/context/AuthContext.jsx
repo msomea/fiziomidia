@@ -20,8 +20,11 @@ export const AuthProvider = ({ children }) => {
           const parsed = JSON.parse(stored);
           if (parsed.accessToken) {
             const data = await fetchCurrentUser();
-            setUser({ ...parsed, ...data });
-            localStorage.setItem("user", JSON.stringify({ ...parsed, ...data }));
+            const updatedUser = { ...parsed, ...data };
+            if (JSON.stringify(user) !== JSON.stringify(updatedUser)) {
+              setUser(updatedUser);
+              localStorage.setItem("user", JSON.stringify(updatedUser));
+            }
           }
         }
       } catch (err) {
@@ -34,6 +37,7 @@ export const AuthProvider = ({ children }) => {
     };
     loadUser();
   }, []);
+
 
   const login = async ({ email, password }) => {
     try {
@@ -55,7 +59,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (navigate) => {
     try {
       await logoutUser();
     } catch (err) {
@@ -63,7 +67,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       localStorage.clear();
-      window.location.href = "/";
+      if (navigate) {
+        navigate("/");
+      }
     }
   };
 

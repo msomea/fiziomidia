@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, ThumbsDown, MessageCircle, Share2 } from "lucide-react";
+import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
@@ -15,7 +15,16 @@ const ForumList = ({ posts = [], loading, user }) => {
     setCurrentPage(1); // reset page when posts change
   }, [posts]);
 
-  if (loading) return <p className="text-center mt-6 text-gray-500">Loading posts...</p>;
+  if (loading) {
+  return (
+    <div className="h-screen flex flex-col items-center justify-center">
+      <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+      <p className="mt-4 text-caribbean font-medium animate-pulse">
+        Loading Posts...
+      </p>
+    </div>
+  );
+}
   if (!posts.length) return <p className="text-center mt-6 text-gray-500">No posts yet.</p>;
 
   const totalPosts = postList.length;
