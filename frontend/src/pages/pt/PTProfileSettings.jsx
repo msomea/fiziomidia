@@ -6,13 +6,13 @@ import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import {
   PTOverview,
-  PTEducation,
   PTReviews,
   PTAvailability,
   PTGallery,
 } from "../../components/profiles";
 import Services from "../../components/ptsetting/Services";
 import Experience from "../../components/ptsetting/Experience";
+import Education from "../../components/ptsetting/Education";
 import avatar from "../../assets/avatar.jpg";
 
 const PTProfileSettings = () => {
@@ -445,17 +445,9 @@ const PTProfileSettings = () => {
           </div>
 
           {/* Education */}
-          <div className="card bg-white shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4 text-caribbean">Education</h2>
-            <textarea
-              name="education"
-              value={formData.education}
-              onChange={handleChange}
-              className="textarea textarea-bordered w-full h-24"
-            ></textarea>
-          </div>
+          <Education formData={formData} setFormData={setFormData} />
 
-          {/* Working Hours */}
+          {/* Availability */}
           <div className="card bg-white shadow-md p-6">
             <h2 className="text-xl font-bold mb-4 text-caribbean">Working Hours</h2>
             <div className="flex gap-2 items-center">
