@@ -9,12 +9,18 @@ const SALT_ROUNDS = 10;
 // Configure multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = "./uploads/avatars";
+    // store avatars and licenses in separate folders depending on fieldname
+    const base = "./uploads";
+    const dir =
+      file.fieldname === "licenseDocument"
+        ? path.join(base, "licenses")
+        : path.join(base, "avatars");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    cb(null, `${req.user._id}${path.extname(file.originalname)}`);
+    const suffix = file.fieldname === "licenseDocument" ? "-license" : "";
+    cb(null, `${req.user._id}${suffix}${path.extname(file.originalname)}`);
   },
 });
 
@@ -56,6 +62,10 @@ export const updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
+    // load existing user to merge ptProfile safely
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
     const {
       fullName,
       email,
@@ -66,15 +76,21 @@ export const updateProfile = async (req, res) => {
       profileImageUrl,
       // Upgrade to physiotherapist
       upgradeToPhysiotherapist, // boolean or string "true"
-      institution,
-      isPrivatePractice,
-      clinicIds,
-      licenseImageUrl,
-      licenseNumber,
-      speciality,
-      yearsOfExperience,
-      workingHours,
     } = req.body;
+
+    // ptProfile may be sent as a JSON string in FormData under 'ptProfile'
+    let ptProfilePayload = {};
+    if (req.body.ptProfile) {
+      try {
+        ptProfilePayload =
+          typeof req.body.ptProfile === "string"
+            ? JSON.parse(req.body.ptProfile)
+            : req.body.ptProfile;
+      } catch (err) {
+        console.warn("Failed to parse ptProfile payload", err);
+        ptProfilePayload = {};
+      }
+    }
 
     const updateData = {
       ...(fullName && { fullName }),
@@ -85,9 +101,16 @@ export const updateProfile = async (req, res) => {
       ...(profileImageUrl && { profileImageUrl }),
     };
 
-    // Handle avatar upload (if multer used)
-    if (req.file) {
-      updateData.profileImageUrl = `/uploads/avatars/${req.file.filename}`;
+    // Handle uploads (avatar and license)
+    // multer.fields will populate req.files as an object of arrays
+    if (req.files) {
+      if (req.files.avatar && req.files.avatar[0]) {
+        updateData.profileImageUrl = `/uploads/avatars/${req.files.avatar[0].filename}`;
+      }
+      if (req.files.licenseDocument && req.files.licenseDocument[0]) {
+        // ensure ptProfile exists in updateData
+        ptProfilePayload.licenseImageUrl = `/uploads/licenses/${req.files.licenseDocument[0].filename}`;
+      }
     }
 
     // Hash new password if provided
@@ -96,31 +119,42 @@ export const updateProfile = async (req, res) => {
       updateData.passwordHash = hash;
     }
 
-    // 🔹 Handle Member → Physiotherapist upgrade
-    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
-      const user = await User.findById(userId);
-      if (!user) return res.status(404).json({ error: "User not found" });
+    // Merge ptProfile payload with existing profile (if any)
+    if (Object.keys(ptProfilePayload).length > 0) {
+      // ensure we keep existing nested fields unless overwritten
+      const existing = user.ptProfile ? user.ptProfile.toObject() : {};
+      const merged = {
+        ...existing,
+        ...ptProfilePayload,
+      };
 
-      if (user.role === "physiotherapist") {
-        return res
-          .status(400)
-          .json({ error: "User is already a Physiotherapist" });
+      // keep yearsOfExperience as string if provided
+      if (
+        merged.yearsOfExperience &&
+        typeof merged.yearsOfExperience !== "string"
+      ) {
+        merged.yearsOfExperience = String(merged.yearsOfExperience);
       }
 
-      updateData.role = "physiotherapist";
-      updateData.ptProfile = {
-        institution,
-        isPrivatePractice: isPrivatePractice !== undefined ? isPrivatePractice : true,
-        clinicIds: clinicIds ? [].concat(clinicIds) : [],
-        licenseImageUrl,
-        licenseNumber,
-        bio,
-        speciality: speciality ? [].concat(speciality) : [],
-        yearsOfExperience: yearsOfExperience ? Number(yearsOfExperience) : undefined,
-        workingHours: workingHours || [],
-        licenseVerified: false,
-        promotionActiveUntil: null,
-      };
+      updateData.ptProfile = merged;
+    }
+
+    // Handle upgrade to physiotherapist explicitly if requested
+    if (
+      upgradeToPhysiotherapist === true ||
+      upgradeToPhysiotherapist === "true"
+    ) {
+      if (user.role === "physiotherapist") {
+        // already a PT — nothing to do
+      } else {
+        updateData.role = "physiotherapist";
+        updateData.ptProfile = {
+          ...(updateData.ptProfile || {}),
+          licenseVerified: false,
+          licenseVerificationStatus: "pending",
+          promotionActiveUntil: null,
+        };
+      }
     }
 
     // Perform update
@@ -133,10 +167,9 @@ export const updateProfile = async (req, res) => {
     }
 
     res.json({
-      message:
-        upgradeToPhysiotherapist
-          ? "Profile updated and upgraded to Physiotherapist"
-          : "Profile updated successfully",
+      message: upgradeToPhysiotherapist
+        ? "Profile updated and upgraded to Physiotherapist"
+        : "Profile updated successfully",
       user: updatedUser,
     });
   } catch (err) {

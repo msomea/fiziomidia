@@ -13,7 +13,16 @@ const router = express.Router();
 router.get("/profile", authenticate, userController.getProfile);
 
 // Update current user profile
-router.put("/profile", authenticate, userController.uploadAvatar.single("avatar"), userController.updateProfile);
+router.put(
+  "/profile",
+  authenticate,
+  // accept both avatar and licenseDocument uploads in same request
+  userController.uploadAvatar.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "licenseDocument", maxCount: 1 },
+  ]),
+  userController.updateProfile
+);
 
 // Public: get profile by ID
 router.get("/:id", userController.getUserById);
