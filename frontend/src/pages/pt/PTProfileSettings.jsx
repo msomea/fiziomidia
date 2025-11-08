@@ -13,6 +13,7 @@ import {
 import Services from "../../components/ptsetting/Services";
 import Experience from "../../components/ptsetting/Experience";
 import Education from "../../components/ptsetting/Education";
+import WorkingHours from "../../components/ptsetting/WorkingHours";
 import avatar from "../../assets/avatar.jpg";
 
 const PTProfileSettings = () => {
@@ -44,9 +45,6 @@ const PTProfileSettings = () => {
   });
   
   const [licenseFile, setLicenseFile] = useState(null);
-  const [workingDay, setWorkingDay] = useState('Monday');
-  const [workingFrom, setWorkingFrom] = useState('09:00');
-  const [workingTo, setWorkingTo] = useState('17:00');
 
   // Load initial data
   useEffect(() => {
@@ -139,23 +137,6 @@ const PTProfileSettings = () => {
     toast.success('License document selected');
   };
 
-  const handleAddWorkingHour = () => {
-    const entry = { dayOfWeek: workingDay, from: workingFrom, to: workingTo, isAvailable: true };
-    setFormData(prev => ({
-      ...prev,
-      workingHours: [...(prev.workingHours || []), entry]
-    }));
-    toast.success('Working hour added');
-  };
-
-  const handleRemoveWorkingHour = (index) => {
-    setFormData(prev => {
-      const arr = [...(prev.workingHours || [])];
-      arr.splice(index, 1);
-      return { ...prev, workingHours: arr };
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -164,10 +145,30 @@ const PTProfileSettings = () => {
       // Prepare form data for submission
       const dataToSend = new FormData();
       
-      // Add all form fields
+      // Add top-level (non-ptProfile) form fields only. pt-specific fields will be sent under 'ptProfile'
+      const ptKeys = new Set([
+        'title',
+        'services',
+        'experience',
+        'education',
+        'gallery',
+        'availability',
+        'institution',
+        'licenseNumber',
+        'speciality',
+        'yearsOfExperience',
+        'workingHours',
+        'isPrivatePractice',
+        'licenseVerificationStatus',
+        'licenseVerificationNotes'
+      ]);
+
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && key !== 'previewUrl') {
-          if (Array.isArray(value)) {
+        if (key === 'previewUrl') return;
+        if (ptKeys.has(key)) return; // skip ptProfile keys here
+        if (value !== null && value !== undefined) {
+          if (Array.isArray(value) || typeof value === 'object') {
+            // append JSON for arrays/objects
             dataToSend.append(key, JSON.stringify(value));
           } else if (typeof value === 'boolean') {
             dataToSend.append(key, value.toString());
@@ -447,39 +448,8 @@ const PTProfileSettings = () => {
           {/* Education */}
           <Education formData={formData} setFormData={setFormData} />
 
-          {/* Availability */}
-          <div className="card bg-white shadow-md p-6">
-            <h2 className="text-xl font-bold mb-4 text-caribbean">Working Hours</h2>
-            <div className="flex gap-2 items-center">
-              <select
-                value={workingDay}
-                onChange={(e) => setWorkingDay(e.target.value)}
-                className="select select-bordered"
-              >
-                <option>Monday</option>
-                <option>Tuesday</option>
-                <option>Wednesday</option>
-                <option>Thursday</option>
-                <option>Friday</option>
-                <option>Saturday</option>
-                <option>Sunday</option>
-              </select>
-              <input type="time" value={workingFrom} onChange={(e)=>setWorkingFrom(e.target.value)} className="input input-bordered" />
-              <input type="time" value={workingTo} onChange={(e)=>setWorkingTo(e.target.value)} className="input input-bordered" />
-              <button type="button" onClick={handleAddWorkingHour} className="btn btn-sm bg-caribbean text-white">Add</button>
-            </div>
-
-            <ul className="mt-4 space-y-2 text-black">
-              {(formData.workingHours || []).map((wh, idx) => (
-                <li key={idx} className="flex items-center justify-between">
-                  <div>{wh.dayOfWeek} — {wh.from} to {wh.to}</div>
-                  <div>
-                    <button type="button" onClick={()=>handleRemoveWorkingHour(idx)} className="text-red-600">Remove</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Working Hours */}
+          <WorkingHours formData={formData} setFormData={setFormData} />
 
           {/* Gallery */}
           <div className="card bg-white shadow-md p-6">

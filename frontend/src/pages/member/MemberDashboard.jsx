@@ -75,9 +75,10 @@ const MemberDashboard = () => {
 
   // Initial fetch when component mounts
   useEffect(() => {
-    if (!user) return;
-    fetchUserData();
-  }, [user]);
+    if (user && !memberData) {
+      fetchUserData();
+    }
+  }, []);
 
   // Listen for profile updates
   useEffect(() => {
