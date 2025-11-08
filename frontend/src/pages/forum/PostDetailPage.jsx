@@ -1,45 +1,23 @@
-// src/pages/forum/PostDetailPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
 import dayjs from "dayjs";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
+import { AuthContext } from "../../context/AuthContext";
 
 const PostDetailPage = () => {
   const { id } = useParams();
+  const { user } = useContext(AuthContext); // get logged-in user from context
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [upvotesCount, setUpvotesCount] = useState(0);
-  const [downvotesCount, setDownvotesCount] = useState(0);
-  const [userVote, setUserVote] = useState(0);
-
-  // Fetch current user
-  const fetchUser = async () => {
-    try {
-      const res = await API.get("/auth/me");
-      setUser(res.data.user || res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const fetchPost = async () => {
     try {
+      setLoading(true);
       const res = await API.get(`/forum/posts/${id}`);
-      const p = res.data;
-      setPost(p);
-      setUpvotesCount(p.upvotes?.length || 0);
-      setDownvotesCount(p.downvotes?.length || 0);
-
-      if (user) {
-        const userIdStr = user._id.toString();
-        const upvoted = p.upvotes?.some(u => u.toString() === userIdStr);
-        const downvoted = p.downvotes?.some(u => u.toString() === userIdStr);
-        setUserVote(upvoted ? 1 : downvoted ? -1 : 0);
-      } else setUserVote(0);
+      setPost(res.data);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load post");
@@ -49,26 +27,8 @@ const PostDetailPage = () => {
   };
 
   useEffect(() => {
-    fetchUser();
-  }, []);
-
-  useEffect(() => {
     fetchPost();
-  }, [id, user]);
-
-  const handleVote = async (voteValue) => {
-    if (!user) return toast.error("Please login to vote");
-    try {
-      const res = await API.post(`/forum/posts/${id}/vote`, { vote: voteValue });
-      const data = res.data;
-      setUpvotesCount(data.upvotesCount);
-      setDownvotesCount(data.downvotesCount);
-      setUserVote(data.userVote);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to vote");
-    }
-  };
+  }, [id]);
 
   if (loading) return <p className="text-center text-gray-500">Loading post...</p>;
   if (!post) return <p className="text-center text-gray-500">Post not found</p>;
@@ -83,11 +43,7 @@ const PostDetailPage = () => {
           </p>
         </div>
 
-        <PostVote
-          post={post}
-          refreshPost={fetchPost} 
-          user={user}
-        />
+        <PostVote post={post} refreshPost={fetchPost} user={user} />
       </div>
 
       <p className="mt-4 mb-6">{post.body}</p>

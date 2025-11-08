@@ -2,13 +2,24 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
 import { toast } from "react-hot-toast";
 
-const AuthContext = createContext();
+export const AuthContext = createContext(null);
+
+//  Default guest user
+export const DEFAULT_USER = {
+  _id: null,
+  fullName: "Guest",
+  profileImageUrl: "/assets/avatar.jpg", // fallback avatar
+  role: "guest",
+  createdAt: null,
+  email: null,
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
+    return stored ? JSON.parse(stored) : DEFAULT_USER;
   });
+
   const [loading, setLoading] = useState(true);
 
   // Load current user on app start
@@ -28,23 +39,26 @@ export const AuthProvider = ({ children }) => {
           }
         }
       } catch (err) {
+        if (err.response?.status === 401) {
+          // expired or invalid token
+          setUser(DEFAULT_USER);
+          localStorage.clear();
+        }
         console.warn("Failed to fetch user:", err);
-        setUser(null);
-        localStorage.clear();
       } finally {
         setLoading(false);
       }
     };
     loadUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
+  // Login function
   const login = async ({ email, password }) => {
     try {
       if (!email || !password) throw new Error("Email and password required");
 
       const data = await loginUser({ email, password });
-
       const newUser = { ...data.user, accessToken: data.accessToken };
 
       setUser(newUser);
@@ -59,17 +73,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Logout function
   const logout = async (navigate) => {
     try {
       await logoutUser();
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
-      setUser(null);
+      setUser(DEFAULT_USER); // reset to guest
       localStorage.clear();
-      if (navigate) {
-        navigate("/");
-      }
+      if (navigate) navigate("/");
     }
   };
 
@@ -80,4 +93,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// Custom hook
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context)
+    throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+};

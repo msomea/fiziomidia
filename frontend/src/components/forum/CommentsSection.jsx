@@ -11,8 +11,12 @@ const CommentsSection = ({ post, user, fetchPost }) => {
 
   // Add comment
   const handleAddComment = async (e) => {
-    console.log(post)
     e.preventDefault();
+
+    if (!user?._id) {
+      toast.error("You must be logged in to comment");
+      return;
+    }
     if (!comment.trim()) return;
 
     try {
@@ -31,6 +35,10 @@ const CommentsSection = ({ post, user, fetchPost }) => {
 
   // Delete comment
   const handleDeleteComment = async (commentId) => {
+    if (!user?._id) {
+      toast.error("You must be logged in to delete comments");
+      return;
+    }
     try {
       await API.delete(`/forum/posts/${post.postId}/comments/${commentId}`);
       toast.success("Comment deleted");
@@ -53,12 +61,16 @@ const CommentsSection = ({ post, user, fetchPost }) => {
   };
 
   const saveEdit = async (commentId) => {
+    if (!user?._id) {
+      toast.error("You must be logged in to edit comments");
+      return;
+    }
     if (!editingContent.trim()) {
       toast.error("Comment cannot be empty");
       return;
     }
     try {
-      await API.put(`/forum/posts/${post._id}/comments/${commentId}`, { content: editingContent });
+      await API.put(`/forum/posts/${post.postId}/comments/${commentId}`, { content: editingContent });
       toast.success("Comment updated");
       cancelEdit();
       fetchPost(); // refetch post
@@ -128,12 +140,17 @@ const CommentsSection = ({ post, user, fetchPost }) => {
       <form onSubmit={handleAddComment} className="flex gap-2 mt-4">
         <input
           type="text"
-          placeholder="Add a comment..."
+          placeholder={user?._id ? "Add a comment..." : "Login to comment"}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="flex-1 border border-gray-400 rounded-lg p-2"
+          disabled={!user?._id}
         />
-        <button type="submit" className="bg-caribbean text-white px-4 py-2 rounded-lg" disabled={adding}>
+        <button
+          type="submit"
+          className="bg-caribbean text-white px-4 py-2 rounded-lg"
+          disabled={adding || !user?._id}
+        >
           {adding ? "Posting..." : "Post"}
         </button>
       </form>

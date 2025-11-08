@@ -129,7 +129,7 @@ const UserSchema = new Schema({
   passwordHash: { type: String },
   role: {
     type: String,
-    enum: ["member", "physiotherapist", "admin"],
+    enum: ["guest", "member", "physiotherapist", "admin"],
     default: "member",
   },
   fullName: { type: String },
