@@ -1,23 +1,29 @@
-import React, { useEffect, useState, useContext } from "react";
+// src/pages/forum/PostDetailPage.jsx
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
-import dayjs from "dayjs";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
-import { AuthContext } from "../../context/AuthContext";
+import dayjs from "dayjs";
 
 const PostDetailPage = () => {
   const { id } = useParams();
-  const { user } = useContext(AuthContext); // get logged-in user from context
+  const { user } = useAuth();
+  const { posts, updatePost } = useForum();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchPost = async () => {
     try {
-      setLoading(true);
       const res = await API.get(`/forum/posts/${id}`);
-      setPost(res.data);
+      const p = res.data;
+      setPost(p);
+      // Update global posts if exists
+      updatePost(p);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load post");
@@ -43,7 +49,7 @@ const PostDetailPage = () => {
           </p>
         </div>
 
-        <PostVote post={post} refreshPost={fetchPost} user={user} />
+        <PostVote post={post} user={user} refreshPost={fetchPost} />
       </div>
 
       <p className="mt-4 mb-6">{post.body}</p>

@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
+// Working Hours Schema
 const WorkingHoursSchema = new Schema(
   {
     dayOfWeek: {
@@ -40,9 +41,10 @@ const WorkingHoursSchema = new Schema(
   { _id: false }
 );
 
+// PT Profile Schema
 const PtProfileSchema = new Schema(
   {
-    title: String, // Professional title
+    title: String,
     institution: String,
     isPrivatePractice: { type: Boolean, default: true },
     clinicIds: [{ type: Schema.Types.ObjectId, ref: "Clinic" }],
@@ -54,13 +56,16 @@ const PtProfileSchema = new Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
-    licenseVerificationNotes: String, // Admin feedback on verification
+    licenseVerificationNotes: String,
     licenseSubmittedAt: Date,
     bio: String,
     speciality: [String],
-    yearsOfExperience: { type: String },
+    yearsOfExperience: { type: Number },
     workingHours: [WorkingHoursSchema],
     promotionActiveUntil: Date,
+    promotionType: { type: String, enum: ["featured", "banner", "sponsored"] },
+    promotionViews: { type: Number, default: 0 },
+    promotionClicks: { type: Number, default: 0 },
     education: [
       {
         institution: String,
@@ -77,7 +82,7 @@ const PtProfileSchema = new Schema(
         position: String,
         startDate: Date,
         endDate: Date,
-        current: Boolean,
+        current: { type: Boolean, default: false },
         description: String,
       },
     ],
@@ -85,7 +90,7 @@ const PtProfileSchema = new Schema(
       {
         name: String,
         description: String,
-        duration: Number, // in minutes
+        duration: Number,
         price: Number,
       },
     ],
@@ -120,10 +125,52 @@ const PtProfileSchema = new Schema(
         validUntil: Date,
       },
     ],
+    documents: [
+      {
+        name: String,
+        url: String,
+        verified: { type: Boolean, default: false },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    changeLogs: [
+      {
+        field: String,
+        oldValue: Schema.Types.Mixed,
+        newValue: Schema.Types.Mixed,
+        changedAt: { type: Date, default: Date.now },
+        changedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
+    location: {
+      region: String,
+      district: String,
+      ward: String,
+      street: String,
+      coordinates: { type: [Number], default: undefined }, // optional [lng, lat]
+    },
   },
   { _id: false }
 );
 
+// Virtuals
+PtProfileSchema.virtual("verificationStatus").get(function () {
+  if (!this.licenseNumber || !this.licenseImageUrl) return "incomplete";
+  return this.licenseVerificationStatus;
+});
+
+PtProfileSchema.virtual("isFullyVerified").get(function () {
+  return this.licenseVerified && this.licenseVerificationStatus === "approved";
+});
+
+PtProfileSchema.virtual("daysInPractice").get(function () {
+  if (!this.licenseSubmittedAt) return null;
+  const now = new Date();
+  const days = Math.floor((now - this.licenseSubmittedAt) / (1000 * 60 * 60 * 24));
+  return days;
+});
+
+// User Schema
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true, lowercase: true },
   passwordHash: { type: String },
@@ -136,16 +183,23 @@ const UserSchema = new Schema({
   phone: String,
   profileImageUrl: String,
   ptProfile: PtProfileSchema,
-  location: { type: String },
   bio: String,
   createdAt: { type: Date, default: Date.now },
   lastLogin: Date,
   isLoggedIn: { type: Boolean, default: false },
-
-  // 🔹 Refresh token storage
+  isActive: { type: Boolean, default: true },
   refreshTokens: [
     {
       token: String,
+      createdAt: { type: Date, default: Date.now },
+    },
+  ],
+  appointments: [{ type: Schema.Types.ObjectId, ref: "Appointment" }],
+  notifications: [
+    {
+      type: { type: String },
+      message: String,
+      read: { type: Boolean, default: false },
       createdAt: { type: Date, default: Date.now },
     },
   ],
@@ -159,56 +213,58 @@ UserSchema.index({ "ptProfile.licenseVerificationStatus": 1 });
 UserSchema.index({ "ptProfile.licenseNumber": 1 });
 UserSchema.index({ createdAt: -1 });
 
-// Virtuals on PtProfileSchema
-PtProfileSchema.virtual("verificationStatus").get(function () {
-  if (!this.licenseNumber || !this.licenseImageUrl) return "incomplete";
-  return this.licenseVerificationStatus;
-});
+// Indexes for location search
+UserSchema.index({ "ptProfile.location.region": 1 });
+UserSchema.index({ "ptProfile.location.district": 1 });
+UserSchema.index({ "ptProfile.location.ward": 1 });
+UserSchema.index({ "ptProfile.location.street": 1 });
 
-PtProfileSchema.virtual("isFullyVerified").get(function () {
-  return this.licenseVerified && this.licenseVerificationStatus === "approved";
-});
-
-PtProfileSchema.virtual("daysInPractice").get(function () {
-  if (!this.licenseSubmittedAt) return null;
-  const now = new Date();
-  const days = Math.floor(
-    (now - this.licenseSubmittedAt) / (1000 * 60 * 60 * 24)
-  );
-  return days;
-});
-
-// Middleware for license verification: reset status and validate format when license fields change
+// Middleware for license verification, ratings, working hours
 UserSchema.pre("save", function (next) {
   try {
+    // License changes
     if (
-      this.isModified &&
-      (this.isModified("ptProfile.licenseNumber") ||
-        this.isModified("ptProfile.licenseImageUrl"))
+      this.isModified("ptProfile.licenseNumber") ||
+      this.isModified("ptProfile.licenseImageUrl")
     ) {
       if (this.ptProfile) {
         this.ptProfile.licenseVerified = false;
         this.ptProfile.licenseVerificationStatus = "pending";
         this.ptProfile.licenseSubmittedAt = new Date();
 
-        // Example format validation: XXX-12345 (adjust to your local format)
-        const licenseNumberRegex = /^[A-Z]{3}-\d{5}$/;
+        const licenseNumberRegex = /^MCT\d{4}$/;
         if (
           this.ptProfile.licenseNumber &&
           !licenseNumberRegex.test(this.ptProfile.licenseNumber)
         ) {
-          return next(
-            new Error("Invalid license number format. Must be XXX-12345")
-          );
+          return next(new Error("Invalid license number format. Must be MCT0123"));
         }
       }
     }
 
-    // Rating validation
-    if (this.isModified && this.isModified("ptProfile.ratings")) {
+    // Ratings validation
+    if (this.isModified("ptProfile.ratings")) {
       const ratings = this.ptProfile.ratings;
-      if (ratings && (ratings.average < 0 || ratings.average > 5)) {
-        return next(new Error("Rating must be between 0 and 5"));
+      if (ratings) {
+        if (ratings.average < 0 || ratings.average > 5) {
+          return next(new Error("Rating must be between 0 and 5"));
+        }
+        if (ratings.count < 0) {
+          return next(new Error("Ratings count cannot be negative"));
+        }
+      }
+    }
+
+    // Working hours validation
+    if (this.isModified("ptProfile.workingHours") && this.ptProfile.workingHours) {
+      for (const wh of this.ptProfile.workingHours) {
+        if (wh.from && wh.to && wh.from >= wh.to) {
+          return next(
+            new Error(
+              `Invalid working hours for ${wh.dayOfWeek}: 'from' must be before 'to'`
+            )
+          );
+        }
       }
     }
 
@@ -226,6 +282,39 @@ UserSchema.methods.needsLicenseReview = function () {
     !!this.ptProfile.licenseNumber &&
     !!this.ptProfile.licenseImageUrl
   );
+};
+
+// Instance method: calculate next available slot
+UserSchema.methods.getNextAvailableSlot = function () {
+  if (!this.ptProfile || !this.ptProfile.workingHours || !this.ptProfile.availability.isAcceptingNewPatients) {
+    return null;
+  }
+
+  const workingHours = this.ptProfile.workingHours;
+  const today = new Date();
+  let currentDate = this.ptProfile.availability.nextAvailableDate || today;
+
+  for (let i = 0; i < 30; i++) {
+    const dayOfWeek = currentDate.toLocaleDateString("en-US", { weekday: "long" });
+    const wh = workingHours.find(w => w.dayOfWeek === dayOfWeek && w.isAvailable);
+
+    if (wh) {
+      const fromParts = wh.from.split(":").map(Number);
+      const nextSlot = new Date(currentDate);
+      nextSlot.setHours(fromParts[0], fromParts[1], 0, 0);
+
+      if (nextSlot < today) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
+
+      return nextSlot;
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return null;
 };
 
 // Static: find PTs pending verification

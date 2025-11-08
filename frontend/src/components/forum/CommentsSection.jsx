@@ -1,30 +1,29 @@
 // src/components/forum/CommentsSection.jsx
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios"; // import API directly
+import API from "../../api/axios";
+import { useForum } from "../../context/ForumContext";
 
 const CommentsSection = ({ post, user, fetchPost }) => {
   const [comment, setComment] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
+  const { updatePostComments } = useForum();
 
   // Add comment
   const handleAddComment = async (e) => {
     e.preventDefault();
-
-    if (!user?._id) {
-      toast.error("You must be logged in to comment");
-      return;
-    }
     if (!comment.trim()) return;
+    if (!user || user.role === "guest") return toast.error("Login to comment");
 
     try {
       setAdding(true);
-      await API.post(`/forum/posts/${post.postId}/comments`, { content: comment });
+      const res = await API.post(`/forum/posts/${post.postId}/comments`, { content: comment });
       toast.success("Comment added");
       setComment("");
-      fetchPost(); // refetch post from parent
+      fetchPost();
+      updatePostComments(post.postId, res.data.comments);
     } catch (err) {
       console.error(err);
       toast.error("Failed to add comment");
@@ -35,14 +34,11 @@ const CommentsSection = ({ post, user, fetchPost }) => {
 
   // Delete comment
   const handleDeleteComment = async (commentId) => {
-    if (!user?._id) {
-      toast.error("You must be logged in to delete comments");
-      return;
-    }
     try {
-      await API.delete(`/forum/posts/${post.postId}/comments/${commentId}`);
+      const res = await API.delete(`/forum/posts/${post.postId}/comments/${commentId}`);
       toast.success("Comment deleted");
-      fetchPost(); // refetch post from parent
+      fetchPost();
+      updatePostComments(post.postId, res.data.comments);
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete comment");
