@@ -10,26 +10,24 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import logo from "../assets/fm-bg.svg";
-import { useAuth } from "../context/AuthContext"; // ✅ Global auth context
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
-
-  // Get user + logout directly from global AuthContext
   const { user, logout } = useAuth();
 
-  //  Determine dashboard path based on role
+  const isGuest = user.role === "guest";
+
   const getDashboardPath = () => {
-    if (!user) return "/login";
+    if (isGuest) return "/login"; // guests go to login
     if (user.role === "physiotherapist") return `/dashboard/pt/${user._id}`;
     if (user.role === "member") return `/dashboard/member/${user._id}`;
     if (user.role === "admin") return `/dashboard/admin`;
     return "/";
   };
 
-  // Navbar links
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
@@ -37,10 +35,9 @@ export default function Navbar() {
     { name: "Education", path: "/education" },
   ];
 
-  // Handle logout globally
   const handleLogout = async () => {
     try {
-      await logout(navigate); 
+      await logout(navigate);
       toast.success("Logged out successfully!");
     } catch (err) {
       console.error("Logout failed:", err);
@@ -51,7 +48,7 @@ export default function Navbar() {
   return (
     <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center py-3">
-        {/*  Logo */}
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img
             src={logo}
@@ -79,10 +76,15 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-          {/* When user logged in */}
-          {user ? (
+          {isGuest ? (
+            <Link
+              to="/login"
+              className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
+            >
+              Login
+            </Link>
+          ) : (
             <>
-              {/* Messages Icon */}
               <Link
                 to="/messages"
                 className="btn btn-ghost btn-circle hover:bg-tufts"
@@ -95,16 +97,13 @@ export default function Navbar() {
                 </div>
               </Link>
 
-              {/* User Dropdown */}
               <div className="relative">
                 <button
                   className="flex items-center gap-2 text-black hover:text-caribbean"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                 >
                   <UserCircle className="w-6 h-6" />
-                  <span className="font-medium capitalize">
-                    {user.fullName || "User"}
-                  </span>
+                  <span className="font-medium capitalize">{user.fullName}</span>
                 </button>
 
                 {dropdownOpen && (
@@ -130,18 +129,10 @@ export default function Navbar() {
                 )}
               </div>
             </>
-          ) : (
-            // When not logged in
-            <Link
-              to="/login"
-              className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
-            >
-              Login
-            </Link>
           )}
         </div>
 
-        {/*  Mobile Menu Toggle */}
+        {/* Mobile Menu Toggle */}
         <button
           className="md:hidden text-black"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -168,7 +159,15 @@ export default function Navbar() {
             </NavLink>
           ))}
 
-          {user ? (
+          {isGuest ? (
+            <Link
+              to="/login"
+              onClick={() => setMenuOpen(false)}
+              className="block px-4 py-3 text-caribbean font-semibold hover:text-tufts"
+            >
+              Login
+            </Link>
+          ) : (
             <>
               <Link
                 to={getDashboardPath()}
@@ -187,14 +186,6 @@ export default function Navbar() {
                 Logout
               </button>
             </>
-          ) : (
-            <Link
-              to="/login"
-              onClick={() => setMenuOpen(false)}
-              className="block px-4 py-3 text-caribbean font-semibold hover:text-tufts"
-            >
-              Login
-            </Link>
           )}
         </div>
       )}
