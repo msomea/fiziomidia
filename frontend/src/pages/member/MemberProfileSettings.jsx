@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { updateProfile, getProfile } from "../../api/profile";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
+import LocationSelector from "../../components/dashboard/member/LocationSelector";
 
 export default function MemberProfileSettings() {
   const { user, setUser } = useAuth();
@@ -33,6 +34,16 @@ export default function MemberProfileSettings() {
       }));
     }
   }, [user]);
+
+  //location selector handler
+  const [form, setForm] = useState({
+    name: "",
+    location: {},
+  });
+
+  const handleLocationSelect = (location) => {
+    setForm(prev => ({ ...prev, location }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -229,11 +240,7 @@ export default function MemberProfileSettings() {
               value={formData.phone}
               onChange={handleChange}
             />
-            <InputField
-              label="Location"
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
+            <LocationSelector onLocationSelect={(handleLocationSelect)}
             />
           </div>
 

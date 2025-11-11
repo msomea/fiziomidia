@@ -20,6 +20,7 @@ import forumRoutes from "./routes/forum.js";
 import promotionRoutes from "./routes/promotions.js";
 import messageRoutes from "./routes/message.js";
 import adminRoutes from "./routes/admin.js"
+import locationRoutes from "./routes/location.js";
 
 // Middleware
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -44,6 +45,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/locations", locationRoutes);
 
 // --- Health check ---
 app.get("/health", (req, res) => {
