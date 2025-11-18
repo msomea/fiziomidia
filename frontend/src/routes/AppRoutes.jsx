@@ -24,6 +24,7 @@ import PTForumPage from "../pages/pt/PTForumPage";
 import EditPostPage from "../pages/forum/EditPostPage";
 import CreatePostPage from "../pages/forum/CreatePostPage"
 import PostDetailPage from "../pages/forum/PostDetailPage";
+import UpgradeToPT from "../components/dashboard/member/UpgradeToPT";
 
 export default function AppRoutes() {
   return (
@@ -50,6 +51,7 @@ export default function AppRoutes() {
       {/* Dashboard Routes */}
       <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />
       <Route path="/dashboard/member/:id" element={<MemberDashboard />} />
+      <Route path="/upgrade-to-pt" element={<UpgradeToPT />} />
 
       {/* Forum Routes */}
       <Route path="/forum/pt/posts/:id" element={<PTForumPage />} />

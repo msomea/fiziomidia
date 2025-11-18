@@ -142,13 +142,6 @@ const PtProfileSchema = new Schema(
         changedBy: { type: Schema.Types.ObjectId, ref: "User" },
       },
     ],
-    location: {
-      region: String,
-      district: String,
-      ward: String,
-      street: String,
-      coordinates: { type: [Number], default: undefined }, // optional [lng, lat]
-    },
   },
   { _id: false }
 );
@@ -203,6 +196,15 @@ const UserSchema = new Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+  location: 
+    {
+    region: String,
+    district: String,
+    ward: String,
+    street: String,
+    coordinates: { type: [Number], default: undefined }, // optional [lng, lat]
+  },
+
 });
 
 // Indexes

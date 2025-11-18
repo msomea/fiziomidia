@@ -1,84 +1,59 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import { updateProfile, getProfile } from "../../api/profile";
-import { API_URL } from "../../config/constants";
-import avatar from "../../assets/avatar.jpg";
+import { updateProfile } from "../../api/profile";
 import LocationSelector from "../../components/dashboard/member/LocationSelector";
+import InputField from "../../components/form/InputField";
+import TextAreaField from "../../components/form/TextAreaField";
+import AvatarUpload from "../../components/form/AvatarUpload";
 
 export default function MemberProfileSettings() {
+  const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
   const { user, setUser } = useAuth();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
-    location: "",
     bio: "",
     password: "",
     confirmPassword: "",
     profileImageUrl: "",
   });
-  const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState(null);
 
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Prefill form with user data
   useEffect(() => {
     if (user) {
-      setFormData((prev) => ({
-        ...prev,
+      setFormData({
         fullName: user.fullName || "",
         email: user.email || "",
         phone: user.phone || "",
-        location: user.location || "",
         bio: user.bio || "",
-        profileImageUrl: user.profileImageUrl || "",
-      }));
+        password: "",
+        confirmPassword: "",
+        profileImageUrl: user.profileImageUrl
+          ? `${API_URL}${user.profileImageUrl}?t=${Date.now()}`
+          : "",
+      });
+
+      if (user.location) {
+        setSelectedLocation({
+          region: user.location.region || "",
+          district: user.location.district || "",
+          ward: user.location.ward || "",
+          street: user.location.street || "",
+        });
+      }
     }
   }, [user]);
 
-  //location selector handler
-  const [form, setForm] = useState({
-    name: "",
-    location: {},
-  });
-
-  const handleLocationSelect = (location) => {
-    setForm(prev => ({ ...prev, location }));
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-    
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
-      return;
-    }
-
-    // Create a new preview URL and revoke the old one if it exists
-    if (formData.previewUrl) {
-      URL.revokeObjectURL(formData.previewUrl);
-    }
-    const previewUrl = URL.createObjectURL(file);
-    
-    setImageFile(file);
-    setFormData(prev => ({
-      ...prev,
-      profileImageUrl: previewUrl,
-      previewUrl: previewUrl // Store the preview URL to clean up later
-    }));
-    toast.success('Image selected successfully');
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -93,69 +68,58 @@ export default function MemberProfileSettings() {
 
     try {
       const dataToSend = new FormData();
-      
-      // Only append non-empty values
+
+      // Append normal fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (value && 
-            key !== "confirmPassword" && 
-            key !== "profileImageUrl" && 
-            key !== "previewUrl") {
+        if (value && key !== "confirmPassword" && key !== "profileImageUrl") {
           dataToSend.append(key, value);
         }
       });
 
-      if (imageFile) {
-        dataToSend.append("avatar", imageFile);
-      }
+      // Append avatar if selected
+      if (imageFile) dataToSend.append("avatar", imageFile);
 
-      const updatedUser = await updateProfile(dataToSend);
+      // Append location
+      if (selectedLocation) dataToSend.append("location", JSON.stringify(selectedLocation));
 
-      // Clean up the preview URL
-      if (formData.previewUrl) {
-        URL.revokeObjectURL(formData.previewUrl);
-      }
+      // Send update request
+      const response = await updateProfile(dataToSend);
+      const updatedUser = response.user || response;
 
-      // Add timestamp to force image refresh
-      const timestamp = new Date().getTime();
+      // Build new avatar URL with timestamp
       const newProfileImageUrl = updatedUser.profileImageUrl
-        ? updatedUser.profileImageUrl.includes('?')
-          ? `${updatedUser.profileImageUrl}&t=${timestamp}`
-          : `${updatedUser.profileImageUrl}?t=${timestamp}`
-        : null;
+        ? `${API_URL}${updatedUser.profileImageUrl}?t=${Date.now()}`
+        : "";
 
-      // Create the complete updated user data
-      const updatedUserData = {
-        ...user,
-        ...updatedUser,
-        profileImageUrl: newProfileImageUrl
-      };
-      
-      // Update auth context
+      // Update auth context and localStorage
+      const updatedUserData = { ...user, ...updatedUser, profileImageUrl: newProfileImageUrl };
       setUser(updatedUserData);
-
-      // Update localStorage with the same data
       localStorage.setItem("user", JSON.stringify(updatedUserData));
 
-      // Fetch fresh profile data to ensure everything is in sync
-      const freshProfileData = await getProfile();
-      
-      // Update form data with fresh values
-      setFormData(prev => ({
-        ...prev,
-        ...freshProfileData,
+      // Update form state with fresh data
+      setFormData({
+        fullName: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        bio: updatedUser.bio,
         password: "",
         confirmPassword: "",
-        previewUrl: null,
-        profileImageUrl: newProfileImageUrl
-      }));
+        profileImageUrl: newProfileImageUrl,
+      });
 
-      // Reset the image file state
+      // Update location
+      if (updatedUser.location) {
+        setSelectedLocation({
+          region: updatedUser.location.region || "",
+          district: updatedUser.location.district || "",
+          ward: updatedUser.location.ward || "",
+          street: updatedUser.location.street || "",
+        });
+      }
+
       setImageFile(null);
-      
       toast.success("Profile updated successfully!");
-
-      // Force a re-render of other components that might be showing the profile image
-      window.dispatchEvent(new Event('profileUpdated'));
+      window.dispatchEvent(new Event("profileUpdated"));
     } catch (err) {
       console.error("Profile update failed:", err);
       toast.error(err.response?.data?.error || "Profile update failed");
@@ -172,132 +136,42 @@ export default function MemberProfileSettings() {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative group">
-              <img
-                src={
-                  formData.previewUrl // First check for preview URL
-                    ? formData.previewUrl
-                    : formData.profileImageUrl // Then check for profile image URL
-                    ? formData.profileImageUrl.startsWith("http")
-                      ? formData.profileImageUrl
-                      : `${API_URL}${formData.profileImageUrl}`
-                    : user?.profileImageUrl // Finally fall back to user profile image
-                    ? user.profileImageUrl.startsWith("http")
-                      ? user.profileImageUrl
-                      : `${API_URL}${user.profileImageUrl}`
-                    : avatar // Default avatar as last resort
-                }
-                alt="Avatar"
-                className="w-32 h-32 rounded-full object-cover border-4 border-caribbean shadow-lg transition-transform duration-300 group-hover:opacity-75"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = avatar;
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <label htmlFor="avatar-upload" className="cursor-pointer bg-caribbean text-white px-3 py-2 rounded-lg hover:bg-[#03bb74] transition-colors">
-                  Change Photo
-                </label>
-              </div>
-            </div>
-            
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            
-            {imageFile && (
-              <div className="text-sm text-gray-600">
-                Selected: {imageFile.name}
-              </div>
-            )}
-          </div>
+          {/* Avatar Upload */}
+          <AvatarUpload profileImageUrl={formData.profileImageUrl} setImageFile={setImageFile} />
 
+          {/* Name & Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Full Name"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleChange}
-            />
-            <InputField
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
+            <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
+            <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
           </div>
 
+          {/* Phone & Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="Phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-            <LocationSelector onLocationSelect={(handleLocationSelect)}
-            />
+            <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+            {/* <div>
+              <label className="font-semibold text-black">Location</label>
+              <LocationSelector onLocationSelect={setSelectedLocation} initialLocation={selectedLocation} />
+            </div> */}
           </div>
 
-          <div>
-            <label className="font-semibold text-black">Bio</label>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleChange}
-              rows="3"
-              className="textarea textarea-bordered w-full mt-1"
-            />
-          </div>
+          {/* Bio */}
+          <TextAreaField label="Bio" name="bio" value={formData.bio} onChange={handleChange} />
 
+          {/* Password */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField
-              label="New Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            <InputField
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
+            <InputField label="New Password" name="password" type="password" value={formData.password} onChange={handleChange} />
+            <InputField label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
           </div>
 
           <button
             type="submit"
-            className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${
-              loading ? "opacity-70 cursor-not-allowed" : ""
-            }`}
+            className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
             disabled={loading}
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
         </form>
       </div>
-    </div>
-  );
-}
-
-function InputField({ label, name, type = "text", value, onChange }) {
-  return (
-    <div className="form-control">
-      <label className="font-semibold text-black">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className="input input-bordered w-full mt-1"
-      />
     </div>
   );
 }

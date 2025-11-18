@@ -23,7 +23,7 @@ import avatar from "../../assets/avatar.jpg";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
-// ✅ Default guest user
+// Default guest user
 const DEFAULT_USER = {
   _id: null,
   fullName: "Guest",
@@ -39,17 +39,9 @@ const MemberDashboard = () => {
 
   // Use authUser or guest as initial state
   const [memberData, setMemberData] = useState(authUser || DEFAULT_USER);
+  console.log("User", memberData)
   const [loading, setLoading] = useState(authUser?.role !== "guest");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showUpgradeForm, setShowUpgradeForm] = useState(false);
-  const [formData, setFormData] = useState({
-    institution: "",
-    isPrivatePractice: true,
-    licenseNumber: "",
-    speciality: "",
-    yearsOfExperience: "",
-    bio: "",
-  });
 
   // Fetch full user data if logged in
   const fetchUserData = async () => {
@@ -61,8 +53,6 @@ const MemberDashboard = () => {
     try {
       const response = await API.get("/users/profile");
       const fullUserData = response.data;
-
-      // Add timestamp to force image refresh
       const timestamp = new Date().getTime();
       if (fullUserData.profileImageUrl) {
         fullUserData.profileImageUrl = fullUserData.profileImageUrl.includes("?")
@@ -87,10 +77,8 @@ const MemberDashboard = () => {
 
   useEffect(() => {
     fetchUserData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Listen for profile updates
   useEffect(() => {
     const handleProfileUpdate = () => {
       fetchUserData();
@@ -116,39 +104,6 @@ const MemberDashboard = () => {
       ? memberData.profileImageUrl
       : `${API_URL}${memberData.profileImageUrl}`
     : avatar;
-
-  // Submit PT Upgrade Form
-  const handleUpgradeSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const upgradeData = {
-        upgradeToPhysiotherapist: true,
-        institution: formData.institution,
-        isPrivatePractice: formData.isPrivatePractice,
-        licenseNumber: formData.licenseNumber,
-        speciality: formData.speciality.split(",").map((s) => s.trim()),
-        yearsOfExperience: Number(formData.yearsOfExperience),
-        bio: formData.bio,
-      };
-
-      const response = await API.put("/users/profile", upgradeData);
-      const updatedUser = response.data.user;
-
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setMemberData(updatedUser);
-
-      toast.success("You are now a Physiotherapist!");
-      setShowUpgradeForm(false);
-      navigate(`/dashboard/pt/${memberData._id}`);
-    } catch (err) {
-      console.error("Upgrade failed:", err);
-      toast.error(err.response?.data?.error || "Failed to upgrade to Physiotherapist");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
@@ -189,12 +144,12 @@ const MemberDashboard = () => {
                   </Link>
 
                   {memberData.role === "member" && (
-                    <button
-                      onClick={() => setShowUpgradeForm(true)}
+                    <Link
+                      to="/upgrade-to-pt"
                       className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"
                     >
                       Become a Physiotherapist
-                    </button>
+                    </Link>
                   )}
                 </>
               )}
@@ -265,93 +220,6 @@ const MemberDashboard = () => {
           </div>
         )}
       </div>
-
-      {/* Upgrade to PT Modal */}
-      {showUpgradeForm && memberData.role === "member" && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg w-96">
-            <h2 className="text-lg font-semibold mb-4 text-center">
-              Upgrade to Physiotherapist
-            </h2>
-            <form onSubmit={handleUpgradeSubmit} className="space-y-3">
-              <input
-                type="text"
-                placeholder="Institution"
-                value={formData.institution}
-                onChange={(e) =>
-                  setFormData({ ...formData, institution: e.target.value })
-                }
-                className="w-full border rounded-lg p-2"
-                required
-              />
-              <input
-                type="text"
-                placeholder="License Number"
-                value={formData.licenseNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, licenseNumber: e.target.value })
-                }
-                className="w-full border rounded-lg p-2"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Speciality (comma separated)"
-                value={formData.speciality}
-                onChange={(e) =>
-                  setFormData({ ...formData, speciality: e.target.value })
-                }
-                className="w-full border rounded-lg p-2"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Years of Experience"
-                value={formData.yearsOfExperience}
-                onChange={(e) =>
-                  setFormData({ ...formData, yearsOfExperience: e.target.value })
-                }
-                className="w-full border rounded-lg p-2"
-                required
-              />
-              <textarea
-                placeholder="Short Bio"
-                value={formData.bio}
-                onChange={(e) =>
-                  setFormData({ ...formData, bio: e.target.value })
-                }
-                className="w-full border rounded-lg p-2"
-              />
-              <div className="flex justify-between mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowUpgradeForm(false)}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-100"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`px-4 py-2 bg-caribbean text-white rounded-lg hover:bg-[#03bb74] flex items-center gap-2 ${
-                    loading ? "opacity-70 cursor-not-allowed" : ""
-                  }`}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="inline-block animate-spin">⌛</span>
-                      Processing...
-                    </>
-                  ) : (
-                    "Submit"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

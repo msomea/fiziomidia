@@ -56,16 +56,21 @@ export const getUserById = async (req, res) => {
   }
 };
 
-// Update current user's profile
+
 // PUT /api/users/profile
+// =========================================
+// UPDATE CURRENT USER PROFILE (FULL FIXED)
+// =========================================
+
 export const updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // load existing user to merge ptProfile safely
+    // Load existing user
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    // Extract simple fields from body
     const {
       fullName,
       email,
@@ -73,13 +78,52 @@ export const updateProfile = async (req, res) => {
       location,
       bio,
       password,
-      profileImageUrl,
-      // Upgrade to physiotherapist
-      upgradeToPhysiotherapist, // boolean or string "true"
+      upgradeToPhysiotherapist,
     } = req.body;
 
-    // ptProfile may be sent as a JSON string in FormData under 'ptProfile'
+    // ---------------------------------------------------
+    // 1️⃣ Prepare updateData
+    // ---------------------------------------------------
+    const updateData = {
+      ...(fullName && { fullName }),
+      ...(email && { email }),
+      ...(phone && { phone }),
+      ...(bio && { bio }),
+    };
+
+    // --------------------------------------------
+    // 2️⃣ Handle Location (try to parse if sent)
+    // --------------------------------------------
+    if (location) {
+      try {
+        updateData.location =
+          typeof location === "string" ? JSON.parse(location) : location;
+      } catch (err) {
+        console.error("Invalid location format", err);
+      }
+    }
+
+    // --------------------------------------------
+    // 3️⃣ Handle avatar / license file uploads ONLY
+    // --------------------------------------------
+    if (req.files) {
+      // Avatar upload
+      if (req.files.avatar && req.files.avatar[0]) {
+        updateData.profileImageUrl = `/uploads/avatars/${req.files.avatar[0].filename}`;
+      }
+
+      // License upload
+      if (req.files.licenseDocument && req.files.licenseDocument[0]) {
+        if (!updateData.ptProfile) updateData.ptProfile = {};
+        updateData.ptProfile.licenseImageUrl = `/uploads/licenses/${req.files.licenseDocument[0].filename}`;
+      }
+    }
+
+    // --------------------------------------------
+    // 4️⃣ Handle ptProfile merging cleanly
+    // --------------------------------------------
     let ptProfilePayload = {};
+
     if (req.body.ptProfile) {
       try {
         ptProfilePayload =
@@ -87,66 +131,40 @@ export const updateProfile = async (req, res) => {
             ? JSON.parse(req.body.ptProfile)
             : req.body.ptProfile;
       } catch (err) {
-        console.warn("Failed to parse ptProfile payload", err);
-        ptProfilePayload = {};
+        console.warn("Failed to parse ptProfile", err);
       }
     }
 
-    const updateData = {
-      ...(fullName && { fullName }),
-      ...(email && { email }),
-      ...(phone && { phone }),
-      ...(location && { location }),
-      ...(bio && { bio }),
-      ...(profileImageUrl && { profileImageUrl }),
-    };
+    // Merge if there is data
+    if (Object.keys(ptProfilePayload).length > 0) {
+      updateData.ptProfile = {
+        ...(user.ptProfile?.toObject?.() || user.ptProfile || {}),
+        ...ptProfilePayload,
+      };
 
-    // Handle uploads (avatar and license)
-    // multer.fields will populate req.files as an object of arrays
-    if (req.files) {
-      if (req.files.avatar && req.files.avatar[0]) {
-        updateData.profileImageUrl = `/uploads/avatars/${req.files.avatar[0].filename}`;
-      }
-      if (req.files.licenseDocument && req.files.licenseDocument[0]) {
-        // ensure ptProfile exists in updateData
-        ptProfilePayload.licenseImageUrl = `/uploads/licenses/${req.files.licenseDocument[0].filename}`;
+      // Enforce string for yearsOfExperience
+      if (
+        updateData.ptProfile.yearsOfExperience &&
+        typeof updateData.ptProfile.yearsOfExperience !== "string"
+      ) {
+        updateData.ptProfile.yearsOfExperience =
+          String(updateData.ptProfile.yearsOfExperience);
       }
     }
 
-    // Hash new password if provided
+    // ------------------------------------------------------------
+    // 5️⃣ Handle password hashing IF password was changed
+    // ------------------------------------------------------------
     if (password) {
       const hash = await bcrypt.hash(password, SALT_ROUNDS);
       updateData.passwordHash = hash;
     }
 
-    // Merge ptProfile payload with existing profile (if any)
-    if (Object.keys(ptProfilePayload).length > 0) {
-      // ensure we keep existing nested fields unless overwritten
-      const existing = user.ptProfile ? user.ptProfile.toObject() : {};
-      const merged = {
-        ...existing,
-        ...ptProfilePayload,
-      };
-
-      // keep yearsOfExperience as string if provided
-      if (
-        merged.yearsOfExperience &&
-        typeof merged.yearsOfExperience !== "string"
-      ) {
-        merged.yearsOfExperience = String(merged.yearsOfExperience);
-      }
-
-      updateData.ptProfile = merged;
-    }
-
-    // Handle upgrade to physiotherapist explicitly if requested
-    if (
-      upgradeToPhysiotherapist === true ||
-      upgradeToPhysiotherapist === "true"
-    ) {
-      if (user.role === "physiotherapist") {
-        // already a PT — nothing to do
-      } else {
+    // ------------------------------------------------------------
+    // 6️⃣ Handle upgrade to physiotherapist
+    // ------------------------------------------------------------
+    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
+      if (user.role !== "physiotherapist") {
         updateData.role = "physiotherapist";
         updateData.ptProfile = {
           ...(updateData.ptProfile || {}),
@@ -157,14 +175,12 @@ export const updateProfile = async (req, res) => {
       }
     }
 
-    // Perform update
+    // ------------------------------------------------------------
+    // 7️⃣ Save and return final updated user
+    // ------------------------------------------------------------
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     }).select("-passwordHash");
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: "User not found" });
-    }
 
     res.json({
       message: upgradeToPhysiotherapist
@@ -177,7 +193,4 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
-
-
-
 
