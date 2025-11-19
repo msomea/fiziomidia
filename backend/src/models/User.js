@@ -196,13 +196,20 @@ const UserSchema = new Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
-  location: 
-    {
-    region: String,
-    district: String,
-    ward: String,
-    street: String,
-    coordinates: { type: [Number], default: undefined }, // optional [lng, lat]
+  location: {
+    type: {
+      type: String,      
+      enum: ["Point"],
+      default: "Point"
+    },
+    coordinates: {
+      type: [Number],
+      default: [0, 0]
+    },
+    region: { type: String },
+    district: { type: String },
+    ward: { type: String },
+    street: { type: String }
   },
 
 });

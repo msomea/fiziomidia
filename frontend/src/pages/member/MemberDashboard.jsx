@@ -39,7 +39,6 @@ const MemberDashboard = () => {
 
   // Use authUser or guest as initial state
   const [memberData, setMemberData] = useState(authUser || DEFAULT_USER);
-  console.log("User", memberData)
   const [loading, setLoading] = useState(authUser?.role !== "guest");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

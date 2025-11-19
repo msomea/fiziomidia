@@ -20,7 +20,6 @@ export default function MemberProfileSettings() {
     confirmPassword: "",
     profileImageUrl: "",
   });
-
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -53,7 +52,7 @@ export default function MemberProfileSettings() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -80,7 +79,17 @@ export default function MemberProfileSettings() {
       if (imageFile) dataToSend.append("avatar", imageFile);
 
       // Append location
-      if (selectedLocation) dataToSend.append("location", JSON.stringify(selectedLocation));
+      if (selectedLocation) {
+        const geoJsonLocation = {
+          type: "Point",
+          coordinates: [0, 0],
+          region: selectedLocation.region,
+          district: selectedLocation.district,
+          ward: selectedLocation.ward,
+          street: selectedLocation.street,
+        };
+        dataToSend.append("location", JSON.stringify(geoJsonLocation));
+      }
 
       // Send update request
       const response = await updateProfile(dataToSend);
@@ -92,7 +101,11 @@ export default function MemberProfileSettings() {
         : "";
 
       // Update auth context and localStorage
-      const updatedUserData = { ...user, ...updatedUser, profileImageUrl: newProfileImageUrl };
+      const updatedUserData = {
+        ...user,
+        ...updatedUser,
+        profileImageUrl: newProfileImageUrl,
+      };
       setUser(updatedUserData);
       localStorage.setItem("user", JSON.stringify(updatedUserData));
 
@@ -137,35 +150,87 @@ export default function MemberProfileSettings() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Upload */}
-          <AvatarUpload profileImageUrl={formData.profileImageUrl} setImageFile={setImageFile} />
+          <AvatarUpload
+            profileImageUrl={formData.profileImageUrl}
+            setImageFile={setImageFile}
+          />
 
           {/* Name & Email */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
-            <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
+            <InputField
+              label="Full Name"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
           </div>
 
           {/* Phone & Location */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-            {/* <div>
-              <label className="font-semibold text-black">Location</label>
-              <LocationSelector onLocationSelect={setSelectedLocation} initialLocation={selectedLocation} />
-            </div> */}
+            <InputField
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+            />
+
+            {/* Location Selector */}
+            <div className="col-span-1 md:col-span-2">
+              <label className="font-semibold text-black mb-1 block">
+                Location
+              </label>
+              <LocationSelector
+                onLocationSelect={setSelectedLocation}
+                initialLocation={selectedLocation}
+              />
+              {selectedLocation && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Selected: {selectedLocation.region},{" "}
+                  {selectedLocation.district}, {selectedLocation.ward},{" "}
+                  {selectedLocation.street}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Bio */}
-          <TextAreaField label="Bio" name="bio" value={formData.bio} onChange={handleChange} />
+          <TextAreaField
+            label="Bio"
+            name="bio"
+            value={formData.bio}
+            onChange={handleChange}
+          />
 
           {/* Password */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="New Password" name="password" type="password" value={formData.password} onChange={handleChange} />
-            <InputField label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} />
+            <InputField
+              label="New Password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+            />
+            <InputField
+              label="Confirm Password"
+              name="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+            />
           </div>
 
           <button
             type="submit"
-            className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
+            className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${
+              loading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
             disabled={loading}
           >
             {loading ? "Saving..." : "Save Changes"}

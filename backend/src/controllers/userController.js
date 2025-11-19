@@ -92,15 +92,19 @@ export const updateProfile = async (req, res) => {
     };
 
     // --------------------------------------------
-    // 2️⃣ Handle Location (try to parse if sent)
+    // 2️⃣ Handle Location (parse and add to updateData)
     // --------------------------------------------
     if (location) {
-      try {
-        updateData.location =
-          typeof location === "string" ? JSON.parse(location) : location;
-      } catch (err) {
-        console.error("Invalid location format", err);
-      }
+      const loc = typeof location === "string" ? JSON.parse(location) : location;
+
+      updateData.location = {
+        type: "Point",
+        coordinates: loc.coordinates || [0, 0],
+        region: loc.region,
+        district: loc.district,
+        ward: loc.ward,
+        street: loc.street,
+      };
     }
 
     // --------------------------------------------
@@ -181,7 +185,6 @@ export const updateProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     }).select("-passwordHash");
-
     res.json({
       message: upgradeToPhysiotherapist
         ? "Profile updated and upgraded to Physiotherapist"

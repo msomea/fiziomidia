@@ -15,7 +15,6 @@ const ConversationPage = () => {
 
   const handleSend = () => {
     if (message.trim() === "") return;
-    console.log("Send:", message);
     setMessage("");
   };
 

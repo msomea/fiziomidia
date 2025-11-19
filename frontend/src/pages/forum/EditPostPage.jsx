@@ -20,7 +20,6 @@ const EditPostPage = () => {
         setPost(res.data);
         setTitle(res.data.title);
         setBody(res.data.body);
-        console.log("body", res.data.body)
       } catch (err) {
         console.error("Error fetching post:", err);
         toast.error("Failed to load post details");

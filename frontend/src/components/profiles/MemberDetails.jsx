@@ -12,6 +12,7 @@ const MemberDetails = () => {
       try {
         const data = await getUserById(user._id);
         setDetails(data);
+        console.log("User", user)
       } catch (err) {
         console.error("Failed to fetch Member Details:", err);
       }
@@ -27,7 +28,7 @@ const MemberDetails = () => {
         <p>Name: {user.fullName || "No name provided"}</p>
         <p>Email: {user.email || "No email provided"}</p>
         <p> Bio: {user.bio || "No Bio"}</p>
-        <p>Location: {user.location || "No Location provided"}</p>
+        <p>Location: {user.location.region || "No Location provided"}</p>
       </div>
     </section>
   );

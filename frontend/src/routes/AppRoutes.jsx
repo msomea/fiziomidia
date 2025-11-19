@@ -69,6 +69,9 @@ export default function AppRoutes() {
       {/* Admin Routes */}
       <Route path="/subs/:id/sponsor" element={<AdminSponsorships />} />
       <Route path="/dashboard/admin" element={<AdminDashboard />} />
+
+      {/* Temp routes for debuging */}
+      
       
     </Routes>
   );

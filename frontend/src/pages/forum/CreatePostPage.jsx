@@ -33,8 +33,6 @@ const CreatePost = () => {
       );
       setTopics(res.data.subs || []);
       setTotalPages(res.data.pagination.totalPages || 1);
-      setPage(res.data.pagination.page || 1);
-      console.log(`Selected Topic`, selectedTopic)
     } catch (err) {
       console.error("Error fetching topics:", err);
     } finally {
@@ -51,7 +49,6 @@ const CreatePost = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Topi ID", selectedTopic._id)
     if (!selectedTopic) return toast.error("Please select a topic.");
 
     setSubmitting(true);
