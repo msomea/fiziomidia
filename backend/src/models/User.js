@@ -231,42 +231,54 @@ UserSchema.index({ "ptProfile.location.street": 1 });
 // Middleware for license verification, ratings, working hours
 UserSchema.pre("save", function (next) {
   try {
-    // License changes
+    // If ptProfile is null, skip all ptProfile-specific checks
+    const hasPT = !!this.ptProfile;
+    // LICENSE VALIDATION
     if (
-      this.isModified("ptProfile.licenseNumber") ||
-      this.isModified("ptProfile.licenseImageUrl")
+      hasPT &&
+      (this.isModified("ptProfile.licenseNumber") ||
+        this.isModified("ptProfile.licenseImageUrl"))
     ) {
-      if (this.ptProfile) {
-        this.ptProfile.licenseVerified = false;
-        this.ptProfile.licenseVerificationStatus = "pending";
-        this.ptProfile.licenseSubmittedAt = new Date();
+      this.ptProfile.licenseVerified = false;
+      this.ptProfile.licenseVerificationStatus = "pending";
+      this.ptProfile.licenseSubmittedAt = new Date();
 
-        const licenseNumberRegex = /^MCT\d{4}$/;
-        if (
-          this.ptProfile.licenseNumber &&
-          !licenseNumberRegex.test(this.ptProfile.licenseNumber)
-        ) {
-          return next(new Error("Invalid license number format. Must be MCT0123"));
-        }
+      const licenseNumberRegex = /^MCT([A-Z]{2,3})?\d{4}$/;
+      if (
+        this.ptProfile.licenseNumber &&
+        !licenseNumberRegex.test(this.ptProfile.licenseNumber)
+      ) {
+        return next(
+          new Error("Invalid license number format. Must be MCT0123")
+        );
       }
     }
-
-    // Ratings validation
-    if (this.isModified("ptProfile.ratings")) {
+    // RATINGS VALIDATION
+    if (hasPT && this.isModified("ptProfile.ratings")) {
       const ratings = this.ptProfile.ratings;
       if (ratings) {
-        if (ratings.average < 0 || ratings.average > 5) {
+        if (
+          typeof ratings.average === "number" &&
+          (ratings.average < 0 || ratings.average > 5)
+        ) {
           return next(new Error("Rating must be between 0 and 5"));
         }
-        if (ratings.count < 0) {
-          return next(new Error("Ratings count cannot be negative"));
+
+        if (
+          typeof ratings.count === "number" &&
+          ratings.count < 0
+        ) {
+          return next(
+            new Error("Ratings count cannot be negative")
+          );
         }
       }
     }
+    // WORKING HOURS VALIDATION
+    if (hasPT && this.isModified("ptProfile.workingHours")) {
+      const whList = this.ptProfile.workingHours || [];
 
-    // Working hours validation
-    if (this.isModified("ptProfile.workingHours") && this.ptProfile.workingHours) {
-      for (const wh of this.ptProfile.workingHours) {
+      for (const wh of whList) {
         if (wh.from && wh.to && wh.from >= wh.to) {
           return next(
             new Error(
@@ -282,6 +294,7 @@ UserSchema.pre("save", function (next) {
     return next(err);
   }
 });
+
 
 // Instance method: needs license review
 UserSchema.methods.needsLicenseReview = function () {
