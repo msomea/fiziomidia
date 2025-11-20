@@ -17,28 +17,21 @@ const Services = ({ formData, setFormData }) => {
 
   const handleNewServiceChange = (e) => {
     const { name, value } = e.target;
-    setNewService(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setNewService(prev => ({ ...prev, [name]: value }));
   };
 
-  const addService = (e) => {
-    e.preventDefault();
-    
+  const addService = () => {
     // Validate inputs
     if (!newService.name || !newService.description || !newService.duration || !newService.price) {
       toast.error('Please fill in all service details');
       return;
     }
 
-    // Validate duration is a number
     if (isNaN(newService.duration)) {
       toast.error('Duration must be a number');
       return;
     }
 
-    // Validate price is a number
     if (isNaN(newService.price)) {
       toast.error('Price must be a number');
       return;
@@ -47,15 +40,9 @@ const Services = ({ formData, setFormData }) => {
     const updatedServices = [...services, newService];
     setServices(updatedServices);
     setFormData(prev => ({ ...prev, services: updatedServices }));
-    
+
     // Reset form
-    setNewService({
-      name: '',
-      description: '',
-      duration: '',
-      price: ''
-    });
-    
+    setNewService({ name: '', description: '', duration: '', price: '' });
     toast.success('Service added successfully');
   };
 
@@ -73,11 +60,12 @@ const Services = ({ formData, setFormData }) => {
       {/* Service List */}
       <div className="mb-6 space-y-4">
         {services.map((service, index) => (
-          <div key={index} className="flex items-start justify-between p-4 bg-alice rounded-lg">
+          <div key={service.name || index} className="flex items-start justify-between p-4 bg-alice rounded-lg">
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-tufts">{service.name}</h3>
                 <button
+                  type="button"
                   onClick={() => removeService(index)}
                   className="text-red-500 hover:text-red-700"
                 >
@@ -94,8 +82,8 @@ const Services = ({ formData, setFormData }) => {
         ))}
       </div>
 
-      {/* Add New Service Form */}
-      <form onSubmit={addService} className="space-y-4">
+      {/* Add New Service */}
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
@@ -131,13 +119,14 @@ const Services = ({ formData, setFormData }) => {
         </div>
         
         <button
-          type="submit"
+          type="button" // <- changed from submit
+          onClick={addService} // manually call addService
           className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
         >
           <Plus size={18} />
           Add Service
         </button>
-      </form>
+      </div>
     </div>
   );
 };

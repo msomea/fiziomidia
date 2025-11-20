@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../../../api/axios";
+import API from "../../api/axios";
 import toast from "react-hot-toast";
 
 export default function LocationSelector({ onLocationSelect, initialLocation }) {
@@ -132,7 +132,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
           setSelectedWard("");
           setSelectedStreet("");
         }}
-        className="select text-white bg-caribbean select-bordered w-full"
+        className="select select-bordered w-full"
       >
         <option value="">Select Region</option>
         {regions.map((r) => (
@@ -150,7 +150,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
           setSelectedWard("");
           setSelectedStreet("");
         }}
-        className="select text-white bg-caribbean select-bordered w-full"
+        className="select select-bordered w-full"
         disabled={!selectedRegion}
       >
         <option value="">Select District</option>
@@ -168,7 +168,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
           setSelectedWard(e.target.value);
           setSelectedStreet("");
         }}
-        className="select text-white bg-caribbean select-bordered w-full"
+        className="select  select-bordered w-full"
         disabled={!selectedDistrict}
       >
         <option value="">Select Ward</option>
@@ -183,7 +183,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       <select
         value={selectedStreet}
         onChange={(e) => setSelectedStreet(e.target.value)}
-        className="select text-white bg-caribbean select-bordered w-full"
+        className="select select-bordered w-full"
         disabled={!selectedWard}
       >
         <option value="">Select Street</option>

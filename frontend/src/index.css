@@ -8,3 +8,11 @@ body {
   overflow-x: hidden;
   width: 100%;
 }
+input, textarea {
+  color: white;
+  background-color: #00CC99;
+}
+
+input::placeholder, textarea::placeholder {
+  color: white;
+}

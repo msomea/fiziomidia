@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../api/profile";
-import LocationSelector from "../../components/dashboard/member/LocationSelector";
+import LocationSelector from "../../components/membersetting/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
 import AvatarUpload from "../../components/form/AvatarUpload";

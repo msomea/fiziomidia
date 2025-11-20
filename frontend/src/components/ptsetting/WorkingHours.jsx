@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -18,7 +18,6 @@ const WorkingHours = ({ formData, setFormData }) => {
   ];
 
   const addWorkingHours = () => {
-    // Check if this day already has hours set
     const existingDay = formData.workingHours?.find(
       (wh) => wh.day === workingDay
     );
@@ -28,7 +27,6 @@ const WorkingHours = ({ formData, setFormData }) => {
       return;
     }
 
-    // Validate time
     if (workingFrom >= workingTo) {
       toast.error('End time must be after start time');
       return;
@@ -36,17 +34,12 @@ const WorkingHours = ({ formData, setFormData }) => {
 
     const newWorkingHours = [
       ...(formData.workingHours || []),
-      {
-        day: workingDay,
-        from: workingFrom,
-        to: workingTo
-      }
+      { day: workingDay, from: workingFrom, to: workingTo }
     ];
 
-    // Sort by day of week
-    newWorkingHours.sort((a, b) => {
-      return weekDays.indexOf(a.day) - weekDays.indexOf(b.day);
-    });
+    newWorkingHours.sort(
+      (a, b) => weekDays.indexOf(a.day) - weekDays.indexOf(b.day)
+    );
 
     setFormData(prev => ({ ...prev, workingHours: newWorkingHours }));
     toast.success('Working hours added');
@@ -67,11 +60,15 @@ const WorkingHours = ({ formData, setFormData }) => {
       {/* Working Hours List */}
       <div className="mb-6 space-y-4">
         {formData.workingHours?.map((wh) => (
-          <div key={wh.day} className="flex items-start justify-between p-4 bg-alice rounded-lg">
+          <div
+            key={`${wh.day}-${wh.from}-${wh.to}`}
+            className="flex items-start justify-between p-4 bg-alice rounded-lg"
+          >
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-tufts">{wh.day}</h3>
                 <button
+                  type="button"
                   onClick={() => removeWorkingHours(wh.day)}
                   className="text-red-500 hover:text-red-700"
                 >
@@ -86,7 +83,7 @@ const WorkingHours = ({ formData, setFormData }) => {
         ))}
       </div>
 
-      {/* Add Working Hours Form */}
+      {/* Add Working Hours */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <select
           value={workingDay}
@@ -94,9 +91,7 @@ const WorkingHours = ({ formData, setFormData }) => {
           className="select select-bordered w-full text-sm"
         >
           {weekDays.map((day) => (
-            <option key={day} value={day}>
-              {day}
-            </option>
+            <option key={day} value={day}>{day}</option>
           ))}
         </select>
         <input
@@ -114,6 +109,7 @@ const WorkingHours = ({ formData, setFormData }) => {
       </div>
 
       <button
+        type="button"
         onClick={addWorkingHours}
         className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2 mt-4"
       >

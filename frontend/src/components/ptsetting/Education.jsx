@@ -27,20 +27,16 @@ const Education = ({ formData, setFormData }) => {
 
   const validateYears = (start, end) => {
     if (!start) return false;
-    if (!end) return true; // If no end year (current), it's valid
+    if (!end) return true;
     return parseInt(start) <= parseInt(end);
   };
 
-  const addEducation = (e) => {
-    e.preventDefault();
-    
-    // Validate required fields
+  const addEducation = () => {
     if (!newEducation.institution || !newEducation.degree || !newEducation.startYear) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    // Validate years
     if (newEducation.endYear && !validateYears(newEducation.startYear, newEducation.endYear)) {
       toast.error('End year must be after start year');
       return;
@@ -49,8 +45,7 @@ const Education = ({ formData, setFormData }) => {
     const updatedEducationList = [...educationList, newEducation];
     setEducationList(updatedEducationList);
     setFormData(prev => ({ ...prev, education: updatedEducationList }));
-    
-    // Reset form
+
     setNewEducation({
       institution: '',
       degree: '',
@@ -59,7 +54,7 @@ const Education = ({ formData, setFormData }) => {
       endYear: '',
       certificateUrl: ''
     });
-    
+
     toast.success('Education entry added successfully');
   };
 
@@ -70,14 +65,13 @@ const Education = ({ formData, setFormData }) => {
     toast.success('Education entry removed');
   };
 
-  // Generate year options for select
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
   return (
     <div className="card bg-white shadow-md p-6">
       <h2 className="text-xl font-bold mb-4 text-caribbean">Education</h2>
-      
+
       {/* Education List */}
       <div className="mb-6 space-y-4">
         {educationList.map((edu, index) => (
@@ -86,6 +80,7 @@ const Education = ({ formData, setFormData }) => {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-tufts">{edu.degree}</h3>
                 <button
+                  type="button"
                   onClick={() => removeEducation(index)}
                   className="text-red-500 hover:text-red-700"
                 >
@@ -96,9 +91,7 @@ const Education = ({ formData, setFormData }) => {
               <p className="text-sm text-gray-600">
                 {edu.startYear}{edu.endYear ? ` - ${edu.endYear}` : ''}
               </p>
-              {edu.field && (
-                <p className="text-sm text-gray-600">Field: {edu.field}</p>
-              )}
+              {edu.field && <p className="text-sm text-gray-600">Field: {edu.field}</p>}
               {edu.certificateUrl && (
                 <a
                   href={edu.certificateUrl}
@@ -114,8 +107,8 @@ const Education = ({ formData, setFormData }) => {
         ))}
       </div>
 
-      {/* Add New Education Form */}
-      <form onSubmit={addEducation} className="space-y-4">
+      {/* Add New Education */}
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
@@ -124,7 +117,6 @@ const Education = ({ formData, setFormData }) => {
             onChange={handleNewEducationChange}
             placeholder="Institution Name *"
             className="input input-bordered w-full text-sm"
-            required
           />
           <input
             type="text"
@@ -133,7 +125,6 @@ const Education = ({ formData, setFormData }) => {
             onChange={handleNewEducationChange}
             placeholder="Degree/Certificate Title *"
             className="input input-bordered w-full text-sm"
-            required
           />
           <input
             type="text"
@@ -149,12 +140,9 @@ const Education = ({ formData, setFormData }) => {
               value={newEducation.startYear}
               onChange={handleNewEducationChange}
               className="select select-bordered w-full text-sm"
-              required
             >
               <option value="">Start Year *</option>
-              {yearOptions.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
+              {yearOptions.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
             <select
               name="endYear"
@@ -163,9 +151,7 @@ const Education = ({ formData, setFormData }) => {
               className="select select-bordered w-full text-sm"
             >
               <option value="">End Year</option>
-              {yearOptions.map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
+              {yearOptions.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
           </div>
           <input
@@ -177,15 +163,16 @@ const Education = ({ formData, setFormData }) => {
             className="input input-bordered w-full text-sm md:col-span-2"
           />
         </div>
-        
+
         <button
-          type="submit"
+          type="button"
+          onClick={addEducation}
           className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
         >
           <Plus size={18} />
           Add Education
         </button>
-      </form>
+      </div>
     </div>
   );
 };

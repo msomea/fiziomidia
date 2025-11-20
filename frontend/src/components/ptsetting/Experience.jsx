@@ -24,7 +24,6 @@ const Experience = ({ formData, setFormData }) => {
       [name]: type === 'checkbox' ? checked : value
     }));
 
-    // If current is checked, clear end date
     if (name === 'current' && checked) {
       setNewExperience(prev => ({ ...prev, endDate: '' }));
     }
@@ -32,16 +31,13 @@ const Experience = ({ formData, setFormData }) => {
 
   const validateDates = (start, end) => {
     if (!start) return false;
-    if (!end) return true; // If no end date (current position), it's valid
-    
+    if (!end) return true;
     const startDate = new Date(start);
     const endDate = new Date(end);
     return startDate <= endDate;
   };
 
-  const addExperience = (e) => {
-    e.preventDefault();
-    
+  const addExperience = () => {
     // Validate required fields
     if (!newExperience.position || !newExperience.company || !newExperience.startDate) {
       toast.error('Please fill in all required fields');
@@ -57,8 +53,7 @@ const Experience = ({ formData, setFormData }) => {
     const updatedExperiences = [...experiences, newExperience];
     setExperiences(updatedExperiences);
     setFormData(prev => ({ ...prev, experience: updatedExperiences }));
-    
-    // Reset form
+
     setNewExperience({
       position: '',
       company: '',
@@ -67,7 +62,7 @@ const Experience = ({ formData, setFormData }) => {
       current: false,
       description: ''
     });
-    
+
     toast.success('Experience added successfully');
   };
 
@@ -87,7 +82,7 @@ const Experience = ({ formData, setFormData }) => {
   return (
     <div className="card bg-white shadow-md p-6">
       <h2 className="text-xl font-bold mb-4 text-caribbean">Experience</h2>
-      
+
       {/* Experience List */}
       <div className="mb-6 space-y-4">
         {experiences.map((exp, index) => (
@@ -96,6 +91,7 @@ const Experience = ({ formData, setFormData }) => {
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-tufts">{exp.position}</h3>
                 <button
+                  type="button"
                   onClick={() => removeExperience(index)}
                   className="text-red-500 hover:text-red-700"
                 >
@@ -112,8 +108,8 @@ const Experience = ({ formData, setFormData }) => {
         ))}
       </div>
 
-      {/* Add New Experience Form */}
-      <form onSubmit={addExperience} className="space-y-4">
+      {/* Add New Experience */}
+      <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
@@ -122,7 +118,6 @@ const Experience = ({ formData, setFormData }) => {
             onChange={handleNewExperienceChange}
             placeholder="Position/Title *"
             className="input input-bordered w-full text-sm"
-            required
           />
           <input
             type="text"
@@ -131,7 +126,6 @@ const Experience = ({ formData, setFormData }) => {
             onChange={handleNewExperienceChange}
             placeholder="Company/Clinic Name *"
             className="input input-bordered w-full text-sm"
-            required
           />
           <div className="grid grid-cols-2 gap-4 md:col-span-2">
             <input
@@ -139,16 +133,13 @@ const Experience = ({ formData, setFormData }) => {
               name="startDate"
               value={newExperience.startDate}
               onChange={handleNewExperienceChange}
-              placeholder="Start Date *"
               className="input input-bordered w-full text-sm"
-              required
             />
             <input
               type="month"
               name="endDate"
               value={newExperience.endDate}
               onChange={handleNewExperienceChange}
-              placeholder="End Date"
               className="input input-bordered w-full text-sm"
               disabled={newExperience.current}
             />
@@ -171,15 +162,16 @@ const Experience = ({ formData, setFormData }) => {
             className="textarea textarea-bordered w-full text-sm md:col-span-2 h-24"
           />
         </div>
-        
+
         <button
-          type="submit"
+          type="button" // <-- changed from submit
+          onClick={addExperience} // <-- manually call handler
           className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
         >
           <Plus size={18} />
           Add Experience
         </button>
-      </form>
+      </div>
     </div>
   );
 };
