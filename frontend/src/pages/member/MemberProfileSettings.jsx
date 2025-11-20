@@ -65,6 +65,7 @@ export default function MemberProfileSettings() {
       return;
     }
 
+
     try {
       const dataToSend = new FormData();
 
@@ -92,22 +93,9 @@ export default function MemberProfileSettings() {
       }
 
       // Send update request
-      const response = await updateProfile(dataToSend);
-      const updatedUser = response.user || response;
-
-      // Build new avatar URL with timestamp
-      const newProfileImageUrl = updatedUser.profileImageUrl
-        ? `${API_URL}${updatedUser.profileImageUrl}?t=${Date.now()}`
-        : "";
-
-      // Update auth context and localStorage
-      const updatedUserData = {
-        ...user,
-        ...updatedUser,
-        profileImageUrl: newProfileImageUrl,
-      };
-      setUser(updatedUserData);
-      localStorage.setItem("user", JSON.stringify(updatedUserData));
+      const updatedUser = await updateProfile(dataToSend);
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       // Update form state with fresh data
       setFormData({
@@ -117,7 +105,7 @@ export default function MemberProfileSettings() {
         bio: updatedUser.bio,
         password: "",
         confirmPassword: "",
-        profileImageUrl: newProfileImageUrl,
+        profileImageUrl: updatedUser.profileImageUrl,
       });
 
       // Update location
@@ -152,6 +140,7 @@ export default function MemberProfileSettings() {
           {/* Avatar Upload */}
           <AvatarUpload
             profileImageUrl={formData.profileImageUrl}
+            selectedFile={imageFile} 
             setImageFile={setImageFile}
           />
 
@@ -167,6 +156,7 @@ export default function MemberProfileSettings() {
               label="Email"
               name="email"
               type="email"
+              disabled
               value={formData.email}
               onChange={handleChange}
             />

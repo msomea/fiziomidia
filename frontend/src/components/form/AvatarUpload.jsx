@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import avatar from "../../assets/avatar.jpg";
 
-export default function AvatarUpload({ profileImageUrl, setImageFile, onChange }) {
-  const [previewUrl, setPreviewUrl] = useState(null);
+export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFile, onChange }) {
+  const [previewUrl, setPreviewUrl] = useState(profileImageUrl);
 
   // Load current avatar from backend
   useEffect(() => {
-    if (profileImageUrl) {
+    if (selectedFile) {
+      const url = URL.createObjectURL(selectedFile);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
       setPreviewUrl(profileImageUrl);
     }
-  }, [profileImageUrl]);
+  }, [selectedFile, profileImageUrl]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
