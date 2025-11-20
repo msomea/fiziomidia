@@ -8,7 +8,7 @@ body {
   overflow-x: hidden;
   width: 100%;
 }
-input, textarea {
+input, textarea, select {
   color: white;
   background-color: #00CC99;
 }

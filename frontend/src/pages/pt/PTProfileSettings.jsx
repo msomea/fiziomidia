@@ -22,7 +22,14 @@ const PTProfileSettings = () => {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [licenseFile, setLicenseFile] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    bio: "",
+    location: [],
+    services: [],
+    experience: [],
+    education: [],
+    workingHours: []
+  });
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -39,6 +46,8 @@ const PTProfileSettings = () => {
     };
     loadProfile();
   }, []);
+
+  if (!formData) return <p>Loading...</p>;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
