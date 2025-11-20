@@ -150,6 +150,7 @@ export const listPosts = async (req, res) => {
 
     const posts = await Post.find({ sub: subId })
       .populate("author", "fullName email profileImageUrl")
+      .populate("comments", "_id")
       .sort({ score: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -251,14 +252,15 @@ export const getPostById = async (req, res) => {
 
     // Fetch post and populate author
     const post = await Post.findById(id)
-      .populate("author", "fullName email avatar") // include avatar if needed
+      .populate("author", "fullName email profileImageUrl") // include avatar if needed
+      .populate("comments", "_id")
       .lean();
 
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     // Fetch comments for this post, populate author info
     const comments = await Comment.find({ post: post._id })
-      .populate("author", "fullName email avatar")
+      .populate("author", "fullName email profileImageUrl")
       .sort({ createdAt: -1 }) // newest first
       .lean();
 

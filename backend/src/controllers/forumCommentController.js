@@ -84,6 +84,9 @@ export const deleteComment = async (req, res) => {
     // Delete the comment
     await Comment.findByIdAndDelete(commentId);
 
+    //Update post to remove reference to deleted comment
+    await Post.findByIdAndUpdate(id, { $pull: { comments: commentId } });
+
     res.json({ message: "Comment deleted successfully" });
   } catch (error) {
     console.error("❌ Error in Delete comment:", error);
