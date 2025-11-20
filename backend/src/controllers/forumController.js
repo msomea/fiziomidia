@@ -149,7 +149,7 @@ export const listPosts = async (req, res) => {
     const totalPosts = await Post.countDocuments({ sub: subId });
 
     const posts = await Post.find({ sub: subId })
-      .populate("author", "fullName email")
+      .populate("author", "fullName email profileImageUrl")
       .sort({ score: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);

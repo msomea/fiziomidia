@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
+import { API_URL } from "../../config/constants";
+import avatar from "../../assets/avatar.jpg"
 
 const FindProfessionals = () => {
   const [pts, setPts] = useState([]);
@@ -36,8 +38,13 @@ const FindProfessionals = () => {
               <div className="avatar mx-auto mb-3">
                 <div className="w-24 rounded-full ring ring-caribbean ring-offset-base-100 ring-offset-2">
                   <img
-                    src={`/assets/pt${index + 1}.jpg`}
+                    src={
+                      pt.profileImageUrl
+                        ? `${API_URL}${pt.profileImageUrl}`
+                        : avatar
+                    }
                     alt={pt.fullName || "Physiotherapist"}
+                    onError={(e) => { e.target.src = avatar; }}       
                   />
                 </div>
               </div>

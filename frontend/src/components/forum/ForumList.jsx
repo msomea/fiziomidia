@@ -4,6 +4,7 @@ import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
+import { API_URL } from "../../config/constants"
 
 const DEFAULT_AUTHOR = {
   fullName: "Guest",
@@ -96,8 +97,9 @@ const ForumList = ({ posts = [], loading, user }) => {
             className="bg-white shadow-sm rounded-xl p-4 flex flex-col md:flex-row gap-4"
           >
             <img
-              src={author.profileImageUrl || avatar}
-              alt={author.fullName}
+              src={author.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar}
+              alt={author.fullName || "Guest"}
+              onError={(e) => { e.target.src = avatar; }}
               className="w-12 h-12 rounded-full object-cover"
             />
 
