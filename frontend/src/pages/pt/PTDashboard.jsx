@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate, Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
-
 import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
 import ForumPosts from "../../components/dashboard/pt/ForumPosts";
@@ -39,9 +38,10 @@ export default function PTDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { logout } = useAuth();
 
   useEffect(() => {
-    if (!user || !_id) return;
+    if (!user || !_id || user._id === null) return;
 
     const token = localStorage.getItem("accessToken");
     const headers = { Authorization: `Bearer ${token}` };
@@ -137,7 +137,15 @@ export default function PTDashboard() {
             <PTNavLink to={`/promotions/pt/${_id}`} icon={<Megaphone size={18} />} label="Promotions" />
             <PTNavLink to={`/settings/pt/${_id}`} icon={<Settings size={18} />} label="Settings" />
             <button
-              onClick={() => navigate("/logout")}
+              onClick={async () => {
+                try {
+                  await logout(() => navigate("/")); // call logout from context
+                  toast.success("Logged out successfully!"); // show success toast
+                } catch (err) {
+                  console.error("Logout error:", err);
+                  toast.error("Failed to logout");
+                }
+              }}
               className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
             >
               <LogOut size={18} />

@@ -3,6 +3,11 @@ import { toast } from "react-hot-toast";
 
 let isRefreshing = false;
 let failedQueue = [];
+let logoutHandler = null;
+
+export const setLogoutHandler = (handler) => {
+  logoutHandler = handler;
+};
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
@@ -17,32 +22,21 @@ const API = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor: attach access token
+// Request interceptor
 API.interceptors.request.use(
-  config => {
+  (config) => {
     const storedUser = localStorage.getItem("user");
-    let accessToken = null;
-
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      accessToken = parsed.accessToken;
-    } else {
-      accessToken = localStorage.getItem("accessToken");
-    }
-
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-
+    let accessToken = storedUser ? JSON.parse(storedUser).accessToken : null;
+    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   },
-  error => Promise.reject(error)
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor: refresh token on 401
+// Response interceptor
 API.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -50,11 +44,11 @@ API.interceptors.response.use(
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
-          .then(token => {
+          .then((token) => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
             return API(originalRequest);
           })
-          .catch(err => Promise.reject(err));
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
@@ -62,8 +56,8 @@ API.interceptors.response.use(
 
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
-        localStorage.clear();
-        window.location.href = "/login";
+        if (logoutHandler) logoutHandler();
+        toast.error("Session expired. Please log in again.");
         return Promise.reject(error);
       }
 
@@ -77,9 +71,8 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.clear();
+        if (logoutHandler) logoutHandler();
         toast.error("Session expired. Please log in again.");
-        window.location.href = "/login";
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

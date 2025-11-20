@@ -82,7 +82,8 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(DEFAULT_USER); // reset to guest
       localStorage.clear();
-      if (navigate) navigate("/");
+      navigate("/");
+      
     }
   };
 
