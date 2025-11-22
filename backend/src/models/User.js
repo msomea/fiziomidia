@@ -44,7 +44,8 @@ const WorkingHoursSchema = new Schema(
 // PT License Schema
 const LicenseSchema = new Schema({
   licenseNumber: { type: String, required: true },
-  licenseImageUrl: String,
+  licenseFileUrl: String,
+  licenseFileType: String,  
   verificationStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],

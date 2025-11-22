@@ -139,27 +139,6 @@ const PTProfileSettings = () => {
     toast.success('Profile image selected');
   };
 
-  const handleLicenseFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validate file type
-    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Please select a PDF or image file');
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File size should be less than 10MB');
-      return;
-    }
-
-    setLicenseFile(file);
-    toast.success('License document selected');
-  };
-
   const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -309,10 +288,10 @@ const PTProfileSettings = () => {
           <Experience formData={formData} setFormData={setFormData} />
           <Education formData={formData} setFormData={setFormData} />
           <WorkingHours formData={formData} setFormData={setFormData} />
-          <LicenseInfo 
-            formData={formData} 
-            handleChange={handleChange} 
-            handleLicenseFileChange={handleLicenseFileChange} 
+          <LicenseInfo
+          formData={formData}
+          setFormData={setFormData}
+          setLicenseFile={setLicenseFile}
           />
           <GallerySection formData={formData} setFormData={setFormData} />
         </div>
