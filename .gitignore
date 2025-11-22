@@ -6,7 +6,7 @@ frontend/node_modules/
 /backend/.env
 /frontend/.env
 *.env
-
+*hint.js
 # Logs
 *.log
 npm-debug.log*

@@ -41,31 +41,44 @@ const WorkingHoursSchema = new Schema(
   { _id: false }
 );
 
+// PT License Schema
+const LicenseSchema = new Schema({
+  licenseNumber: { type: String, required: true },
+  licenseImageUrl: String,
+  verificationStatus: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+  verificationNotes: String,
+  verified: { type: Boolean, default: false },
+  submittedAt: { type: Date, default: Date.now },
+});
+
 // PT Profile Schema
 const PtProfileSchema = new Schema(
   {
     title: String,
     institution: String,
+
     isPrivatePractice: { type: Boolean, default: true },
     clinicIds: [{ type: Schema.Types.ObjectId, ref: "Clinic" }],
-    licenseImageUrl: String,
-    licenseNumber: String,
-    licenseVerified: { type: Boolean, default: false },
-    licenseVerificationStatus: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-    },
-    licenseVerificationNotes: String,
-    licenseSubmittedAt: Date,
-    bio: String,
+
+    licenses: [LicenseSchema],
+
     speciality: [String],
-    yearsOfExperience: { type: Number },
+    yearsOfExperience: Number,
+
     workingHours: [WorkingHoursSchema],
+
     promotionActiveUntil: Date,
-    promotionType: { type: String, enum: ["featured", "banner", "sponsored"] },
+    promotionType: {
+      type: String,
+      enum: ["featured", "banner", "sponsored"],
+    },
     promotionViews: { type: Number, default: 0 },
     promotionClicks: { type: Number, default: 0 },
+
     education: [
       {
         institution: String,
@@ -76,6 +89,7 @@ const PtProfileSchema = new Schema(
         certificateUrl: String,
       },
     ],
+
     workExperience: [
       {
         institution: String,
@@ -86,6 +100,7 @@ const PtProfileSchema = new Schema(
         description: String,
       },
     ],
+
     services: [
       {
         name: String,
@@ -94,6 +109,7 @@ const PtProfileSchema = new Schema(
         price: Number,
       },
     ],
+
     languages: [
       {
         language: String,
@@ -103,6 +119,7 @@ const PtProfileSchema = new Schema(
         },
       },
     ],
+
     gallery: [
       {
         imageUrl: String,
@@ -110,14 +127,17 @@ const PtProfileSchema = new Schema(
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
+
     ratings: {
       average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
+
     availability: {
       isAcceptingNewPatients: { type: Boolean, default: true },
       nextAvailableDate: Date,
     },
+
     professionalMemberships: [
       {
         organization: String,
@@ -125,6 +145,7 @@ const PtProfileSchema = new Schema(
         validUntil: Date,
       },
     ],
+
     documents: [
       {
         name: String,
@@ -133,6 +154,7 @@ const PtProfileSchema = new Schema(
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
+
     changeLogs: [
       {
         field: String,
@@ -145,6 +167,7 @@ const PtProfileSchema = new Schema(
   },
   { _id: false }
 );
+
 
 // Virtuals
 PtProfileSchema.virtual("verificationStatus").get(function () {

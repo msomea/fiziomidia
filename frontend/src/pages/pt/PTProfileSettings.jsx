@@ -23,12 +23,27 @@ const PTProfileSettings = () => {
   const [imageFile, setImageFile] = useState(null);
   const [licenseFile, setLicenseFile] = useState(null);
   const [formData, setFormData] = useState({
-    bio: "",
+    fullName: "",
+    email: "",
+    phone: "",
     location: [],
+    bio: "",
+    title: "",
     services: [],
-    experience: [],
-    education: [],
-    workingHours: []
+    workExperience: "",
+    education: "",
+    gallery: [],
+    availability: "",
+    institution: "",
+    licenses: [],
+    speciality: [],
+    yearsOfExperience: "",
+    isPrivatePractice: true,
+    profileImageUrl: "",
+    languages: [],
+    professionalMemberships: [],
+    documents: [],
+
   });
 
   useEffect(() => {
@@ -36,9 +51,48 @@ const PTProfileSettings = () => {
       try {
         const profileData = await getProfile();
         setFormData({
-          ...profileData,
-          ...profileData.ptProfile
+          // USER fields
+          fullName: profileData.fullName || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          profileImageUrl: profileData.profileImageUrl || "",
+          bio: profileData.bio || "",
+          location: profileData.location || [],
+
+          // FLATTENED location
+          coordinates: profileData.location?.coordinates || [0, 0],
+          region: profileData.location?.region || "",
+          district: profileData.location?.district || "",
+          ward: profileData.location?.ward || "",
+          street: profileData.location?.street || "",
+
+          // FLATTENED PT profile fields
+          title: profileData.ptProfile?.title || "",
+          institution: profileData.ptProfile?.institution || "",
+          isPrivatePractice: profileData.ptProfile?.isPrivatePractice ?? true,
+          clinicIds: profileData.ptProfile?.clinicIds || [],
+
+          speciality: profileData.ptProfile?.speciality || [],
+          yearsOfExperience: profileData.ptProfile?.yearsOfExperience || "",
+          
+          services: profileData.ptProfile?.services || [],
+          education: profileData.ptProfile?.education || [],
+          workExperience: profileData.ptProfile?.workExperience || [],
+          languages: profileData.ptProfile?.languages || [],
+          gallery: profileData.ptProfile?.gallery || [],
+          workingHours: profileData.ptProfile?.workingHours || [],
+          
+          // availability
+          isAcceptingNewPatients:
+            profileData.ptProfile?.availability?.isAcceptingNewPatients ?? true,
+          nextAvailableDate:
+            profileData.ptProfile?.availability?.nextAvailableDate || null,
+
+          licenses: profileData.ptProfile?.licenses || [],
+          professionalMemberships: profileData.ptProfile?.professionalMemberships || [],
+          documents: profileData.ptProfile?.documents || [],
         });
+
       } catch (err) {
         console.error("Error loading profile:", err);
         toast.error("Failed to load profile data");
@@ -113,12 +167,12 @@ const PTProfileSettings = () => {
     try {
       // Prepare form data for submission
       const dataToSend = new FormData();
-      
       // Add top-level (non-ptProfile) form fields only. pt-specific fields will be sent under 'ptProfile'
       const ptKeys = new Set([
         'title',
         'services',
-        'experience',
+        'clinicIds',
+        'workExperience',
         'education',
         'gallery',
         'availability',
@@ -128,8 +182,10 @@ const PTProfileSettings = () => {
         'yearsOfExperience',
         'workingHours',
         'isPrivatePractice',
-        'licenseVerificationStatus',
-        'licenseVerificationNotes'
+        'licenses',
+        'languages',
+        'professionalMembership',
+        'documents',
       ]);
 
       Object.entries(formData).forEach(([key, value]) => {
@@ -158,24 +214,40 @@ const PTProfileSettings = () => {
       }
 
       // Add PT specific fields
-      dataToSend.append('ptProfile', JSON.stringify({
-        title: formData.title,
-        services: formData.services,
-        experience: formData.experience,
-        education: formData.education,
-        gallery: formData.gallery,
-        availability: formData.availability,
-        institution: formData.institution,
-        licenseNumber: formData.licenseNumber,
-        speciality: formData.speciality,
-        yearsOfExperience: formData.yearsOfExperience,
-        workingHours: formData.workingHours || [],
-        isPrivatePractice: formData.isPrivatePractice,
-        licenseVerificationStatus: formData.licenseVerificationStatus,
-        licenseVerificationNotes: formData.licenseVerificationNotes
-      }));
+      const ptProfilePayload = {};
+      const ptFields = [
+        "title",
+        "services",
+        "workExperience",
+        "education",
+        "gallery",
+        "availability",
+        "institution",
+        "licenses",
+        "speciality",
+        "yearsOfExperience",
+        "workingHours",
+        "isPrivatePractice",
+        "languages",
+        "professionalMemberships",
+        "documents",
+        "licenseVerificationStatus",
+        "licenseVerificationNotes"
+      ];
+
+      ptFields.forEach((field) => {
+        const value = formData[field];
+        if (value !== undefined) {
+          ptProfilePayload[field] = value;
+        }
+      });
+
+      // Append final ptProfile
+      dataToSend.append("ptProfile", JSON.stringify(ptProfilePayload));
+
 
       const updatedUser = await updateProfile(dataToSend);
+    
 
       // Clean up preview URL
       if (formData.previewUrl) {
@@ -209,6 +281,7 @@ const PTProfileSettings = () => {
       }));
 
       toast.success('Profile updated successfully!');
+      console.log("Data to send", dataToSend)
       
       // Notify other components
       window.dispatchEvent(new Event('profileUpdated'));
@@ -235,9 +308,6 @@ const PTProfileSettings = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Location Selector */}
           <div className="col-span-1 md:col-span-2">
-            <label className="font-semibold text-black mb-1 block">
-              Location
-            </label>
             <LocationSelector
               initialLocation={formData.location}
               onLocationSelect={(location) => 

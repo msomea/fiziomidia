@@ -191,6 +191,7 @@ export const updateProfile = async (req, res) => {
         : "Profile updated successfully",
       user: updatedUser,
     });
+    console.log("✅ ✅ Update Data from frontend", updateData)
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Failed to update profile" });

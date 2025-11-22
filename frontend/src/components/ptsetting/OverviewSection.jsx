@@ -1,15 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
-const OverviewSection = ({ formData, handleChange }) => (
-  <div className="card bg-white shadow-md p-6">
-    <h2 className="text-xl font-bold mb-4 text-caribbean">Overview</h2>
-    <textarea
-      name="bio"
-      value={formData.bio || ""}
-      onChange={handleChange}
-      className="textarea textarea-bordered w-full h-32"
-    ></textarea>
-  </div>
-);
+export default function OverviewSection({ formData, handleChange }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-export default OverviewSection;
+  return (
+    <div className="card bg-white shadow-md p-6">
+
+      {/* HEADER (CLICK TO COLLAPSE) */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center"
+      >
+        <h2 className="text-xl font-bold text-caribbean">Overview</h2>
+        <ChevronDown
+          className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* COLLAPSIBLE CONTENT */}
+      <div
+        className={`transition-all duration-300 overflow-hidden ${
+          isOpen ? "max-h-[400px] mt-4" : "max-h-0"
+        }`}
+      >
+        <textarea
+          name="bio"
+          value={formData.bio || ""}
+          onChange={handleChange}
+          placeholder="Write a short overview about yourself..."
+          className="textarea textarea-bordered w-full h-32"
+        ></textarea>
+      </div>
+
+    </div>
+  );
+}
