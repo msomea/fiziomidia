@@ -161,138 +161,126 @@ const PTProfileSettings = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    try {
-      // Prepare form data for submission
-      const dataToSend = new FormData();
-      // Add top-level (non-ptProfile) form fields only. pt-specific fields will be sent under 'ptProfile'
-      const ptKeys = new Set([
-        'title',
-        'services',
-        'clinicIds',
-        'workExperience',
-        'education',
-        'gallery',
-        'availability',
-        'institution',
-        'licenseNumber',
-        'speciality',
-        'yearsOfExperience',
-        'workingHours',
-        'isPrivatePractice',
-        'licenses',
-        'languages',
-        'professionalMembership',
-        'documents',
-      ]);
+  try {
+    const dataToSend = new FormData();
 
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key === 'previewUrl') return;
-        if (ptKeys.has(key)) return; // skip ptProfile keys here
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value) || typeof value === 'object') {
-            // append JSON for arrays/objects
-            dataToSend.append(key, JSON.stringify(value));
-          } else if (typeof value === 'boolean') {
-            dataToSend.append(key, value.toString());
-          } else {
-            dataToSend.append(key, value);
-          }
+    // -------------------
+    // Top-level user fields
+    // -------------------
+    const userFields = [
+      "fullName",
+      "email",
+      "phone",
+      "bio",
+      "profileImageUrl",
+      "location",
+      "coordinates",
+      "region",
+      "district",
+      "ward",
+      "street",
+    ];
+
+    userFields.forEach((key) => {
+      const value = formData[key];
+      if (value !== undefined && value !== null) {
+        if (typeof value === "object") {
+          dataToSend.append(key, JSON.stringify(value));
+        } else {
+          dataToSend.append(key, value);
         }
-      });
-
-      // Add profile image if changed
-      if (imageFile) {
-        dataToSend.append('avatar', imageFile);
       }
+    });
 
-      // Add license file if changed
-      if (licenseFile) {
-        dataToSend.append('licenseDocument', licenseFile);
+    // -------------------
+    // PT profile fields
+    // -------------------
+    const ptFields = [
+      "title",
+      "services",
+      "workExperience",
+      "education",
+      "gallery",
+      "availability",
+      "institution",
+      "licenses",
+      "speciality",
+      "yearsOfExperience",
+      "workingHours",
+      "isPrivatePractice",
+      "languages",
+      "professionalMemberships",
+      "documents",
+      "licenseVerificationStatus",
+      "licenseVerificationNotes",
+    ];
+
+    const ptProfilePayload = {};
+
+    ptFields.forEach((field) => {
+      const value = formData[field];
+      if (value !== undefined) {
+        ptProfilePayload[field] = value; // keep as object/array
       }
+    });
 
-      // Add PT specific fields
-      const ptProfilePayload = {};
-      const ptFields = [
-        "title",
-        "services",
-        "workExperience",
-        "education",
-        "gallery",
-        "availability",
-        "institution",
-        "licenses",
-        "speciality",
-        "yearsOfExperience",
-        "workingHours",
-        "isPrivatePractice",
-        "languages",
-        "professionalMemberships",
-        "documents",
-        "licenseVerificationStatus",
-        "licenseVerificationNotes"
-      ];
+    // Append PT profile as one object
+    dataToSend.append("ptProfile", JSON.stringify(ptProfilePayload));
 
-      ptFields.forEach((field) => {
-        const value = formData[field];
-        if (value !== undefined) {
-          ptProfilePayload[field] = value;
-        }
-      });
+    // -------------------
+    // Files
+    // -------------------
+    if (imageFile) dataToSend.append("avatar", imageFile);
+    if (licenseFile) dataToSend.append("licenseDocument", licenseFile);
 
-      // Append final ptProfile
-      dataToSend.append("ptProfile", JSON.stringify(ptProfilePayload));
+    // -------------------
+    // Send request
+    // -------------------
+    const updatedUser = await updateProfile(dataToSend);
 
+    // -------------------
+    // Update context and local storage
+    // -------------------
+    if (formData.previewUrl) URL.revokeObjectURL(formData.previewUrl);
 
-      const updatedUser = await updateProfile(dataToSend);
-    
+    const timestamp = new Date().getTime();
+    const newProfileImageUrl = updatedUser.profileImageUrl
+      ? updatedUser.profileImageUrl.includes("?")
+        ? `${updatedUser.profileImageUrl}&t=${timestamp}`
+        : `${updatedUser.profileImageUrl}?t=${timestamp}`
+      : null;
 
-      // Clean up preview URL
-      if (formData.previewUrl) {
-        URL.revokeObjectURL(formData.previewUrl);
-      }
+    const updatedUserData = {
+      ...user,
+      ...updatedUser,
+      profileImageUrl: newProfileImageUrl,
+    };
 
-      // Update auth context and localStorage
-      const timestamp = new Date().getTime();
-      const newProfileImageUrl = updatedUser.profileImageUrl
-        ? updatedUser.profileImageUrl.includes('?')
-          ? `${updatedUser.profileImageUrl}&t=${timestamp}`
-          : `${updatedUser.profileImageUrl}?t=${timestamp}`
-        : null;
+    setUser(updatedUserData);
+    localStorage.setItem("user", JSON.stringify(updatedUserData));
 
-      const updatedUserData = {
-        ...user,
-        ...updatedUser,
-        profileImageUrl: newProfileImageUrl
-      };
+    // Reset states
+    setImageFile(null);
+    setFormData((prev) => ({
+      ...prev,
+      ...updatedUser,
+      profileImageUrl: newProfileImageUrl,
+      previewUrl: null,
+    }));
 
-      setUser(updatedUserData);
-      localStorage.setItem('user', JSON.stringify(updatedUserData));
+    toast.success("Profile updated successfully!");
+    window.dispatchEvent(new Event("profileUpdated"));
+  } catch (err) {
+    console.error("Profile update failed:", err);
+    toast.error(err.response?.data?.error || "Failed to update profile");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Reset states
-      setImageFile(null);
-      setFormData(prev => ({
-        ...prev,
-        ...updatedUser,
-        previewUrl: null,
-        profileImageUrl: newProfileImageUrl
-      }));
-
-      toast.success('Profile updated successfully!');
-      console.log("Data to send", dataToSend)
-      
-      // Notify other components
-      window.dispatchEvent(new Event('profileUpdated'));
-      
-    } catch (err) {
-      console.error('Profile update failed:', err);
-      toast.error(err.response?.data?.error || 'Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 text-white mt-20">

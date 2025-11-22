@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const WorkingHours = ({ formData, setFormData }) => {
@@ -12,13 +12,23 @@ const WorkingHours = ({ formData, setFormData }) => {
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
+  const validateTime = (time) => {
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(time);
+  };
+
   const addWorkingHours = () => {
     const existingDay = formData.workingHours?.find(
-      (wh) => wh.day === workingDay
+      (wh) => wh.dayOfWeek === workingDay
     );
 
     if (existingDay) {
       toast.error('Working hours for this day already exist');
+      return;
+    }
+
+    if (!validateTime(workingFrom) || !validateTime(workingTo)) {
+      toast.error("Invalid time format (HH:MM)");
       return;
     }
 
@@ -29,11 +39,17 @@ const WorkingHours = ({ formData, setFormData }) => {
 
     const newWorkingHours = [
       ...(formData.workingHours || []),
-      { day: workingDay, from: workingFrom, to: workingTo }
+      {
+        dayOfWeek: workingDay,
+        from: workingFrom,
+        to: workingTo,
+        isAvailable: true,
+      }
     ];
 
+    // sort by weekday
     newWorkingHours.sort(
-      (a, b) => weekDays.indexOf(a.day) - weekDays.indexOf(b.day)
+      (a, b) => weekDays.indexOf(a.dayOfWeek) - weekDays.indexOf(b.dayOfWeek)
     );
 
     setFormData(prev => ({ ...prev, workingHours: newWorkingHours }));
@@ -42,7 +58,7 @@ const WorkingHours = ({ formData, setFormData }) => {
 
   const removeWorkingHours = (day) => {
     const newWorkingHours = formData.workingHours?.filter(
-      (wh) => wh.day !== day
+      (wh) => wh.dayOfWeek !== day
     ) || [];
 
     setFormData(prev => ({ ...prev, workingHours: newWorkingHours }));
@@ -74,15 +90,15 @@ const WorkingHours = ({ formData, setFormData }) => {
           <div className="mb-6 space-y-4">
             {formData.workingHours?.map((wh) => (
               <div
-                key={`${wh.day}-${wh.from}-${wh.to}`}
+                key={`${wh.dayOfWeek}-${wh.from}-${wh.to}`}
                 className="flex items-start justify-between p-4 bg-alice rounded-lg"
               >
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-tufts">{wh.day}</h3>
+                    <h3 className="font-semibold text-tufts">{wh.dayOfWeek}</h3>
                     <button
                       type="button"
-                      onClick={() => removeWorkingHours(wh.day)}
+                      onClick={() => removeWorkingHours(wh.dayOfWeek)}
                       className="text-red-500 hover:text-red-700"
                     >
                       <X size={18} />
