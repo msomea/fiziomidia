@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
+import path from "path"
 import { ENV } from "./config/env.js";
 import ForumSub from "./models/ForumSub.js";
 import cron from "node-cron";
+import { fileURLToPath } from "url";
 
 // Schedule a cron job to clean expired sponsorships daily at midnight
 cron.schedule("0 0 * * *", async () => {
@@ -22,6 +24,9 @@ import messageRoutes from "./routes/message.js";
 import adminRoutes from "./routes/admin.js"
 import locationRoutes from "./routes/location.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = process.cwd();
+
 // Middleware
 import { errorHandler } from "./middlewares/errorHandler.js";
 
@@ -33,7 +38,14 @@ app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
-app.use("/uploads", express.static("uploads"));
+// app.use("/uploads", express.static("uploads"));
+// Serve uploads folder
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
+
+console.log("📁 Serving uploads from:", path.join(__dirname, "uploads"));
 
 
 // --- Routes ---

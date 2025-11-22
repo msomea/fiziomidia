@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_URL } from "../../config/constants";
 
 const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,11 +53,11 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
   // Pass file to parent
   setLicenseFile(file);
 
-  // ❗ FIX: Save the actual file object inside newLicense
+  // FIX: Save the actual file object inside newLicense
   setNewLicense((prev) => ({
     ...prev,
     licenseFile: file,
-    licenseFileUrl: file.name,
+    licenseFileUrl: `/uploads/licenses/${file.name}`,
     licenseFileType: file.type,
   }));
 
@@ -152,17 +153,19 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                   >
                     Status: {license.verificationStatus}
                   </p>
+                  {license.fil}
 
-                  {license.licenseFileUrl && (
+                  {/* {license.licenseFileUrl && (
                     <a
-                      href={license.licenseFileUrl}
+                      href={`${API_URL}${license.licenseFileUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-caribbean underline mt-2 block"
                     >
                       View Document
                     </a>
-                  )}
+                    
+                  )} */}
                 </div>
               ))}
             </div>
