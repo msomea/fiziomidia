@@ -96,7 +96,7 @@ export const updateProfile = async (req, res) => {
     }
 
     // --------------------------------------------
-    // 3️⃣ Handle avatar, gallery and license file uploads ONLY
+    // 3️⃣ Handle avatar and gallery file uploads ONLY (license handled later)
     // --------------------------------------------
     // collect newly uploaded gallery items here so they are in scope
     // for later merging with the client's ptProfile payload
@@ -108,11 +108,9 @@ export const updateProfile = async (req, res) => {
         updateData.profileImageUrl = `/uploads/avatars/${req.files.avatar[0].filename}`;
       }
 
-      // License upload
-      if (req.files.licenseDocument && req.files.licenseDocument[0]) {
-        if (!updateData.ptProfile) updateData.ptProfile = {};
-        updateData.ptProfile.licenseImageUrl = `/uploads/licenses/${req.files.licenseDocument[0].filename}`;
-      }
+      // NOTE: licenseDocument handling is deferred until after parsing
+      // ptProfilePayload so we can attach the generated filename to the
+      // corresponding license entry inside the payload.
 
       // Gallery Images
       if (req.files.galleryImages?.length > 0) {
@@ -190,6 +188,41 @@ export const updateProfile = async (req, res) => {
       }
 
       updateData.ptProfile = merged;
+    }
+
+    // --------------------------------------------
+    // 4️⃣b Attach uploaded license file to the corresponding license entry
+    // --------------------------------------------
+    if (
+      req.files &&
+      req.files.licenseDocument &&
+      req.files.licenseDocument[0]
+    ) {
+      const filename = req.files.licenseDocument[0].filename;
+      const licenseUrl = `/uploads/licenses/${filename}`;
+
+      // If client provided licenses in payload, attach to the last added
+      // license (frontend appends new licenses to the end before submit).
+      if (
+        ptProfilePayload &&
+        Array.isArray(ptProfilePayload.licenses) &&
+        ptProfilePayload.licenses.length > 0
+      ) {
+        const idx = ptProfilePayload.licenses.length - 1;
+        ptProfilePayload.licenses[idx].licenseFileUrl = licenseUrl;
+        ptProfilePayload.licenses[idx].uploadedAt = new Date();
+
+        // Ensure updateData.ptProfile exists and merge the modified payload
+        updateData.ptProfile = {
+          ...(updateData.ptProfile || {}),
+          ...(user.ptProfile?.toObject?.() || user.ptProfile || {}),
+          ...ptProfilePayload,
+        };
+      } else {
+        // Fallback: add/overwrite top-level licenseImageUrl for backward compat
+        if (!updateData.ptProfile) updateData.ptProfile = {};
+        updateData.ptProfile.licenseImageUrl = licenseUrl;
+      }
     }
 
     // ------------------------------------------------------------

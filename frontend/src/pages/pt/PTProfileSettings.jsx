@@ -83,12 +83,7 @@ const PTProfileSettings = () => {
           languages: profileData.ptProfile?.languages || [],
           gallery: profileData.ptProfile?.gallery || [],
           workingHours: profileData.ptProfile?.workingHours || [],
-          
-          // availability
-          isAcceptingNewPatients:
-            profileData.ptProfile?.availability?.isAcceptingNewPatients ?? true,
-          nextAvailableDate:
-            profileData.ptProfile?.availability?.nextAvailableDate || null,
+          availability: profileData.ptProfile?.availability || [],          
 
           licenses: profileData.ptProfile?.licenses || [],
           professionalMemberships: profileData.ptProfile?.professionalMemberships || [],
@@ -194,6 +189,7 @@ const PTProfileSettings = () => {
       "documents",
       "licenseVerificationStatus",
       "licenseVerificationNotes",
+      "availability",
     ];
 
     const ptProfilePayload = {};
@@ -316,13 +312,14 @@ const PTProfileSettings = () => {
           formData={formData}
           setFormData={setFormData}
           setLicenseFile={setLicenseFile}
+          user={user}
           />
           <GallerySection formData={formData} setFormData={setFormData} />
         </div>
 
         {/* Right Column */}
         <div className="space-y-6">
-          <AvailabilitySection formData={formData} handleChange={handleChange} />
+          <AvailabilitySection formData={formData} setFormData={setFormData} />
           <SaveButton loading={loading} />
         </div>
       </form>

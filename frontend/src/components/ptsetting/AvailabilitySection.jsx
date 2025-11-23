@@ -20,13 +20,45 @@ const AvailabilitySection = ({ formData, handleChange }) => {
       </button>
 
       {isOpen && (
-        <div className="mt-4">
-          <textarea
-            name="availability"
-            value={formData.availability || ""}
-            onChange={handleChange}
-            className="textarea textarea-bordered w-full h-24"
-          />
+        <div className="mt-4 space-y-4">
+
+          {/* Accepting New Patients */}
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="availability.isAcceptingNewPatients"
+              checked={formData.availability?.isAcceptingNewPatients || false}
+              onChange={(e) =>
+                handleChange({
+                  target: {
+                    name: "availability.isAcceptingNewPatients",
+                    value: e.target.checked,
+                  }
+                })
+              }
+              className="checkbox checkbox-primary"
+            />
+            <span className="text-gray-700">Accepting New Patients</span>
+          </label>
+
+          {/* Next Available Date */}
+          <div>
+            <label className="text-gray-700 font-medium">
+              Next Available Date
+            </label>
+            <input
+              type="date"
+              name="availability.nextAvailableDate"
+              value={
+                formData.availability?.nextAvailableDate
+                  ? formData.availability.nextAvailableDate.split("T")[0]
+                  : ""
+              }
+              onChange={handleChange}
+              className="input input-bordered w-full mt-1"
+            />
+          </div>
+
         </div>
       )}
     </div>

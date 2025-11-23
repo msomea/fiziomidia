@@ -3,9 +3,12 @@ import { ChevronDown, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
 
+
 const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [licenseList, setLicenseList] = useState(formData.licenses || []);
+  
+
 
   const [newLicense, setNewLicense] = useState({
     licenseNumber: "",
@@ -57,7 +60,8 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
   setNewLicense((prev) => ({
     ...prev,
     licenseFile: file,
-    licenseFileUrl: `/uploads/licenses/${file.name}`,
+    // Do not assume backend filename; leave URL empty until server returns
+    licenseFileUrl: null,
     licenseFileType: file.type,
   }));
 
@@ -67,7 +71,6 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
 
   // Add a license entry
   const addLicense = () => {
-    console.log("Data to send", newLicense)
     if (!newLicense.licenseNumber || !newLicense.licenseFile) {
       toast.error("Please enter license number and select a file");
       return;
@@ -155,7 +158,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                   </p>
                   {license.fil}
 
-                  {/* {license.licenseFileUrl && (
+                  {license.licenseFileUrl && (
                     <a
                       href={`${API_URL}${license.licenseFileUrl}`}
                       target="_blank"
@@ -165,7 +168,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                       View Document
                     </a>
                     
-                  )} */}
+                  )}
                 </div>
               ))}
             </div>
