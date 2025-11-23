@@ -4,6 +4,27 @@ import { ChevronDown } from "lucide-react";
 const AvailabilitySection = ({ formData, handleChange }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  const availability = formData.availability || {
+    isAcceptingNewPatients: true,
+    nextAvailableDate: null,
+  };
+
+  const updateAvailability = (field, value) => {
+    let updated = { ...availability, [field]: value };
+
+    // Auto-set nextAvailableDate to null if accepting patients
+    if (field === "isAcceptingNewPatients" && value === true) {
+      updated.nextAvailableDate = null;
+    }
+
+    handleChange({
+      target: {
+        name: "availability",
+        value: updated,
+      },
+    });
+  };
+
   return (
     <div className="card bg-white shadow-md p-6">
       <button
@@ -26,15 +47,9 @@ const AvailabilitySection = ({ formData, handleChange }) => {
           <label className="flex items-center gap-3">
             <input
               type="checkbox"
-              name="availability.isAcceptingNewPatients"
-              checked={formData.availability?.isAcceptingNewPatients || false}
+              checked={availability.isAcceptingNewPatients}
               onChange={(e) =>
-                handleChange({
-                  target: {
-                    name: "availability.isAcceptingNewPatients",
-                    value: e.target.checked,
-                  }
-                })
+                updateAvailability("isAcceptingNewPatients", e.target.checked)
               }
               className="checkbox checkbox-primary"
             />
@@ -48,15 +63,24 @@ const AvailabilitySection = ({ formData, handleChange }) => {
             </label>
             <input
               type="date"
-              name="availability.nextAvailableDate"
+              disabled={availability.isAcceptingNewPatients}
               value={
-                formData.availability?.nextAvailableDate
-                  ? formData.availability.nextAvailableDate.split("T")[0]
+                availability.nextAvailableDate
+                  ? availability.nextAvailableDate.split("T")[0]
                   : ""
               }
-              onChange={handleChange}
-              className="input input-bordered w-full mt-1"
+              onChange={(e) =>
+                updateAvailability("nextAvailableDate", e.target.value)
+              }
+              className={`input input-bordered w-full mt-1 ${
+                availability.isAcceptingNewPatients ? "opacity-50" : ""
+              }`}
             />
+            {availability.isAcceptingNewPatients && (
+              <p className="text-sm text-gray-500 mt-1">
+                Since you are accepting new patients, next available date is not required.
+              </p>
+            )}
           </div>
 
         </div>

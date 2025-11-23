@@ -83,8 +83,10 @@ const PTProfileSettings = () => {
           languages: profileData.ptProfile?.languages || [],
           gallery: profileData.ptProfile?.gallery || [],
           workingHours: profileData.ptProfile?.workingHours || [],
-          availability: profileData.ptProfile?.availability || [],          
-
+          availability: profileData.ptProfile?.availability || {
+            isAcceptingNewPatients: true,
+            nextAvailableDate: ""
+          },
           licenses: profileData.ptProfile?.licenses || [],
           professionalMemberships: profileData.ptProfile?.professionalMemberships || [],
           documents: profileData.ptProfile?.documents || [],
@@ -319,7 +321,7 @@ const PTProfileSettings = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          <AvailabilitySection formData={formData} setFormData={setFormData} />
+          <AvailabilitySection formData={formData} handleChange={handleChange} />
           <SaveButton loading={loading} />
         </div>
       </form>
