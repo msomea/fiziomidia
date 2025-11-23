@@ -19,7 +19,6 @@ import { API_URL } from "../config/constants";
 const PTProfile = () => {
   const { id } = useParams(); // user._id of PT to view
   const { user: loggedInUser } = useAuth(); // logged-in user for actions
-
   const [pt, setPt] = useState(null);
   const [loading, setLoading] = useState(true);
 

@@ -105,7 +105,11 @@ const ForumList = ({ posts = [], loading, user }) => {
 
             <div className="flex-1">
               <div className="flex justify-between items-center mb-1">
+                <Link
+                  to={`/profile/pt/${author._id}`}
+                >
                 <span className="font-semibold text-black">{author.fullName}</span>
+                </Link>
                 <span className="text-gray-400 text-sm">{formatDate(post.createdAt)}</span>
               </div>
               <Link

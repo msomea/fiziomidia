@@ -89,7 +89,7 @@ const Services = ({ formData, setFormData }) => {
                   <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                   <div className="flex gap-4 mt-2 text-sm text-gray-500">
                     <span>{service.duration} minutes</span>
-                    <span>${service.price}</span>
+                    <span>Tsh {service.price}</span>
                   </div>
                 </div>
               </div>
@@ -120,7 +120,7 @@ const Services = ({ formData, setFormData }) => {
                 name="price"
                 value={newService.price}
                 onChange={handleNewServiceChange}
-                placeholder="Price ($)"
+                placeholder="Price (Tsh)"
                 className="input input-bordered w-full text-sm"
               />
               <textarea

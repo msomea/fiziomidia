@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { getUserById }from "../api/profile";
-import MemberDetails from "../components/profiles/MemberDetails";
-import MemberAppointments from "../components/profiles/MemberAppointments";
-import MemberSavedPTs from "../components/profiles/MemberSavedPTs";
-
+import API from "../api/axios";
+import { useAuth } from "../context/AuthContext";
+import { MessageSquare } from "lucide-react";
+import avatar from "../assets/avatar.jpg";
+import { API_URL } from "../config/constants";
 
 const MemberProfile = () => {
-  const { memberId } = useParams();
-  const [member, setMember] = useState(null);
+  const { id } = useParams();
+  const { user: loggedInUser } = useAuth();
   const [loading, setLoading] = useState(true);
+    const [member, setMember] = useState();
 
   useEffect(() => {
     const fetchMember = async () => {
       try {
-        const response = await getUserById(memberId);
-        setMember(response?.data);
+        const response = await API.get(`/users/${id}`);
+        setMember(response.data.user);
       } catch (error) {
         console.error("Error fetching member profile:", error);
       } finally {
@@ -24,30 +25,72 @@ const MemberProfile = () => {
     };
 
     fetchMember();
-  }, [memberId]);
+  }, [id]);
+  console.log("Member", member)
+  
 
-  if (loading) return <p className="p-4">Loading member profile...</p>;
-  if (!member) return <p className="p-4 text-red-600">Member not found.</p>;
+  if (loading)
+    return <p className="p-4 text-gray-600">Loading member profile...</p>;
+
+  if (!member)
+    return <p className="p-4 text-red-600">Member not found.</p>;
+
+  const isOwnProfile = loggedInUser?._id === member?._id;
 
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-6">
-      {/* Member Details Section */}
-      <section className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-2">Member Details</h2>
-        <MemberDetails member={member} />
+    <div className="max-w-3xl mx-auto mt-20 p-4 space-y-6">
+
+      {/* Member Header */}
+      <section className="bg-white p-6 rounded-2xl shadow flex items-center space-x-5">
+        <img
+          src={`${API_URL}${member.profileImageUrl}` || avatar}
+          alt="avatar"
+          className="w-24 h-24 rounded-full object-cover border"
+        />
+
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-caribbean">
+            {member.fullName}
+          </h1>
+          <p className="text-gray-600 mt-1">{member.email}</p>
+          {member.bio && (
+            <p className="text-gray-700 mt-2 text-sm">{member.bio}</p>
+          )}
+        </div>
+
+        {/* Message Button */}
+        {!isOwnProfile && loggedInUser?.role !== "guest" ? (
+          <button
+            className="bg-caribbean text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-caribbean-dark"
+            onClick={() => alert("Open chat modal or redirect to messages")}
+          >
+            <MessageSquare className="w-5 h-5" />
+            <span>Message</span>
+          </button>
+        ) : (
+          !isOwnProfile && (
+            <p className="text-sm text-gray-500 italic">
+              Login to message this member
+            </p>
+          )
+        )}
+
       </section>
 
-      {/* Saved PTs */}
-      <section className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-2">Saved Physiotherapists</h2>
-        <MemberSavedPTs memberId={memberId} />
+      {/* Basic Info */}
+      <section className="bg-white p-5 rounded-2xl shadow">
+        <h2 className="text-xl font-bold text-caribbean mb-3">About</h2>
+
+        <div className="space-y-2 text-gray-700">
+          {member.location && (
+            <p><strong>Location:</strong> {member.location.region},  {member.location.district}</p>
+          )}
+          <p><strong>Joined:</strong> {new Date(member.createdAt).toDateString()}</p>
+          <p><strong>Last seen:</strong> {new Date(member.lastLogin).toDateString()}</p>
+          
+        </div>
       </section>
 
-      {/* Appointments Section (if public access allowed) */}
-      <section className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-2">Appointments</h2>
-        <MemberAppointments memberId={memberId} />
-      </section>
     </div>
   );
 };

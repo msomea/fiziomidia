@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Linkedin } from "lucide-react";
+import { Link } from "react-router";
 
 export default function Footer() {
   return (
@@ -21,9 +22,24 @@ export default function Footer() {
 
         {/* Social Media */}
         <div className="flex justify-center gap-4 mb-6">
-          <a href="#" className="hover:text-caribbean"><Facebook size={20} /></a>
-          <a href="#" className="hover:text-caribbean"><Instagram size={20} /></a>
-          <a href="#" className="hover:text-caribbean"><Linkedin size={20} /></a>
+          <a
+            href="https://www.facebook.com/fiziomidia"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-caribbean"
+          >
+            <Facebook size={20} />
+          </a>
+          <a
+            href="https://www.instagram.com/fiziomidia/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-caribbean"
+          >
+            <Instagram size={20} />
+          </a>
+
+          {/* <a href="#" className="hover:text-caribbean"><Linkedin size={20} /></a> */}
         </div>
 
         {/* Copyright */}

@@ -35,9 +35,9 @@ const About = () => {
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
           <h1 className="text-3xl font-bold text-caribbean mb-4">About Fiziomidia</h1>
           <p className="text-gray-700 mb-4">
-            Fiziomidia is Tanzania’s leading platform connecting physiotherapists (PTs) with members
-            seeking quality care, education, and wellness resources. Our mission is to improve access
-            to professional physiotherapy services while supporting PTs to grow their practice.
+            Fiziomidia is Tanzania’s leading platform connecting physiotherapists (PTs) with community members
+            seeking quality care, education and wellness resources. Our mission is to improve access
+            to professional Physiotherapy services while supporting PTs to grow their practice.
           </p>
           <p className="text-gray-700">
             Through our platform, members can discover PTs, book appointments, join educational forums,
@@ -94,7 +94,7 @@ const About = () => {
               required
             />
             <div className="flex justify-end">
-              <button type="submit" className="btn bg-caribbean text-white hover:bg-tufts">
+              <button type="submit" className="btn bg-caribbean text-white p-1 hover:bg-tufts">
                 Send Message
               </button>
             </div>

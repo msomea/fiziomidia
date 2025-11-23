@@ -20,7 +20,7 @@ const Forum = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-caribbean">Forum</h1>
-          {user.role !== "guest" && (
+          {user.role !== "guest" && user.role !== "member" && (
             <button
               onClick={() => navigate("/forum/create")}
               className="btn p-2 bg-caribbean text-white hover:bg-tufts"
