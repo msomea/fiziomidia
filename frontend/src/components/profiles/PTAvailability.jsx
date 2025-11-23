@@ -1,44 +1,37 @@
-import React, { useEffect, useState } from "react";
-import { CalendarDays, Clock } from "lucide-react";
-import { getProfile, getUserById } from "../../api/profile";
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import dayjs from "dayjs";
 
-const PTAvailability = ({ ptId, formData, setFormData }) => {
-  const [availability, setAvailability] = useState("");
+const PTAvailability = ({ availability }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (formData?.availability) setAvailability(formData.availability);
-    else {
-      const fetchProfile = async () => {
-        const data = ptId ? await getUserById(ptId) : await getProfile();
-        setAvailability(data.user?.availability || data.availability || "");
-      };
-      fetchProfile();
-    }
-  }, [ptId, formData]);
-
-  const handleChange = (e) => {
-    setAvailability(e.target.value);
-    setFormData?.({ ...formData, availability: e.target.value });
-  };
+  if (!availability) return null;
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
-      <h2 className="text-xl font-semibold text-black mb-3">Availability</h2>
-      {setFormData ? (
-        <textarea
-          value={availability}
-          onChange={handleChange}
-          className="textarea textarea-bordered w-full h-24"
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center mb-3"
+      >
+        <h2 className="text-xl font-bold text-caribbean">Availability</h2>
+        <ChevronDown
+          className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
-      ) : (
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <CalendarDays className="w-5 h-5 text-caribbean" />
-            <p className="text-sm text-gray-700">{availability}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-caribbean" />
-          </div>
+      </button>
+
+      {isOpen && (
+        <div className="space-y-2">
+          <p className="text-gray-700 text-sm">
+           {availability.isAcceptingNewPatients ? "Accepting New Patient" : "Not Accepting New Patient"}
+          </p>
+          {!availability.isAcceptingNewPatients && availability.nextAvailableDate && (
+            <p className="text-gray-700 text-sm">
+              Next Available: {dayjs(availability.nextAvailableDate).format("DD MMM YYYY")}
+            </p>
+          )}
         </div>
       )}
     </section>

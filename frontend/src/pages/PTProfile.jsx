@@ -8,9 +8,9 @@ import {
   PTServices,
   PTExperience,
   PTEducation,
-  PTReviews,
   PTAvailability,
   PTGallery,
+  PTRatings,
 } from "../components/profiles";
 
 import avatarFallback from "../assets/avatar.jpg";
@@ -96,15 +96,12 @@ console.log("PT", pt)
       {/* Profile Content */}
       <div className="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <PTOverview overview={ptProfile.overview} />
+          <PTOverview overview={pt.bio} />
           <PTServices services={ptProfile.services} />
-          <PTExperience experience={ptProfile.experience} />
+          <PTExperience experience={ptProfile.workExperience} />
           <PTEducation education={ptProfile.education} />
           <PTGallery gallery={ptProfile.gallery} />
-          <PTReviews ptId={pt._id} reviews={ptProfile.reviews} />
-        </div>
-
-        <div className="space-y-6">
+          <PTRatings ratings={ptProfile.ratings} reviews={ptProfile.reviews} />
           <PTAvailability availability={ptProfile.availability} />
         </div>
       </div>

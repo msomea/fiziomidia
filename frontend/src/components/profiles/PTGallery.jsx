@@ -1,35 +1,42 @@
-import React, { useEffect, useState } from "react";
-import { getProfile, getUserById } from "../../api/profile";
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { API_URL } from "../../config/constants";
 
-const PTGallery = ({ ptId, formData, setFormData }) => {
-  const [gallery, setGallery] = useState([]);
+const PTGallery = ({ gallery }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (formData?.gallery) setGallery(formData.gallery);
-    else {
-      const fetchProfile = async () => {
-        const data = ptId ? await getUserById(ptId) : await getProfile();
-        setGallery(data.user?.gallery || data.gallery || []);
-      };
-      fetchProfile();
-    }
-  }, [ptId, formData]);
+  if (!gallery || gallery.length === 0) return null;
 
-  const handleChange = (e) => {
-    const files = Array.from(e.target.files);
-    setGallery(files);
-    setFormData?.({ ...formData, gallery: files });
-  };
+  const recentGallery = gallery.slice(-10).reverse(); // last 10 images, newest first
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
-      <h2 className="text-xl font-semibold text-black mb-3">Gallery</h2>
-      {setFormData ? (
-        <input type="file" multiple onChange={handleChange} className="file-input file-input-bordered w-full" />
-      ) : (
-        <div className="grid grid-cols-3 gap-2">
-          {gallery.map((img, i) => (
-            <img key={i} src={img.url || URL.createObjectURL(img)} alt="gallery" className="w-full h-24 object-cover rounded" />
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex justify-between items-center mb-3"
+      >
+        <h2 className="text-xl font-bold text-caribbean">Gallery</h2>
+        <ChevronDown
+          className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {isOpen && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {recentGallery.map((item, index) => (
+            <div key={index} className="rounded overflow-hidden shadow-sm">
+              <img
+                src={`${API_URL}${item.imageUrl}`}
+                alt={item.caption || `Image ${index + 1}`}
+                className="w-full h-40 object-cover"
+              />
+              {item.caption && (
+                <p className="text-gray-700 text-sm mt-1 p-2">{item.caption}</p>
+              )}
+            </div>
           ))}
         </div>
       )}
