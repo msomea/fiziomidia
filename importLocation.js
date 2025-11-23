@@ -35,7 +35,6 @@ async function importCSVFiles() {
 
     for (const file of files) {
       const filePath = path.join(CSV_FOLDER, file);
-      console.log(`📂 Reading ${file}...`);
 
       const rows = [];
       await new Promise((resolve, reject) => {

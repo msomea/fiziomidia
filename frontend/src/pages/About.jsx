@@ -23,7 +23,6 @@ const About = () => {
       return;
     }
     // TODO: Send form data to backend
-    console.log(formData);
     toast.success("Message sent successfully!");
     setFormData({ name: "", email: "", message: "" });
   };

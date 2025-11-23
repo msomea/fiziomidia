@@ -1,50 +1,93 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router";
+import { useAuth } from "../context/AuthContext";
+import API from "../api/axios";
+
 import {
-    PTOverview,
-    PTServices,
-    PTExperience,
-    PTEducation,
-    PTReviews,
-    PTAvailability,
-    PTGallery
+  PTOverview,
+  PTServices,
+  PTExperience,
+  PTEducation,
+  PTReviews,
+  PTAvailability,
+  PTGallery,
 } from "../components/profiles";
-import avatar from "../assets/avatar.jpg";
 
-
+import avatarFallback from "../assets/avatar.jpg";
+import { API_URL } from "../config/constants";
 
 const PTProfile = () => {
+  const { id } = useParams(); // user._id of PT to view
+  const { user: loggedInUser } = useAuth(); // logged-in user for actions
+
+  const [pt, setPt] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPT = async () => {
+      try {
+        const res = await API.get(`/pts/${id}`);
+        setPt(res.data); 
+      } catch (err) {
+        console.error("Error fetching PT profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPT();
+  }, [id]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!pt || !pt.ptProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        Physiotherapist not found.
+      </div>
+    );
+  }
+console.log("PT", pt)
+  const ptProfile = pt.ptProfile;
+  const avatarSrc = pt.profileImageUrl ? `${API_URL}${pt.profileImageUrl}` : avatarFallback;
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
-      {/* Header Section */}
+      {/* Header */}
       <div className="relative bg-white shadow-md rounded-b-3xl">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
-          {/* PT Image */}
           <img
-            src={avatar}
-            alt="Physiotherapist"
+            src={avatarSrc}
+            alt={pt.fullName}
             className="w-32 h-32 rounded-full object-cover border-4 border-gold"
           />
 
-          {/* Basic Info */}
           <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-black">
-              Dr. Jane Mwita
-            </h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-black">{pt.fullName}</h1>
+
             <p className="text-sm md:text-base text-gray-600">
-              Senior Physiotherapist | 10+ Years Experience
-            </p>
-            <p className="mt-2 text-sm text-gray-500">
-              Dar es Salaam, Tanzania
+              {ptProfile.title || "Physiotherapist"}
+              {ptProfile.yearsOfExperience ? ` | ${ptProfile.yearsOfExperience}+ Years Experience` : ""}
             </p>
 
-            {/* Contact / Book */}
+            <p className="mt-2 text-sm text-gray-500">
+              {pt.location?.region}, {pt.location?.district}
+            </p>
+
+            {/* Actions */}
             <div className="mt-4 flex flex-wrap gap-3">
-              <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts">
-                Book Appointment
-              </button>
-              <button className="btn btn-outline border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
-                Message
-              </button>
+              {loggedInUser.role !== "guest" && (
+                <>
+                  <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts">
+                    Book Appointment
+                  </button>
+                  <button className="btn btn-outline border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
+                    Message
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -52,19 +95,17 @@ const PTProfile = () => {
 
       {/* Profile Content */}
       <div className="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column (Main Info) */}
         <div className="lg:col-span-2 space-y-6">
-          <PTOverview />
-          <PTServices />
-          <PTExperience />
-          <PTEducation />
-          <PTGallery />
-          <PTReviews />
+          <PTOverview overview={ptProfile.overview} />
+          <PTServices services={ptProfile.services} />
+          <PTExperience experience={ptProfile.experience} />
+          <PTEducation education={ptProfile.education} />
+          <PTGallery gallery={ptProfile.gallery} />
+          <PTReviews ptId={pt._id} reviews={ptProfile.reviews} />
         </div>
 
-        {/* Right Column (Sidebar) */}
         <div className="space-y-6">
-          <PTAvailability />
+          <PTAvailability availability={ptProfile.availability} />
         </div>
       </div>
     </div>

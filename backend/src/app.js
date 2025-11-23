@@ -64,8 +64,6 @@ app.use((req, res, next) => {
 
 app.use("/uploads", express.static(uploadsDir));
 
-console.log("📁 Serving uploads from:", uploadsDir);
-
 // Backwards-compatibility: some files were previously written to
 // `backend/src/services/uploads` (when uploadService used __dirname
 // directly). If a file isn't found in the main uploads folder, allow
@@ -73,24 +71,6 @@ console.log("📁 Serving uploads from:", uploadsDir);
 // remain accessible.
 const legacyUploadsDir = path.join(__dirname, "services", "uploads");
 app.use("/uploads", express.static(legacyUploadsDir));
-console.log("📁 (fallback) Serving legacy uploads from:", legacyUploadsDir);
-
-// Debug endpoint to check uploads file resolution (remove in production)
-app.get("/debug/uploads-check", (req, res) => {
-  const rel = req.query.file || ""; // e.g. 'licenses/license_image.jpeg'
-  const primaryPath = path.join(uploadsDir, rel);
-  const legacyPath = path.join(legacyUploadsDir, rel);
-  res.json({
-    uploadsDir,
-    legacyUploadsDir,
-    requested: rel,
-    existsPrimary: fs.existsSync(primaryPath),
-    primaryPath,
-    existsLegacy: fs.existsSync(legacyPath),
-    legacyPath,
-  });
-});
-
 
 // --- Routes ---
 app.use("/api/admin", adminRoutes);

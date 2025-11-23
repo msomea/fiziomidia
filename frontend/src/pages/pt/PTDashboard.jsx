@@ -62,8 +62,6 @@ export default function PTDashboard() {
         setForumPosts(forumRes.data.posts || []);
         setPromotion(promoRes.data || null);
         setStats(statsRes.data || statsRes);
-        
-        console.log(token)
       } catch (err) {
         console.error("Error loading PT dashboard:", err.response?.data || err.message);
         toast.error("Failed to load dashboard. Check console for details.");

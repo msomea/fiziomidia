@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg"
+import { Link } from "react-router";
 
 const FindProfessionals = () => {
   const [pts, setPts] = useState([]);
@@ -63,9 +64,11 @@ const FindProfessionals = () => {
               </p>
 
               {/* View Profile Button */}
-              <button className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts">
+              <Link 
+              to={`/profile/pt/${pt._id}`}
+              className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts">
                 View Profile
-              </button>
+              </Link>
             </div>
           ))
         ) : (
