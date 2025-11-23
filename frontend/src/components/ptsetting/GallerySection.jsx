@@ -1,15 +1,58 @@
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 
 const GallerySection = ({ formData, setFormData }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // Generate previews from formData.gallery
+  const previews = (formData.gallery || []).map((item) => {
+    if (item.file instanceof File) {
+      return {
+        src: URL.createObjectURL(item.file),
+        caption: item.caption || "",
+        file: item.file,
+      };
+    }
+    return {
+      src: item.imageUrl,
+      caption: item.caption || "",
+      file: null,
+    };
+  });
+
   const handleGalleryChange = (e) => {
-    const files = Array.from(e.target.files || []);
+    const files = Array.from(e.target.files || []).map((file) => ({
+      file,
+      caption: "",
+    }));
+
+    // Update gallery in formData
     setFormData((prev) => ({
       ...prev,
       gallery: [...(prev.gallery || []), ...files],
     }));
+
+  // files are tracked inside formData.gallery; no parent sync needed
+  };
+
+  const handleCaptionChange = (index, value) => {
+    setFormData((prev) => {
+      const updatedGallery = [...(prev.gallery || [])];
+      updatedGallery[index] = { ...updatedGallery[index], caption: value };
+      return { ...prev, gallery: updatedGallery };
+    });
+
+    // captions are stored in formData.gallery so no extra sync required
+  };
+
+  const removeImage = (index) => {
+    setFormData((prev) => {
+      const updatedGallery = [...(prev.gallery || [])];
+      updatedGallery.splice(index, 1);
+      return { ...prev, gallery: updatedGallery };
+    });
+
+    // removed from formData.gallery above; nothing else to do
   };
 
   return (
@@ -28,19 +71,41 @@ const GallerySection = ({ formData, setFormData }) => {
       </button>
 
       {isOpen && (
-        <div className="mt-4">
+        <div className="mt-4 space-y-4">
           <input
             type="file"
             multiple
+            accept="image/*"
             className="file-input file-input-bordered w-full"
             onChange={handleGalleryChange}
           />
-          {formData.gallery?.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {formData.gallery.map((file) => (
-                <span key={file.name || file.url} className="badge badge-outline">
-                  {file.name || file.url}
-                </span>
+
+          {previews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-2">
+              {previews.map((p, index) => (
+                <div key={index} className="relative border p-1 rounded">
+                  <button
+                    type="button"
+                    className="absolute top-1 right-1 text-red-500"
+                    onClick={() => removeImage(index)}
+                  >
+                    <X size={18} />
+                  </button>
+                  <img
+                    src={p.src}
+                    alt={`Gallery ${index}`}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Caption"
+                    value={formData.gallery[index]?.caption || ""}
+                    onChange={(e) =>
+                      handleCaptionChange(index, e.target.value)
+                    }
+                    className="input input-sm w-full mt-1"
+                  />
+                </div>
               ))}
             </div>
           )}

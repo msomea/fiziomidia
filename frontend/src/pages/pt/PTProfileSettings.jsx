@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { data, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile, updateProfile } from "../../api/profile";
 import toast from "react-hot-toast";
@@ -15,6 +15,7 @@ import AvailabilitySection from "../../components/ptsetting/AvailabilitySection"
 import GallerySection from "../../components/ptsetting/GallerySection";
 import SaveButton from "../../components/ptsetting/SaveButton";
 import LocationSelector from "../../components/ptsetting/LocationSelector";
+import { set } from "mongoose";
 
 const PTProfileSettings = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const PTProfileSettings = () => {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [licenseFile, setLicenseFile] = useState(null);
+  // galleryFiles is no longer needed (we track files inside formData.gallery)
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -154,7 +156,6 @@ const PTProfileSettings = () => {
       "email",
       "phone",
       "bio",
-      "profileImageUrl",
       "location",
       "coordinates",
       "region",
@@ -182,8 +183,6 @@ const PTProfileSettings = () => {
       "services",
       "workExperience",
       "education",
-      "gallery",
-      "availability",
       "institution",
       "licenses",
       "speciality",
@@ -198,22 +197,45 @@ const PTProfileSettings = () => {
     ];
 
     const ptProfilePayload = {};
-
     ptFields.forEach((field) => {
-      const value = formData[field];
-      if (value !== undefined) {
-        ptProfilePayload[field] = value; // keep as object/array
+      if (formData[field] !== undefined) {
+        ptProfilePayload[field] = formData[field];
       }
     });
 
-    // Append PT profile as one object
+    // -------------------
+    // Handle Gallery separately
+    // -------------------
+    const newFiles = [];
+    const galleryPayload = (formData.gallery || []).map((item, idx) => {
+      if (item.file) {
+        // New files to be uploaded
+        newFiles.push({ file: item.file, caption: item.caption || "" });
+        return null; // will replace in backend after upload
+      } else if (item.imageUrl) {
+        // Existing images from backend
+        return { imageUrl: item.imageUrl, caption: item.caption || "" };
+      }
+      return null;
+    }).filter(Boolean); // remove nulls
+
+    ptProfilePayload.gallery = galleryPayload;
+
     dataToSend.append("ptProfile", JSON.stringify(ptProfilePayload));
 
     // -------------------
-    // Files
+    // Files: avatar, license
     // -------------------
     if (imageFile) dataToSend.append("avatar", imageFile);
     if (licenseFile) dataToSend.append("licenseDocument", licenseFile);
+
+    // -------------------
+    // Gallery new files
+    // -------------------
+    newFiles.forEach((item, index) => {
+      dataToSend.append("galleryImages", item.file);
+      dataToSend.append(`galleryCaption`, item.caption); // backend handles array order
+    });
 
     // -------------------
     // Send request
@@ -259,6 +281,8 @@ const PTProfileSettings = () => {
     setLoading(false);
   }
 };
+
+
 
 
   return (

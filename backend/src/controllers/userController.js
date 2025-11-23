@@ -1,30 +1,18 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { upload as uploadMiddleware } from "../services/uploadService.js";
+
+// Export upload for backward compatibility with any code that imported
+// `upload` from this controller. Prefer using the central service directly
+// (import from ../services/uploadService.js) in new code.
+export const upload = uploadMiddleware;
 
 const SALT_ROUNDS = 10;
 
-// Configure multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // store avatars and licenses in separate folders depending on fieldname
-    const base = "./uploads";
-    const dir =
-      file.fieldname === "licenseDocument"
-        ? path.join(base, "licenses")
-        : path.join(base, "avatars");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const suffix = file.fieldname === "licenseDocument" ? "-license" : "";
-    cb(null, `${req.user._id}${suffix}${path.extname(file.originalname)}`);
-  },
-});
-
-export const uploadAvatar = multer({ storage });
+// Note: upload handling is provided by the centralized upload service
+// (backend/src/services/uploadService.js). This controller no longer
+// defines a local multer instance to avoid duplication and inconsistent
+// destination folders.
 
 // Get current user's profile
 export const getProfile = async (req, res) => {
@@ -55,7 +43,6 @@ export const getUserById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-
 
 // PUT /api/users/profile
 // =========================================
@@ -95,7 +82,8 @@ export const updateProfile = async (req, res) => {
     // 2️⃣ Handle Location (parse and add to updateData)
     // --------------------------------------------
     if (location) {
-      const loc = typeof location === "string" ? JSON.parse(location) : location;
+      const loc =
+        typeof location === "string" ? JSON.parse(location) : location;
 
       updateData.location = {
         type: "Point",
@@ -108,8 +96,12 @@ export const updateProfile = async (req, res) => {
     }
 
     // --------------------------------------------
-    // 3️⃣ Handle avatar / license file uploads ONLY
+    // 3️⃣ Handle avatar, gallery and license file uploads ONLY
     // --------------------------------------------
+    // collect newly uploaded gallery items here so they are in scope
+    // for later merging with the client's ptProfile payload
+    let newGallery = [];
+
     if (req.files) {
       // Avatar upload
       if (req.files.avatar && req.files.avatar[0]) {
@@ -120,6 +112,27 @@ export const updateProfile = async (req, res) => {
       if (req.files.licenseDocument && req.files.licenseDocument[0]) {
         if (!updateData.ptProfile) updateData.ptProfile = {};
         updateData.ptProfile.licenseImageUrl = `/uploads/licenses/${req.files.licenseDocument[0].filename}`;
+      }
+
+      // Gallery Images
+      if (req.files.galleryImages?.length > 0) {
+        if (!updateData.ptProfile) updateData.ptProfile = {};
+
+        // Support multiple captions
+        // If frontend sends single string, convert to array for consistency
+        const captions =
+          typeof req.body.galleryCaption === "string"
+            ? [req.body.galleryCaption]
+            : req.body.galleryCaption || [];
+        newGallery = req.files.galleryImages.map((file, i) => ({
+          imageUrl: `/uploads/gallery/${file.filename}`,
+          caption: captions[i] || "",
+          uploadedAt: new Date(),
+        }));
+
+        // Merge with existing gallery if any
+        const existingGallery = user.ptProfile?.gallery || [];
+        updateData.ptProfile.gallery = [...existingGallery, ...newGallery];
       }
     }
 
@@ -138,22 +151,45 @@ export const updateProfile = async (req, res) => {
         console.warn("Failed to parse ptProfile", err);
       }
     }
-
-    // Merge if there is data
+    // Merge if there is data. Special handling for `gallery`:
+    // - If frontend provided `ptProfile.gallery` (even an empty array),
+    //   treat that as the set of kept images and append any newly
+    //   uploaded images (newGallery).
+    // - If frontend did NOT provide `gallery`, preserve the current
+    //   updateData.ptProfile.gallery (which may include existing + new).
     if (Object.keys(ptProfilePayload).length > 0) {
-      updateData.ptProfile = {
+      const merged = {
         ...(user.ptProfile?.toObject?.() || user.ptProfile || {}),
         ...ptProfilePayload,
       };
 
+      const hasGalleryInPayload = Object.prototype.hasOwnProperty.call(
+        ptProfilePayload,
+        "gallery"
+      );
+
+      let finalGallery = [];
+      if (hasGalleryInPayload) {
+        // frontend explicitly provided gallery -> keep those and append new uploads
+        finalGallery = [...(ptProfilePayload.gallery || []), ...newGallery];
+      } else if (updateData.ptProfile && updateData.ptProfile.gallery) {
+        // use the gallery we assembled earlier (existing + new)
+        finalGallery = updateData.ptProfile.gallery;
+      } else {
+        finalGallery = [...(user.ptProfile?.gallery || []), ...newGallery];
+      }
+
+      merged.gallery = finalGallery;
+
       // Enforce string for yearsOfExperience
       if (
-        updateData.ptProfile.yearsOfExperience &&
-        typeof updateData.ptProfile.yearsOfExperience !== "string"
+        merged.yearsOfExperience &&
+        typeof merged.yearsOfExperience !== "string"
       ) {
-        updateData.ptProfile.yearsOfExperience =
-          String(updateData.ptProfile.yearsOfExperience);
+        merged.yearsOfExperience = String(merged.yearsOfExperience);
       }
+
+      updateData.ptProfile = merged;
     }
 
     // ------------------------------------------------------------
@@ -167,7 +203,10 @@ export const updateProfile = async (req, res) => {
     // ------------------------------------------------------------
     // 6️⃣ Handle upgrade to physiotherapist
     // ------------------------------------------------------------
-    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
+    if (
+      upgradeToPhysiotherapist === true ||
+      upgradeToPhysiotherapist === "true"
+    ) {
       if (user.role !== "physiotherapist") {
         updateData.role = "physiotherapist";
         updateData.ptProfile = {
@@ -191,7 +230,7 @@ export const updateProfile = async (req, res) => {
         : "Profile updated successfully",
       user: updatedUser,
     });
-    console.log("✅ ✅ Update Data from frontend", updateData)
+    console.log("✅ ✅ Update Data from frontend", updateData);
   } catch (err) {
     console.error("Error updating profile:", err);
     res.status(500).json({ error: "Failed to update profile" });

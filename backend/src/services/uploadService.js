@@ -3,15 +3,25 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import config from "../config/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Base uploads folder inside backend
-const BASE_UPLOAD_DIR = path.join(__dirname, "uploads");
-
+// Base uploads folder inside backend (use configured uploadDir and resolve
+// relative to the backend folder). __dirname is backend/src/services; move
+// two levels up to reach backend/.
+const BASE_UPLOAD_DIR = path.join(
+  __dirname,
+  "..",
+  "..",
+  config.uploadDir || "uploads/"
+);
 // Ensure folder exists
 if (!fs.existsSync(BASE_UPLOAD_DIR)) fs.mkdirSync(BASE_UPLOAD_DIR, { recursive: true });
+// Gallery uploads folder (subfolder under BASE_UPLOAD_DIR)
+const GALLERY_DIR = path.join(BASE_UPLOAD_DIR, "gallery");
+if (!fs.existsSync(GALLERY_DIR)) fs.mkdirSync(GALLERY_DIR, { recursive: true });
 
 // Multer storage configuration
 const storage = multer.diskStorage({
@@ -20,6 +30,7 @@ const storage = multer.diskStorage({
 
     if (file.fieldname === "avatar") folderName = "avatars";
     else if (file.fieldname === "licenseDocument") folderName = "licenses";
+    else if (file.fieldname === "galleryImages") folderName = "gallery";
 
     const dir = path.join(BASE_UPLOAD_DIR, folderName);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -27,11 +38,11 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    // Unique filename: timestamp + original name
     const safeName = file.originalname.replace(/\s+/g, "_");
     cb(null, `${Date.now()}-${safeName}`);
   },
 });
+
 
 // File filter to accept only images or pdf
 const fileFilter = (req, file, cb) => {
@@ -53,4 +64,4 @@ const limits = {
 // Export multer instance
 const upload = multer({ storage, fileFilter, limits });
 
-export { upload, BASE_UPLOAD_DIR };
+export { upload, BASE_UPLOAD_DIR, GALLERY_DIR };

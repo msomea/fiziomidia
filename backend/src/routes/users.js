@@ -2,6 +2,7 @@ import express from "express";
 import { authenticate } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
 import * as userController from "../controllers/userController.js";
+import { upload } from "../services/uploadService.js";
 import { getSavedPTsByMember } from "../controllers/ptController.js";
 
 const router = express.Router();
@@ -17,9 +18,10 @@ router.put(
   "/profile",
   authenticate,
   // accept both avatar and licenseDocument uploads in same request
-  userController.uploadAvatar.fields([
+  upload.fields([
     { name: "avatar", maxCount: 1 },
     { name: "licenseDocument", maxCount: 1 },
+    { name: "galleryImages", maxCount: 10 },
   ]),
   userController.updateProfile
 );
