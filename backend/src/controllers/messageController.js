@@ -1,38 +1,40 @@
 import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
 
-// Send a new message
+// Send message
 export const sendMessage = async (req, res) => {
-  const sender = req.user._id;
-  const { conversationId, receiver, content } = req.body;
-
   try {
-    // Create the new message
-    const newMessage = await Message.create({
+    const { conversationId, content } = req.body;
+    const sender = req.user._id;
+
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation)
+      return res.status(404).json({ message: "Conversation not found" });
+
+    const receiver = conversation.participants.find(
+      (p) => p.toString() !== sender.toString()
+    );
+
+    const message = await Message.create({
       conversation: conversationId,
       sender,
       receiver,
       content,
     });
 
-    // Update the conversation: push to messages, set lastMessage, increment unread for receiver
-    const convo = await Conversation.findByIdAndUpdate(
-      conversationId,
-      {
-        $push: { messages: newMessage._id },
-        $set: { lastMessage: newMessage._id },
-        $inc: { [`unreadCounts.${receiver}`]: 1 },
-      },
-      { new: true }
-    )
-      .populate("participants", "fullName profileImageUrl role")
-      .populate({
-        path: "messages",
-        select: "sender receiver content createdAt",
-      })
-      .lean();
+    // Add message to conversation
+    conversation.messages.push(message._id);
+    conversation.lastMessage = message._id;
 
-    res.status(201).json({ message: newMessage, conversation: convo });
+    // Increment unread count for the receiver
+    conversation.unreadCounts.set(
+      receiver.toString(),
+      (conversation.unreadCounts.get(receiver.toString()) || 0) + 1
+    );
+
+    await conversation.save();
+
+    res.status(201).json({ message });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

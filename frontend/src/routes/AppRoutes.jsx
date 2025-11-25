@@ -8,7 +8,7 @@ import PTProfile from "../pages/PTProfile";
 import MemberDashboard from "../pages/member/MemberDashboard";
 import PTDashboard from "../pages/pt/PTDashboard";
 import MessagesPage from "../pages/message/Messages";
-import ConversationPage from "../pages/Conversation";
+import ConversationPage from "../pages/message/Conversation";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
 import FindProfessionals from "../components/home/FindProfessionals";

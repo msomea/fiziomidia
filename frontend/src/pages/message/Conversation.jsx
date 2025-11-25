@@ -1,15 +1,19 @@
-// src/pages/ConversationPage.jsx
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Send } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import API from "../api/axios";
-import { useAuth } from "../context/AuthContext";
+import { io } from "socket.io-client";
+import API from "../../api/axios";
+import { useAuth } from "../../context/AuthContext";
+const REACT_APP_BACKEND_URL = import.meta.env.VITE_SOCKET_URL;
+
+const socket = io(REACT_APP_BACKEND_URL || "http://localhost:4000");
 
 const ConversationPage = () => {
-  const { id: otherUserId } = useParams(); // user you are chatting with
+  const { id: otherUserId } = useParams();
   const { user: loggedInUser } = useAuth();
   const navigate = useNavigate();
 
+  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -18,53 +22,74 @@ const ConversationPage = () => {
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // Fetch messages between logged-in user and other user
+  // Join user's personal room
+  useEffect(() => {
+    if (!loggedInUser?._id) return;
+    socket.emit("joinRoom", loggedInUser._id);
+  }, [loggedInUser]);
+
+  // Fetch conversation once
   useEffect(() => {
     const fetchConversation = async () => {
       try {
         setLoading(true);
         const res = await API.get(`/conversations/user/${otherUserId}`);
-        if (res.data?.messages) {
-          setMessages(res.data.messages);
-        } else {
-          setMessages([]);
+        if (res.data) {
+          setConversation(res.data);
+          setMessages(res.data.messages || []);
         }
       } catch (err) {
-        console.error("Error fetching conversation:", err);
+        console.error(err);
       } finally {
         setLoading(false);
         scrollToBottom();
       }
     };
-
     fetchConversation();
-  }, [otherUserId, loggedInUser]);
-  console.log(`user ${loggedInUser.fullName} other user ${otherUserId}`)
+  }, [otherUserId]);
+
+  // Listen for incoming messages
+  useEffect(() => {
+    socket.on("messageReceived", (newMessage) => {
+      // Only add messages for this conversation
+      if (
+        newMessage.conversation === conversation?._id ||
+        newMessage.sender === otherUserId ||
+        newMessage.receiver === otherUserId
+      ) {
+        setMessages((prev) => [...prev, newMessage]);
+        scrollToBottom();
+      }
+    });
+
+    return () => socket.off("messageReceived");
+  }, [conversation, otherUserId]);
+
   // Send message
-  const handleSend = async () => {
-    if (!message.trim()) return;
+  const handleSend = () => {
+    if (!message.trim() || !conversation) return;
 
-    try {
-      const res = await API.post("/messages", {
-        sender: loggedInUser._id,
-        receiver: otherUserId,
-        content: message,
-      });
+    const msgData = {
+      sender: loggedInUser._id,
+      receiver: otherUserId,
+      content: message,
+      conversationId: conversation._id,
+    };
 
-      setMessages((prev) => [...prev, res.data.message]);
-      setMessage("");
-      scrollToBottom();
-    } catch (err) {
-      console.error("Error sending message:", err);
-    }
+    socket.emit("sendMessage", msgData);
+
+    // Optimistic UI
+    setMessages((prev) => [...prev, { ...msgData, _id: Date.now().toString() }]);
+    setMessage("");
+    scrollToBottom();
   };
 
   if (loading)
-    return (
-      <p className="p-4 mt-20 text-gray-600">
-        Loading conversation... from conversation page
-      </p>
-    );
+    return <p className="p-4 mt-20 text-gray-600">Loading conversation...</p>;
+
+  const otherUser = conversation?.participants.find(
+    (p) => p._id !== loggedInUser._id
+  );
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">
@@ -76,10 +101,13 @@ const ConversationPage = () => {
         <div className="flex items-center gap-3">
           <div className="avatar">
             <div className="w-10 rounded-full">
-              <img src="/avatars/default-user.jpg" alt="User" />
+              <img
+                src={otherUser?.profileImageUrl || "/avatars/default-user.jpg"}
+                alt="User"
+              />
             </div>
           </div>
-          <h2 className="font-semibold text-lg">Conversation</h2>
+          <h2 className="font-semibold text-lg">{otherUser?.fullName}</h2>
         </div>
       </div>
 
@@ -94,12 +122,14 @@ const ConversationPage = () => {
           <div
             key={msg._id}
             className={`chat ${
-              msg.sender === loggedInUser._id ? "chat-end" : "chat-start"
+              msg.sender === loggedInUser._id || msg.sender._id === loggedInUser._id
+                ? "chat-end"
+                : "chat-start"
             }`}
           >
             <div
               className={`chat-bubble ${
-                msg.sender === loggedInUser._id
+                msg.sender === loggedInUser._id || msg.sender._id === loggedInUser._id
                   ? "chat-bubble-primary text-white"
                   : "chat-bubble-secondary"
               }`}

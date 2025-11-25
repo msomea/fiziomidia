@@ -1,16 +1,20 @@
-// backend/models/Message.js
 import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
+    conversation: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Conversation",
+      required: true,
+    },
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // sender can be Member, PT, or Admin
+      ref: "User",
       required: true,
     },
     receiver: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // direct 1:1 message
+      ref: "User",
       required: true,
     },
     content: {
@@ -24,8 +28,8 @@ const messageSchema = new mongoose.Schema(
     },
     attachments: [
       {
-        fileUrl: String, // optional (images, PDFs, reports)
-        fileType: String, // e.g., "image/png", "application/pdf"
+        fileUrl: String,
+        fileType: String,
       },
     ],
   },
