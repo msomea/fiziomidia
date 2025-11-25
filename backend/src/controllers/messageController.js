@@ -62,19 +62,24 @@ export const getMessages = async (req, res) => {
 
 // Delete a message (owner or admin)
 export const deleteMessage = async (req, res) => {
+  console.log("✅ ✅ REg", req.params.id);
   try {
-    const { id } = req.params;
-    const message = await Message.findById(id);
-    if (!message) return res.status(404).json({ message: "Message not found" });
+    const messageId = req.params.id;
 
-    // Only sender or admin can delete
-    if (message.sender.toString() !== req.user._id.toString() && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
+    const msg = await Message.findById(messageId);
+    if (!msg) return res.status(404).json({ error: "Message not found" });
 
-    await message.deleteOne();
-    res.json({ message: "Message deleted successfully" });
+    // Remove from conversation.messages array
+    await Conversation.updateOne(
+      { _id: msg.conversation },
+      { $pull: { messages: messageId } }
+    );
+
+    await msg.deleteOne();
+
+    return res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Delete message error:", err);
+    return res.status(500).json({ error: "Server error" });
   }
 };

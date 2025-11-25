@@ -1,11 +1,14 @@
 import { useParams, useNavigate } from "react-router";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, PhoneIcon } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants"
 import { useAuth } from "../../context/AuthContext";
-const REACT_APP_BACKEND_URL = import.meta.env.VITE_SOCKET_URL;
+import avatar from "../../assets/avatar.jpg"
 
+const REACT_APP_BACKEND_URL = import.meta.env.VITE_SOCKET_URL;
 const socket = io(REACT_APP_BACKEND_URL || "http://localhost:4000");
 
 const ConversationPage = () => {
@@ -77,39 +80,102 @@ const ConversationPage = () => {
     };
 
     socket.emit("sendMessage", msgData);
-
-    // Optimistic UI
-    setMessages((prev) => [...prev, { ...msgData, _id: Date.now().toString() }]);
     setMessage("");
     scrollToBottom();
   };
 
   if (loading)
-    return <p className="p-4 mt-20 text-gray-600">Loading conversation...</p>;
+    return <p className="p-4 mt-16 text-gray-600">Loading conversation...</p>;
 
   const otherUser = conversation?.participants.find(
     (p) => p._id !== loggedInUser._id
   );
 
+  const handleDeleteMessage = async (messageId) => {
+    if (!messageId) return toast.error("Message ID missing");
+    console.log("Message ID", messageId)
+
+    // Backup original list
+    const originalMessages = [...messages];
+
+    // Remove instantly from UI
+    setMessages((prev) => prev.filter((m) => m._id !== messageId));
+
+    // Undo toast (5 seconds)
+    const undoToast = toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>Message deleted</span>
+
+          <button
+            onClick={() => {
+              setMessages(originalMessages);
+              toast.dismiss(t.id);
+            }}
+            className="text-blue-500 underline"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      { duration: 5000 }
+    );
+
+    try {
+      // Delay real delete (to allow undo)
+      setTimeout(async () => {
+        await API.delete(`/messages/${messageId}`);
+      }, 5000);
+
+    } catch (error) {
+      // Restore original messages
+      setMessages(originalMessages);
+      toast.error("Error deleting message");
+    }
+  };
+
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">
+    <div className="flex mt-20 flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-base-300 border-b border-base-300">
+      <div className="flex items-center justify-between p-4 bg-base-300 border-b border-base-300">
+  
+      {/* LEFT SIDE */}
+      <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)}>
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-3">
-          <div className="avatar">
-            <div className="w-10 rounded-full">
-              <img
-                src={otherUser?.profileImageUrl || "/avatars/default-user.jpg"}
-                alt="User"
-              />
-            </div>
+
+        <div className="avatar">
+          <div className="w-10 rounded-full">
+            <img
+              src={`${API_URL}${otherUser?.profileImageUrl}` || avatar}
+              alt="User"
+            />
           </div>
-          <h2 className="font-semibold text-lg">{otherUser?.fullName}</h2>
+        </div>
+
+        <div className="flex flex-col">
+          <span className="font-semibold text-lg">
+            {otherUser?.fullName || "User"}
+          </span>
+          <span className="text-xs text-gray-500">Online</span>
         </div>
       </div>
+
+      {/* RIGHT SIDE — PHONE BUTTON */}
+      {otherUser?.phone && (
+        <a
+          href={`tel:${otherUser.phone}`}
+          className="p-2 rounded-full hover:bg-base-200 text-green-600"
+          title={`Call ${otherUser.fullName}`}
+        >
+          <PhoneIcon className="w-5 h-5" />
+        </a>
+      )}
+
+    </div>
+
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -118,26 +184,43 @@ const ConversationPage = () => {
             Start the conversation by sending a message.
           </p>
         )}
-        {messages.map((msg) => (
-          <div
-            key={msg._id}
-            className={`chat ${
-              msg.sender === loggedInUser._id || msg.sender._id === loggedInUser._id
-                ? "chat-end"
-                : "chat-start"
-            }`}
-          >
+        {messages.map((msg) => {
+          const senderId = msg.sender?._id || msg.sender; // HANDLE BOTH FORMATS
+          const isMe = senderId === loggedInUser._id;
+
+          return (
             <div
-              className={`chat-bubble ${
-                msg.sender === loggedInUser._id || msg.sender._id === loggedInUser._id
-                  ? "chat-bubble-primary text-white"
-                  : "chat-bubble-secondary"
-              }`}
+              key={msg._id}
+              className={`chat ${isMe ? "chat-end" : "chat-start"}`}
             >
-              {msg.content}
+              {/* WRAPPER WITH GROUP */}
+              <div className="relative group">
+
+                <div
+                  className={`chat-bubble ${
+                    isMe
+                      ? "chat-bubble-primary text-white"
+                      : "chat-bubble-secondary"
+                  }`}
+                >
+                  {msg.content}
+                </div>
+
+                {/* DELETE BUTTON */}
+                {isMe && (
+                  <button
+                    onClick={() => handleDeleteMessage(msg._id)}
+                    className="absolute -top-2 -right-2 p-1 bg-red-600 text-white text-xs rounded-full 
+                    opacity-0 group-hover:opacity-100 transition"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+
         <div ref={messagesEndRef} />
       </div>
 

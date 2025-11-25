@@ -32,7 +32,7 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: userId,
     })
-      .populate("participants", "fullName profileImageUrl role")
+      .populate("participants", "fullName _id isLoggedIn profileImageUrl phone role")
       .populate({
         path: "lastMessage",
         select: "sender receiver content createdAt",
@@ -62,7 +62,7 @@ export const getConversationWithUser = async (req, res) => {
     const convo = await Conversation.findOne({
       participants: { $all: [userId, otherUserId] },
     })
-      .populate("participants", "fullName profileImageUrl role") // populate participants
+      .populate("participants", "fullName _id isLoggedIn profileImageUrl phone role") // populate participants
       .populate({
         path: "lastMessage",
         select: "sender receiver content createdAt",
@@ -72,7 +72,7 @@ export const getConversationWithUser = async (req, res) => {
         select: "sender receiver content createdAt",
         populate: {
           path: "sender receiver",
-          select: "fullName profileImageUrl role",
+          select: "fullName _id isLoggedIn profileImageUrl phone role",
         },
       })
       .lean();
