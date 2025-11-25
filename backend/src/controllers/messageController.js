@@ -3,39 +3,39 @@ import Conversation from "../models/Conversation.js";
 
 // Send a new message
 export const sendMessage = async (req, res) => {
+  const sender = req.user._id;
+  const { conversationId, receiver, content } = req.body;
+
   try {
-    const { receiverId, content } = req.body;
-    const senderId = req.user._id;
-
-    // Create or find conversation
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
-    });
-
-    if (!conversation) {
-      conversation = await Conversation.create({
-        participants: [senderId, receiverId],
-      });
-    }
-
-    // Save message
+    // Create the new message
     const newMessage = await Message.create({
-      sender: senderId,
-      receiver: receiverId,
+      conversation: conversationId,
+      sender,
+      receiver,
       content,
-      conversation: conversation._id,
     });
 
-    // Update conversation
-    conversation.lastMessage = newMessage._id;
-    await conversation.save();
+    // Update the conversation: push to messages, set lastMessage, increment unread for receiver
+    const convo = await Conversation.findByIdAndUpdate(
+      conversationId,
+      {
+        $push: { messages: newMessage._id },
+        $set: { lastMessage: newMessage._id },
+        $inc: { [`unreadCounts.${receiver}`]: 1 },
+      },
+      { new: true }
+    )
+      .populate("participants", "fullName profileImageUrl role")
+      .populate({
+        path: "messages",
+        select: "sender receiver content createdAt",
+      })
+      .lean();
 
-    // Emit Socket.IO event (notify receiver)
-    req.io.to(receiverId.toString()).emit("receiveMessage", newMessage);
-
-    res.status(201).json(newMessage);
+    res.status(201).json({ message: newMessage, conversation: convo });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 

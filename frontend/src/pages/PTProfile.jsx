@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
+import { useNavigate } from "react-router";
 
 import {
   PTOverview,
@@ -17,6 +18,7 @@ import avatarFallback from "../assets/avatar.jpg";
 import { API_URL } from "../config/constants";
 
 const PTProfile = () => {
+  const navigate = useNavigate();
   const { id } = useParams(); // user._id of PT to view
   const { user: loggedInUser } = useAuth(); // logged-in user for actions
   const [pt, setPt] = useState(null);
@@ -37,18 +39,18 @@ const PTProfile = () => {
     fetchPT();
   }, [id]);
 
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!pt || !pt.ptProfile) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-red-500">
+      <div className="min-h-screen mt-20 flex items-center justify-center text-red-500">
         Physiotherapist not found.
       </div>
     );
   }
-console.log("PT", pt)
   const ptProfile = pt.ptProfile;
   const avatarSrc = pt.profileImageUrl ? `${API_URL}${pt.profileImageUrl}` : avatarFallback;
 
@@ -77,15 +79,20 @@ console.log("PT", pt)
 
             {/* Actions */}
             <div className="mt-4 flex flex-wrap gap-3">
-              {loggedInUser.role !== "guest" && (
+              {loggedInUser.role !== "guest" && id !== loggedInUser._id ? (
                 <>
                   <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts">
                     Book Appointment
                   </button>
-                  <button className="btn btn-outline border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
+                  <Link
+                  to={`/messages/user/${pt._id}`}
+                  className="btn btn-outline border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
                     Message
-                  </button>
+                  </Link>
                 </>
+              ):(
+                <p className="text-sm text-gray-500 italic">
+                  Login to message or book appointment                </p>
               )}
             </div>
           </div>

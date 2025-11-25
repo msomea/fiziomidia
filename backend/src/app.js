@@ -22,6 +22,7 @@ import appointmentRoutes from "./routes/appointments.js";
 import forumRoutes from "./routes/forum.js";
 import promotionRoutes from "./routes/promotions.js";
 import messageRoutes from "./routes/message.js";
+import conversationRoute from "./routes/conversation.js";
 import adminRoutes from "./routes/admin.js";
 import locationRoutes from "./routes/location.js";
 
@@ -41,7 +42,6 @@ app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
-// app.use("/uploads", express.static("uploads"));
 // Serve uploads folder (resolve relative to backend root)
 const uploadsDir = path.join(__dirname, "..", config.uploadDir || "uploads");
 
@@ -81,6 +81,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/forum", forumRoutes);
 app.use("/api/promotions", promotionRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/conversations", conversationRoute);
 app.use("/api/locations", locationRoutes);
 
 // --- Health check ---

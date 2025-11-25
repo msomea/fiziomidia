@@ -7,7 +7,7 @@ import MemberProfile from "../pages/MemberProfile";
 import PTProfile from "../pages/PTProfile";
 import MemberDashboard from "../pages/member/MemberDashboard";
 import PTDashboard from "../pages/pt/PTDashboard";
-import MessagesPage from "../pages/Messages";
+import MessagesPage from "../pages/message/Messages";
 import ConversationPage from "../pages/Conversation";
 import MemberProfileSettings from "../pages/member/MemberProfileSettings";
 import PTProfileSettings from "../pages/pt/PTProfileSettings";
@@ -24,6 +24,7 @@ import EditPostPage from "../pages/forum/EditPostPage";
 import CreatePostPage from "../pages/forum/CreatePostPage"
 import PostDetailPage from "../pages/forum/PostDetailPage";
 import UpgradeToPT from "../components/dashboard/member/UpgradeToPT";
+import MessageRouterPage  from "../pages/message/MessageRouterPage";
 
 export default function AppRoutes() {
   return (
@@ -59,7 +60,8 @@ export default function AppRoutes() {
 
       {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />
-      <Route path="/messages/:conversationId" element={<ConversationPage />} />
+      <Route path="/messages/:id" element={<ConversationPage />} />
+      <Route path="/messages/user/:receiverId" element={<MessageRouterPage />} />
 
       {/* Profile Settings Routes */}
       <Route path="/settings/pt/:id" element={<PTProfileSettings />} />

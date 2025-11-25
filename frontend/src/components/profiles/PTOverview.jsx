@@ -3,8 +3,6 @@ import { ChevronDown } from "lucide-react";
 
 const PTOverview = ({ overview }) => {
   const [isOpen, setIsOpen] = useState(false);
-  console.log("Bio", overview)
-
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <button
