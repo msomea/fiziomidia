@@ -2,7 +2,8 @@ import express from "express";
 import { 
   createConversation,
   getConversations,
-  getConversationWithUser
+  getConversationWithUser,
+  deleteConversation
 } from "../controllers/conversationController.js";
 import { authenticate } from "../middlewares/auth.js";
 
@@ -17,5 +18,8 @@ router.get("/", authenticate, getConversations);
 
 // Get conversation with specific user
 router.get("/user/:id", authenticate, getConversationWithUser);
+
+// Delete a conversation by ID
+router.delete("/:id", authenticate, deleteConversation);
 
 export default router;

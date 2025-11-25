@@ -92,3 +92,25 @@ export const getConversationWithUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+// Delete a conversation by ID
+export const deleteConversation = async (req, res) => {
+  try {
+    const conversationId = req.params.id;
+
+    const conversation = await Conversation.findOneAndDelete({
+      _id: conversationId,
+      participants: req.user._id, // only allow deletion if the user is a participant
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    // Messages will be deleted automatically via pre('findOneAndDelete') middleware
+
+    return res.status(200).json({ message: "Conversation and messages deleted" });
+  } catch (err) {
+    console.error("Error deleting conversation:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

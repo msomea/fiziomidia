@@ -62,7 +62,6 @@ export const getMessages = async (req, res) => {
 
 // Delete a message (owner or admin)
 export const deleteMessage = async (req, res) => {
-  console.log("✅ ✅ REg", req.params.id);
   try {
     const messageId = req.params.id;
 
