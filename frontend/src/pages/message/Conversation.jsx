@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import API from "../../api/axios";
-import { API_URL } from "../../config/constants"
+import { API_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
-import avatar from "../../assets/avatar.jpg"
+import avatar from "../../assets/avatar.jpg";
 
-const REACT_APP_BACKEND_URL = import.meta.env.VITE_SOCKET_URL;
-const socket = io(REACT_APP_BACKEND_URL || "http://localhost:4000");
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
+const socket = io(SOCKET_URL || "http://localhost:4000");
 
 const ConversationPage = () => {
   const { id: otherUserId } = useParams();
@@ -25,13 +25,13 @@ const ConversationPage = () => {
   const scrollToBottom = () =>
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // Join user's personal room
+  // Join room
   useEffect(() => {
     if (!loggedInUser?._id) return;
     socket.emit("joinRoom", loggedInUser._id);
   }, [loggedInUser]);
 
-  // Fetch conversation once
+  // FETCH CONVERSATION
   useEffect(() => {
     const fetchConversation = async () => {
       try {
@@ -46,40 +46,57 @@ const ConversationPage = () => {
       } finally {
         setLoading(false);
         scrollToBottom();
+
+        // Tell backend this conversation is opened → reset unread
+        if (res?.data?._id && loggedInUser?._id) {
+          socket.emit("conversation:open", {
+            conversationId: res.data._id,
+            userId: loggedInUser._id,
+          });
+        }
       }
     };
+
     fetchConversation();
-  }, [otherUserId]);
+  }, [otherUserId, loggedInUser]);
 
-  // Listen for incoming messages
+  // LISTEN FOR NEW MESSAGES (NEW EVENT)
   useEffect(() => {
-    socket.on("messageReceived", (newMessage) => {
-      // Only add messages for this conversation
-      if (
-        newMessage.conversation === conversation?._id ||
-        newMessage.sender === otherUserId ||
-        newMessage.receiver === otherUserId
-      ) {
-        setMessages((prev) => [...prev, newMessage]);
-        scrollToBottom();
-      }
-    });
+    const handleIncoming = (payload) => {
+      if (!conversation?._id) return;
 
-    return () => socket.off("messageReceived");
-  }, [conversation, otherUserId]);
+      if (payload.conversationId !== conversation._id) return;
 
-  // Send message
+      // Add to UI instantly
+      setMessages((prev) => [
+        ...prev,
+        {
+          _id: Math.random().toString(36), // temporary fake id
+          sender: payload.sender,
+          content: payload.content,
+          conversation: payload.conversationId,
+        },
+      ]);
+
+      scrollToBottom();
+    };
+
+    socket.on("message:new", handleIncoming);
+
+    return () => socket.off("message:new", handleIncoming);
+  }, [conversation]);
+
+  // SEND MESSAGE
   const handleSend = () => {
     if (!message.trim() || !conversation) return;
 
-    const msgData = {
+    socket.emit("sendMessage", {
       sender: loggedInUser._id,
       receiver: otherUserId,
       content: message,
       conversationId: conversation._id,
-    };
+    });
 
-    socket.emit("sendMessage", msgData);
     setMessage("");
     scrollToBottom();
   };
@@ -91,22 +108,17 @@ const ConversationPage = () => {
     (p) => p._id !== loggedInUser._id
   );
 
+  // DELETE MESSAGE
   const handleDeleteMessage = async (messageId) => {
     if (!messageId) return toast.error("Message ID missing");
-    console.log("Message ID", messageId)
 
-    // Backup original list
     const originalMessages = [...messages];
-
-    // Remove instantly from UI
     setMessages((prev) => prev.filter((m) => m._id !== messageId));
 
-    // Undo toast (5 seconds)
     const undoToast = toast(
       (t) => (
         <div className="flex items-center gap-3">
           <span>Message deleted</span>
-
           <button
             onClick={() => {
               setMessages(originalMessages);
@@ -122,60 +134,50 @@ const ConversationPage = () => {
     );
 
     try {
-      // Delay real delete (to allow undo)
       setTimeout(async () => {
         await API.delete(`/messages/${messageId}`);
       }, 5000);
-
     } catch (error) {
-      // Restore original messages
       setMessages(originalMessages);
       toast.error("Error deleting message");
     }
   };
 
-
   return (
     <div className="flex mt-20 flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-base-300 border-b border-base-300">
-  
-      {/* LEFT SIDE */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
-        <div className="avatar">
-          <div className="w-10 rounded-full">
-            <img
-              src={`${API_URL}${otherUser?.profileImageUrl}` || avatar}
-              alt="User"
-            />
+          <div className="avatar">
+            <div className="w-10 rounded-full">
+              <img
+                src={`${API_URL}${otherUser?.profileImageUrl}` || avatar}
+                alt="User"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="font-semibold text-lg">
+              {otherUser?.fullName || "User"}
+            </span>
+            <span className="text-xs text-gray-500">Online</span>
           </div>
         </div>
 
-        <div className="flex flex-col">
-          <span className="font-semibold text-lg">
-            {otherUser?.fullName || "User"}
-          </span>
-          <span className="text-xs text-gray-500">Online</span>
-        </div>
+        {otherUser?.phone && (
+          <a
+            href={`tel:${otherUser.phone}`}
+            className="p-2 rounded-full hover:bg-base-200 text-green-600"
+          >
+            <PhoneIcon className="w-5 h-5" />
+          </a>
+        )}
       </div>
-
-      {/* RIGHT SIDE — PHONE BUTTON */}
-      {otherUser?.phone && (
-        <a
-          href={`tel:${otherUser.phone}`}
-          className="p-2 rounded-full hover:bg-base-200 text-green-600"
-          title={`Call ${otherUser.fullName}`}
-        >
-          <PhoneIcon className="w-5 h-5" />
-        </a>
-      )}
-
-    </div>
-
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -184,8 +186,9 @@ const ConversationPage = () => {
             Start the conversation by sending a message.
           </p>
         )}
+
         {messages.map((msg) => {
-          const senderId = msg.sender?._id || msg.sender; // HANDLE BOTH FORMATS
+          const senderId = msg.sender?._id || msg.sender;
           const isMe = senderId === loggedInUser._id;
 
           return (
@@ -193,9 +196,7 @@ const ConversationPage = () => {
               key={msg._id}
               className={`chat ${isMe ? "chat-end" : "chat-start"}`}
             >
-              {/* WRAPPER WITH GROUP */}
               <div className="relative group">
-
                 <div
                   className={`chat-bubble ${
                     isMe
@@ -206,12 +207,10 @@ const ConversationPage = () => {
                   {msg.content}
                 </div>
 
-                {/* DELETE BUTTON */}
-                {isMe && (
+                {isMe && msg._id && (
                   <button
                     onClick={() => handleDeleteMessage(msg._id)}
-                    className="absolute -top-2 -right-2 p-1 bg-red-600 text-white text-xs rounded-full 
-                    opacity-0 group-hover:opacity-100 transition"
+                    className="absolute -top-2 -right-2 p-1 bg-red-600 text-white text-xs rounded-full opacity-0 group-hover:opacity-100 transition"
                   >
                     ✕
                   </button>
@@ -228,16 +227,13 @@ const ConversationPage = () => {
       <div className="p-4 border-t border-base-300 flex gap-2">
         <input
           type="text"
+          className="input input-bordered w-full"
+          placeholder="Type a message..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="input input-bordered w-full"
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
         />
-        <button
-          onClick={handleSend}
-          className="btn btn-primary flex items-center gap-1"
-        >
+        <button onClick={handleSend} className="btn btn-primary flex items-center gap-1">
           <Send size={16} /> Send
         </button>
       </div>
