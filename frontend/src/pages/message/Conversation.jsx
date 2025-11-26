@@ -155,7 +155,7 @@ const ConversationPage = () => {
           <div className="avatar">
             <div className="w-10 rounded-full">
               <img
-                src={`${API_URL}${otherUser?.profileImageUrl}` || avatar}
+                src={otherUser?.profileImageUrl ? `${API_URL}${otherUser.profileImageUrl}` : avatar}
                 alt="User"
               />
             </div>
@@ -165,7 +165,13 @@ const ConversationPage = () => {
             <span className="font-semibold text-lg">
               {otherUser?.fullName || "User"}
             </span>
-            <span className="text-xs text-gray-500">Online</span>
+            <span className="text-xs text-gray-500">
+            {otherUser?.isLoggedIn ? (
+              <span className="text-green-500">Online</span>
+            ) : (
+              <span className="text-gray-400">Offline</span>
+            )}
+          </span>
           </div>
         </div>
 

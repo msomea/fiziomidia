@@ -25,7 +25,9 @@ const MessagesPage = () => {
     socket.emit("joinRoom", loggedInUser._id);
 
     return () => {
+      socket.off("message:new");
       socket.off("messageReceived");
+      socket.off("conversation:read");
     };
   }, [loggedInUser]);
 
@@ -51,48 +53,63 @@ const MessagesPage = () => {
   // LISTEN FOR NEW MESSAGES
   // ------------------------------------------
   useEffect(() => {
-    socket.on("messageReceived", (msg) => {
-      console.log("Real-time message received:", msg);
+    // Backend emits `message:new`. Some older code may emit `messageReceived`.
+    const handleMessage = (msg) => {
+      // Normalize payload: accept either { conversationId } or { conversation }
+      const conversationId = msg.conversationId || msg.conversation;
+      const sender = msg.sender || msg.from;
+      const receiver = msg.receiver || msg.to;
+      const content = msg.content || msg.body || "";
 
       setConversations((prev) => {
-        const existing = prev.find(
-          (c) => c._id === msg.conversation
-        );
+        const existing = prev.find((c) => c._id === conversationId);
 
         // If conversation exists → update it
         if (existing) {
-          const updatedList = prev.map((c) => {
-            if (c._id !== msg.conversation) return c;
+          return prev.map((c) => {
+            if (c._id !== conversationId) return c;
 
-            const isFromOther = msg.sender !== loggedInUser._id;
+            const isFromOther = sender !== loggedInUser._id;
 
             return {
               ...c,
-              lastMessage: msg,
+              lastMessage: { content, sender, conversation: conversationId, updatedAt: msg.updatedAt || new Date().toISOString() },
               unread: isFromOther ? (c.unread || 0) + 1 : c.unread,
-              updatedAt: new Date().toISOString(),
+              updatedAt: msg.updatedAt || new Date().toISOString(),
             };
           });
-
-          return updatedList;
         }
 
         // If new conversation → insert it at top
         return [
           {
-            _id: msg.conversation,
+            _id: conversationId,
             participants: [
-              { _id: msg.sender },
-              { _id: msg.receiver },
+              { _id: sender },
+              { _id: receiver },
             ],
-            unread: msg.sender !== loggedInUser._id ? 1 : 0,
-            lastMessage: msg,
-            updatedAt: new Date().toISOString(),
+            unread: sender !== loggedInUser._id ? 1 : 0,
+            lastMessage: { content, sender, conversation: conversationId, updatedAt: msg.updatedAt || new Date().toISOString() },
+            updatedAt: msg.updatedAt || new Date().toISOString(),
           },
           ...prev,
         ];
       });
-    });
+    };
+
+    const handleConversationRead = ({ conversationId, unread }) => {
+      setConversations((prev) => prev.map((c) => (c._id === conversationId ? { ...c, unread: unread || 0 } : c)));
+    };
+
+    socket.on("message:new", handleMessage);
+    socket.on("messageReceived", handleMessage); // fallback
+    socket.on("conversation:read", handleConversationRead);
+
+    return () => {
+      socket.off("message:new", handleMessage);
+      socket.off("messageReceived", handleMessage);
+      socket.off("conversation:read", handleConversationRead);
+    };
   }, [loggedInUser]);
 
   // ------------------------------------------
