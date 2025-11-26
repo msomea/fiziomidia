@@ -114,3 +114,18 @@ export const deleteConversation = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const updateUnreadCount = async (req, res) => {
+  try {
+    const convo = await Conversation.findById(req.params.id);
+    if (!convo) return res.status(404).json({ message: "Conversation not found" });
+
+    convo.unreadCounts.set(req.user._id.toString(), 0);
+    await convo.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Mark read error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

@@ -3,7 +3,8 @@ import {
   createConversation,
   getConversations,
   getConversationWithUser,
-  deleteConversation
+  deleteConversation,
+  updateUnreadCount
 } from "../controllers/conversationController.js";
 import { authenticate } from "../middlewares/auth.js";
 
@@ -18,7 +19,8 @@ router.get("/", authenticate, getConversations);
 
 // Get conversation with specific user
 router.get("/user/:id", authenticate, getConversationWithUser);
-
+// Update Unread counter
+router.put("/:id/mark-read", authenticate, updateUnreadCount)
 // Delete a conversation by ID
 router.delete("/:id", authenticate, deleteConversation);
 
