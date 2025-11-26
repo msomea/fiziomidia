@@ -14,6 +14,7 @@ const socket = io(SOCKET_URL || "http://localhost:4000");
 const ConversationPage = () => {
   const { id: otherUserId } = useParams();
   const { user: loggedInUser } = useAuth();
+  const [onlineStatus, setOnlineStatus] = useState({}); 
   const navigate = useNavigate();
 
   const [conversation, setConversation] = useState(null);
@@ -29,6 +30,14 @@ const ConversationPage = () => {
   useEffect(() => {
     if (!loggedInUser?._id) return;
     socket.emit("joinRoom", loggedInUser._id);
+    // Listen for status updates
+    socket.on("userStatusUpdate", ({ userId, isOnline }) => {
+      setOnlineStatus((prev) => ({ ...prev, [userId]: isOnline }));
+    });
+
+    return () => {
+      socket.off("userStatusUpdate");
+    };
   }, [loggedInUser]);
 
   // FETCH CONVERSATION
@@ -46,11 +55,11 @@ const ConversationPage = () => {
       } finally {
         setLoading(false);
         scrollToBottom();
-
+        
         // Tell backend this conversation is opened → reset unread
-        if (res?.data?._id && loggedInUser?._id) {
+        if (conversation._id && loggedInUser?._id) {
           socket.emit("conversation:open", {
-            conversationId: res.data._id,
+            conversationId: conversation._id,
             userId: loggedInUser._id,
           });
         }
@@ -166,8 +175,8 @@ const ConversationPage = () => {
               {otherUser?.fullName || "User"}
             </span>
             <span className="text-xs text-gray-500">
-            {otherUser?.isLoggedIn ? (
-              <span className="text-green-500">Online</span>
+            {onlineStatus[otherUser._id]  ? (
+              <span className="text-caribbean">Online</span>
             ) : (
               <span className="text-gray-400">Offline</span>
             )}

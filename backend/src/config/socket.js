@@ -2,10 +2,12 @@ import { Server } from "socket.io";
 import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
 
+let onlineUsers = {};
+
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "*",
+      origin: process.env.CLIENT_URL || "http://localhost:5173",
       methods: ["GET", "POST"],
       // Ensure socket.io responses include Access-Control-Allow-Credentials: true
       credentials: true,
@@ -13,19 +15,16 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
-
-    //----------------------------------------------------------------------
     // JOIN USER PERSONAL ROOM
-    //----------------------------------------------------------------------
     socket.on("joinRoom", (userId) => {
       socket.join(userId);
-      console.log(`User ${userId} joined personal room`);
+      onlineUsers[userId] = socket.id;
+      // Broadcast to others that this user is online
+      io.emit("userStatusUpdate", { userId, isOnline: true });
     });
 
-    //----------------------------------------------------------------------
     // SEND MESSAGE EVENT
-    //----------------------------------------------------------------------
+   
     socket.on("sendMessage", async (data) => {
       try {
         const { sender, receiver, content, conversationId } = data;
@@ -54,9 +53,9 @@ export const initSocket = (server) => {
 
         await conversation.save();
 
-        //------------------------------------------------------------------
+        
         // EMIT NEW MESSAGE WITH UNREAD INFO
-        //------------------------------------------------------------------
+        
         io.to(receiver).emit("message:new", {
           conversationId,
           sender,
@@ -78,9 +77,9 @@ export const initSocket = (server) => {
       }
     });
 
-    //----------------------------------------------------------------------
+    
     // MARK CONVERSATION AS READ
-    //----------------------------------------------------------------------
+   
     socket.on("conversation:open", async ({ conversationId, userId }) => {
       try {
         const conversation = await Conversation.findById(conversationId);
@@ -96,9 +95,9 @@ export const initSocket = (server) => {
           (p) => p.toString() !== userId.toString()
         );
 
-        //------------------------------------------------------------------
+        
         // Notify sender AND receiver
-        //------------------------------------------------------------------
+        
         io.to(userId).emit("conversation:read", {
           conversationId,
           unread: 0,
@@ -115,11 +114,20 @@ export const initSocket = (server) => {
       }
     });
 
-    //----------------------------------------------------------------------
+
     // DISCONNECT
-    //----------------------------------------------------------------------
+
     socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.id}`);
+      // Remove user from online list
+      const userId = Object.keys(onlineUsers).find(
+        (key) => onlineUsers[key] === socket.id
+      );
+
+      if (userId) {
+        delete onlineUsers[userId];
+        // Broadcast offline status
+        io.emit("userStatusUpdate", { userId, isOnline: false });
+      }
     });
   });
 
