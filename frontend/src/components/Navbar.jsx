@@ -11,12 +11,14 @@ import {
 import toast from "react-hot-toast";
 import logo from "../assets/fm-bg.svg";
 import { useAuth } from "../context/AuthContext";
+import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { unreadCount } = useUnreadMessages();
 
   const isGuest = user.role === "guest";
 
@@ -91,9 +93,11 @@ export default function Navbar() {
               >
                 <div className="indicator">
                   <MessageCircle className="w-5 h-5 text-black" />
-                  <span className="badge badge-sm badge-primary indicator-item">
-                    3
-                  </span>
+                  {unreadCount > 0 && (
+                    <span className="badge badge-sm badge-primary indicator-item">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </div>
               </Link>
 
@@ -169,6 +173,21 @@ export default function Navbar() {
             </Link>
           ) : (
             <>
+              <Link
+                to="/messages"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between px-4 py-3 text-black hover:text-caribbean"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5" />
+                </div>
+                {unreadCount > 0 && (
+                  <span className="badge badge-primary">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+
               <Link
                 to={getDashboardPath()}
                 onClick={() => setMenuOpen(false)}
