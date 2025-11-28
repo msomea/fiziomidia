@@ -32,18 +32,30 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: userId,
     })
-      .populate("participants", "fullName _id isLoggedIn profileImageUrl phone role")
+      .populate(
+        "participants",
+        "fullName _id isLoggedIn profileImageUrl phone role"
+      )
       .populate({
         path: "lastMessage",
         select: "sender receiver content createdAt",
       })
       .sort({ updatedAt: -1 });
 
-    // Include unread count for logged-in user
-    const data = conversations.map((c) => ({
-      ...c.toObject(),
-      unread: c.unreadCounts.get(userId.toString()) || 0,
-    }));
+    // Calculate unread count from messages with status !== 'read'
+    const data = await Promise.all(
+      conversations.map(async (c) => {
+        const unreadCount = await Message.countDocuments({
+          conversation: c._id,
+          receiver: userId,
+          status: { $ne: "read" },
+        });
+        return {
+          ...c.toObject(),
+          unread: unreadCount,
+        };
+      })
+    );
 
     res.status(200).json(data);
   } catch (error) {
@@ -62,7 +74,10 @@ export const getConversationWithUser = async (req, res) => {
     const convo = await Conversation.findOne({
       participants: { $all: [userId, otherUserId] },
     })
-      .populate("participants", "fullName _id isLoggedIn profileImageUrl phone role") // populate participants
+      .populate(
+        "participants",
+        "fullName _id isLoggedIn profileImageUrl phone role"
+      ) // populate participants
       .populate({
         path: "lastMessage",
         select: "sender receiver content createdAt",
@@ -80,10 +95,17 @@ export const getConversationWithUser = async (req, res) => {
     if (!convo)
       return res.status(404).json({ message: "Conversation not found" });
 
+    // Calculate unread count from messages with status !== 'read'
+    const unreadCount = await Message.countDocuments({
+      conversation: convo._id,
+      receiver: userId,
+      status: { $ne: "read" },
+    });
+
     // Add unread count for logged-in user
     const data = {
       ...convo,
-      unread: convo.unreadCounts?.[userId.toString()] || 0,
+      unread: unreadCount,
     };
 
     res.json(data);
@@ -118,10 +140,18 @@ export const deleteConversation = async (req, res) => {
 export const updateUnreadCount = async (req, res) => {
   try {
     const convo = await Conversation.findById(req.params.id);
-    if (!convo) return res.status(404).json({ message: "Conversation not found" });
+    if (!convo)
+      return res.status(404).json({ message: "Conversation not found" });
 
-    convo.unreadCounts.set(req.user._id.toString(), 0);
-    await convo.save();
+    // Mark all messages from other user to current user as read
+    await Message.updateMany(
+      {
+        conversation: req.params.id,
+        receiver: req.user._id,
+        status: { $ne: "read" },
+      },
+      { status: "read" }
+    );
 
     res.json({ success: true });
   } catch (error) {

@@ -53,12 +53,14 @@ export const initSocket = (server) => {
         conversation.messages.push(message._id);
         conversation.lastMessage = message._id;
 
-        // Increase unread count for receiver
-        const currentUnread =
-          conversation.unreadCounts.get(receiver.toString()) || 0;
-        conversation.unreadCounts.set(receiver.toString(), currentUnread + 1);
-
         await conversation.save();
+
+        // Count unread messages for receiver
+        const unreadCount = await Message.countDocuments({
+          conversation: conversationId,
+          receiver,
+          status: { $ne: "read" },
+        });
 
         // EMIT NEW MESSAGE WITH UNREAD INFO (include messageId and status)
 
@@ -70,7 +72,7 @@ export const initSocket = (server) => {
           messageId: message._id,
           status: message.status,
           updatedAt: conversation.updatedAt,
-          unread: currentUnread + 1,
+          unread: unreadCount,
         };
 
         io.to(receiver).emit("message:new", payloadForReceiver);
@@ -159,11 +161,7 @@ export const initSocket = (server) => {
 
         if (!conversation) return;
 
-        // Reset unread count for this user
-        conversation.unreadCounts.set(userId.toString(), 0);
-        await conversation.save();
-
-        // Also mark any messages directed to this user in the conversation as 'read'
+        // Mark any messages directed to this user in the conversation as 'read'
         try {
           const unreadMessages = await Message.find({
             conversation: conversationId,

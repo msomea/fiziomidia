@@ -26,12 +26,6 @@ export const sendMessage = async (req, res) => {
     conversation.messages.push(message._id);
     conversation.lastMessage = message._id;
 
-    // Increment unread count for the receiver
-    conversation.unreadCounts.set(
-      receiver.toString(),
-      (conversation.unreadCounts.get(receiver.toString()) || 0) + 1
-    );
-
     await conversation.save();
 
     res.status(201).json({ message });
