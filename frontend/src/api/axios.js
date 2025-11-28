@@ -40,6 +40,17 @@ API.interceptors.response.use(
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Avoid treating auth login/register attempts as "session expired".
+      // If the request was explicitly to login or register, just reject so
+      // the calling code can show appropriate error messages.
+      const authSkip = ["/auth/login", "/auth/register", "/auth/logout"];
+      if (
+        originalRequest.url &&
+        authSkip.some((r) => originalRequest.url.includes(r))
+      ) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
@@ -62,10 +73,14 @@ API.interceptors.response.use(
       }
 
       try {
-        const res = await axios.post("/api/auth/refresh", { token: refreshToken });
+        const res = await axios.post("/api/auth/refresh", {
+          token: refreshToken,
+        });
         const newAccessToken = res.data.accessToken;
         localStorage.setItem("accessToken", newAccessToken);
-        API.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
+        API.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${newAccessToken}`;
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
         return API(originalRequest);

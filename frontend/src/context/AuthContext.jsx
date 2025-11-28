@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
       return data.user;
     } catch (err) {
-      toast.error(err.response?.data?.error || "Login failed");
+      // Let the calling component (Login.jsx) handle the error toast
       throw err;
     }
   };

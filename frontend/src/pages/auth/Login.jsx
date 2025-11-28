@@ -35,7 +35,7 @@ export default function Login() {
 
     } catch (err) {
       console.error("Login failed:", err);
-      toast.error(err.response?.data?.error || err.message || "Invalid credentials");
+      toast.error(err.response?.data?.error || err.message );
     } finally {
       setLoading(false);
     }
