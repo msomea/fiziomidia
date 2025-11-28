@@ -153,6 +153,16 @@ export async function logoutUser(req, res) {
       $pull: { refreshTokens: { token } },
     });
 
+    // If socket.io is attached to the app, broadcast that this user went offline
+    try {
+      const io = req.app?.get("io");
+      if (io) {
+        io.emit("userWentOffline", { userId: userId.toString() });
+      }
+    } catch (e) {
+      console.error("Error emitting logout socket event:", e);
+    }
+
     res.json({ message: "Logged out successfully" });
   } catch (err) {
     console.error("Logout error:", err);

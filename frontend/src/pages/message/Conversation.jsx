@@ -14,13 +14,13 @@ const socket = io(SOCKET_URL || "http://localhost:4000");
 const ConversationPage = () => {
   const { id: otherUserId } = useParams();
   const { user: loggedInUser } = useAuth();
-  const [onlineStatus, setOnlineStatus] = useState({}); 
   const navigate = useNavigate();
-
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isOtherUserOnline, setIsOtherUserOnline] = useState(false);
+
 
   const messagesEndRef = useRef(null);
   const scrollToBottom = () =>
@@ -30,14 +30,6 @@ const ConversationPage = () => {
   useEffect(() => {
     if (!loggedInUser?._id) return;
     socket.emit("joinRoom", loggedInUser._id);
-    // Listen for status updates
-    socket.on("userStatusUpdate", ({ userId, isOnline }) => {
-      setOnlineStatus((prev) => ({ ...prev, [userId]: isOnline }));
-    });
-
-    return () => {
-      socket.off("userStatusUpdate");
-    };
   }, [loggedInUser]);
 
   // FETCH CONVERSATION
@@ -49,6 +41,10 @@ const ConversationPage = () => {
         if (res.data) {
           setConversation(res.data);
           setMessages(res.data.messages || []);
+          const otherUserData = res.data.participants.find(
+            (p) => p._id !== loggedInUser._id
+          );
+          setIsOtherUserOnline(otherUserData?.isLoggedIn || false);
         }
       } catch (err) {
         console.error(err);
@@ -94,6 +90,41 @@ const ConversationPage = () => {
 
     return () => socket.off("message:new", handleIncoming);
   }, [conversation]);
+
+  // LISTEN FOR OTHER USER LOGOUT
+  useEffect(() => {
+    if (!otherUserId) return;
+
+    const handleUserWentOffline = ({ userId }) => {
+      if (userId === otherUserId) {
+        setIsOtherUserOnline(false);
+      }
+    };
+
+    socket.on("userWentOffline", handleUserWentOffline);
+
+    return () => {
+      socket.off("userWentOffline", handleUserWentOffline);
+    };
+  }, [otherUserId]);
+
+  // LISTEN FOR OTHER USER ONLINE
+  useEffect(() => {
+    if (!otherUserId) return;
+
+    const handleUserWentOnline = ({ userId }) => {
+      if (userId === otherUserId) {
+        setIsOtherUserOnline(true);
+      }
+    };
+
+    socket.on("userWentOnline", handleUserWentOnline);
+
+    return () => {
+      socket.off("userWentOnline", handleUserWentOnline);
+    };
+  }, [otherUserId]);
+
 
   // SEND MESSAGE
   const handleSend = () => {
@@ -152,6 +183,7 @@ const ConversationPage = () => {
     }
   };
 
+
   return (
     <div className="flex mt-20 flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">
       {/* Header */}
@@ -175,7 +207,7 @@ const ConversationPage = () => {
               {otherUser?.fullName || "User"}
             </span>
             <span className="text-xs text-gray-500">
-            {onlineStatus[otherUser._id]  ? (
+            {isOtherUserOnline  ? (
               <span className="text-caribbean">Online</span>
             ) : (
               <span className="text-gray-400">Offline</span>

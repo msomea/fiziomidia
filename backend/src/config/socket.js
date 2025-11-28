@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
+import { userInfo } from "os";
 
 let onlineUsers = {};
 
@@ -18,13 +19,19 @@ export const initSocket = (server) => {
     // JOIN USER PERSONAL ROOM
     socket.on("joinRoom", (userId) => {
       socket.join(userId);
-      onlineUsers[userId] = socket.id;
-      // Broadcast to others that this user is online
-      io.emit("userStatusUpdate", { userId, isOnline: true });
+
+      // Track online socket ids per user
+      if (!onlineUsers[userId]) onlineUsers[userId] = [];
+      if (!onlineUsers[userId].includes(socket.id))
+        onlineUsers[userId].push(socket.id);
+
+      // If this is the first connection for the user, broadcast online
+      if (onlineUsers[userId].length === 1) {
+        io.emit("userWentOnline", { userId });
+      }
     });
 
     // SEND MESSAGE EVENT
-   
     socket.on("sendMessage", async (data) => {
       try {
         const { sender, receiver, content, conversationId } = data;
@@ -53,9 +60,8 @@ export const initSocket = (server) => {
 
         await conversation.save();
 
-        
         // EMIT NEW MESSAGE WITH UNREAD INFO
-        
+
         io.to(receiver).emit("message:new", {
           conversationId,
           sender,
@@ -77,9 +83,8 @@ export const initSocket = (server) => {
       }
     });
 
-    
     // MARK CONVERSATION AS READ
-   
+
     socket.on("conversation:open", async ({ conversationId, userId }) => {
       try {
         const conversation = await Conversation.findById(conversationId);
@@ -95,9 +100,8 @@ export const initSocket = (server) => {
           (p) => p.toString() !== userId.toString()
         );
 
-        
         // Notify sender AND receiver
-        
+
         io.to(userId).emit("conversation:read", {
           conversationId,
           unread: 0,
@@ -114,19 +118,26 @@ export const initSocket = (server) => {
       }
     });
 
-
     // DISCONNECT
 
     socket.on("disconnect", () => {
       // Remove user from online list
-      const userId = Object.keys(onlineUsers).find(
-        (key) => onlineUsers[key] === socket.id
+      const userId = Object.keys(onlineUsers).find((id) =>
+        onlineUsers[id].includes(socket.id)
       );
 
       if (userId) {
-        delete onlineUsers[userId];
-        // Broadcast offline status
-        io.emit("userStatusUpdate", { userId, isOnline: false });
+        onlineUsers[userId] = onlineUsers[userId].filter(
+          (id) => id !== socket.id
+        );
+
+        // If no more sockets remain for this user, mark offline and broadcast
+        if (onlineUsers[userId].length === 0) {
+          delete onlineUsers[userId];
+          console.log("✅ ✅ User went offline", userId);
+          // Broadcast to all connected clients that this user went offline
+          io.emit("userWentOffline", { userId });
+        }
       }
     });
   });
