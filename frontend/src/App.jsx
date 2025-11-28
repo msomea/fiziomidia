@@ -1,4 +1,4 @@
-import { BrowserRouter } from "react-router"; 
+import { BrowserRouter, useNavigate } from "react-router"; 
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -10,32 +10,33 @@ import { useEffect } from "react";
 
 function AppContent() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setLogoutHandler(() => logout());
-  }, [logout]);
+    setLogoutHandler(() => logout(navigate));
+  }, [logout, navigate]);
 
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-alice">
-        <Navbar />
-        <main className="flex-grow">
-          <AppRoutes />
-        </main>
-        <Footer />
-        <Toaster position="top-right" />
-      </div>
-    </BrowserRouter>
+    <div className="min-h-screen flex flex-col bg-alice">
+      <Navbar />
+      <main className="flex-grow">
+        <AppRoutes />
+      </main>
+      <Footer />
+      <Toaster position="top-right" />
+    </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <ForumProvider>
-        <AppContent />
-      </ForumProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <ForumProvider>
+          <AppContent />
+        </ForumProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

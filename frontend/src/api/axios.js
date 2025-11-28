@@ -67,8 +67,12 @@ API.interceptors.response.use(
 
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
-        if (logoutHandler) logoutHandler();
-        toast.error("Session expired. Please log in again.");
+        isRefreshing = false;
+        if (logoutHandler) {
+          logoutHandler();
+        } else {
+          toast.error("Session expired. Please log in again.");
+        }
         return Promise.reject(error);
       }
 
@@ -86,11 +90,13 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        if (logoutHandler) logoutHandler();
-        toast.error("Session expired. Please log in again.");
-        return Promise.reject(err);
-      } finally {
         isRefreshing = false;
+        if (logoutHandler) {
+          logoutHandler();
+        } else {
+          toast.error("Session expired. Please log in again.");
+        }
+        return Promise.reject(err);
       }
     }
 
