@@ -60,26 +60,94 @@ export const initSocket = (server) => {
 
         await conversation.save();
 
-        // EMIT NEW MESSAGE WITH UNREAD INFO
+        // EMIT NEW MESSAGE WITH UNREAD INFO (include messageId and status)
 
-        io.to(receiver).emit("message:new", {
+        const payloadForReceiver = {
           conversationId,
           sender,
+          receiver,
           content,
+          messageId: message._id,
+          status: message.status,
           updatedAt: conversation.updatedAt,
           unread: currentUnread + 1,
-        });
+        };
 
-        // Optional: Sender also gets confirmation
-        socket.emit("message:new", {
+        io.to(receiver).emit("message:new", payloadForReceiver);
+
+        // Optional: Sender also gets confirmation (message saved)
+        const payloadForSender = {
           conversationId,
           sender,
+          receiver,
           content,
+          messageId: message._id,
+          status: message.status,
           updatedAt: conversation.updatedAt,
           unread: 0,
-        });
+        };
+
+        socket.emit("message:new", payloadForSender);
       } catch (err) {
         console.error("Socket sendMessage error:", err);
+      }
+    });
+
+    // MESSAGE DELIVERED (recipient acknowledges receipt)
+    socket.on("message:delivered", async ({ messageId, userId }) => {
+      try {
+        const msg = await Message.findById(messageId);
+        if (!msg) return;
+
+        // Ensure only the receiver can mark delivered
+        if (msg.receiver.toString() !== userId.toString()) return;
+
+        if (msg.status === "sent") {
+          msg.status = "delivered";
+          await msg.save();
+
+          // notify the sender and the receiver sockets
+          io.to(msg.sender.toString()).emit("message:status", {
+            messageId: msg._id,
+            status: msg.status,
+          });
+
+          socket.emit("message:status", {
+            messageId: msg._id,
+            status: msg.status,
+          });
+        }
+      } catch (err) {
+        console.error("message:delivered error:", err);
+      }
+    });
+
+    // MESSAGE READ (recipient/read event)
+    socket.on("message:read", async ({ messageId, userId }) => {
+      try {
+        const msg = await Message.findById(messageId);
+        if (!msg) return;
+
+        // Only receiver can mark read
+        if (msg.receiver.toString() !== userId.toString()) return;
+
+        if (msg.status !== "read") {
+          msg.status = "read";
+          await msg.save();
+
+          // notify sender and receiver
+          io.to(msg.sender.toString()).emit("message:status", {
+            messageId: msg._id,
+            status: msg.status,
+          });
+
+          socket.emit("message:status", {
+            messageId: msg._id,
+            status: msg.status,
+          });
+        }
+      } catch (err) {
+        console.error("message:read error:", err);
       }
     });
 
@@ -95,6 +163,32 @@ export const initSocket = (server) => {
         conversation.unreadCounts.set(userId.toString(), 0);
         await conversation.save();
 
+        // Also mark any messages directed to this user in the conversation as 'read'
+        try {
+          const unreadMessages = await Message.find({
+            conversation: conversationId,
+            receiver: userId,
+            status: { $ne: "read" },
+          });
+
+          for (const m of unreadMessages) {
+            m.status = "read";
+            await m.save();
+
+            // notify sender and receiver about the status change
+            io.to(m.sender.toString()).emit("message:status", {
+              messageId: m._id,
+              status: "read",
+            });
+
+            io.to(userId).emit("message:status", {
+              messageId: m._id,
+              status: "read",
+            });
+          }
+        } catch (e) {
+          console.error("Error updating message read statuses:", e);
+        }
         // Identify other participant
         const otherId = conversation.participants.find(
           (p) => p.toString() !== userId.toString()

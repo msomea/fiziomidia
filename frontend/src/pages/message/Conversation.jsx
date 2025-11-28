@@ -49,11 +49,30 @@ export default function ConversationPage() {
         );
         setIsOtherUserOnline(otherUser?.isLoggedIn || false);
 
-        // Reset unread
+        // Reset unread (server will also mark messages as read)
         socket.emit("conversation:open", {
           conversationId: res.data._id,
           userId: loggedInUser._id,
         });
+
+        // Acknowledge and mark as read any messages we fetched that were sent to this user
+        try {
+          const receivedMessages = (res.data.messages || []).filter(
+            (m) => String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
+          );
+
+          receivedMessages.forEach((m) => {
+            // Mark as delivered if still in 'sent' state
+            if (m.status === "sent" || !m.status) {
+              socket.emit("message:delivered", { messageId: m._id, userId: loggedInUser._id });
+            }
+            // Mark as read (this will trigger server to update DB and notify sender)
+            socket.emit("message:read", { messageId: m._id, userId: loggedInUser._id });
+          });
+        } catch (e) {
+          // ignore acknowledgement errors
+          console.error("Error acknowledging messages:", e);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -65,17 +84,57 @@ export default function ConversationPage() {
     load();
   }, [otherUserId, loggedInUser]);
 
-  // Listen for new messages
+  // Listen for new messages and acknowledge delivery when appropriate
   useEffect(() => {
     const handler = (payload) => {
       if (payload.conversationId !== conversation?._id) return;
-      setMessages((prev) => [...prev, payload]);
+
+      const msgObj = {
+        _id: payload.messageId || payload._id,
+        conversation: payload.conversationId,
+        sender: payload.sender,
+        receiver: payload.receiver,
+        content: payload.content,
+        createdAt: payload.createdAt || new Date().toISOString(),
+        status: payload.status || "sent",
+      };
+
+      setMessages((prev) => [...prev, msgObj]);
       scrollToBottom();
+
+      // If current user is the receiver of this incoming message, acknowledge delivery and mark as read immediately
+      if (String(payload.receiver) === String(loggedInUser?._id)) {
+        socket.emit("message:delivered", {
+          messageId: msgObj._id,
+          userId: loggedInUser._id,
+        });
+
+        // Since conversation is already open, immediately mark as read
+        socket.emit("message:read", {
+          messageId: msgObj._id,
+          userId: loggedInUser._id,
+        });
+      }
     };
 
     socket.on("message:new", handler);
     return () => socket.off("message:new", handler);
-  }, [conversation]);
+  }, [conversation, loggedInUser]);
+
+  // Listen for message status updates (delivered/read)
+  useEffect(() => {
+    const statusHandler = (payload) => {
+      const { messageId, status } = payload;
+      if (!messageId) return;
+
+      setMessages((prev) =>
+        prev.map((m) => (String(m._id) === String(messageId) ? { ...m, status } : m))
+      );
+    };
+
+    socket.on("message:status", statusHandler);
+    return () => socket.off("message:status", statusHandler);
+  }, []);
 
   // Track online/offline
   useEffect(() => {

@@ -22,9 +22,11 @@ const messageSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
-    read: {
-      type: Boolean,
-      default: false,
+    // message status: 'sent' (created), 'delivered' (recipient received), 'read' (recipient opened/read)
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "read"],
+      default: "sent",
     },
     attachments: [
       {

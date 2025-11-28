@@ -69,7 +69,7 @@ export const getConversationWithUser = async (req, res) => {
       })
       .populate({
         path: "messages",
-        select: "sender receiver content createdAt",
+        select: "sender receiver content createdAt status",
         populate: {
           path: "sender receiver",
           select: "fullName _id isLoggedIn profileImageUrl phone role",
