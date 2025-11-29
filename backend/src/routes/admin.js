@@ -7,10 +7,13 @@ const router = express.Router();
 // All routes require admin authentication
 router.use(authenticate, authenticateAdmin);
 
-// List all users (admin only)
+// Users Section
 router.get("/users", admin.listUsers);
+router.get("/users/:id", admin.getUserDetails);
+router.put("/users/:id/role", admin.updateUserRole);
+router.put("/users/:id/license", admin.updateLicenseStatus);
 
-// admin can all view appointments
+// admin can view all appointments
 router.get("/appointments", admin.getAllAppointments);
 
 // Update / Add sponsorship

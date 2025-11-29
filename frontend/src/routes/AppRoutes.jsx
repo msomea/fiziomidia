@@ -25,6 +25,7 @@ import CreatePostPage from "../pages/forum/CreatePostPage"
 import PostDetailPage from "../pages/forum/PostDetailPage";
 import UpgradeToPT from "../components/dashboard/member/UpgradeToPT";
 import MessageRouterPage  from "../pages/message/MessageRouterPage";
+import AdminUserDetails from "../components/admin/AdminUserDetails";
 
 export default function AppRoutes() {
   return (
@@ -70,7 +71,7 @@ export default function AppRoutes() {
       {/* Admin Routes */}
       <Route path="/subs/:id/sponsor" element={<AdminSponsorships />} />
       <Route path="/dashboard/admin" element={<AdminDashboard />} />
-
+      <Route path="/admin/users/:id" element={<AdminUserDetails />} />
       {/* Temp routes for debuging */}
       
       

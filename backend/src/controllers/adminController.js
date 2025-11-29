@@ -3,20 +3,159 @@ import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Promotion from "../models/Promotion.js";
 
-// -----------------------------------------
-// LIST USERS
-// -----------------------------------------
+// -------------------------------------------
+// LIST USERS + SEARCH + FILTER
+// -------------------------------------------
 export const listUsers = async (req, res) => {
   try {
-    const users = await User.find()
-      .select("-passwordHash")
-      .limit(100)
-      .lean();
+    const { search, role, licenseStatus } = req.query;
 
+    const query = {};
+
+    // Search by fullName or email
+    if (search) {
+      query.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Filter by role: e.g., physiotherapist
+    if (role) {
+      query.role = role;
+    }
+
+    // Filter by license verification status in ptProfile.licenses array
+    if (licenseStatus) {
+      // Match users that have at least one license with given verificationStatus
+      query["ptProfile.licenses"] = { $elemMatch: { verificationStatus: licenseStatus } };
+    }
+
+    // Limit / pagination could be added later
+    const users = await User.find(query)
+      .select("-passwordHash -refreshTokens")
+      .sort({ createdAt: -1 })
+      .lean();
     return res.json({ success: true, users });
-  } catch (error) {
-    console.error("❌ Admin listUsers error:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch users" });
+  } catch (err) {
+    console.error("List users error:", err);
+    return res.status(500).json({ success: false, message: "Failed to fetch users" });
+  }
+};
+
+// -------------------------------------------
+// GET INDIVIDUAL USER DETAILS
+// -------------------------------------------
+export const getUserDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user id" });
+    }
+
+    const user = await User.findById(id).select("-passwordHash -refreshTokens").lean();
+
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    return res.json({ success: true, user });
+  } catch (err) {
+    console.error("User details error:", err);
+    return res.status(500).json({ success: false, message: "Failed to fetch user details" });
+  }
+};
+
+// -------------------------------------------
+// UPDATE USER ROLE
+// -------------------------------------------
+export const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    const allowedRoles = ["guest", "member", "physiotherapist", "admin"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role provided" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true, runValidators: true }
+    ).select("-passwordHash -refreshTokens");
+
+    if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
+
+    return res.json({ success: true, message: "Role updated successfully", user: updatedUser });
+  } catch (err) {
+    console.error("Role update error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update user role" });
+  }
+};
+// -------------------------------------------
+// VERIFY OR REJECT PT LICENSE
+// -------------------------------------------
+export const updateLicenseStatus = async (req, res) => {
+  try {
+    const { status, notes, licenseId } = req.body;
+    // expected status values: "pending" | "approved" | "rejected"
+    const valid = ["pending", "approved", "rejected"];
+    if (!valid.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid license status" });
+    }
+
+    const userId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid user id" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    // ensure ptProfile and licenses exist
+    if (!user.ptProfile || !Array.isArray(user.ptProfile.licenses) || user.ptProfile.licenses.length === 0) {
+      return res.status(400).json({ success: false, message: "No licenses found for this user" });
+    }
+
+    // find license by id if provided, otherwise default to first license
+    let licenseDoc;
+    if (licenseId) {
+      licenseDoc = user.ptProfile.licenses.id(licenseId);
+      if (!licenseDoc) {
+        return res.status(404).json({ success: false, message: "License not found" });
+      }
+    } else {
+      licenseDoc = user.ptProfile.licenses[0];
+    }
+
+    // update fields
+    licenseDoc.verificationStatus = status;
+    licenseDoc.verificationNotes = typeof notes === "string" ? notes : licenseDoc.verificationNotes;
+    licenseDoc.verified = status === "approved";
+
+    // Optional: update top-level indicators on ptProfile for convenience/search
+    user.ptProfile.lastLicenseVerificationAt = new Date();
+    user.ptProfile.isVerified = status === "approved";
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: `License ${status}`,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        ptProfile: {
+          licenses: user.ptProfile.licenses,
+          isVerified: user.ptProfile.isVerified,
+          lastLicenseVerificationAt: user.ptProfile.lastLicenseVerificationAt,
+        },
+      },
+      license: licenseDoc,
+    });
+  } catch (err) {
+    console.error("License update error:", err);
+    return res.status(500).json({ success: false, message: "Failed to update license status" });
   }
 };
 
