@@ -2,6 +2,7 @@ import ForumSub from "../models/ForumSub.js";
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Promotion from "../models/Promotion.js";
+import mongoose from "mongoose";
 
 // -------------------------------------------
 // LIST USERS + SEARCH + FILTER

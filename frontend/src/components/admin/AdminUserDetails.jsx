@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
+import { API_URL } from "../../config/constants";
 
 export default function AdminUserDetails() {
   const { id } = useParams();
@@ -15,8 +16,8 @@ export default function AdminUserDetails() {
 
   const load = async () => {
     const res = await API.get(`/admin/users/${id}`);
-    setUser(res.data);
-    setNewRole(res.data.role);
+    setUser(res.data.user);
+    setNewRole(res.data.user.role);
   };
 
   const updateRole = async () => {
@@ -39,14 +40,14 @@ export default function AdminUserDetails() {
   const license = user?.ptProfile?.licenses?.[0];
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold">User Details</h2>
+    <div className="p-4 mt-20">
+      <h2 className="text-xl font-bold text-caribbean">User Details</h2>
 
       <div className="mt-4 space-y-4">
 
         {/* Basic Info */}
-        <div className="border p-4 rounded">
-          <h3 className="font-semibold text-lg">Basic Information</h3>
+        <div className="border p-4 rounded text-tufts">
+          <h3 className="font-semibold text-lg text-caribbean">Basic Information</h3>
           <p>Name: {user.fullName}</p>
           <p>Email: {user.email}</p>
           <p>Phone: {user.phone}</p>
@@ -74,12 +75,12 @@ export default function AdminUserDetails() {
 
         {/* PT License */}
         {license && (
-          <div className="border p-4 rounded">
-            <h3 className="font-semibold text-lg">License Verification</h3>
+          <div className="border p-4 rounded text-tufts">
+            <h3 className="font-semibold text-lg text-caribbean">License Verification</h3>
             <p>License Number: {license.licenseNumber}</p>
             <p>Status: {license.verificationStatus}</p>
             <a
-              href={license.licenseFileUrl}
+              href={`${API_URL}${license.licenseFileUrl}`}
               target="_blank"
               rel="noreferrer"
               className="text-blue-600 underline"
