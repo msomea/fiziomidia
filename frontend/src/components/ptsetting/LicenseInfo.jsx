@@ -142,7 +142,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                   </p>
 
                   <p
-                    className={`text-xs font-medium px-2 py-1 rounded inline-block
+                    className={`text-xs font-medium px-2 py-1 rounded inline-block text-tufts
                       ${
                         license.verificationStatus === "approved"
                           ? "bg-green-100 text-green-700"
@@ -156,8 +156,9 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                   >
                     Status: {license.verificationStatus}
                   </p>
-                  {license.fil}
-
+                  <p className="inline-block text-sm text-tufts"> {license.licenseFileType}</p>
+                  <p className="text-sm text-gray-900">{license.verificationNotes}</p>
+                 
                   {license.licenseFileUrl && (
                     <a
                       href={`${API_URL}${license.licenseFileUrl}`}
