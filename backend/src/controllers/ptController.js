@@ -48,7 +48,6 @@ export const updatePTProfile = async (req, res) => {
 export const getSavedPTsByMember = async (req, res) => {
   try {
     const memberId = req.params.id;
-
     // Only allow admin or the member themselves
     if (req.user.role !== "admin" && req.user._id.toString() !== memberId) {
       return res.status(403).json({ error: "Forbidden" });

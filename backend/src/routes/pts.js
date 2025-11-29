@@ -21,3 +21,7 @@ router.put("/:id", authenticate, requireRole("physiotherapist", "admin"), ptCont
 // get pt dashboard
 router.get("/:id/dashboard-stats",  ptController.getPTDashboardStats)
 export default router;
+
+// get member saved pt
+router.get("/users/:id/saved-pts", ptController.getSavedPTsByMember)
+

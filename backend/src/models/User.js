@@ -197,6 +197,7 @@ const UserSchema = new Schema({
     default: "member",
   },
   fullName: { type: String },
+  savedPTs: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   phone: String,
   profileImageUrl: String,
   ptProfile: PtProfileSchema,
