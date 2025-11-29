@@ -29,7 +29,7 @@ export default function AdminDashboard() {
 
       {user && (
         <p className="text-gray-700 mb-6">
-          Welcome, {user.name} ({user.role})
+          Welcome, {user.fullName} ({user.role})
         </p>
       )}
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchAdminAppointments } from "../../api/admin";
 import toast from "react-hot-toast";
+import CollapsibleSection from "./CallapsibleSection";
 
 export default function AppointmentsSection() {
   const [appointments, setAppointments] = useState([]);
@@ -19,9 +20,7 @@ export default function AppointmentsSection() {
   }, []);
 
   return (
-    <div className="p-4 bg-white shadow rounded overflow-y-auto max-h-[300px]">
-      <h2 className="font-bold text-caribbean text-lg">Appointments</h2>
-
+    <CollapsibleSection title="Appointments">
       {appointments.length === 0 && (
         <p className="text-tufts mt-2 text-sm">No appointments found.</p>
       )}
@@ -32,10 +31,10 @@ export default function AppointmentsSection() {
           className="mt-3 p-2 border rounded bg-gray-50 text-sm text-tufts"
         >
           <p><b>Clinic:</b> {a.clinic.name}</p>
-          <p><b>PT:</b> {a.pt?.fullName || a.pt}</p>
-          <p><b>Requester:</b> {a.requester?.fullName || a.requester}</p>
+          <p><b>PT:</b> {a.pt?.fullName}</p>
+          <p><b>Requester:</b> {a.requester?.fullName}</p>
         </div>
       ))}
-    </div>
+    </CollapsibleSection>
   );
 }

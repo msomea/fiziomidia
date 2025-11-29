@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAdminPromotions } from "../../api/admin";
+import CollapsibleSection from "./CallapsibleSection";
 import toast from "react-hot-toast";
 import dayjs from "dayjs"
 
@@ -20,8 +21,7 @@ export default function PromotionsSection() {
   }, []);
 
   return (
-    <div className="p-4 bg-white shadow rounded">
-      <h2 className="font-bold text-caribbean text-lg">Promotions</h2>
+    <CollapsibleSection title="PT Promotions">
 
       {promotions.slice(0, 5).map((promo) => (
         <div key={promo._id} className="mt-2 p-2 bg-gray-100 text-sm rounded text-tufts">
@@ -31,6 +31,6 @@ export default function PromotionsSection() {
       ))}
 
       <p className="text-xs text-gray-400 mt-2">Showing first 5 promotions</p>
-    </div>
+    </CollapsibleSection>
   );
 }
