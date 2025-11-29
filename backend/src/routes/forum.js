@@ -25,12 +25,6 @@ router.delete("/posts/:id", authenticate, forum.deletePost);
 router.put("/posts/:id", authenticate, forum.updatePost);
 
 /* -------------------------------
-   Sponsorship Management
---------------------------------*/
-router.put("/subs/:id/sponsorship", authenticate, forum.updateSubSponsorship);
-router.put("/subs/:id/sponsorship/remove", authenticate, forum.removeSubSponsorship);
-
-/* -------------------------------
    Physiotherapist Forum Activity
 --------------------------------*/
 

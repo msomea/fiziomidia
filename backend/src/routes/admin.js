@@ -5,7 +5,7 @@ import * as admin from "../controllers/adminController.js";
 const router = express.Router();
 // route /api/admin
 // All routes require admin authentication
-// router.use(authenticate, authenticateAdmin);
+router.use(authenticate, authenticateAdmin);
 
 // List all users (admin only)
 router.get("/users", admin.listUsers);
@@ -14,10 +14,10 @@ router.get("/users", admin.listUsers);
 router.get("/appointments", admin.getAllAppointments);
 
 // Update / Add sponsorship
-router.put("/subs/:id/sponsorship", admin.updateSponsorship);
+router.patch("/subs/:id/sponsorship", admin.updateSponsorship);
 
 // Remove sponsorship
-router.put("/subs/:id/sponsorship/remove", admin.removeSponsorship);
+router.patch("/subs/:id/sponsorship/remove", admin.removeSponsorship);
 
 // List all promotions
 router.get("/promotions", admin.getAllPromotions);
