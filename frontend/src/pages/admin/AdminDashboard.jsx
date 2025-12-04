@@ -28,9 +28,12 @@ export default function AdminDashboard() {
       <h1 className="text-3xl text-caribbean font-bold mb-4">Admin Dashboard</h1>
 
       {user && (
-        <p className="text-gray-700 mb-6">
-          Welcome, {user.fullName} ({user.role})
-        </p>
+        <div className="text-gray-700 mb-6">
+          <p >
+            Welcome, {user.fullName} ({user.role})
+          </p>
+          <p>For Administrative works please use Laptop or Desktop</p>
+        </div>
       )}
 
       {/* Dashboard Sections */}

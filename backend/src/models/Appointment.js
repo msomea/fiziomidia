@@ -7,7 +7,8 @@ const AppointmentSchema = new Schema(
     pt: { type: Schema.Types.ObjectId, ref: "User", required: true },
     clinic: { type: Schema.Types.ObjectId, ref: "Clinic" },
     requestedAt: { type: Date, default: Date.now },
-    scheduledAt: Date,
+    scheduledDate: { type: String }, 
+    scheduledTime: { type: String },
     durationMinutes: { type: Number, default: 60 },
     status: {
       type: String,

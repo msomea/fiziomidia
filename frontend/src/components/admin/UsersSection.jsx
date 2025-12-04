@@ -30,11 +30,9 @@ export default function AdminUsers() {
       setLoading(false);
     }
   };
-  console.log("Users", users)
+
   return (
     <CollapsibleSection title="Users Managements">
-      
-
       {/* Search + Filters */}
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1">

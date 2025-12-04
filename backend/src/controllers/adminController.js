@@ -1,5 +1,6 @@
 import ForumSub from "../models/ForumSub.js";
 import User from "../models/User.js";
+import Clinic from "../models/Clinic.js";
 import Appointment from "../models/Appointment.js";
 import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
@@ -160,24 +161,141 @@ export const updateLicenseStatus = async (req, res) => {
   }
 };
 
-// -----------------------------------------
-// LIST ALL APPOINTMENTS
-// -----------------------------------------
+/* ============================================
+   GET ALL APPOINTMENTS (with filtering)
+   Admin only
+============================================ */
 export const getAllAppointments = async (req, res) => {
   try {
-    const appts = await Appointment.find()
+    const { search = "", clinic = "", pt = "", requester = "", status = "" } = req.query;
+
+    // Build dynamic query
+    let query = {};
+
+    // global search
+    if (search) {
+      query.$or = [
+        { notes: new RegExp(search, "i") },
+        { adminNotes: new RegExp(search, "i") }
+      ];
+    }
+
+    // Filter by clinic NAME
+    if (clinic) {
+      const clinicMatches = await Clinic.find({
+        name: new RegExp(clinic, "i")
+      }).select("_id");
+
+      query.clinic = { $in: clinicMatches.map((c) => c._id) };
+    }
+
+    // Filter by PT NAME
+    if (pt) {
+      const ptMatches = await User.find({
+        fullName: new RegExp(pt, "i")
+      }).select("_id");
+
+      query.pt = { $in: ptMatches.map((u) => u._id) };
+    }
+
+    // Filter Requester NAME
+    if (requester) {
+      const reqMatches = await User.find({
+        fullName: new RegExp(requester, "i")
+      }).select("_id");
+
+      query.requester = { $in: reqMatches.map((u) => u._id) };
+    }
+
+    // Filter by status
+    if (status) {
+      query.status = status;
+    }
+
+    const appts = await Appointment.find(query)
       .populate("pt", "fullName email")
       .populate("requester", "fullName email")
-      .populate("clinic", "name address")
-      .sort({ createdAt: -1 })
-      .lean();
+      .populate("clinic", "name location")
+      .sort({ createdAt: -1 });
 
-    return res.json({ success: true, appts });
-  } catch (error) {
-    console.error("❌ Admin getAllAppointments error:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch Appointments" });
+    res.json({ appts });
+  } catch (err) {
+    console.error("ADMIN appointment query error:", err);
+    res.status(500).json({ error: "Server error fetching appointments" });
   }
 };
+
+
+/* ============================================
+   GET SINGLE APPOINTMENT DETAILS
+============================================ */
+export const getAppointmentDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(400).json({ success: false, message: "Invalid appointment ID" });
+
+    const appointment = await Appointment.findById(id)
+      .populate("requester", "fullName email phone")
+      .populate("pt", "fullName email phone")
+      .populate("clinic", "name address")
+      .lean();
+
+    if (!appointment)
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+
+    return res.json({ success: true, appointment });
+  } catch (err) {
+    console.error("Admin appointment details error:", err);
+    return res.status(500).json({ success: false, message: "Failed to fetch appointment details" });
+  }
+};
+
+/* ============================================
+   UPDATE APPOINTMENT (Admin override)
+============================================ */
+export const updateAppointment = async (req, res) => {
+  try {
+    const { status, date, time, physiotherapist, adminNotes } = req.body;
+
+    const updated = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      {
+        status,
+        scheduledDate: date,
+        scheduledTime: time,
+        adminNotes,
+        pt: physiotherapist,
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, appointment: updated });
+  } catch {
+    res.status(500).json({ success: false });
+  }
+};
+
+
+/* ============================================
+   DELETE APPOINTMENT (optional)
+============================================ */
+export const deleteAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await Appointment.findByIdAndDelete(id);
+
+    if (!deleted)
+      return res.status(404).json({ success: false, message: "Appointment not found" });
+
+    return res.json({ success: true, message: "Appointment deleted successfully" });
+  } catch (err) {
+    console.error("Admin delete appointment error:", err);
+    return res.status(500).json({ success: false, message: "Failed to delete appointment" });
+  }
+};
+
 
 // -----------------------------------------
 // LIST ALL PROMOTIONS

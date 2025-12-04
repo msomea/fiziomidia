@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
+import { X } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
 
 export default function AdminUserDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [newRole, setNewRole] = useState("");
   const [notes, setNotes] = useState("");
@@ -47,7 +49,11 @@ export default function AdminUserDetails() {
 
         {/* Basic Info */}
         <div className="border p-4 rounded text-tufts">
-          <h3 className="font-semibold text-lg text-caribbean">Basic Information</h3>
+          <div className="flex justify-between mb-3">
+            <h3 className="font-semibold text-caribbean">Basic Information</h3>
+            <button onClick={() => navigate(-1)}><X className="text-red-400 hover:text-red-800"/></button>
+          </div>
+          <p>ID: {user._id}</p>
           <p>Name: {user.fullName}</p>
           <p>Email: {user.email}</p>
           <p>Phone: {user.phone}</p>

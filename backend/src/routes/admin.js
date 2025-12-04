@@ -13,8 +13,11 @@ router.get("/users/:id", admin.getUserDetails);
 router.put("/users/:id/role", admin.updateUserRole);
 router.put("/users/:id/license", admin.updateLicenseStatus);
 
-// admin can view all appointments
+// Appointments Section
 router.get("/appointments", admin.getAllAppointments);
+router.get("/appointments/:id", admin.getAppointmentDetails);
+router.put("/appointments/:id", admin.updateAppointment);
+router.delete("/appointments/:id", admin.deleteAppointment);
 
 // Update / Add sponsorship
 router.patch("/subs/:id/sponsorship", admin.updateSponsorship);

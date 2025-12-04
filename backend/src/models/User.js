@@ -72,14 +72,6 @@ const PtProfileSchema = new Schema(
 
     workingHours: [WorkingHoursSchema],
 
-    promotionActiveUntil: Date,
-    promotionType: {
-      type: String,
-      enum: ["featured", "banner", "sponsored"],
-    },
-    promotionViews: { type: Number, default: 0 },
-    promotionClicks: { type: Number, default: 0 },
-
     education: [
       {
         institution: String,

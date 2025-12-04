@@ -71,7 +71,6 @@ export const getPTsWithActivePromotions = async (req, res) => {
   try {
     // Find all active promotions
     const activePromotions = await Promotion.find({ status: "active" });
-
     // Get all physiotherapists linked to active promotions
     const ptIds = activePromotions.map((promo) => promo.pt);
     const pts = await User.find({
