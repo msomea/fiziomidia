@@ -19,14 +19,15 @@ router.get("/appointments/:id", admin.getAppointmentDetails);
 router.put("/appointments/:id", admin.updateAppointment);
 router.delete("/appointments/:id", admin.deleteAppointment);
 
-// Update / Add sponsorship
+// Admin sponsorship
 router.patch("/subs/:id/sponsorship", admin.updateSponsorship);
-
-// Remove sponsorship
 router.patch("/subs/:id/sponsorship/remove", admin.removeSponsorship);
 
-// List all promotions
+// Admin Promotions
 router.get("/promotions", admin.getAllPromotions);
+router.get("/promotions/:id", admin.getAdminPromotion);
+router.put("/promotions/:id", admin.updateAdminPromotion);
+router.delete("/promotions/:id", admin.deleteAdminPromotion);
 
 
 export default router;

@@ -6,7 +6,7 @@ import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
 
 // -------------------------------------------
-// LIST USERS + SEARCH + FILTER
+// USERS CONTROLER
 // -------------------------------------------
 export const listUsers = async (req, res) => {
   try {
@@ -46,9 +46,8 @@ export const listUsers = async (req, res) => {
   }
 };
 
-// -------------------------------------------
+
 // GET INDIVIDUAL USER DETAILS
-// -------------------------------------------
 export const getUserDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,9 +66,7 @@ export const getUserDetails = async (req, res) => {
   }
 };
 
-// -------------------------------------------
 // UPDATE USER ROLE
-// -------------------------------------------
 export const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
@@ -93,9 +90,8 @@ export const updateUserRole = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to update user role" });
   }
 };
-// -------------------------------------------
+
 // VERIFY OR REJECT PT LICENSE
-// -------------------------------------------
 export const updateLicenseStatus = async (req, res) => {
   try {
     const { status, notes, licenseId } = req.body;
@@ -161,10 +157,9 @@ export const updateLicenseStatus = async (req, res) => {
   }
 };
 
-/* ============================================
-   GET ALL APPOINTMENTS (with filtering)
-   Admin only
-============================================ */
+// ============================================
+// APPOINTMENTS CONTROLLER
+// ============================================
 export const getAllAppointments = async (req, res) => {
   try {
     const { search = "", clinic = "", pt = "", requester = "", status = "" } = req.query;
@@ -225,10 +220,7 @@ export const getAllAppointments = async (req, res) => {
   }
 };
 
-
-/* ============================================
-   GET SINGLE APPOINTMENT DETAILS
-============================================ */
+// GET SINGLE APPOINTMENT DETAILS
 export const getAppointmentDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -251,9 +243,7 @@ export const getAppointmentDetails = async (req, res) => {
   }
 };
 
-/* ============================================
-   UPDATE APPOINTMENT (Admin override)
-============================================ */
+//  UPDATE APPOINTMENT (Admin override)
 export const updateAppointment = async (req, res) => {
   try {
     const { status, date, time, physiotherapist, adminNotes } = req.body;
@@ -276,10 +266,7 @@ export const updateAppointment = async (req, res) => {
   }
 };
 
-
-/* ============================================
-   DELETE APPOINTMENT (optional)
-============================================ */
+// DELETE APPOINTMENT
 export const deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -298,25 +285,110 @@ export const deleteAppointment = async (req, res) => {
 
 
 // -----------------------------------------
-// LIST ALL PROMOTIONS
+// PROMOTIONS CONTROLLER
 // -----------------------------------------
 export const getAllPromotions = async (req, res) => {
   try {
-    const promotions = await Promotion.find()
-      .populate("pt", "fullName email")
-      .sort({ createdAt: -1 })
-      .limit(100)
-      .lean();
+    const { search, status } = req.query;
 
-    return res.json({ success: true, promotions });
+    let ptIds = [];
+
+    if (search) {
+      const pts = await User.find({
+        role: "physiotherapist",
+        $or: [
+          { fullName: { $regex: search, $options: "i" } },
+          { email: { $regex: search, $options: "i" } }
+        ]
+      }).select("_id");
+      ptIds = pts.map((p) => p._id);
+    }
+
+    // Main promotion query
+    const query = {};
+
+    if (ptIds.length > 0) {
+      query.pt = { $in: ptIds };
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    const promotions = await Promotion.find(query)
+      .populate("pt", "fullName email")
+      .sort({ createdAt: -1 });
+
+    res.json({ promotions });
   } catch (err) {
-    console.error("❌ Admin getAllPromotions error:", err);
-    return res.status(500).json({ success: false, error: "Failed to fetch promotions" });
+    res.status(500).json({ message: "Server error" });
   }
 };
 
+// Get one Promotion
+export const getAdminPromotion = async (req, res) => {
+  try {
+    const promotion = await Promotion.findById(req.params.id)
+      .populate("pt", "fullName email");
+
+    res.json({ promotion });
+  } catch {
+    res.status(500).json({ message: "Unable to fetch promotion" });
+  }
+};
+
+//UPDATE PROMOTION
+export const updateAdminPromotion = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, endAt } = req.body;
+
+    const promotion = await Promotion.findById(id);
+    if (!promotion)
+      return res.status(404).json({ message: "Promotion not found" });
+
+    // Update status if sent
+    if (status) {
+      promotion.status = status;
+    }
+
+    // Update end date if sent
+    if (endAt) {
+      const formattedEndAt = new Date(endAt);
+
+      if (isNaN(formattedEndAt)) {
+        return res.status(400).json({ message: "Invalid endAt date format" });
+      }
+
+      promotion.endAt = formattedEndAt;
+    }
+
+    await promotion.save();
+
+    return res.json({
+      message: "Promotion updated successfully",
+      promotion,
+    });
+  } catch (err) {
+    console.error("Update promotion error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+// DELETE PROMOTION
+export const deleteAdminPromotion = async (req, res) => {
+  try {
+    await Promotion.findByIdAndDelete(req.params.id);
+    res.json({ message: "Promotion deleted" });
+  } catch {
+    res.status(500).json({ message: "Delete failed" });
+  }
+};
+
+
 // -----------------------------------------
-// UPDATE OR ADD SPONSORSHIP
+// SPONSORSHIP CONTROLLER
 // -----------------------------------------
 export const updateSponsorship = async (req, res) => {
   const { id } = req.params;
@@ -362,9 +434,8 @@ export const updateSponsorship = async (req, res) => {
   }
 };
 
-// -----------------------------------------
 // REMOVE SPONSORSHIP
-// -----------------------------------------
+
 export const removeSponsorship = async (req, res) => {
   const { id } = req.params;
 

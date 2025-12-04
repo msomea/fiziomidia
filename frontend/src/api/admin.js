@@ -10,10 +10,11 @@ export const fetchAdminAppointments = async () => {
   return data;
 };
 
-export const fetchAdminPromotions = async () => {
-  const { data } = await API.get("/admin/promotions");
-  return data;
+export const fetchAdminPromotions = async (params = {}) => {
+  const res = await API.get("/admin/promotions", { params });
+  return res.data;
 };
+
 
 // Sponsorship
 export const fetchForumSubs = async () => {

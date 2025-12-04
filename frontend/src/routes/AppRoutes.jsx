@@ -27,6 +27,7 @@ import UpgradeToPT from "../components/dashboard/member/UpgradeToPT";
 import MessageRouterPage  from "../pages/message/MessageRouterPage";
 import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
+import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
 
 export default function AppRoutes() {
   return (
@@ -74,6 +75,7 @@ export default function AppRoutes() {
       <Route path="/dashboard/admin" element={<AdminDashboard />} />
       <Route path="/admin/users/:id" element={<AdminUserDetails />} />
       <Route path="/admin/appointments/:id" element={<AdminAppointmentDetails />} />
+      <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
 
       {/* Temp routes for debuging */}
       
