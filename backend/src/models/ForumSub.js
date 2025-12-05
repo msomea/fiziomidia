@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const ForumSubSchema = new Schema(
-    {
+  {
     title: {
       type: String,
       required: true,
@@ -19,38 +19,35 @@ const ForumSubSchema = new Schema(
       type: String,
       trim: true,
     },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
+
+    // 🔹 NEW: Array of rules
+    rules: [
+      {
+        type: String,
+        trim: true,
+      }
+    ],
+    moderators: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      }
+    ],
+
     // 🔹 Sponsorship fields
-    isSponsored: {
-      type: Boolean,
-      default: false,
-    },
-    sponsorName: {
-      type: String,
-      trim: true,
-    },
-    sponsorLogo: {
-      type: String, // image URL
-      trim: true,
-    },
-    sponsorMessage: {
-      type: String,
-      trim: true,
-    },
-    sponsorWebsite: {
-      type: String, // image URL
-      trim: true,
-    },
-    startDate: {
-      type: Date,
-    },
-    endDate: {
-      type: Date,
-    },
+    isSponsored: { type: Boolean, default: false },
+    sponsorName: { type: String, trim: true },
+    sponsorLogo: { type: String, trim: true },
+    sponsorMessage: { type: String, trim: true },
+    sponsorWebsite: { type: String, trim: true },
+    startDate: { type: Date },
+    endDate: { type: Date },
   },
   { timestamps: true }
 );
@@ -59,7 +56,7 @@ const ForumSubSchema = new Schema(
 ForumSubSchema.pre("remove", async function (next) {
   try {
     const Post = mongoose.model("Post");
-    await Post.deleteMany({ sub: this._id }); // delete all posts under this sub
+    await Post.deleteMany({ sub: this._id });
     console.log(`All posts under sub "${this.title}" removed.`);
     next();
   } catch (err) {
@@ -68,8 +65,7 @@ ForumSubSchema.pre("remove", async function (next) {
   }
 });
 
-
-// Auto-deactivate expired sponsorships
+// 🔹 Auto-deactivate expired sponsorships
 ForumSubSchema.pre("save", function (next) {
   const now = new Date();
   if (this.endDate && this.endDate < now) {
@@ -84,7 +80,7 @@ ForumSubSchema.pre("save", function (next) {
   next();
 });
 
-// Optional: when fetching subs, clean expired ones
+// 🔹 Static cleanup method
 ForumSubSchema.statics.cleanExpiredSponsorships = async function () {
   const now = new Date();
   const expiredSubs = await this.find({
@@ -107,6 +103,5 @@ ForumSubSchema.statics.cleanExpiredSponsorships = async function () {
     console.log(`🕓 Deactivated ${expiredSubs.length} expired sponsorship(s).`);
   }
 };
-
 
 export default mongoose.model("ForumSub", ForumSubSchema);

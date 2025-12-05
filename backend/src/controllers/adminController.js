@@ -4,6 +4,7 @@ import Clinic from "../models/Clinic.js";
 import Appointment from "../models/Appointment.js";
 import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
+import Post from "../models/Post.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -388,81 +389,126 @@ export const deleteAdminPromotion = async (req, res) => {
 
 
 // -----------------------------------------
-// SPONSORSHIP CONTROLLER
+// SUB & SPONSORSHIP CONTROLLER
 // -----------------------------------------
+
+//GET SINGLE FORUM SUBS
+export const getSingleForumSub = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const sub = await ForumSub.findById(id)
+      .populate("createdBy", "name email role")
+      .populate("moderators", "name email role");
+
+    if (!sub) {
+      return res.status(404).json({ message: "Forum Sub not found" });
+    }
+
+    const postCount = await Post.countDocuments({ sub: id });
+
+    return res.status(200).json({
+      message: "Forum Sub fetched successfully",
+      sub: {
+        _id: sub._id,
+        title: sub.title,
+        slug: sub.slug,
+        description: sub.description,
+        rules: sub.rules,
+        moderators: sub.moderators,
+        createdBy: sub.createdBy,
+        postCount,
+
+        isSponsored: sub.isSponsored,
+        sponsorName: sub.sponsorName,
+        sponsorLogo: sub.sponsorLogo,
+        sponsorMessage: sub.sponsorMessage,
+        sponsorWebsite: sub.sponsorWebsite,
+        startDate: sub.startDate,
+        endDate: sub.endDate,
+
+        createdAt: sub.createdAt,
+        updatedAt: sub.updatedAt,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching forum sub detail:", error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+//UPDATE SUB SPONSORSHIP
 export const updateSponsorship = async (req, res) => {
   const { id } = req.params;
-  const {
-    sponsorName,
-    sponsorLogo,
-    sponsorMessage,
-    sponsorWebsite,
-    startDate,
-    endDate,
-  } = req.body;
 
   try {
     const sub = await ForumSub.findById(id);
+    if (!sub) return res.status(404).json({ success: false, error: "Forum sub not found" });
 
-    if (!sub) {
-      return res.status(404).json({ success: false, error: "Forum sub not found" });
+    // Convert isSponsored from string to boolean
+    const isSponsored = req.body.isSponsored === "true" || req.body.isSponsored === true;
+
+    if (!isSponsored) {
+      sub.isSponsored = false;
+      sub.sponsorName = "";
+      sub.sponsorLogo = "";
+      sub.sponsorMessage = "";
+      sub.sponsorWebsite = "";
+      sub.startDate = null;
+      sub.endDate = null;
+
+      await sub.save();
+      return res.json({ success: true, message: "Sponsorship disabled", sub });
     }
 
-    // Mark as sponsored
+    // Sponsorship ON → update fields
     sub.isSponsored = true;
-    
-    // Apply fields only if present (keeps patch behavior safe)
-    if (sponsorName !== undefined) sub.sponsorName = sponsorName;
-    if (sponsorLogo !== undefined) sub.sponsorLogo = sponsorLogo;
-    if (sponsorMessage !== undefined) sub.sponsorMessage = sponsorMessage;
-    if (sponsorWebsite !== undefined) sub.sponsorWebsite = sponsorWebsite;
 
-    // Convert dates only if valid
-    if (startDate) sub.startDate = new Date(startDate);
-    if (endDate) sub.endDate = new Date(endDate);
+    if (req.body.sponsorName !== undefined) sub.sponsorName = req.body.sponsorName;
+    if (req.body.sponsorMessage !== undefined) sub.sponsorMessage = req.body.sponsorMessage;
+    if (req.body.sponsorWebsite !== undefined) sub.sponsorWebsite = req.body.sponsorWebsite;
+
+    // Logo
+    if (req.file) {
+      sub.sponsorLogo = `/uploads/sponsor_logo/${req.file.filename}`;
+    } else if (req.body.sponsorLogo !== undefined) {
+      sub.sponsorLogo = req.body.sponsorLogo;
+    }
+
+    // Dates
+    if (req.body.startDate) sub.startDate = new Date(req.body.startDate);
+    if (req.body.endDate) sub.endDate = new Date(req.body.endDate);
 
     await sub.save();
 
-    return res.json({
-      success: true,
-      message: "Sponsorship updated successfully",
-      sub,
-    });
+    return res.json({ success: true, message: "Sponsorship updated successfully", sub });
   } catch (err) {
     console.error("❌ Error updating sponsorship:", err);
     return res.status(500).json({ success: false, error: "Failed to update sponsorship" });
   }
 };
 
-// REMOVE SPONSORSHIP
-
-export const removeSponsorship = async (req, res) => {
-  const { id } = req.params;
-
+// DELETE SUB
+export const deleteSub = async (req, res) => {
   try {
+    const { id } = req.params;
     const sub = await ForumSub.findById(id);
 
     if (!sub) {
-      return res.status(404).json({ success: false, error: "Forum sub not found" });
+      return res.status(404).json({ error: "Forum sub not found" });
     }
 
-    sub.isSponsored = false;
-    sub.sponsorName = "";
-    sub.sponsorLogo = "";
-    sub.sponsorMessage = "";
-    sub.sponsorWebsite = "";
-    sub.startDate = null;
-    sub.endDate = null;
+    // Pre-remove hook will cascade delete posts
+    await sub.remove();
 
-    await sub.save();
-
-    return res.json({
-      success: true,
-      message: "Sponsorship removed successfully",
-      sub,
+    res.json({
+      message: `Forum sub "${sub.title}" and its posts have been deleted successfully.`,
     });
   } catch (err) {
-    console.error("❌ Error removing sponsorship:", err);
-    return res.status(500).json({ success: false, error: "Failed to remove sponsorship" });
+    console.error("Error deleting sub:", err);
+    res.status(500).json({ error: "Failed to delete forum sub" });
   }
 };

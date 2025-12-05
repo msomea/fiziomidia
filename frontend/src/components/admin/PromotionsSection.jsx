@@ -34,7 +34,7 @@ export default function PromotionsSection() {
     <CollapsibleSection title="PT Promotions">
 
       {/* FILTERS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <input
           type="text"
           placeholder="Search PT name or email..."

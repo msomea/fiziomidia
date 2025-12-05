@@ -31,6 +31,7 @@ const storage = multer.diskStorage({
     if (file.fieldname === "avatar") folderName = "avatars";
     else if (file.fieldname === "licenseDocument") folderName = "licenses";
     else if (file.fieldname === "galleryImages") folderName = "gallery";
+    else if (file.fieldname === "logo") folderName = "sponsor_logo";
 
     const dir = path.join(BASE_UPLOAD_DIR, folderName);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });

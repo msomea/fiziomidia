@@ -93,32 +93,7 @@ export const createSub = async (req, res) => {
 };
 
 // Delete a sub (Admin only)
-export const deleteSub = async (req, res) => {
-  try {
-    if (req.user.role !== "admin") {
-      return res
-        .status(403)
-        .json({ error: "Only Admins can delete forum subs" });
-    }
 
-    const { id } = req.params;
-    const sub = await ForumSub.findById(id);
-
-    if (!sub) {
-      return res.status(404).json({ error: "Forum sub not found" });
-    }
-
-    // Pre-remove hook will cascade delete posts
-    await sub.remove();
-
-    res.json({
-      message: `Forum sub "${sub.title}" and its posts have been deleted successfully.`,
-    });
-  } catch (err) {
-    console.error("Error deleting sub:", err);
-    res.status(500).json({ error: "Failed to delete forum sub" });
-  }
-};
 
 // ===== POSTS =====
 

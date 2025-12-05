@@ -1,6 +1,7 @@
 import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import * as admin from "../controllers/adminController.js";
+import { upload } from "../services/uploadService.js";
 
 const router = express.Router();
 // route /api/admin
@@ -19,9 +20,10 @@ router.get("/appointments/:id", admin.getAppointmentDetails);
 router.put("/appointments/:id", admin.updateAppointment);
 router.delete("/appointments/:id", admin.deleteAppointment);
 
-// Admin sponsorship
-router.patch("/subs/:id/sponsorship", admin.updateSponsorship);
-router.patch("/subs/:id/sponsorship/remove", admin.removeSponsorship);
+// Admin sub and sponsorship
+router.get("/subs/:id", admin.getSingleForumSub);
+router.put("/subs/:id/sponsorship", upload.single("logo"), admin.updateSponsorship);
+router.delete("/subs/:id", admin.deleteSub);
 
 // Admin Promotions
 router.get("/promotions", admin.getAllPromotions);

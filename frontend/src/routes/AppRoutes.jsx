@@ -28,6 +28,7 @@ import MessageRouterPage  from "../pages/message/MessageRouterPage";
 import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
+import AdminSponsorshipDetail from "../components/admin/AdminSponsorshipDetail";
 
 export default function AppRoutes() {
   return (
@@ -76,7 +77,7 @@ export default function AppRoutes() {
       <Route path="/admin/users/:id" element={<AdminUserDetails />} />
       <Route path="/admin/appointments/:id" element={<AdminAppointmentDetails />} />
       <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
-
+      <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
       {/* Temp routes for debuging */}
       
       
