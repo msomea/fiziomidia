@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 
 const ForumTopics = ({ onSelectTopic }) => {
@@ -56,7 +57,6 @@ const ForumTopics = ({ onSelectTopic }) => {
   const handleNext = () => {
     if (page < totalPages) setPage((prev) => prev + 1);
   };
-
   return (
     <div className="bg-white text-black shadow-md rounded-2xl p-4">
       {/* Header with Sorting */}
@@ -79,50 +79,35 @@ const ForumTopics = ({ onSelectTopic }) => {
         {sortedTopics.map((topic) => (
           <li
             key={topic._id}
-            className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 border 
-              ${
-                activeTopic === topic._id
-                  ? "bg-caribbean text-white"
-                  : "hover:bg-alice"
-              }`}
+            className={`p-3 rounded-lg cursor-pointer transition-colors duration-200 border
+              ${activeTopic === topic._id ? "bg-caribbean text-white" : ""}
+              ${topic.isSponsored ? "border-l-4 border-yellow-400" : ""}`}
             onClick={() => handleTopicClick(topic)}
           >
             <div className="flex justify-between items-center">
               <span className="font-medium flex items-center gap-2">
-                {topic.sponsor?.isActive && (
-                  <img
-                    src={topic.sponsor.logoUrl}
-                    alt={topic.sponsor.name}
-                    className="w-5 h-5 rounded-full"
-                  />
-                )}
-                {topic.sponsor?.isActive
-                  ? `${topic.sponsor.name} ${topic.title}`
-                  : topic.title}
+                {topic.isSponsored ? `${topic.sponsorName} - ${topic.title}` : topic.title}
               </span>
-              <span
-                className={`text-sm ${
-                  activeTopic === topic._id ? "text-white/80" : "text-gray-500"
-                }`}
-              >
+              <span className={`text-sm ${activeTopic === topic._id ? "text-white/80" : "text-gray-500"}`}>
                 {topic.totalPosts || 0} posts
               </span>
             </div>
 
-            {topic.sponsor?.isActive && (
-              <p className="text-xs text-gray-400 mt-1">
+            {topic.isSponsored && topic.sponsorWebsite && (
+              <p className="text-xs text-black mt-1">
                 Sponsored by{" "}
                 <a
-                  href={topic.sponsor.website}
+                  href={`https://${topic.sponsorWebsite}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-caribbean underline"
+                  className="text-tufts underline"
                 >
-                  {topic.sponsor.name}
+                  {topic.sponsorName}
                 </a>
               </p>
             )}
           </li>
+
         ))}
       </ul>
 

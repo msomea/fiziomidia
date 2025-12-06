@@ -1,4 +1,3 @@
-// src/pages/forum/Forum.jsx
 import React, { useEffect } from "react";
 import ForumTopics from "../../components/forum/ForumTopics";
 import ForumList from "../../components/forum/ForumList";
@@ -9,12 +8,14 @@ import { useForum } from "../../context/ForumContext";
 const Forum = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { posts, fetchPosts, selectedSub, loadingPosts } = useForum();
+  const { posts, fetchPosts, fetchSub, selectedSub, loadingPosts } = useForum();
 
-  const handleSelectTopic = (topic) => {
-    fetchPosts(topic._id);
+  const handleSelectTopic = async (topic) => {
+    await fetchSub(topic._id);
+    await fetchPosts(topic._id);
   };
 
+console.log("Selected Sub", selectedSub)
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -40,6 +41,7 @@ const Forum = () => {
               user={user}
               posts={posts}
               loading={loadingPosts || !selectedSub}
+              currentTopic={selectedSub}
             />
           </div>
         </div>
