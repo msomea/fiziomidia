@@ -194,7 +194,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
         {[...Array(totalPages)].map((_, i) => (
           <button
             key={i}
-            className={`btn btn-sm ${currentPage === i + 1 ? "btn-active" : ""}`}
+            className={`btn p-1 border border-caribbean text-caribbean hover:bg-tufts hover:text-white ${currentPage === i + 1 ? "btn-active" : ""}`}
             onClick={() => setCurrentPage(i + 1)}
           >
             {i + 1}

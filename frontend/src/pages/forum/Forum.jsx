@@ -15,7 +15,7 @@ const Forum = () => {
     await fetchPosts(topic._id);
   };
 
-console.log("Selected Sub", selectedSub)
+
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -35,6 +35,7 @@ console.log("Selected Sub", selectedSub)
           <div className="md:col-span-1">
             <ForumTopics onSelectTopic={handleSelectTopic} />
           </div>
+
 
           <div className="md:col-span-2">
             <ForumList

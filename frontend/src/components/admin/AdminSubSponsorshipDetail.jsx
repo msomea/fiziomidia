@@ -93,7 +93,6 @@ export default function AdminSponsorshipDetail() {
 
   if (loading || !sub)
     return <p className="mt-20 text-gray-500">Loading Sponsorship...</p>;
-  console.log(sub)
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       {/* HEADER */}
