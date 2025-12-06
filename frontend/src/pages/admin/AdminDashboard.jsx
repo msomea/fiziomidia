@@ -5,7 +5,7 @@ import { fetchCurrentUser } from "../../api/auth";
 import UsersSection from "../../components/admin/UsersSection"
 import AppointmentsSection from "../../components/admin/AppointmentsSection";
 import PromotionsSection from "../../components/admin/PromotionsSection";
-import SponsorshipSection from "../../components/admin/SponsorshipSection";
+import SponsorshipSection from "../../components/admin/SubSponsorshipSection";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);

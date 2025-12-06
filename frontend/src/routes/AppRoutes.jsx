@@ -28,7 +28,7 @@ import MessageRouterPage  from "../pages/message/MessageRouterPage";
 import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
-import AdminSponsorshipDetail from "../components/admin/AdminSponsorshipDetail";
+import AdminSponsorshipDetail from "../components/admin/AdminSubSponsorshipDetail";
 
 export default function AppRoutes() {
   return (
