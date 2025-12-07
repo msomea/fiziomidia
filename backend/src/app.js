@@ -25,6 +25,7 @@ import messageRoutes from "./routes/message.js";
 import conversationRoute from "./routes/conversation.js";
 import adminRoutes from "./routes/admin.js";
 import locationRoutes from "./routes/location.js";
+import sponsoredProduct from "./routes/sponsoredProduct.js"
 
 const __filename = fileURLToPath(import.meta.url);
 // __dirname should point to the directory of this file (backend/src)
@@ -83,6 +84,7 @@ app.use("/api/promotions", promotionRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/locations", locationRoutes);
+app.use("/api/sponsored-products", sponsoredProduct);
 
 // --- Health check ---
 app.get("/health", (req, res) => {

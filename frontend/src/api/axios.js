@@ -69,10 +69,18 @@ API.interceptors.response.use(
       if (!refreshToken) {
         isRefreshing = false;
         if (logoutHandler) {
-          logoutHandler();
+          // Show toast BEFORE navigation so UI remains mounted long enough
+          toast.error("Session expired. Please log in again.");
+
+          // Delay logout slightly so toast becomes visible
+          setTimeout(() => {
+            logoutHandler(); // Will use navigate() internally
+          }, 800);
+
         } else {
           toast.error("Session expired. Please log in again.");
         }
+
         return Promise.reject(error);
       }
 

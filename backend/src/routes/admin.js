@@ -25,11 +25,17 @@ router.get("/subs/:id", admin.getSingleForumSub);
 router.put("/subs/:id/sponsorship", upload.single("logo"), admin.updateSponsorship);
 router.delete("/subs/:id", admin.deleteSub);
 
-// Admin Promotions
+// Admin PT Promotions
 router.get("/promotions", admin.getAllPromotions);
 router.get("/promotions/:id", admin.getAdminPromotion);
 router.put("/promotions/:id", admin.updateAdminPromotion);
 router.delete("/promotions/:id", admin.deleteAdminPromotion);
 
+//Admin Sponsored Products
+router.get("/sponsored-products", admin.getAllSponsoredProducts);
+router.post("/sponsored-products", upload.single("product"), admin.createSponsoredProduct);
+router.get("/sponsored-products/:id", admin.getSponsoredProductById);
+router.put("/sponsored-products/:id", upload.single("product"), admin.updateSponsoredProduct);
+router.delete("/sponsored-products/:id", admin.deleteSponsoredProduct);
 
 export default router;

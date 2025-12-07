@@ -5,6 +5,7 @@ import Appointment from "../models/Appointment.js";
 import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
+import SponsoredProduct from "../models/SponsoredProduct.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -286,7 +287,7 @@ export const deleteAppointment = async (req, res) => {
 
 
 // -----------------------------------------
-// PROMOTIONS CONTROLLER
+// PT PROMOTIONS CONTROLLER
 // -----------------------------------------
 export const getAllPromotions = async (req, res) => {
   try {
@@ -510,5 +511,120 @@ export const deleteSub = async (req, res) => {
   } catch (err) {
     console.error("Error deleting sub:", err);
     res.status(500).json({ error: "Failed to delete forum sub" });
+  }
+};
+
+// -----------------------------------------
+// PROMOTED PRODUCTS
+// -----------------------------------------
+
+// Create a new Sponsored Product
+export const createSponsoredProduct = async (req, res) => {
+  try {
+    const product = new SponsoredProduct(req.body);
+    await product.save();
+    res.status(201).json({ message: "Sponsored product created", product });
+  } catch (err) {
+    console.error("Create error:", err);
+    res.status(500).json({ error: "Failed to create product" });
+  }
+};
+
+// List all Sponsored Products with pagination
+export const getAllSponsoredProducts = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 12;
+    const skip = (page - 1) * limit;
+
+    const products = await SponsoredProduct.find()
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const count = await SponsoredProduct.countDocuments();
+
+    res.json({
+      page,
+      totalPages: Math.ceil(count / limit),
+      products,
+    });
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({ error: "Failed to load sponsored products" });
+  }
+};
+
+// Get single product
+export const getSponsoredProductById = async (req, res) => {
+  try {
+    const product = await SponsoredProduct.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Not found" });
+
+    res.json(product);
+  } catch (err) {
+    console.error("Fetch one error:", err);
+    res.status(500).json({ error: "Failed to fetch product" });
+  }
+};
+
+// Update Sponsored Product
+export const updateSponsoredProduct = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const product = await SponsoredProduct.findById(id);
+    if (!product)
+      return res.status(404).json({ success: false, error: "Product not found" });
+
+    // Convert isActive to boolean if present
+    if (req.body.isActive !== undefined) {
+      product.isActive =
+        req.body.isActive === "true" || req.body.isActive === true;
+    }
+
+    // Update simple fields
+    if (req.body.name !== undefined) product.name = req.body.name;
+    if (req.body.price !== undefined) product.price = req.body.price;
+    if (req.body.link !== undefined) product.link = req.body.link;
+
+    // Handle product image upload (fieldname: "product")
+    if (req.file) {
+      product.image = `/uploads/products/${req.file.filename}`;
+    } else if (req.body.image !== undefined) {
+      // preserve or update image URL string
+      product.image = req.body.image;
+    }
+
+    await product.save();
+
+    return res.json({
+      success: true,
+      message: "Sponsored product updated successfully",
+      product,
+    });
+
+  } catch (err) {
+    console.error("❌ Error updating sponsored product:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update sponsored product",
+    });
+  }
+};
+
+
+
+// Delete Sponsored Product
+export const deleteSponsoredProduct = async (req, res) => {
+  try {
+    const product = await SponsoredProduct.findByIdAndDelete(req.params.id);
+
+    if (!product) return res.status(404).json({ error: "Not found" });
+
+    res.json({ message: "Product deleted" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ error: "Failed to delete product" });
   }
 };

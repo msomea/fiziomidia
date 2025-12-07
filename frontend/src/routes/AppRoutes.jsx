@@ -29,6 +29,7 @@ import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
 import AdminSponsorshipDetail from "../components/admin/AdminSubSponsorshipDetail";
+import AdminProductSponsorshipDetail from "../components/admin/AdminProductSponsorshipDetail";
 
 export default function AppRoutes() {
   return (
@@ -78,6 +79,7 @@ export default function AppRoutes() {
       <Route path="/admin/appointments/:id" element={<AdminAppointmentDetails />} />
       <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
       <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
+      <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
       {/* Temp routes for debuging */}
       
       

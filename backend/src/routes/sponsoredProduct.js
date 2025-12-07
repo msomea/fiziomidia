@@ -5,7 +5,7 @@ import {
   updateSponsoredProduct,
   deleteSponsoredProduct
 } from "../controllers/sponsoredProductController.js";
-
+import { authenticate } from "../middlewares/auth.js";
 import { upload } from "../services/uploadService.js";    // if uploading images
 
 const router = express.Router();
@@ -14,8 +14,8 @@ const router = express.Router();
 router.get("/", getSponsoredProducts);
 
 // ADMIN ONLY
-router.post("/", upload.single("image"), createSponsoredProduct);
-router.put("/:id",  upload.single("image"), updateSponsoredProduct);
-router.delete("/:id", deleteSponsoredProduct);
+router.post("/", authenticate, upload.single("image"), createSponsoredProduct);
+router.put("/:id", authenticate,  upload.single("image"), updateSponsoredProduct);
+router.delete("/:id", authenticate, deleteSponsoredProduct);
 
 export default router;
