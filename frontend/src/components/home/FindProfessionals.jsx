@@ -12,6 +12,9 @@ export default function FindProfessionals() {
   const [pts, setPts] = useState([]);
   const [page, setPage] = useState(0); // 0-indexed pages
   const intervalRef = useRef(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const itemsRef = useRef(null);
+
 
   useEffect(() => {
     const fetchPTs = async () => {
@@ -31,6 +34,12 @@ export default function FindProfessionals() {
   // Auto-play effect
   useEffect(() => {
     startAutoPlay();
+    if (itemsRef.current) {
+      const height = itemsRef.current.offsetHeight;
+      if (height > containerHeight) {
+        setContainerHeight(height);
+      }
+    }
     return () => stopAutoPlay();
   }, [page, pts]);
 
@@ -67,12 +76,16 @@ export default function FindProfessionals() {
       </h2>
 
       {/* Carousel container */}
-      <div className="relative">
+      <div
+        className="relative transition-all duration-300"
+        style={{ minHeight: containerHeight || "auto" }}
+      >
+        {/* Measure height */}
+        <div ref={itemsRef}>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 transition-all duration-500">
+            {currentItems.length > 0 ? (
+              currentItems.map((pt, index) => (
 
-        {/* Items */}
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 transition-all duration-500">
-          {currentItems.length > 0 ? (
-            currentItems.map((pt, index) => (
               <div
                 key={pt._id || index}
                 className="card bg-white shadow-md hover:shadow-lg transition-shadow rounded-2xl p-4 text-center"
@@ -122,6 +135,7 @@ export default function FindProfessionals() {
             </p>
           )}
         </div>
+      </div>
 
         {/* Prev Button */}
         <button
