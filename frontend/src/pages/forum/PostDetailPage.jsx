@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
+import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
@@ -36,7 +37,14 @@ const PostDetailPage = () => {
     fetchPost();
   }, [id]);
 
-  if (loading) return <p className="text-center text-gray-500">Loading post...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Post...</p>
+      </div>
+    );
+  }
   if (!post) return <p className="text-center text-gray-500">Post not found</p>;
 
   return (

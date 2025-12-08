@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
+import { Loader2 } from "lucide-react";
 import CollapsibleSection from "./CallapsibleSection";
 
 export default function AdminAppointments() {
@@ -114,7 +115,10 @@ export default function AdminAppointments() {
         {/* RESULTS */}
         <div className="mt-4">
           {loading ? (
-            <p className="text-gray-600 mt-20">Loading...</p>
+            <div className="h-screen flex flex-col items-center justify-center">
+              <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+              <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Appointments...</p>
+            </div>
           ) : appointments.length === 0 ? (
             <p className="text-gray-500 text-sm mt-20">No appointments found</p>
           ) : (

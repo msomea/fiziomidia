@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 
@@ -64,7 +64,14 @@ export default function AdminAppointmentDetails() {
     }
   };
 
-  if (loading) return <p className="text-gray-500 mt-20">Loading...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Appointment...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 text-tufts">

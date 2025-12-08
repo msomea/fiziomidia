@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Loader2 } from "lucide-react";
 import avatar from "../assets/avatar.jpg";
 import { API_URL } from "../config/constants";
 
@@ -27,8 +27,14 @@ const MemberProfile = () => {
     fetchMember();
   }, [id]);
 
-  if (loading)
-    return <p className="p-4 text-gray-600">Loading member profile...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Member Profile...</p>
+      </div>
+    );
+  }
 
   if (!member)
     return <p className="p-4 text-red-600">Member not found.</p>;

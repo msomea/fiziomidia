@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import API from "../../api/axios";
+import { Loader2 } from "lucide-react";
 import { ArrowBigLeftIcon, ArrowBigRightIcon, Search } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -93,9 +94,12 @@ const CreatePost = () => {
               className="border border-gray-300 rounded-lg p-2 flex-1 focus:ring-2 focus:ring-caribbean"
             />
           </div>
-
+          
           {loading ? (
-            <p className="text-gray-500">Loading topics...</p>
+            <div className="h-screen flex flex-col items-center justify-center">
+              <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+              <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Topic...</p>
+            </div>
           ) : (
             <ul className="space-y-2">
               {topics.map((topic) => (

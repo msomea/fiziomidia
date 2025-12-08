@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import API from "../../api/axios";
+import { Loader2 } from "lucide-react";
 
 export default function MessageRouterPage() {
   const { receiverId } = useParams();
@@ -27,5 +28,8 @@ export default function MessageRouterPage() {
     loadConversation();
   }, [receiverId]);
 
-  return <div className="p-4 text-center">Loading...</div>;
+  return <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading...</p>
+      </div>;
 }

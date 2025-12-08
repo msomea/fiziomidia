@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 import {toast} from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 const AdminSponsorships = () => {
   const [subs, setSubs] = useState([]);
@@ -91,7 +92,10 @@ const AdminSponsorships = () => {
       <h1 className="text-3xl font-bold text-caribbean mb-6">Manage Sponsorships</h1>
 
       {loading ? (
-        <p>Loading...</p>
+        <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sponsorship...</p>
+      </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
           {/* Sub List */}

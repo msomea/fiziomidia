@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 const EditPostPage = () => {
   const { postId, ptId } = useParams();
@@ -45,8 +46,14 @@ const EditPostPage = () => {
     }
   };
 
-  if (loading)
-    return <p className="text-center mt-6 text-gray-500">Loading post...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Posts...</p>
+      </div>
+    );
+  }
 
   if (!post)
     return (

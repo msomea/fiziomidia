@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import { API_URL } from "../../config/constants";
+import { Loader2 } from "lucide-react";
 
 import ConversationHeader from "../../components/message/ConversationHeader";
 import ConversationMessages from "../../components/message/ConversationMessages";
@@ -197,10 +198,14 @@ export default function ConversationPage() {
     }, 5000);
   };
 
-  if (loading)
+  if (loading || !product) {
     return (
-      <p className="p-4 mt-20 text-gray-600">Loading conversation...</p>
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Conversations...</p>
+      </div>
     );
+  }
 
   const otherUser = conversation?.participants.find(
     (p) => p._id !== loggedInUser._id

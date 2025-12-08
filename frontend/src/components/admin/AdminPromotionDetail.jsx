@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 
@@ -60,8 +60,14 @@ export default function AdminPromotionDetail() {
     }
   };
 
-  if (loading || !promo)
-    return <p className="mt-20 text-gray-500">Loading Promotion...</p>;
+  if (loading || !promo) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Promotion...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20">

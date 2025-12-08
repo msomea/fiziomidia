@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
@@ -91,8 +91,14 @@ export default function AdminSponsorshipDetail() {
     }
   };
 
-  if (loading || !sub)
-    return <p className="mt-20 text-gray-500">Loading Sponsorship...</p>;
+  if (loading || !sub) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sponsorship...</p>
+      </div>
+    );
+  }
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       {/* HEADER */}

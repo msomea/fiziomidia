@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
+import { Loader2 } from "lucide-react";
 
 export default function AdminUserDetails() {
   const { id } = useParams();
@@ -37,7 +38,14 @@ export default function AdminUserDetails() {
     load();
   };
 
-  if (!user) return <p className="p-4 text-caribbean mt-20">Loading...</p>;
+  if (!user) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Users...</p>
+      </div>
+    );
+  }
 
   const license = user?.ptProfile?.licenses?.[0];
 

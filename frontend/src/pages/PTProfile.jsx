@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import { useNavigate } from "react-router";
+import { Loader2 } from "lucide-react";
 
 import {
   PTOverview,
@@ -41,7 +42,12 @@ const PTProfile = () => {
 
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading PT Profile...</p>
+      </div>
+    );
   }
 
   if (!pt || !pt.ptProfile) {

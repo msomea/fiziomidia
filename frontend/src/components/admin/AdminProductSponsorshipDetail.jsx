@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
 import { getSponsoredProductById } from "../../api/admin";
@@ -94,8 +94,14 @@ export default function AdminProductSponsorshipDetail() {
     }
   };
 
-  if (loading || !product)
-    return <p className="mt-20 text-gray-500">Loading product...</p>;
+  if (loading || !product) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sponsorship...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">

@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
 import { API_URL } from "../../config/constants";
 import { io } from "socket.io-client";
+import { Loader2 } from "lucide-react";
 
 const socket = io(API_URL, { withCredentials: true });
 
@@ -132,8 +133,14 @@ const MessagesPage = () => {
     }
   };
 
-  if (loading)
-    return <p className="p-4 mt-60 text-gray-600">Loading conversations...</p>;
+  if (loading) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Conversations...</p>
+      </div>
+    );
+  }
 
   if (conversations.length < 1)
     return (
