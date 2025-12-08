@@ -3,7 +3,7 @@ import { getSponsoredProducts } from "../../api/admin";
 import CollapsibleSection from "./CallapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
-import { Import } from "lucide-react";
+import { dayjs } from "dayjs";
 import { API_URL } from "../../config/constants";
 
 export default function ProductSponsorshipSection() {
@@ -29,7 +29,7 @@ export default function ProductSponsorshipSection() {
       toast.error("Failed to load sponsored products");
     }
   };
-
+  console.log(products)
   return (
     <CollapsibleSection title="Sponsored Products">
       
@@ -53,7 +53,6 @@ export default function ProductSponsorshipSection() {
           <option value="inactive">Inactive</option>
         </select>
       </div>
-
       {/* PRODUCT LIST */}
       {products.map((product) => (
         <div
@@ -71,13 +70,16 @@ export default function ProductSponsorshipSection() {
                 {product.name}
               </h3>
             </Link>
+            <p><b>Owner:</b> {product.owner.fullName}</p>
             <p><b>Price:</b> {product.price}</p>
+            <p><b>Descriptiom:</b> {product.description}</p>
+            <p><b>Due Date:</b> {product.endAt}</p>
             <p><b>Status:</b> {product.isActive ? "Active" : "Inactive"}</p>
             {product.link && (
               <p>
                 <b>Link:</b>{" "}
                 <a
-                  href={product.link}
+                  href={`https://${product.link}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"

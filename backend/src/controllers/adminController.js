@@ -533,32 +533,50 @@ export const createSponsoredProduct = async (req, res) => {
 // List all Sponsored Products with pagination
 export const getAllSponsoredProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 12;
+    const { search = "", status = "", page = 1 } = req.query;
+
+    const filter = {};
+
+    // Search by product name
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
+    // Filter by active / inactive
+    if (status === "active") {
+      filter.isActive = true;
+    } else if (status === "inactive") {
+      filter.isActive = false;
+    }
+
+    const limit = 10;
     const skip = (page - 1) * limit;
 
-    const products = await SponsoredProduct.find()
+    const products = await SponsoredProduct.find(filter)
+      .populate("owner", "fullName")
+      .sort({ updatedAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      .limit(limit);
 
-    const count = await SponsoredProduct.countDocuments();
+    const totalCount = await SponsoredProduct.countDocuments(filter);
 
     res.json({
-      page,
-      totalPages: Math.ceil(count / limit),
+      success: true,
       products,
+      totalPages: Math.ceil(totalCount / limit),
     });
-  } catch (err) {
-    console.error("Fetch error:", err);
-    res.status(500).json({ error: "Failed to load sponsored products" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Failed to fetch sponsored products" });
   }
 };
+
 
 // Get single product
 export const getSponsoredProductById = async (req, res) => {
   try {
-    const product = await SponsoredProduct.findById(req.params.id);
+    const product = await SponsoredProduct.findById(req.params.id)
+    .populate("owner", "fullName");
     if (!product) return res.status(404).json({ error: "Not found" });
 
     res.json(product);

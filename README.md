@@ -14,3 +14,7 @@ See the `src/` directory layout.
 - Integrate Stripe properly and webhook handling
 - Add input validation (e.g. Joi or express-validator)
 - Add tests, logging, rate-limiting, and production-ready error handling
+
+IMPORTANT
+Add product sponsoship creation page
+Add PT promotion creation page Page

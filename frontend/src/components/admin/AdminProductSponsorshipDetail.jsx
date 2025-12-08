@@ -19,6 +19,9 @@ export default function AdminProductSponsorshipDetail() {
     link: "",
     isActive: false,
     image: "",
+    startAt: "",
+    endAt: "",
+    description: "",
   });
 
   const [newImage, setNewImage] = useState(null);
@@ -40,6 +43,9 @@ export default function AdminProductSponsorshipDetail() {
         link: res.link || "",
         isActive: res.isActive || false,
         image: res.image || "",
+        startAt: res.startAt ? res.startAt.substring(0, 10) : "",
+        endAt: res.endAt ? res.endAt.substring(0, 10) : "",
+        description: res.description || "",
       });
     } catch (err) {
       console.error(err);
@@ -60,6 +66,9 @@ export default function AdminProductSponsorshipDetail() {
       data.append("price", form.price);
       data.append("link", form.link);
       data.append("isActive", form.isActive);
+      data.append("startAt", form.startAt);
+      data.append("endAt", form.endAt);
+      data.append("description", form.description);
 
       if (newImage) data.append("product", newImage);
 
@@ -87,7 +96,7 @@ export default function AdminProductSponsorshipDetail() {
 
   if (loading || !product)
     return <p className="mt-20 text-gray-500">Loading product...</p>;
-console.log(product)
+
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       {/* HEADER */}
@@ -104,14 +113,20 @@ console.log(product)
         {/* PRODUCT INFO */}
         <div className="bg-gray-100 p-3 rounded text-tufts">
           <h3 className="font-semibold mb-2">Product Information</h3>
+          <p><b>Owner:</b> {product.owner.fullName}</p>
           <p><b>Name:</b> {product.name}</p>
           <p><b>Price:</b> {product.price}</p>
           <p><b>Link:</b> {product.link || "No link provided"}</p>
+
+          <p><b>Description:</b> {product.description || "No description"}</p>
+
+          <p><b>Start At:</b> {product.startAt ? product.startAt.substring(0,10) : "—"}</p>
+          <p><b>End At:</b> {product.endAt ? product.endAt.substring(0,10) : "—"}</p>
         </div>
 
         {/* EDIT FORM */}
         <div className="bg-gray-100 p-4 rounded space-y-3 text-tufts">
-          <h3 className="font-semibold mb-2 text-caribbean">Product Details</h3>
+          <h3 className="font-semibold mb-2 text-caribbean">Edit Product Details</h3>
 
           <input
             name="name"
@@ -136,6 +151,40 @@ console.log(product)
             placeholder="Link (optional)"
             className="w-full border p-2 rounded"
           />
+
+          {/* DESCRIPTION */}
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Description"
+            className="w-full border p-2 rounded min-h-[80px]"
+          />
+
+          {/* DATE PICKERS */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-medium">Start At</label>
+              <input
+                type="date"
+                name="startAt"
+                value={form.startAt}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+              />
+            </div>
+
+            <div>
+              <label className="font-medium">End At</label>
+              <input
+                type="date"
+                name="endAt"
+                value={form.endAt}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+              />
+            </div>
+          </div>
 
           {/* ACTIVE STATUS */}
           <label className="flex items-center gap-2">
