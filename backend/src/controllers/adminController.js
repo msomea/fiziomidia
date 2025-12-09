@@ -108,7 +108,7 @@ export const updateUserRole = async (req, res) => {
 // VERIFY OR REJECT PT LICENSE
 export const updateLicenseStatus = async (req, res) => {
   try {
-    const { status, notes, licenseId } = req.body;
+    const { status, notes, index } = req.body;
 
     const valid = ["pending", "approved", "rejected"];
     if (!valid.includes(status)) {
@@ -127,43 +127,48 @@ export const updateLicenseStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: "No licenses found for this user" });
     }
 
-    // Pick license
-    let licenseDoc = licenseId
-      ? user.ptProfile.licenses.id(licenseId)
-      : user.ptProfile.licenses[0];
+    // ✅ Select license by index (fallback to first)
+    const licenseDoc =
+      typeof index === "number"
+        ? user.ptProfile.licenses[index]
+        : user.ptProfile.licenses[0];
 
     if (!licenseDoc) {
       return res.status(404).json({ success: false, message: "License not found" });
     }
 
-    // Update license fields
+    // Update license details
     licenseDoc.verificationStatus = status;
-    licenseDoc.verificationNotes =
-      typeof notes === "string" ? notes : licenseDoc.verificationNotes;
+    if (typeof notes === "string") {
+      licenseDoc.verificationNotes = notes;
+    }
     licenseDoc.verified = status === "approved";
 
-    // Top-level profile flags
+    // Update profile verification info
     user.ptProfile.lastLicenseVerificationAt = new Date();
-    user.ptProfile.isVerified = status === "approved";
 
-    // 🔥 Role & access control logic — FIXED
+    // Determine if overall profile is verified
+    user.ptProfile.isVerified = user.ptProfile.licenses.every(
+      (lic) => lic.verificationStatus === "approved"
+    );
+
+    // 🔥 Role & access logic
     if (status === "approved") {
       user.physioApproval = true;
       user.role = "physiotherapist";
-    } 
-    else if (status === "rejected") {
+
+    } else if (status === "rejected") {
       user.physioApproval = false;
-      user.role = "pendingPhysiotherapist"; 
-      // if you want: user.role = "member"
-    } 
-    else if (status === "pending") {
+      user.role = "pendingPhysiotherapist"; // or "member"
+
+    } else if (status === "pending") {
       user.physioApproval = false;
       user.role = "pendingPhysiotherapist";
     }
 
     await user.save();
 
-    return res.json({
+    res.json({
       success: true,
       message: `License ${status}`,
       user,
@@ -172,12 +177,10 @@ export const updateLicenseStatus = async (req, res) => {
 
   } catch (err) {
     console.error("License update error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to update license status"
-    });
+    res.status(500).json({ success: false, message: "Failed to update license status" });
   }
 };
+
 
 
 // ============================================

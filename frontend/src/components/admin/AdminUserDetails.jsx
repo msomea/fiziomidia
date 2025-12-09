@@ -29,30 +29,27 @@ export default function AdminUserDetails() {
     load();
   };
 
-  const verifyLicense = async (status) => {
-    try {
-      // Call backend to update license verification + user approval
-      const response = await API.put(`/admin/users/${id}/license`, {
-        status,
-        notes,
-      });
+  const verifyLicense = async (status, idx) => {
+  try {
+    const response = await API.put(`/admin/users/${id}/license`, {
+      status,
+      notes: notes[idx] || "",
+      index: idx,
+    });
 
-      // Backend should return updated user
-      const updatedUser = response.data.user;
-      setUser(updatedUser);
+    setUser(response.data.user);
+    toast.success(
+      status === "approved"
+        ? "License approved and user granted physiotherapist access"
+        : "License rejected"
+    );
+  } catch (err) {
+    console.error("License verification failed:", err);
+    toast.error("Failed to update license status");
+  }
+};
 
-      toast.success(
-        status === "approved"
-          ? "License approved and user granted physiotherapist access"
-          : "License rejected"
-      );
-    } catch (err) {
-      console.error("License verification failed:", err);
-      toast.error("Failed to update license status");
-    }
-  };
 
-console.log(user)
   if (!user) {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
@@ -62,8 +59,6 @@ console.log(user)
     );
   }
 
-  const license = user?.ptProfile?.licenses?.[0];
-console.log(user)
   return (
     <div className="p-4 mt-20">
       <h2 className="text-xl font-bold text-caribbean">User Details</h2>
@@ -103,45 +98,49 @@ console.log(user)
           </div>
         </div>
 
-        {/* PT License */}
-        {license && (
-          <div className="border p-4 rounded text-tufts">
-            <h3 className="font-semibold text-lg text-caribbean">License Verification</h3>
-            <p>License Number: {license.licenseNumber}</p>
-            <p>Status: {license.verificationStatus}</p>
-            <a
-              href={`${API_URL}${license.licenseFileUrl}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-blue-600 underline"
+        {/* PT Licenses Management */}
+        {user.ptProfile.licenses.map((license, idx) => (
+        <div key={license._id} className="border p-4 rounded text-tufts">
+          <h3 className="font-semibold text-lg text-caribbean">License Verification</h3>
+          <p>License Number: {license.licenseNumber}</p>
+          <p>Status: {license.verificationStatus}</p>
+          <a
+            href={`${API_URL}${license.licenseFileUrl}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-blue-600 underline"
+          >
+            View Uploaded License File
+          </a>
+
+          <textarea
+            placeholder="Verification notes..."
+            className="w-full border p-2 rounded mt-3"
+            value={notes[idx] || ""}
+            onChange={(e) => {
+              const newNotes = [...notes];
+              newNotes[idx] = e.target.value;
+              setNotes(newNotes);
+            }}
+          />
+
+          <div className="flex gap-3 mt-3">
+            <button
+              className="px-4 py-1 bg-green-600 text-white rounded"
+              onClick={() => verifyLicense("approved", idx)}
             >
-              View Uploaded License File
-            </a>
+              Approve
+            </button>
 
-            <textarea
-              placeholder="Verification notes..."
-              className="w-full border p-2 rounded mt-3"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-
-            <div className="flex gap-3 mt-3">
-              <button
-                className="px-4 py-1 bg-green-600 text-white rounded"
-                onClick={() => verifyLicense("approved")}
-              >
-                Approve
-              </button>
-
-              <button
-                className="px-4 py-1 bg-red-600 text-white rounded"
-                onClick={() => verifyLicense("rejected")}
-              >
-                Reject
-              </button>
-            </div>
+            <button
+              className="px-4 py-1 bg-red-600 text-white rounded"
+              onClick={() => verifyLicense("rejected", idx)}
+            >
+              Reject
+            </button>
           </div>
-        )}
+        </div>
+      ))}
       </div>
     </div>
   );
