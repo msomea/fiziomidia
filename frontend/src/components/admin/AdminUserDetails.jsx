@@ -30,14 +30,29 @@ export default function AdminUserDetails() {
   };
 
   const verifyLicense = async (status) => {
-    await API.put(`/admin/users/${id}/license`, {
-      status,
-      notes,
-    });
-    toast.success(`License ${status}`);
-    load();
+    try {
+      // Call backend to update license verification + user approval
+      const response = await API.put(`/admin/users/${id}/license`, {
+        status,
+        notes,
+      });
+
+      // Backend should return updated user
+      const updatedUser = response.data.user;
+      setUser(updatedUser);
+
+      toast.success(
+        status === "approved"
+          ? "License approved and user granted physiotherapist access"
+          : "License rejected"
+      );
+    } catch (err) {
+      console.error("License verification failed:", err);
+      toast.error("Failed to update license status");
+    }
   };
 
+console.log(user)
   if (!user) {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
@@ -48,7 +63,7 @@ export default function AdminUserDetails() {
   }
 
   const license = user?.ptProfile?.licenses?.[0];
-
+console.log(user)
   return (
     <div className="p-4 mt-20">
       <h2 className="text-xl font-bold text-caribbean">User Details</h2>
@@ -75,6 +90,7 @@ export default function AdminUserDetails() {
               className="border p-2 rounded"
             >
               <option value="member">Member</option>
+              <option value="pendingPhysiotherapist">Pending PT verification</option>
               <option value="physiotherapist">Physiotherapist</option>
               <option value="admin">Admin</option>
             </select>

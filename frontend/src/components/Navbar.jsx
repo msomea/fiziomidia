@@ -25,7 +25,7 @@ export default function Navbar() {
   const getDashboardPath = () => {
     if (isGuest) return "/login"; // guests go to login
     if (user.role === "physiotherapist") return `/dashboard/pt/${user._id}`;
-    if (user.role === "member") return `/dashboard/member/${user._id}`;
+    if (user.role === "member" || user.role === "pendingPhysiotherapist") return `/dashboard/member/${user._id}`;
     if (user.role === "admin") return `/dashboard/admin`;
     return "/";
   };

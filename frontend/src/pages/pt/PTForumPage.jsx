@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "react-hot-toast";
-import { Loader2 } from "lucide-react";
 import API from "../../api/axios";
 import { NotebookPen, PlusSquareIcon, Trash2Icon, Loader2 } from "lucide-react";
 

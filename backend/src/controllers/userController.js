@@ -46,7 +46,7 @@ export const getUserById = async (req, res) => {
 
 // PUT /api/users/profile
 // =========================================
-// UPDATE CURRENT USER PROFILE (FULL FIXED)
+// UPDATE CURRENT USER PROFILE
 // =========================================
 
 export const updateProfile = async (req, res) => {
@@ -236,20 +236,36 @@ export const updateProfile = async (req, res) => {
     // ------------------------------------------------------------
     // 6️⃣ Handle upgrade to physiotherapist
     // ------------------------------------------------------------
-    if (
-      upgradeToPhysiotherapist === true ||
-      upgradeToPhysiotherapist === "true"
-    ) {
-      if (user.role !== "physiotherapist") {
-        updateData.role = "physiotherapist";
-        updateData.ptProfile = {
-          ...(updateData.ptProfile || {}),
-          licenseVerified: false,
-          licenseVerificationStatus: "pending",
-          promotionActiveUntil: null,
-        };
+    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
+  
+      if (!user.ptProfile) {
+        user.ptProfile = {};
       }
+
+      // Ensure licenses array exists
+      if (!Array.isArray(user.ptProfile.licenses)) {
+        user.ptProfile.licenses = [];
+      }
+
+      // Create new license entry (only ONE allowed)
+      const newLicense = {
+        licenseNumber: req.body["ptProfile[licenseNumber]"],
+        licenseFileUrl: req.uploadedLicense?.url || null,
+        licenseFileType: req.uploadedLicense?.type || null,
+        verificationStatus: "pending",
+        verified: false,
+        submittedAt: new Date(),
+      };
+
+      // Replace previous license if any
+      user.ptProfile.licenses = [newLicense];
+      // Update PT profile meta
+      updateData.role = "pendingPhysiotherapist";
+      updateData.physioApproval = false;   
+      updateData.ptProfile.isVerified = false; 
     }
+
+
 
     // ------------------------------------------------------------
     // 7️⃣ Save and return final updated user

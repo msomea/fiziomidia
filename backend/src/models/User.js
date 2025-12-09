@@ -185,7 +185,7 @@ const UserSchema = new Schema({
   passwordHash: { type: String },
   role: {
     type: String,
-    enum: ["guest", "member", "physiotherapist", "admin"],
+    enum: ["guest", "member","pendingPhysiotherapist", "physiotherapist", "admin"],
     default: "member",
   },
   fullName: { type: String },
@@ -213,6 +213,10 @@ const UserSchema = new Schema({
       createdAt: { type: Date, default: Date.now },
     },
   ],
+  physioApproval: {
+    type: Boolean,
+    default: false,
+  },
   location: {
     type: {
       type: String,      

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2 } from "lucide-react";
+import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2, RefreshCwOff } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
@@ -32,7 +32,12 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
   }
 
   if (!posts.length) {
-    return <p className="text-center mt-6 text-gray-500">No posts yet.</p>;
+    return (
+      <div className="mt-4 flex flex-col items-center justify-center">
+        <RefreshCwOff className="w-12 h-12 text-caribbean animate-spin" />
+        <p className="mt-4 text-caribbean font-medium animate-pulse">No Post Yet...</p>
+      </div>
+    );
   }
 
   const totalPosts = postList.length;

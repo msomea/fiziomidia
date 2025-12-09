@@ -112,9 +112,9 @@ const CreatePost = () => {
                       : "hover:bg-gray-100"
                   }`}
                 >
-                  <div className="flex justify-between items-center">
+                  <div className="text-tufts flex justify-between items-center">
                     <span>{topic.title}</span>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-tufts">
                       {topic.totalPosts || 0} posts
                     </span>
                   </div>

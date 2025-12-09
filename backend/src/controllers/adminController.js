@@ -72,32 +72,44 @@ export const getUserDetails = async (req, res) => {
 export const updateUserRole = async (req, res) => {
   try {
     const { role } = req.body;
-    const allowedRoles = ["guest", "member", "physiotherapist", "admin"];
+    const userId = req.params.id;
 
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: "Invalid role provided" });
+    const validRoles = ["member", "physiotherapist", "pendingPhysiotherapist", "admin"];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ success: false, message: "Invalid role" });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      { role },
-      { new: true, runValidators: true }
-    ).select("-passwordHash -refreshTokens");
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
 
-    if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
+    user.role = role;
 
-    return res.json({ success: true, message: "Role updated successfully", user: updatedUser });
+    // 🔥 IMPORTANT FIX: If user is changed back to member → wipe PT data
+    if (role === "member") {
+      user.ptProfile = null;
+      user.physioApproval = false;
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Role updated successfully",
+      user,
+    });
   } catch (err) {
-    console.error("Role update error:", err);
+    console.error("Update role error:", err);
     return res.status(500).json({ success: false, message: "Failed to update user role" });
   }
 };
+;
 
 // VERIFY OR REJECT PT LICENSE
 export const updateLicenseStatus = async (req, res) => {
   try {
     const { status, notes, licenseId } = req.body;
-    // expected status values: "pending" | "approved" | "rejected"
+
     const valid = ["pending", "approved", "rejected"];
     if (!valid.includes(status)) {
       return res.status(400).json({ success: false, message: "Invalid license status" });
@@ -111,53 +123,62 @@ export const updateLicenseStatus = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    // ensure ptProfile and licenses exist
-    if (!user.ptProfile || !Array.isArray(user.ptProfile.licenses) || user.ptProfile.licenses.length === 0) {
+    if (!user.ptProfile || !user.ptProfile.licenses?.length) {
       return res.status(400).json({ success: false, message: "No licenses found for this user" });
     }
 
-    // find license by id if provided, otherwise default to first license
-    let licenseDoc;
-    if (licenseId) {
-      licenseDoc = user.ptProfile.licenses.id(licenseId);
-      if (!licenseDoc) {
-        return res.status(404).json({ success: false, message: "License not found" });
-      }
-    } else {
-      licenseDoc = user.ptProfile.licenses[0];
+    // Pick license
+    let licenseDoc = licenseId
+      ? user.ptProfile.licenses.id(licenseId)
+      : user.ptProfile.licenses[0];
+
+    if (!licenseDoc) {
+      return res.status(404).json({ success: false, message: "License not found" });
     }
 
-    // update fields
+    // Update license fields
     licenseDoc.verificationStatus = status;
-    licenseDoc.verificationNotes = typeof notes === "string" ? notes : licenseDoc.verificationNotes;
+    licenseDoc.verificationNotes =
+      typeof notes === "string" ? notes : licenseDoc.verificationNotes;
     licenseDoc.verified = status === "approved";
 
-    // Optional: update top-level indicators on ptProfile for convenience/search
+    // Top-level profile flags
     user.ptProfile.lastLicenseVerificationAt = new Date();
     user.ptProfile.isVerified = status === "approved";
+
+    // 🔥 Role & access control logic — FIXED
+    if (status === "approved") {
+      user.physioApproval = true;
+      user.role = "physiotherapist";
+    } 
+    else if (status === "rejected") {
+      user.physioApproval = false;
+      user.role = "pendingPhysiotherapist"; 
+      // if you want: user.role = "member"
+    } 
+    else if (status === "pending") {
+      user.physioApproval = false;
+      user.role = "pendingPhysiotherapist";
+    }
 
     await user.save();
 
     return res.json({
       success: true,
       message: `License ${status}`,
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        ptProfile: {
-          licenses: user.ptProfile.licenses,
-          isVerified: user.ptProfile.isVerified,
-          lastLicenseVerificationAt: user.ptProfile.lastLicenseVerificationAt,
-        },
-      },
+      user,
       license: licenseDoc,
     });
+
   } catch (err) {
     console.error("License update error:", err);
-    return res.status(500).json({ success: false, message: "Failed to update license status" });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update license status"
+    });
   }
 };
+
 
 // ============================================
 // APPOINTMENTS CONTROLLER
@@ -630,8 +651,6 @@ export const updateSponsoredProduct = async (req, res) => {
     });
   }
 };
-
-
 
 // Delete Sponsored Product
 export const deleteSponsoredProduct = async (req, res) => {

@@ -7,11 +7,25 @@ import User from "../models/User.js";
 // List all forum subs with pagination and totalPosts dynamically calculated
 export const listSubs = async (req, res) => {
   try {
+    const search = req.query.search || "";
     const page = parseInt(req.query.page) || 1; 
     const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
 
+    const matchStage = search
+      ? {
+          $match: {
+            $or: [
+              { title: { $regex: search, $options: "i" } },
+              { slug: { $regex: search, $options: "i" } },
+              { description: { $regex: search, $options: "i" } },
+            ],
+          },
+        }
+      : { $match: {} };
+
     const subs = await ForumSub.aggregate([
+      matchStage,
       {
         $lookup: {
           from: "posts",
@@ -25,17 +39,14 @@ export const listSubs = async (req, res) => {
           totalPosts: { $size: "$posts" },
         },
       },
-      {
-        $project: {
-          posts: 0,
-        },
-      },
+      { $project: { posts: 0 } },
       { $sort: { createdAt: -1 } },
       { $skip: skip },
       { $limit: limit },
     ]);
 
-    const totalCount = await ForumSub.countDocuments();
+    // Count with search filter
+    const totalCount = await ForumSub.countDocuments(matchStage.$match);
 
     res.json({
       subs,
@@ -51,8 +62,6 @@ export const listSubs = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch subs" });
   }
 };
-
-
 
 // Get single sub
 export const getSubById = async (req, res) => {

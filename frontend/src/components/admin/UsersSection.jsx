@@ -65,8 +65,9 @@ export default function AdminUsers() {
           >
             <option value="">All Roles</option>
             <option value="physiotherapist">Physiotherapists</option>
+            <option value="pendingPhysiotherapist">Pending PT Request</option>
             <option value="member">Members</option>
-            <option value="guest">Guests</option>
+            <option value="admin">Admins</option>
           </select>
 
           {/* License Verification Filter */}
