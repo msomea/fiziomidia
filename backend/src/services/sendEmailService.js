@@ -1,4 +1,8 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+const resolver = new dns.Resolver();
+resolver.setServers(["8.8.8.8"]); // Google DNS
 
 export const sendEmail = async ({ to, subject, html }) => {
   try {
@@ -13,6 +17,7 @@ export const sendEmail = async ({ to, subject, html }) => {
       tls: {
         rejectUnauthorized: false, // prevents SSL incorrect version errors
       },
+      dns: resolver,
     });
 
     await transporter.sendMail({

@@ -7,6 +7,7 @@ import {
   verifyRefreshToken,
 } from "../services/tokenService.js";
 import { generateRandomToken } from "../utils/tokens.js";
+import { generateFiziomidiaEmail } from "../templates/emailHelper.js";
 
 const SALT_ROUNDS = 12;
 const RESET_TOKEN_TTL = 10 * 60 * 1000; // 10 minutes
@@ -58,19 +59,23 @@ export async function registerUser(req, res) {
 
     // Create verification url
     const verifyURL = `${process.env.CLIENT_URL}/verify-email/${verifyToken}`;
+    //Remove on Production
     console.log("✅ ✅ ✅ Click to verify email", verifyURL)
     // Save user once
     await user.save();
 
     // Send verify email (fire and forget pattern is OK but await for reliability)
+    const verifyHTML = generateFiziomidiaEmail({
+      title: "Verify Your Email",
+      body: "<p>Hello! Please verify your FizioMidia account by clicking the button below. This link expires in 1 hour.</p>",
+      buttonText: "Verify Email",
+      buttonURL: verifyURL
+    });
+
     await sendEmail({
       to: email,
-      subject: "Verify your email",
-      html: `
-        <h2>Welcome to Fiziomidia</h2>
-        <p>Click the link below to verify your email. This link expires in 1 hour.</p>
-        <a href="${verifyURL}">Verify Email</a>
-      `,
+      subject: "Verify your FizioMidia account",
+      html: verifyHTML
     });
 
     return success(res, "Registration successful. Please verify your email.");
@@ -135,15 +140,20 @@ export async function requestPasswordReset(req, res) {
     await user.save();
     
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${token}`;
+    // Send Email
+    const resetHTML = generateFiziomidiaEmail({
+      title: "Reset Your Password",
+      body: "<p>We received a request to reset your password. Click the button below to reset it. This link expires in 10 minutes.</p>",
+      buttonText: "Reset Password",
+      buttonURL: resetURL
+    });
+
     await sendEmail({
       to: email,
-      subject: "Reset Password",
-      html: `
-        <h2>Password Reset Request</h2>
-        <p>Click the link below to reset your password. This link expires in 10 minutes.</p>
-        <a href="${resetURL}">Reset Password</a>
-      `,
+      subject: "Reset your Fiziomidia password",
+      html: resetHTML
     });
+    //Remove on Production
     console.log("✅ ✅ ✅ Click to reset your Password", resetURL)
     return success(res, "Password reset link sent (if email exists)");
   } catch (err) {
