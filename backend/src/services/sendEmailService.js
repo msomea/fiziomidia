@@ -1,34 +1,26 @@
-import nodemailer from "nodemailer";
-import dns from "dns";
+import { Resend } from "resend"
 
-const resolver = new dns.Resolver();
-resolver.setServers(["8.8.8.8"]); // Google DNS
+const resend = new Resend(process.env.RESEND_API_KEY);
 
+/**
+ * Send an email using Resend API
+ * @param {Object} options
+ * @param {string} options.to - Recipient email
+ * @param {string} options.subject - Email subject
+ * @param {string} options.html - Email HTML content
+ */
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST, // smtp.resend.com
-      port: Number(process.env.MAIL_PORT), // 587
-      secure: false, // IMPORTANT: must be false for Resend
-      auth: {
-        user: process.env.MAIL_USER, // "resend"
-        pass: process.env.MAIL_PASS, // re_xxxxxx
-      },
-      tls: {
-        rejectUnauthorized: false, // prevents SSL incorrect version errors
-      },
-      dns: resolver,
-    });
-
-    await transporter.sendMail({
-      from: `"FizioMidia" <onboarding@resend.dev>`, // or your resend domain
+    const response = await resend.emails.send({
+      from: `"FizioMidia" <onboarding@resend.dev>` ,
       to,
       subject,
       html,
     });
 
-  } catch (error) {
-    console.error("📮 Email sending failed:", error);
-    throw error;
+    return response;
+  } catch (err) {
+    console.error("📮 Email sending failed:", err);
+    throw err;
   }
 };

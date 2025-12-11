@@ -169,6 +169,7 @@ export async function requestPasswordReset(req, res) {
  */
 export async function resetPassword(req, res) {
   try {
+    
     const { token } = req.params;
     const { newPassword } = req.body;
     if (!token || !newPassword) return fail(res, 400, "Token and new password required");
@@ -191,10 +192,17 @@ export async function resetPassword(req, res) {
     await user.save();
 
     // Notify user of password change
+    const notifyHTML = generateFiziomidiaEmail({
+      title: "Your Password has been Changed",
+      body: "<p>Your password was changed. If you did not perform this action, please contact support and login immediately to secure your account.</p>",
+      buttonText: "Login",
+      buttonURL: "https://www.fiziomidia.org/login"
+    });
+
     await sendEmail({
       to: user.email,
-      subject: "Your password has been changed",
-      html: `<p>Your password was changed. If you did not perform this action, please contact support and reset again immediately.</p>`,
+      subject: "Password Change",
+      html: notifyHTML
     });
 
     return success(res, "Password reset successfully");
