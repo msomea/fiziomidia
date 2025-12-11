@@ -99,7 +99,7 @@ export default function AdminUserDetails() {
         </div>
 
         {/* PT Licenses Management */}
-        {user.ptProfile.licenses.map((license, idx) => (
+        {user.ptProfile && user.ptProfile.licenses.map((license, idx) => (
         <div key={license._id} className="border p-4 rounded text-tufts">
           <h3 className="font-semibold text-lg text-caribbean">License Verification</h3>
           <p>License Number: {license.licenseNumber}</p>

@@ -198,9 +198,17 @@ const UserSchema = new Schema({
   lastLogin: Date,
   isLoggedIn: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
+  isBanned: { type: Boolean, default: false },
+  verifyToken: String,
+  verifyTokenExpire: Date,
+  isVerified: { type: Boolean, default: false },
+  resetToken: String,
+  resetTokenExpire: Date,
+
   refreshTokens: [
     {
       token: String,
+      device: String,
       createdAt: { type: Date, default: Date.now },
     },
   ],

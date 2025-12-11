@@ -39,7 +39,7 @@ export default function AppRoutes() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
       {/* Public Pages Routes */}
       <Route path="/" element={<Home />} />
