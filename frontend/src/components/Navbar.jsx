@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import {
   Menu,
@@ -16,6 +16,7 @@ import { useUnreadMessages } from "../hooks/useUnreadMessages";
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { unreadCount } = useUnreadMessages();
@@ -34,6 +35,7 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
     { name: "Forum", path: "/forum" },
+    { name: "Services", path: "/services" },
     { name: "Education", path: "/education" },
   ];
 
@@ -46,6 +48,23 @@ export default function Navbar() {
       toast.error("Logout failed. Try again.");
     }
   };
+
+  // set mobile view based on 1030px breakpoint
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = typeof window !== "undefined" && window.innerWidth < 1030;
+      setIsMobileView(mobile);
+      // Close mobile menu when switching to desktop
+      if (!mobile) setMenuOpen(false);
+    };
+
+    // run once
+    checkMobile();
+
+    // listen for resize
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   return (
     <nav className="w-full bg-white shadow-md fixed top-0 left-0 z-50">
@@ -63,7 +82,8 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center gap-6">
+        {!isMobileView && (
+          <div className="flex items-center gap-6">
           {navLinks.map((link) => (
             <NavLink
               key={link.name}
@@ -134,20 +154,20 @@ export default function Navbar() {
               </div>
             </>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Mobile Menu Toggle */}
-        <button
-          className="md:hidden text-black"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        {isMobileView && (
+          <button className="text-black" onClick={() => setMenuOpen(!menuOpen)}>
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        )}
       </div>
 
       {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="md:hidden bg-white shadow-lg border-t border-gray-200">
+      {menuOpen && isMobileView && (
+        <div className="bg-white shadow-lg border-t border-gray-200">
           {navLinks.map((link) => (
             <NavLink
               key={link.name}

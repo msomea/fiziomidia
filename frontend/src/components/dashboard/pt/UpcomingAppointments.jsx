@@ -9,7 +9,7 @@ export default function UpcomingAppointments({ appointments }) {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="table table-zebra w-full">
+        <table className="table table-auto w-full">
           <thead>
             <tr className="bg-alice text-caribbean">
               <th>Patient</th>
@@ -19,7 +19,7 @@ export default function UpcomingAppointments({ appointments }) {
               <th>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-200">
             {appointments.map((appt, i) => (
               <tr key={i}>
                 <td>{appt.requester.fullName}</td>

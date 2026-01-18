@@ -30,6 +30,11 @@ import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
 import AdminSponsorshipDetail from "../components/admin/AdminSubSponsorshipDetail";
 import AdminProductSponsorshipDetail from "../components/admin/AdminProductSponsorshipDetail";
+import Services from "../pages/services/Services";
+import CreatePromotion from "../pages/services/CreatePromotion";
+import ListPromotions from "../pages/services/ListPromotions";
+import ListSponsoredProduct from "../pages/services/ListSponsoredProduct";
+import CreateSponsoredProduct from "../pages/services/CreateSponsoredProduct";
 
 export default function AppRoutes() {
   return (
@@ -52,6 +57,14 @@ export default function AppRoutes() {
       <Route path="/profile/pt/:id" element={<PTProfile />} />
       <Route path="/profile/member/:id" element={<MemberProfile />} />
       <Route path="/find-professionals" element={<FindProfessionals />} />
+
+      {/* Services Routes */}
+      <Route path="/services/promotions/create" element={<CreatePromotion />} />
+      <Route path="/services" element={<Services />} />
+      <Route path="/services/promotions" element={<ListPromotions />} />
+      <Route path="/services/sponsored" element={<ListSponsoredProduct />} />
+      <Route path="/services/sponsored/create" element={<CreateSponsoredProduct />} />
+
 
       {/* Dashboard Routes */}
       <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />

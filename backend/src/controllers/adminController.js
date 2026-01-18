@@ -571,7 +571,15 @@ export const getAllSponsoredProducts = async (req, res) => {
       filter.isActive = true;
     } else if (status === "inactive") {
       filter.isActive = false;
+    } else if (status === "approved") {
+      filter.status = "approved"
+    } else if (status === "pending") {
+      filter.status = "pending"
+    } else if (status === "rejected") {
+      filter.status = "rejected"
     }
+    
+
 
     const limit = 10;
     const skip = (page - 1) * limit;
@@ -616,29 +624,70 @@ export const updateSponsoredProduct = async (req, res) => {
 
   try {
     const product = await SponsoredProduct.findById(id);
-    if (!product)
-      return res.status(404).json({ success: false, error: "Product not found" });
-
-    // Convert isActive to boolean if present
-    if (req.body.isActive !== undefined) {
-      product.isActive =
-        req.body.isActive === "true" || req.body.isActive === true;
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: "Product not found",
+      });
     }
 
-    // Update simple fields
+    /* =========================
+       BASIC FIELDS
+    ========================== */
     if (req.body.name !== undefined) product.name = req.body.name;
-    if (req.body.price !== undefined) product.price = req.body.price;
+    if (req.body.category !== undefined) product.category = req.body.category;
+    if (req.body.description !== undefined) product.description = req.body.description;
+    if (req.body.price !== undefined) product.price = Number(req.body.price);
+    if (req.body.duration !== undefined) product.duration = Number(req.body.duration);
     if (req.body.link !== undefined) product.link = req.body.link;
 
-    // Handle product image upload (fieldname: "product")
+    /* =========================
+       STATUS CHANGE (ADMIN)
+       approved | rejected | pending
+       → dates & activation handled by schema hook
+    ========================== */
+    if (req.body.status !== undefined) {
+      const validStatus = ["pending", "approved", "rejected"];
+      if (!validStatus.includes(req.body.status)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid status value",
+        });
+      }
+
+      product.status = req.body.status;
+      // ⚠️ startDate, endDate & isActive are handled in pre-save hook
+    }
+
+    /* =========================
+       MANUAL ACTIVE TOGGLE
+       (Allowed only if approved)
+    ========================== */
+    if (req.body.isActive !== undefined) {
+      const isActiveValue =
+        req.body.isActive === true || req.body.isActive === "true";
+
+      // Only block if trying to ACTIVATE
+      if (isActiveValue && product.status !== "approved") {
+        return res.status(400).json({
+          success: false,
+          error: "Only approved products can be activated",
+        });
+      }
+
+      product.isActive = isActiveValue;
+    }
+
+    /* =========================
+       IMAGE HANDLING
+    ========================== */
     if (req.file) {
       product.image = `/uploads/products/${req.file.filename}`;
     } else if (req.body.image !== undefined) {
-      // preserve or update image URL string
       product.image = req.body.image;
     }
 
-    await product.save();
+    await product.save(); // triggers schema hooks
 
     return res.json({
       success: true,
@@ -654,6 +703,8 @@ export const updateSponsoredProduct = async (req, res) => {
     });
   }
 };
+
+
 
 // Delete Sponsored Product
 export const deleteSponsoredProduct = async (req, res) => {

@@ -48,9 +48,19 @@ export default function ProductSponsorshipSection() {
           onChange={(e) => setStatus(e.target.value)}
           className="border p-2 rounded"
         >
-          <option value="">All Status</option>
+          <option value="">All</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
+        </select>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="border p-2 rounded"
+        >
+          <option value="">Status</option>
+          <option value="approved">Approved</option>
+          <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
         </select>
       </div>
       {/* PRODUCT LIST */}
@@ -73,7 +83,7 @@ export default function ProductSponsorshipSection() {
             <p><b>Owner:</b> {product.owner.fullName}</p>
             <p><b>Price:</b> {product.price}</p>
             <p><b>Descriptiom:</b> {product.description}</p>
-            <p><b>Due Date:</b> {product.endAt}</p>
+            <p><b>Due Date:</b> {product.endDate}</p>
             <p><b>Status:</b> {product.isActive ? "Active" : "Inactive"}</p>
             {product.link && (
               <p>
