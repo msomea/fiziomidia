@@ -8,6 +8,9 @@
  * @param {string} [options.logoURL] - Optional logo URL
  * @returns {string} - HTML email content
  */
+import dayjs from "dayjs";
+const currentYear = dayjs().year();
+
 export const generateFiziomidiaEmail = ({
   title,
   body,
@@ -39,7 +42,7 @@ export const generateFiziomidiaEmail = ({
         </tr>
         <tr>
           <td style="padding: 20px; font-size: 12px; color: #6b7280; text-align: center; background-color: #f3f4f6;">
-            © 2025 Fiziomidia. All rights reserved.
+            © 2026 Fiziomidia. All rights reserved.
           </td>
         </tr>
       </table>

@@ -7,12 +7,15 @@ import config from "./config/index.js";
 import ForumSub from "./models/ForumSub.js";
 import cron from "node-cron";
 import { fileURLToPath } from "url";
+import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
 
 // Schedule a cron job to clean expired sponsorships daily at midnight
 cron.schedule("0 0 * * *", async () => {
   console.log("🕓 Running daily sponsorship cleanup...");
   await ForumSub.cleanExpiredSponsorships();
 });
+// Clone job to remove expired sponsored product
+expireSponsoredProductsJob();
 
 // Routes
 import authRoutes from "./routes/auth.js";

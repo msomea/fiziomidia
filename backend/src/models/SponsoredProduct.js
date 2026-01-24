@@ -90,4 +90,7 @@ SponsoredProductSchema.pre("save", function (next) {
   next();
 });
 
+// Index
+SponsoredProductSchema.index({ isActive: 1, endDate: 1 });
+
 export default mongoose.model("SponsoredProduct", SponsoredProductSchema);
