@@ -39,10 +39,11 @@ export const getConversations = async (req, res) => {
     const userId = req.user._id;
     const conversations = await Conversation.find({
       participants: userId,
+      deletedBy: { $ne: userId }, // Exclude conversations deleted by current user
     })
       .populate(
         "participants",
-        "fullName _id isLoggedIn profileImageUrl phone role"
+        "fullName _id isLoggedIn profileImageUrl phone role",
       )
       .populate({
         path: "lastMessage",
@@ -122,23 +123,39 @@ export const getConversationWithUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-// Delete a conversation by ID
+// Delete a conversation by ID (soft delete - only for current user)
 export const deleteConversation = async (req, res) => {
   try {
     const conversationId = req.params.id;
+    const userId = req.user._id;
 
-    const conversation = await Conversation.findOneAndDelete({
+    // Find conversation and check if user is a participant
+    const conversation = await Conversation.findOne({
       _id: conversationId,
-      participants: req.user._id, // only allow deletion if the user is a participant
+      participants: userId,
     });
 
     if (!conversation) {
       return res.status(404).json({ message: "Conversation not found" });
     }
 
-    // Messages will be deleted automatically via pre('findOneAndDelete') middleware
+    // Add current user to deletedBy array if not already there
+    if (!conversation.deletedBy.includes(userId)) {
+      conversation.deletedBy.push(userId);
+      await conversation.save();
+    }
 
-    return res.status(200).json({ message: "Conversation and messages deleted" });
+    // Check if all participants have deleted the conversation
+    if (conversation.deletedBy.length === conversation.participants.length) {
+      // All participants deleted it, so delete all messages and the conversation
+      await Message.deleteMany({ _id: { $in: conversation.messages } });
+      await Conversation.findByIdAndDelete(conversationId);
+      return res
+        .status(200)
+        .json({ message: "Conversation and all messages deleted permanently" });
+    }
+
+    return res.status(200).json({ message: "Conversation deleted for you" });
   } catch (err) {
     console.error("Error deleting conversation:", err);
     res.status(500).json({ message: "Server error" });

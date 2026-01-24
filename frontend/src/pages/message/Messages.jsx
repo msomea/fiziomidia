@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Trash2 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
@@ -133,6 +134,40 @@ const MessagesPage = () => {
     }
   };
 
+  // ------------------------------------------
+  // DELETE CONVERSATION
+  // ------------------------------------------
+  const handleDeleteConversation = async (e, convId) => {
+    e.stopPropagation();
+
+    const backup = [...conversations];
+    setConversations((prev) => prev.filter((c) => c._id !== convId));
+
+    const toastUndo = toast((t) => (
+      <div className="flex items-center gap-3">
+        <span>Conversation deleted</span>
+        <button
+          onClick={() => {
+            setConversations(backup);
+            toast.dismiss(t.id);
+          }}
+          className="text-blue-500 underline"
+        >
+          Undo
+        </button>
+      </div>
+    ));
+
+    setTimeout(async () => {
+      try {
+        await API.delete(`/conversations/${convId}`);
+      } catch (error) {
+        setConversations(backup);
+        toast.error("Could not delete conversation");
+      }
+    }, 5000);
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
@@ -164,41 +199,53 @@ const MessagesPage = () => {
           );
 
           return (
-            <button
+            <div
               key={conv._id}
-              onClick={() => handleOpenConversation(conv._id, other._id)}
-              className="flex w-full text-left items-center gap-4 p-4 hover:bg-base-300 transition"
+              className="flex w-full items-center gap-4 p-4 hover:bg-base-300 transition"
             >
-              <div className="avatar">
-                <div className="w-12 rounded-full">
-                  <img
-                    src={
-                      other?.profileImageUrl
-                        ? `${API_URL}${other.profileImageUrl}`
-                        : avatar
-                    }
-                    alt={other?.fullName}
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1">
-                <div className="flex justify-between items-center">
-                  <h2 className="font-semibold">{other?.fullName}</h2>
-                  <span className="text-xs text-gray-400">
-                    {new Date(conv.updatedAt).toLocaleString()}
-                  </span>
+              <button
+                onClick={() => handleOpenConversation(conv._id, other._id)}
+                className="flex-1 text-left flex items-center gap-4"
+              >
+                <div className="avatar">
+                  <div className="w-12 rounded-full">
+                    <img
+                      src={
+                        other?.profileImageUrl
+                          ? `${API_URL}${other.profileImageUrl}`
+                          : avatar
+                      }
+                      alt={other?.fullName}
+                    />
+                  </div>
                 </div>
 
-                <p className="text-sm text-gray-500 truncate">
-                  {conv.lastMessage?.content || "No messages yet"}
-                </p>
-              </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-center">
+                    <h2 className="font-semibold">{other?.fullName}</h2>
+                    <span className="text-xs text-gray-400">
+                      {new Date(conv.updatedAt).toLocaleString()}
+                    </span>
+                  </div>
 
-              {conv.unread > 0 && (
-                <span className="badge badge-primary">{conv.unread}</span>
-              )}
-            </button>
+                  <p className="text-sm text-gray-500 truncate">
+                    {conv.lastMessage?.content || "No messages yet"}
+                  </p>
+                </div>
+
+                {conv.unread > 0 && (
+                  <span className="badge badge-primary">{conv.unread}</span>
+                )}
+              </button>
+
+              <button
+                onClick={(e) => handleDeleteConversation(e, conv._id)}
+                className="btn btn-ghost btn-sm text-error hover:bg-red-100"
+                title="Delete conversation"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           );
         })}
       </div>
