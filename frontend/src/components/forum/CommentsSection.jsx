@@ -3,12 +3,18 @@ import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useForum } from "../../context/ForumContext";
+import { API_URL } from "../../config/constants";
+import avatar from "../../assets/avatar.jpg";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 const CommentsSection = ({ post, user, fetchPost }) => {
   const [comment, setComment] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
+  const [sortBy, setSortBy] = useState("newest"); // "newest" or "oldest"
+  const [commentsPerPage] = useState(5);
+  const [displayedCount, setDisplayedCount] = useState(5);
   const { updatePostComments } = useForum();
 
   // Add comment
@@ -76,13 +82,52 @@ const CommentsSection = ({ post, user, fetchPost }) => {
     }
   };
 
+  // Sort comments based on selected option
+  const sortedComments = [...(post.comments || [])].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
+    } else {
+      return new Date(a.createdAt || a.updatedAt) - new Date(b.createdAt || b.updatedAt);
+    }
+  });
+
+  // Paginate comments
+  const displayedComments = sortedComments.slice(0, displayedCount);
+  const hasMore = displayedCount < sortedComments.length;
+
+  const handleLoadMore = () => {
+    setDisplayedCount(prev => prev + commentsPerPage);
+  };
+
   return (
     <div className="mt-6 bg-white shadow-sm rounded-xl p-4">
-      <h3 className="text-lg font-bold mb-3">Comments ({post.comments?.length || 0})</h3>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-bold">Comments ({post.comments?.length || 0})</h3>
+        {post.comments?.length > 0 && (
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setDisplayedCount(commentsPerPage); // Reset pagination on sort change
+            }}
+            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+          </select>
+        )}
+      </div>
 
       {post.comments?.length > 0 ? (
-        post.comments.map((c) => (
-          <div key={c._id} className="p-3 border-b border-gray-300 flex justify-between">
+        displayedComments.map((c) => (
+          <div key={c._id} className="p-3 border-b border-gray-300 flex gap-3 justify-between">
+            {/* Avatar */}
+            <img
+              src={c.author?.profileImageUrl ? `${API_URL}${c.author.profileImageUrl}` : avatar}
+              alt={c.author?.fullName || "User"}
+              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+            />
+            
             <div className="flex-1">
               {editingId === c._id ? (
                 <div>
@@ -110,7 +155,7 @@ const CommentsSection = ({ post, user, fetchPost }) => {
                 <>
                   <p className="text-gray-800">{c.content}</p>
                   <small className="text-gray-500">
-                    By {c.author.fullName} at {new Date(c.updatedAt).toLocaleString()}
+                    By <span className="font-medium">{c.author?.fullName || "Unknown"}</span> • {new Date(c.updatedAt || c.createdAt).toLocaleString()}
                   </small>
                 </>
               )}
@@ -130,6 +175,16 @@ const CommentsSection = ({ post, user, fetchPost }) => {
         ))
       ) : (
         <p className="text-gray-500 text-sm">No comments yet.</p>
+      )}
+
+      {/* Load More Button */}
+      {hasMore && (
+        <button
+          onClick={handleLoadMore}
+          className="w-full mt-3 py-2 text-caribbean font-medium hover:bg-alice rounded-lg transition-colors"
+        >
+          Load More Comments ({displayedCount} of {sortedComments.length})
+        </button>
       )}
 
       {/* Add Comment */}
