@@ -11,6 +11,7 @@ const requiredVars = [
   "STRIPE_WEBHOOK_SECRET",
   "CLOUDINARY_URL",
   "CLIENT_URL",
+  "RESEND_API_KEY",
 ];
 
 for (const key of requiredVars) {
@@ -45,6 +46,9 @@ export default {
 
   // Cloudinary
   cloudinaryUrl: process.env.CLOUDINARY_URL,
+
+  // Resend (email)
+  resendApiKey: process.env.RESEND_API_KEY,
 
   // Upload Directory
   uploadDir: process.env.UPLOAD_DIR || "uploads/",

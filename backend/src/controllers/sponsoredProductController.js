@@ -58,7 +58,8 @@ export const updateSponsoredProduct = async (req, res) => {
     let updateData = { ...req.body };
 
     if (req.file) {
-      updateData.image = await uploadToCloudinary(req.file.path, "sponsored-products");
+      // store local uploads path (cloud upload helper not present here)
+      updateData.image = `/uploads/products/${req.file.filename}`;
     }
 
     const updated = await SponsoredProduct.findByIdAndUpdate(
@@ -77,6 +78,18 @@ export const updateSponsoredProduct = async (req, res) => {
 // Admin — DELETE product
 export const deleteSponsoredProduct = async (req, res) => {
   try {
+    const product = await SponsoredProduct.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Not found" });
+
+    // only owner or admin can delete
+    if (
+      product.owner &&
+      product.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     await SponsoredProduct.findByIdAndDelete(req.params.id);
     res.json({ message: "Sponsored product deleted" });
   } catch (err) {

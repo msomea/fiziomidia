@@ -7,13 +7,18 @@ import dayjs from "dayjs";
 
 // GET /api/pts
 export const listPts = async (req, res) => {
-  // simple list with filter for verified/promotion
-  const { specialty, verified } = req.query;
-  const query = { role: "physiotherapist" };
-  if (specialty) query["ptProfile.specialties"] = specialty;
-  if (verified === "true") query["ptProfile.licenseVerified"] = true;
-  const pts = await User.find(query).limit(50).select("-passwordHash");
-  res.json({ pts });
+  try {
+    // simple list with filter for verified/promotion
+    const { specialty, verified } = req.query;
+    const query = { role: "physiotherapist" };
+    if (specialty) query["ptProfile.speciality"] = specialty;
+    if (verified === "true") query["ptProfile.licenses.verified"] = true;
+    const pts = await User.find(query).limit(50).select("-passwordHash");
+    res.json({ pts });
+  } catch (err) {
+    console.error("Error listing PTs:", err);
+    res.status(500).json({ error: "Failed to list PTs" });
+  }
 };
 
 // GET /api/pts/:id
@@ -34,14 +39,19 @@ export const getPTById = async (req, res) => {
 
 // PUT /api/pts/:id - only owner or admin
 export const updatePTProfile = async (req, res) => {
-  const id = req.params.id;
-  if (req.user.role !== "admin" && req.user._id.toString() !== id)
-    return res.status(403).json({ error: "Forbidden" });
-  const allowed = req.body;
-  const pt = await User.findByIdAndUpdate(id, allowed, { new: true }).select(
-    "-passwordHash"
-  );
-  res.json({ pt });
+  try {
+    const id = req.params.id;
+    if (req.user.role !== "admin" && req.user._id.toString() !== id)
+      return res.status(403).json({ error: "Forbidden" });
+    const allowed = req.body;
+    const pt = await User.findByIdAndUpdate(id, allowed, { new: true }).select(
+      "-passwordHash",
+    );
+    res.json({ pt });
+  } catch (err) {
+    console.error("Error updating PT profile:", err);
+    res.status(500).json({ error: "Failed to update PT profile" });
+  }
 };
 
 // Get saved PTs for a member

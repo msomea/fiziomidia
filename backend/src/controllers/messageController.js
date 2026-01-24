@@ -15,6 +15,12 @@ export const sendMessage = async (req, res) => {
       (p) => p.toString() !== sender.toString()
     );
 
+    if (!receiver) {
+      return res
+        .status(400)
+        .json({ message: "Invalid conversation participants" });
+    }
+
     const message = await Message.create({
       conversation: conversationId,
       sender,
@@ -62,10 +68,20 @@ export const deleteMessage = async (req, res) => {
     const msg = await Message.findById(messageId);
     if (!msg) return res.status(404).json({ error: "Message not found" });
 
+    // Authorization: only sender or admin may delete
+    const userId = req.user._id.toString();
+    const senderId =
+      msg.sender && msg.sender.toString
+        ? msg.sender.toString()
+        : String(msg.sender);
+    if (senderId !== userId && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
     // Remove from conversation.messages array
     await Conversation.updateOne(
       { _id: msg.conversation },
-      { $pull: { messages: messageId } }
+      { $pull: { messages: messageId } },
     );
 
     await msg.deleteOne();

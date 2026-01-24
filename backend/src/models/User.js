@@ -162,7 +162,36 @@ const PtProfileSchema = new Schema(
 );
 
 
-// Virtuals
+// Convenience virtuals that expose the first license fields for backward compatibility
+PtProfileSchema.virtual("firstLicense").get(function () {
+  return Array.isArray(this.licenses) && this.licenses.length > 0 ? this.licenses[0] : null;
+});
+
+PtProfileSchema.virtual("licenseNumber").get(function () {
+  const l = Array.isArray(this.licenses) && this.licenses[0];
+  return l ? l.licenseNumber : undefined;
+});
+
+PtProfileSchema.virtual("licenseImageUrl").get(function () {
+  const l = Array.isArray(this.licenses) && this.licenses[0];
+  return l ? l.licenseFileUrl : undefined;
+});
+
+PtProfileSchema.virtual("licenseVerificationStatus").get(function () {
+  const l = Array.isArray(this.licenses) && this.licenses[0];
+  return l ? l.verificationStatus : undefined;
+});
+
+PtProfileSchema.virtual("licenseVerified").get(function () {
+  const l = Array.isArray(this.licenses) && this.licenses[0];
+  return l ? l.verified : false;
+});
+
+PtProfileSchema.virtual("licenseSubmittedAt").get(function () {
+  const l = Array.isArray(this.licenses) && this.licenses[0];
+  return l ? l.submittedAt : undefined;
+});
+
 PtProfileSchema.virtual("verificationStatus").get(function () {
   if (!this.licenseNumber || !this.licenseImageUrl) return "incomplete";
   return this.licenseVerificationStatus;
@@ -247,8 +276,8 @@ const UserSchema = new Schema({
 UserSchema.index({ email: 1 });
 UserSchema.index({ role: 1 });
 UserSchema.index({ "ptProfile.speciality": 1 });
-UserSchema.index({ "ptProfile.licenseVerificationStatus": 1 });
-UserSchema.index({ "ptProfile.licenseNumber": 1 });
+UserSchema.index({ "ptProfile.licenses.verificationStatus": 1 });
+UserSchema.index({ "ptProfile.licenses.licenseNumber": 1 });
 UserSchema.index({ createdAt: -1 });
 
 // Indexes for location search
@@ -262,24 +291,24 @@ UserSchema.pre("save", function (next) {
   try {
     // If ptProfile is null, skip all ptProfile-specific checks
     const hasPT = !!this.ptProfile;
-    // LICENSE VALIDATION
-    if (
-      hasPT &&
-      (this.isModified("ptProfile.licenseNumber") ||
-        this.isModified("ptProfile.licenseImageUrl"))
-    ) {
-      this.ptProfile.licenseVerified = false;
-      this.ptProfile.licenseVerificationStatus = "pending";
-      this.ptProfile.licenseSubmittedAt = new Date();
+    // LICENSE VALIDATION: operate on licenses[] (first license is primary)
+    if (hasPT && this.isModified("ptProfile.licenses")) {
+      const first =
+        Array.isArray(this.ptProfile.licenses) && this.ptProfile.licenses[0];
+      if (first) {
+        first.verified = false;
+        first.verificationStatus = first.verificationStatus || "pending";
+        first.submittedAt = first.submittedAt || new Date();
 
-      const licenseNumberRegex = /^MCT([A-Z]{2,3})?\d{4}$/;
-      if (
-        this.ptProfile.licenseNumber &&
-        !licenseNumberRegex.test(this.ptProfile.licenseNumber)
-      ) {
-        return next(
-          new Error("Invalid license number format. Must be MCT0123")
-        );
+        const licenseNumberRegex = /^MCT([A-Z]{2,3})?\d{4}$/;
+        if (
+          first.licenseNumber &&
+          !licenseNumberRegex.test(first.licenseNumber)
+        ) {
+          return next(
+            new Error("Invalid license number format. Must be MCT0123"),
+          );
+        }
       }
     }
     // RATINGS VALIDATION
@@ -293,13 +322,8 @@ UserSchema.pre("save", function (next) {
           return next(new Error("Rating must be between 0 and 5"));
         }
 
-        if (
-          typeof ratings.count === "number" &&
-          ratings.count < 0
-        ) {
-          return next(
-            new Error("Ratings count cannot be negative")
-          );
+        if (typeof ratings.count === "number" && ratings.count < 0) {
+          return next(new Error("Ratings count cannot be negative"));
         }
       }
     }
@@ -311,8 +335,8 @@ UserSchema.pre("save", function (next) {
         if (wh.from && wh.to && wh.from >= wh.to) {
           return next(
             new Error(
-              `Invalid working hours for ${wh.dayOfWeek}: 'from' must be before 'to'`
-            )
+              `Invalid working hours for ${wh.dayOfWeek}: 'from' must be before 'to'`,
+            ),
           );
         }
       }
@@ -328,10 +352,13 @@ UserSchema.pre("save", function (next) {
 // Instance method: needs license review
 UserSchema.methods.needsLicenseReview = function () {
   if (!this.ptProfile) return false;
+  const first =
+    Array.isArray(this.ptProfile.licenses) && this.ptProfile.licenses[0];
+  if (!first) return false;
   return (
-    this.ptProfile.licenseVerificationStatus === "pending" &&
-    !!this.ptProfile.licenseNumber &&
-    !!this.ptProfile.licenseImageUrl
+    first.verificationStatus === "pending" &&
+    !!first.licenseNumber &&
+    !!first.licenseFileUrl
   );
 };
 
@@ -368,16 +395,18 @@ UserSchema.methods.getNextAvailableSlot = function () {
   return null;
 };
 
-// Static: find PTs pending verification
+// Static: find PTs pending verification (checks licenses[] for a pending entry)
 UserSchema.statics.findPendingVerifications = function () {
   return this.find({
     role: "physiotherapist",
-    "ptProfile.licenseVerificationStatus": "pending",
-    "ptProfile.licenseNumber": { $exists: true },
-    "ptProfile.licenseImageUrl": { $exists: true },
-  }).select(
-    "fullName email ptProfile.licenseNumber ptProfile.licenseImageUrl ptProfile.licenseSubmittedAt"
-  );
+    "ptProfile.licenses": {
+      $elemMatch: {
+        verificationStatus: "pending",
+        licenseNumber: { $exists: true },
+        licenseFileUrl: { $exists: true },
+      },
+    },
+  }).select("fullName email ptProfile");
 };
 
 export default mongoose.model("User", UserSchema);

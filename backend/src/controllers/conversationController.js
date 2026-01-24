@@ -3,24 +3,32 @@ import Message from "../models/Message.js";
 import User from "../models/User.js";
 
 export const createConversation = async (req, res) => {
-  const sender = req.user._id;
-  const { receiver } = req.body;
+  try {
+    const sender = req.user._id;
+    const { receiver } = req.body;
 
-  let convo = await Conversation.findOne({
-    participants: { $all: [sender, receiver] },
-  }).lean();
+    if (!receiver)
+      return res.status(400).json({ message: "Receiver required" });
 
-  if (convo) return res.json(convo);
+    let convo = await Conversation.findOne({
+      participants: { $all: [sender, receiver] },
+    }).lean();
 
-  const newConvo = await Conversation.create({
-    participants: [sender, receiver],
-    unreadCounts: {
-      [sender]: 0,
-      [receiver]: 0,
-    },
-  });
+    if (convo) return res.json(convo);
 
-  res.status(201).json(newConvo.toObject());
+    const newConvo = await Conversation.create({
+      participants: [sender, receiver],
+      unreadCounts: {
+        [sender]: 0,
+        [receiver]: 0,
+      },
+    });
+
+    res.status(201).json(newConvo.toObject());
+  } catch (err) {
+    console.error("Create conversation error:", err);
+    res.status(500).json({ message: "Failed to create conversation" });
+  }
 };
 
 

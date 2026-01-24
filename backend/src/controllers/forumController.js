@@ -2,6 +2,7 @@ import ForumSub from "../models/ForumSub.js";
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
+import escapeRegExp from "../utils/escapeRegExp.js";
 
 // ===== SUBS =====
 // List all forum subs with pagination and totalPosts dynamically calculated
@@ -16,9 +17,9 @@ export const listSubs = async (req, res) => {
       ? {
           $match: {
             $or: [
-              { title: { $regex: search, $options: "i" } },
-              { slug: { $regex: search, $options: "i" } },
-              { description: { $regex: search, $options: "i" } },
+              { title: { $regex: escapeRegExp(search), $options: "i" } },
+              { slug: { $regex: escapeRegExp(search), $options: "i" } },
+              { description: { $regex: escapeRegExp(search), $options: "i" } },
             ],
           },
         }

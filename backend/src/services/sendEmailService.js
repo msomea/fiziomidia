@@ -1,6 +1,13 @@
-import { Resend } from "resend"
+import { Resend } from "resend";
+import config from "../config/index.js";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+if (!config.resendApiKey) {
+  console.warn(
+    "RESEND_API_KEY is not configured — emails will fail to send in non-dev environments.",
+  );
+}
+
+const resend = new Resend(config.resendApiKey);
 
 /**
  * Send an email using Resend API
@@ -12,7 +19,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export const sendEmail = async ({ to, subject, html }) => {
   try {
     const response = await resend.emails.send({
-      from: `"FizioMidia" <onboarding@resend.dev>` ,
+      from: `"FizioMidia" <onboarding@resend.dev>`,
       to,
       subject,
       html,

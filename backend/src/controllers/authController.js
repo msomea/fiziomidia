@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import config from "../config/index.js";
 import User from "../models/User.js";
 import { sendEmail } from "../services/sendEmailService.js";
 import {
@@ -9,7 +10,7 @@ import {
 import { generateRandomToken } from "../utils/tokens.js";
 import { generateFiziomidiaEmail } from "../templates/emailHelper.js";
 
-const SALT_ROUNDS = 12;
+const SALT_ROUNDS = 10;
 const RESET_TOKEN_TTL = 10 * 60 * 1000; // 10 minutes
 const VERIFY_TOKEN_TTL = 60 * 60 * 1000; // 1 hour
 
@@ -58,9 +59,9 @@ export async function registerUser(req, res) {
     });
 
     // Create verification url
-    const verifyURL = `${process.env.CLIENT_URL}/verify-email/${verifyToken}`;
-    //Remove on Production
-    console.log("✅ ✅ ✅ Click to verify email", verifyURL)
+    const verifyURL = `${config.clientUrl}/verify-email/${verifyToken}`;
+    // Log only in debug mode
+    if (config.debug) console.log("✅ ✅ ✅ Click to verify email", verifyURL);
     // Save user once
     await user.save();
 
@@ -139,7 +140,7 @@ export async function requestPasswordReset(req, res) {
     user.resetTokenExpire = Date.now() + RESET_TOKEN_TTL;
     await user.save();
     
-    const resetURL = `${process.env.CLIENT_URL}/reset-password/${token}`;
+    const resetURL = `${config.clientUrl}/reset-password/${token}`;
     // Send Email
     const resetHTML = generateFiziomidiaEmail({
       title: "Reset Your Password",
@@ -153,8 +154,8 @@ export async function requestPasswordReset(req, res) {
       subject: "Reset your Fiziomidia password",
       html: resetHTML
     });
-    //Remove on Production
-    console.log("✅ ✅ ✅ Click to reset your Password", resetURL)
+    if (config.debug)
+      console.log("✅ ✅ ✅ Click to reset your Password", resetURL);
     return success(res, "Password reset link sent (if email exists)");
   } catch (err) {
     console.error("Request password reset error:", err);
@@ -196,7 +197,7 @@ export async function resetPassword(req, res) {
       title: "Your Password has been Changed",
       body: "<p>Your password was changed. If you did not perform this action, please contact support and login immediately to secure your account.</p>",
       buttonText: "Login",
-      buttonURL: "https://www.fiziomidia.org/login"
+      buttonURL: `${config.clientUrl}/login`,
     });
 
     await sendEmail({
@@ -288,7 +289,26 @@ export async function refreshToken(req, res) {
 
     // Find user who has this refresh token
     const user = await User.findOne({ "refreshTokens.token": token });
-    if (!user) return fail(res, 403, "Invalid refresh token");
+    if (!user) {
+      try {
+        const preview = String(token).slice(0, 12);
+        console.error(
+          `Refresh token not found in DB. tokenLen=${String(token).length} preview=${preview}`,
+        );
+        // Try a loose prefix search to help debug truncated/storage issues
+        const possible = await User.findOne({
+          "refreshTokens.token": { $regex: preview },
+        }).select("_id email refreshTokens");
+        console.error(
+          "Loose prefix match found:",
+          !!possible,
+          possible ? { id: possible._id, email: possible.email } : null,
+        );
+      } catch (e) {
+        console.error("Error during refresh debug search:", e);
+      }
+      return fail(res, 403, "Invalid refresh token");
+    }
 
     // Verify token signature/expiry
     let decoded;

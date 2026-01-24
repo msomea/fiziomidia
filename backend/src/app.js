@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import path from "path"
+import path from "path";
 import { ENV } from "./config/env.js";
 import config from "./config/index.js";
 import ForumSub from "./models/ForumSub.js";
@@ -28,7 +28,7 @@ import messageRoutes from "./routes/message.js";
 import conversationRoute from "./routes/conversation.js";
 import adminRoutes from "./routes/admin.js";
 import locationRoutes from "./routes/location.js";
-import sponsoredProduct from "./routes/sponsoredProduct.js"
+import sponsoredProduct from "./routes/sponsoredProduct.js";
 
 const __filename = fileURLToPath(import.meta.url);
 // __dirname should point to the directory of this file (backend/src)

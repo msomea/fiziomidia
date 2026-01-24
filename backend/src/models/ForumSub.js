@@ -65,6 +65,18 @@ ForumSubSchema.pre("remove", async function (next) {
   }
 });
 
+// Ensure cascade when using findOneAndDelete / findByIdAndDelete
+ForumSubSchema.post("findOneAndDelete", async function (doc) {
+  if (!doc) return;
+  try {
+    const Post = mongoose.model("Post");
+    await Post.deleteMany({ sub: doc._id });
+    console.log(`All posts under sub "${doc.title}" removed (findOneAndDelete).`);
+  } catch (err) {
+    console.error("Error deleting related posts on findOneAndDelete:", err);
+  }
+});
+
 // 🔹 Auto-deactivate expired sponsorships
 ForumSubSchema.pre("save", function (next) {
   const now = new Date();

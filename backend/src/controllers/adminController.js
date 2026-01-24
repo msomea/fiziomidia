@@ -6,6 +6,7 @@ import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
+import escapeRegExp from "../utils/escapeRegExp.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -18,10 +19,11 @@ export const listUsers = async (req, res) => {
 
     // Search by fullName or email
     if (search) {
+      const esc = escapeRegExp(search);
       query.$or = [
-        { fullName: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
+        { fullName: { $regex: esc, $options: "i" } },
+        { email: { $regex: esc, $options: "i" } },
+        { phone: { $regex: esc, $options: "i" } },
       ];
     }
 
@@ -195,16 +197,18 @@ export const getAllAppointments = async (req, res) => {
 
     // global search
     if (search) {
+      const escSearch = escapeRegExp(search);
       query.$or = [
-        { notes: new RegExp(search, "i") },
-        { adminNotes: new RegExp(search, "i") }
+        { notes: new RegExp(escSearch, "i") },
+        { adminNotes: new RegExp(escSearch, "i") },
       ];
     }
 
     // Filter by clinic NAME
     if (clinic) {
+      const escClinic = escapeRegExp(clinic);
       const clinicMatches = await Clinic.find({
-        name: new RegExp(clinic, "i")
+        name: new RegExp(escClinic, "i"),
       }).select("_id");
 
       query.clinic = { $in: clinicMatches.map((c) => c._id) };
@@ -212,8 +216,9 @@ export const getAllAppointments = async (req, res) => {
 
     // Filter by PT NAME
     if (pt) {
+      const escPt = escapeRegExp(pt);
       const ptMatches = await User.find({
-        fullName: new RegExp(pt, "i")
+        fullName: new RegExp(escPt, "i"),
       }).select("_id");
 
       query.pt = { $in: ptMatches.map((u) => u._id) };
@@ -221,8 +226,9 @@ export const getAllAppointments = async (req, res) => {
 
     // Filter Requester NAME
     if (requester) {
+      const escReq = escapeRegExp(requester);
       const reqMatches = await User.find({
-        fullName: new RegExp(requester, "i")
+        fullName: new RegExp(escReq, "i"),
       }).select("_id");
 
       query.requester = { $in: reqMatches.map((u) => u._id) };
@@ -320,12 +326,13 @@ export const getAllPromotions = async (req, res) => {
     let ptIds = [];
 
     if (search) {
+      const esc = escapeRegExp(search);
       const pts = await User.find({
         role: "physiotherapist",
         $or: [
-          { fullName: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } }
-        ]
+          { fullName: { $regex: esc, $options: "i" } },
+          { email: { $regex: esc, $options: "i" } },
+        ],
       }).select("_id");
       ptIds = pts.map((p) => p._id);
     }
@@ -563,7 +570,8 @@ export const getAllSponsoredProducts = async (req, res) => {
 
     // Search by product name
     if (search) {
-      filter.name = { $regex: search, $options: "i" };
+      const esc = escapeRegExp(search);
+      filter.name = { $regex: esc, $options: "i" };
     }
 
     // Filter by active / inactive

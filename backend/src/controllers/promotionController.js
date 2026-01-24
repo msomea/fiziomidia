@@ -61,7 +61,13 @@ export const stripeWebhook = async (req, res) => {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(req.rawBody, sig, config.stripe.webhookSecret);
+    // express.raw middleware sets req.body to a Buffer for this route
+    const raw = req.body;
+    event = stripe.webhooks.constructEvent(
+      raw,
+      sig,
+      config.stripe.webhookSecret,
+    );
   } catch (err) {
     console.error("Webhook signature verification failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);

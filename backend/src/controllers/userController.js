@@ -35,7 +35,7 @@ export const getProfile = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id).select("-password"); // hide password
+    const user = await User.findById(id).select("-passwordHash"); // hide passwordHash
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({ user });
@@ -82,16 +82,25 @@ export const updateProfile = async (req, res) => {
     // 2️⃣ Handle Location (parse and add to updateData)
     // --------------------------------------------
     if (location) {
-      const loc =
-        typeof location === "string" ? JSON.parse(location) : location;
+      let loc;
+      if (typeof location === "string") {
+        try {
+          loc = JSON.parse(location);
+        } catch (e) {
+          console.warn("Invalid location JSON:", e);
+          return res.status(400).json({ error: "Invalid location JSON" });
+        }
+      } else {
+        loc = location;
+      }
 
       updateData.location = {
         type: "Point",
-        coordinates: loc.coordinates || [0, 0],
-        region: loc.region,
-        district: loc.district,
-        ward: loc.ward,
-        street: loc.street,
+        coordinates: (loc && loc.coordinates) || [0, 0],
+        region: loc?.region,
+        district: loc?.district,
+        ward: loc?.ward,
+        street: loc?.street,
       };
     }
 
@@ -163,7 +172,7 @@ export const updateProfile = async (req, res) => {
 
       const hasGalleryInPayload = Object.prototype.hasOwnProperty.call(
         ptProfilePayload,
-        "gallery"
+        "gallery",
       );
 
       let finalGallery = [];
@@ -219,14 +228,52 @@ export const updateProfile = async (req, res) => {
           ...ptProfilePayload,
         };
       } else {
-        // Fallback: add/overwrite top-level licenseImageUrl for backward compat
+        // Fallback: attach license to ptProfile.licenses (create array if missing)
         if (!updateData.ptProfile) updateData.ptProfile = {};
-        updateData.ptProfile.licenseImageUrl = licenseUrl;
+
+        // Try to obtain a license number from provided payload or form fields
+        const providedLicenseNumber =
+          (ptProfilePayload &&
+          Array.isArray(ptProfilePayload.licenses) &&
+          ptProfilePayload.licenses.length > 0
+            ? ptProfilePayload.licenses[ptProfilePayload.licenses.length - 1]
+                .licenseNumber
+            : null) ||
+          req.body.licenseNumber ||
+          req.body["ptProfile[licenseNumber]"] ||
+          null;
+
+        const licenseEntry = {
+          licenseNumber: providedLicenseNumber,
+          licenseFileUrl: licenseUrl,
+          licenseFileType: req.files.licenseDocument[0].mimetype,
+          verificationStatus: "pending",
+          verified: false,
+          submittedAt: new Date(),
+        };
+
+        updateData.ptProfile.licenses = [
+          ...(user.ptProfile && Array.isArray(user.ptProfile.licenses)
+            ? user.ptProfile.licenses
+            : []),
+          licenseEntry,
+        ];
       }
     }
 
     // ------------------------------------------------------------
-    // 5️⃣ Handle password hashing IF password was changed
+    // 5️⃣ Validate email uniqueness and handle password hashing
+    // ------------------------------------------------------------
+    // If updating email, ensure it's not taken by another user
+    if (email && email !== user.email) {
+      const other = await User.findOne({ email });
+      if (other && other._id.toString() !== userId.toString()) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Handle password hashing IF password was changed
     // ------------------------------------------------------------
     if (password) {
       const hash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -236,36 +283,46 @@ export const updateProfile = async (req, res) => {
     // ------------------------------------------------------------
     // 6️⃣ Handle upgrade to physiotherapist
     // ------------------------------------------------------------
-    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
-  
-      if (!user.ptProfile) {
-        user.ptProfile = {};
-      }
-
-      // Ensure licenses array exists
-      if (!Array.isArray(user.ptProfile.licenses)) {
-        user.ptProfile.licenses = [];
-      }
-
+    if (
+      upgradeToPhysiotherapist === true ||
+      upgradeToPhysiotherapist === "true"
+    ) {
       // Create new license entry (only ONE allowed)
+      const providedLicenseNumber =
+        req.body["ptProfile[licenseNumber]"] || req.body.licenseNumber || null;
       const newLicense = {
-        licenseNumber: req.body["ptProfile[licenseNumber]"],
-        licenseFileUrl: req.uploadedLicense?.url || null,
-        licenseFileType: req.uploadedLicense?.type || null,
+        licenseNumber: providedLicenseNumber,
+        licenseFileUrl:
+          req.files && req.files.licenseDocument && req.files.licenseDocument[0]
+            ? `/uploads/licenses/${req.files.licenseDocument[0].filename}`
+            : null,
+        licenseFileType:
+          req.files && req.files.licenseDocument && req.files.licenseDocument[0]
+            ? req.files.licenseDocument[0].mimetype
+            : null,
         verificationStatus: "pending",
         verified: false,
         submittedAt: new Date(),
       };
 
-      // Replace previous license if any
-      user.ptProfile.licenses = [newLicense];
+      // Prepare ptProfile on updateData (do not mutate `user` directly)
+      const basePtProfile =
+        (user.ptProfile &&
+          user.ptProfile.toObject &&
+          user.ptProfile.toObject()) ||
+        user.ptProfile ||
+        {};
+      updateData.ptProfile = {
+        ...(updateData.ptProfile || {}),
+        ...basePtProfile,
+        licenses: [newLicense],
+        isVerified: false,
+      };
+
       // Update PT profile meta
       updateData.role = "pendingPhysiotherapist";
-      updateData.physioApproval = false;   
-      updateData.ptProfile.isVerified = false; 
+      updateData.physioApproval = false;
     }
-
-
 
     // ------------------------------------------------------------
     // 7️⃣ Save and return final updated user

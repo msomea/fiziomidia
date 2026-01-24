@@ -1,4 +1,5 @@
 import Location from "../models/Location.js";
+import escapeRegExp from "../utils/escapeRegExp.js";
 
 export const getRegions = async (req, res) => {
   try {
@@ -16,8 +17,9 @@ export const getDistricts = async (req, res) => {
     const { region }= req.params;
     if (!region) return res.status(400).json({ error: "Region required" });
     // Case-insensitive match
+    const escRegion = escapeRegExp(region);
     const districts = await Location.distinct("district", {
-      region: { $regex: new RegExp(`^${region}$`, "i") },
+      region: { $regex: `^${escRegion}$`, $options: "i" },
     });
     res.json(districts.map((name) => ({ name })));
   } catch (err) {
@@ -32,8 +34,9 @@ export const getWards = async (req, res) => {
     const { district} = req.params;
     if (!district)
       return res.status(400).json({ error: "Region and District required" });
+    const escDistrict = escapeRegExp(district);
     const wards = await Location.distinct("ward", {
-      district: { $regex: new RegExp(`^${district}$`, "i") },
+      district: { $regex: `^${escDistrict}$`, $options: "i" },
     });
     res.json(wards.map((name) => ({ name })));
   } catch (err) {
@@ -49,8 +52,9 @@ export const getStreets = async (req, res) => {
     if (!ward)
       return res.status(400).json({ error: "Region, District, and Ward required" });
 
+    const escWard = escapeRegExp(ward);
     const streets = await Location.distinct("street", {
-      ward: { $regex: new RegExp(`^${ward}$`, "i") },
+      ward: { $regex: `^${escWard}$`, $options: "i" },
     });
     res.json(streets.map((name) => ({ name })));
   } catch (err) {

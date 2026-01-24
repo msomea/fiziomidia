@@ -95,7 +95,7 @@ const Experience = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Expirience</h2>
+        <h2 className="text-xl font-bold text-caribbean">Experience</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
