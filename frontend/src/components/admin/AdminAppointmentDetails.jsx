@@ -36,9 +36,10 @@ export default function AdminAppointmentDetails() {
       });
 
       setLoading(false);
-    } catch {
+    } catch (err) {
+      console.error("Error fetching appointment details:", err);
       toast.error("Failed to load appointment");
-
+      setLoading(false);
     }
   };
 
@@ -59,7 +60,8 @@ export default function AdminAppointmentDetails() {
       if (!res.data.success) throw new Error();
 
       toast.success("Appointment updated");
-    } catch {
+    } catch (err) {
+      console.error("Error updating appointment:", err);
       toast.error("Failed to update appointment");
     }
   };

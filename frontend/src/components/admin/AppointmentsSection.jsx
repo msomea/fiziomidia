@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { Loader2 } from "lucide-react";
-import CollapsibleSection from "./CallapsibleSection";
+import CollapsibleSection from "./CollapsibleSection";
 
 export default function AdminAppointments() {
   const [appointments, setAppointments] = useState([]);

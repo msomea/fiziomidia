@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Filter } from "lucide-react";
 import API from "../../api/axios";
-import CollapsibleSection from "./CallapsibleSection";
+import CollapsibleSection from "./CollapsibleSection";
 import { Link } from "react-router";
 
 export default function AdminUsers() {

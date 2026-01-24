@@ -87,7 +87,7 @@ const SponsoredContent = () => {
   const scrollRight = () => {
     goToPage((page + 1) % totalPages);
   };
-  console.log(products)
+
   return (
     <section ref={sectionRef} className="bg-white py-16 flex items-center">
       <div className="max-w-6xl mx-auto px-4 relative w-full">

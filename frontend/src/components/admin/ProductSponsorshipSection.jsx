@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSponsoredProducts } from "../../api/admin";
-import CollapsibleSection from "./CallapsibleSection";
+import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { dayjs } from "dayjs";
@@ -29,7 +29,7 @@ export default function ProductSponsorshipSection() {
       toast.error("Failed to load sponsored products");
     }
   };
-  console.log(products)
+
   return (
     <CollapsibleSection title="Sponsored Products">
       

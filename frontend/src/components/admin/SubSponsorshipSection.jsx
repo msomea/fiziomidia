@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchForumSubs } from "../../api/admin";
-import CollapsibleSection from "./CallapsibleSection";
+import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 

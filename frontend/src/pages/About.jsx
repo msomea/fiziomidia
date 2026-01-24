@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
+import API from "../api/axios";
 
 const servicesList = [
   { title: "Physiotherapy Consultation", description: "Expert advice and treatment plans for your condition." },
@@ -10,21 +11,32 @@ const servicesList = [
 
 const About = () => {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       toast.error("Please fill in all fields!");
       return;
     }
-    // TODO: Send form data to backend
-    toast.success("Message sent successfully!");
-    setFormData({ name: "", email: "", message: "" });
+    
+    setLoading(true);
+    try {
+      // Send form data to backend - adjust endpoint as needed
+      await API.post("/contacts", formData);
+      toast.success("Message sent successfully!");
+      setFormData({ name: "", email: "", message: "" });
+    } catch (err) {
+      console.error("Error sending message:", err);
+      toast.error(err.response?.data?.error || "Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -94,8 +106,8 @@ const About = () => {
               required
             />
             <div className="flex justify-end">
-              <button type="submit" className="btn bg-caribbean text-white p-1 hover:bg-tufts">
-                Send Message
+              <button type="submit" className="btn bg-caribbean text-white p-1 hover:bg-tufts" disabled={loading}>
+                {loading ? "Sending..." : "Send Message"}
               </button>
             </div>
           </form>

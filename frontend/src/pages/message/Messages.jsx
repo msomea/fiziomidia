@@ -57,11 +57,23 @@ const MessagesPage = () => {
   useEffect(() => {
     // Backend emits `message:new`. Some older code may emit `messageReceived`.
     const handleMessage = (msg) => {
+      // Validate message structure before processing
+      if (!msg || typeof msg !== 'object') {
+        console.warn("Invalid message structure received:", msg);
+        return;
+      }
+      
       // Normalize payload: accept either { conversationId } or { conversation }
       const conversationId = msg.conversationId || msg.conversation;
       const sender = msg.sender || msg.from;
       const receiver = msg.receiver || msg.to;
       const content = msg.content || msg.body || "";
+      
+      // Validate required fields
+      if (!conversationId || !sender) {
+        console.warn("Missing required message fields:", { conversationId, sender });
+        return;
+      }
 
       setConversations((prev) => {
         const existing = prev.find((c) => c._id === conversationId);
@@ -229,7 +241,7 @@ const MessagesPage = () => {
                   </div>
 
                   <p className="text-sm text-gray-500 truncate">
-                    {conv.lastMessage?.content || "No messages yet"}
+                    {conv.lastMessage?.content || "No New messages"}
                   </p>
                 </div>
 

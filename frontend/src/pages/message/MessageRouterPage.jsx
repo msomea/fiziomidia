@@ -17,16 +17,25 @@ export default function MessageRouterPage() {
       } catch (err) {
         if (err.response?.status === 404) {
           // 2. Create new
-          const createRes = await API.post("/conversations", {
-            receiver: receiverId,
-          });
-          return navigate(`/messages/${createRes.data._id}`);
+          try {
+            const createRes = await API.post("/conversations", {
+              receiver: receiverId,
+            });
+            return navigate(`/messages/${createRes.data._id}`);
+          } catch (createErr) {
+            console.error("Error creating conversation:", createErr);
+            navigate("/messages");
+          }
+        } else {
+          // Handle non-404 errors
+          console.error("Error loading conversation:", err);
+          navigate("/messages");
         }
       }
     };
 
     loadConversation();
-  }, [receiverId]);
+  }, [receiverId, navigate]);
 
   return <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />

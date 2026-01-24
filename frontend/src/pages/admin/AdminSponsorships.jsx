@@ -69,7 +69,7 @@ const AdminSponsorships = () => {
       toast.success("Sponsorship updated successfully.");
       fetchSubs();
     } catch (err) {
-      console.error(err);
+      console.error("Error updating sponsorship:", err);
       toast.error("Failed to update sponsorship.");
     }
   };
@@ -82,7 +82,7 @@ const AdminSponsorships = () => {
       toast.success("Sponsorship removed.");
       fetchSubs();
     } catch (err) {
-      console.error(err);
+      console.error("Error removing sponsorship:", err);
       toast.error("Failed to remove sponsorship.");
     }
   };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchAdminPromotions } from "../../api/admin";
-import CollapsibleSection from "./CallapsibleSection";
+import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import { Link } from "react-router";

@@ -93,7 +93,7 @@ export default function AppRoutes() {
       <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
       <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
       <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
-      {/* Temp routes for debuging */}
+      {/* Temp routes for debugging */}
       
       
     </Routes>

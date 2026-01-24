@@ -61,39 +61,40 @@ export const useUnreadMessages = () => {
       const conversationId = msg.conversationId || msg.conversation;
       const sender = msg.sender || msg.from;
 
-      console.log("📨 message:new received", {
-        conversationId,
-        sender,
-        currentUserId: user._id,
-        msg,
-      });
-
       // Only increment if message is from another user
-      if (sender !== user._id && msg.unread !== null && msg.unread !== undefined) {
-        console.log("✅ Updating unread count:", msg.unread);
+      if (
+        sender !== user._id &&
+        msg.unread !== null &&
+        msg.unread !== undefined
+      ) {
         // Update the map for this conversation
         conversationUnreadRef.current[conversationId] = msg.unread;
 
         // Recalculate total unread
         const total = Object.values(conversationUnreadRef.current).reduce(
           (sum, count) => sum + (count || 0),
-          0
+          0,
         );
-        console.log("📊 Total unread after update:", total);
         setUnreadCount(total);
       }
     };
 
     // Handle message status update (e.g., message marked as read)
-    const handleMessageStatus = ({ messageId, status, conversationId }) => {
+    const handleMessageStatus = ({
+      messageId,
+      status,
+      conversationId: statusConversationId,
+    }) => {
       // When a message is marked as read, decrement unread count for that conversation
       if (status === "read") {
         setUnreadCount((prev) => Math.max(0, prev - 1));
 
-        // Update conversation unread map
-        const conversationId = Object.keys(conversationUnreadRef.current)[0]; // TODO: get actual conversation
-        if (conversationId && conversationUnreadRef.current[conversationId] > 0) {
-          conversationUnreadRef.current[conversationId]--;
+        // Update conversation unread map - use the conversationId from event
+        if (
+          statusConversationId &&
+          conversationUnreadRef.current[statusConversationId] > 0
+        ) {
+          conversationUnreadRef.current[statusConversationId]--;
         }
       }
     };
@@ -116,15 +117,11 @@ export const useUnreadMessages = () => {
     socket.on("message:status", handleMessageStatus);
     socket.on("conversation:read", handleConversationRead);
 
-    // Debug logging
-    console.log("✅ Socket listeners attached for user:", user._id);
-
     return () => {
       socket.off("message:new", handleNewMessage);
       socket.off("messageReceived", handleNewMessage);
       socket.off("message:status", handleMessageStatus);
       socket.off("conversation:read", handleConversationRead);
-      console.log("❌ Socket listeners removed");
     };
   }, [user?._id]);
 
