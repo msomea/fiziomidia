@@ -5,31 +5,37 @@ import API from "../../api/axios";
 import { useForum } from "../../context/ForumContext";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
-import { ChevronUp, ChevronDown } from "lucide-react";
+
+const COMMENTS_PER_PAGE = 5;
 
 const CommentsSection = ({ post, user, fetchPost }) => {
   const [comment, setComment] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
-  const [sortBy, setSortBy] = useState("newest"); // "newest" or "oldest"
-  const [commentsPerPage] = useState(5);
-  const [displayedCount, setDisplayedCount] = useState(5);
+  const [sortBy, setSortBy] = useState("newest");
+  const [displayedCount, setDisplayedCount] = useState(COMMENTS_PER_PAGE);
+
   const { updatePostComments } = useForum();
 
-  // Add comment
+  /* ---------------- Add Comment ---------------- */
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!comment.trim()) return;
-    if (!user || user.role === "guest") return toast.error("Login to comment");
+    if (!user?._id) return toast.error("Login to comment");
 
     try {
       setAdding(true);
-      const res = await API.post(`/forum/posts/${post.postId}/comments`, { content: comment });
+      const res = await API.post(
+        `/forum/posts/${post.postId}/comments`,
+        { content: comment.trim() }
+      );
+
       toast.success("Comment added");
       setComment("");
-      fetchPost();
+      setDisplayedCount(COMMENTS_PER_PAGE);
       updatePostComments(post.postId, res.data.comments);
+      fetchPost();
     } catch (err) {
       console.error(err);
       toast.error("Failed to add comment");
@@ -38,20 +44,24 @@ const CommentsSection = ({ post, user, fetchPost }) => {
     }
   };
 
-  // Delete comment
+  /* ---------------- Delete Comment ---------------- */
   const handleDeleteComment = async (commentId) => {
     try {
-      const res = await API.delete(`/forum/posts/${post.postId}/comments/${commentId}`);
+      const res = await API.delete(
+        `/forum/posts/${post.postId}/comments/${commentId}`
+      );
+
       toast.success("Comment deleted");
-      fetchPost();
+      setDisplayedCount(COMMENTS_PER_PAGE);
       updatePostComments(post.postId, res.data.comments);
+      fetchPost();
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete comment");
     }
   };
 
-  // Edit comment
+  /* ---------------- Edit Comment ---------------- */
   const startEdit = (c) => {
     setEditingId(c._id);
     setEditingContent(c.content);
@@ -63,54 +73,53 @@ const CommentsSection = ({ post, user, fetchPost }) => {
   };
 
   const saveEdit = async (commentId) => {
-    if (!user?._id) {
-      toast.error("You must be logged in to edit comments");
-      return;
-    }
     if (!editingContent.trim()) {
       toast.error("Comment cannot be empty");
       return;
     }
+
     try {
-      await API.put(`/forum/posts/${post.postId}/comments/${commentId}`, { content: editingContent });
+      const res = await API.put(
+        `/forum/posts/${post.postId}/comments/${commentId}`,
+        { content: editingContent.trim() }
+      );
+
       toast.success("Comment updated");
       cancelEdit();
-      fetchPost(); // refetch post
+      updatePostComments(post.postId, res.data.comments);
+      fetchPost();
     } catch (err) {
       console.error(err);
       toast.error("Failed to update comment");
     }
   };
 
-  // Sort comments based on selected option
+  /* ---------------- Sorting & Pagination ---------------- */
   const sortedComments = [...(post.comments || [])].sort((a, b) => {
-    if (sortBy === "newest") {
-      return new Date(b.createdAt || b.updatedAt) - new Date(a.createdAt || a.updatedAt);
-    } else {
-      return new Date(a.createdAt || a.updatedAt) - new Date(b.createdAt || b.updatedAt);
-    }
+    const dateA = new Date(a.updatedAt || a.createdAt);
+    const dateB = new Date(b.updatedAt || b.createdAt);
+    return sortBy === "newest" ? dateB - dateA : dateA - dateB;
   });
 
-  // Paginate comments
   const displayedComments = sortedComments.slice(0, displayedCount);
   const hasMore = displayedCount < sortedComments.length;
 
-  const handleLoadMore = () => {
-    setDisplayedCount(prev => prev + commentsPerPage);
-  };
-
+  /* ---------------- UI ---------------- */
   return (
     <div className="mt-6 bg-white shadow-sm rounded-xl p-4">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-bold">Comments ({post.comments?.length || 0})</h3>
+        <h3 className="text-lg font-bold">
+          Comments ({post.comments?.length || 0})
+        </h3>
+
         {post.comments?.length > 0 && (
           <select
             value={sortBy}
             onChange={(e) => {
               setSortBy(e.target.value);
-              setDisplayedCount(commentsPerPage); // Reset pagination on sort change
+              setDisplayedCount(COMMENTS_PER_PAGE);
             }}
-            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white cursor-pointer"
+            className="text-sm border rounded px-2 py-1"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -118,55 +127,72 @@ const CommentsSection = ({ post, user, fetchPost }) => {
         )}
       </div>
 
-      {post.comments?.length > 0 ? (
+      {displayedComments.length ? (
         displayedComments.map((c) => (
-          <div key={c._id} className="p-3 border-b border-gray-300 flex gap-3 justify-between">
-            {/* Avatar */}
+          <div
+            key={c._id}
+            className="p-3 border-b border-gray-300 flex gap-3"
+          >
             <img
-              src={c.author?.profileImageUrl ? `${API_URL}${c.author.profileImageUrl}` : avatar}
+              src={
+                c.author?.profileImageUrl
+                  ? `${API_URL}${c.author.profileImageUrl}`
+                  : avatar
+              }
               alt={c.author?.fullName || "User"}
-              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+              className="w-8 h-8 rounded-full object-cover"
             />
-            
+
             <div className="flex-1">
               {editingId === c._id ? (
-                <div>
+                <>
                   <textarea
+                    autoFocus
                     value={editingContent}
                     onChange={(e) => setEditingContent(e.target.value)}
-                    className="w-full border border-gray-400 rounded-lg p-2 mb-2"
+                    className="w-full border rounded-lg p-2 mb-2"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => saveEdit(c._id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                      className="bg-blue-500 text-white px-3 py-1 rounded"
                     >
                       Save
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500"
+                      className="bg-gray-400 text-white px-3 py-1 rounded"
                     >
                       Cancel
                     </button>
                   </div>
-                </div>
+                </>
               ) : (
                 <>
                   <p className="text-gray-800">{c.content}</p>
                   <small className="text-gray-500">
-                    By <span className="font-medium">{c.author?.fullName || "Unknown"}</span> • {new Date(c.updatedAt || c.createdAt).toLocaleString()}
+                    By <span className="font-medium">
+                      {c.author?.fullName || "Unknown"}
+                    </span>{" "}
+                    • {new Date(c.updatedAt || c.createdAt).toLocaleString()}
+                    {c.updatedAt !== c.createdAt && " (edited)"}
                   </small>
                 </>
               )}
             </div>
 
-            {user && user._id === c.author._id && editingId !== c._id && (
-              <div className="flex gap-2 ml-4">
-                <button onClick={() => startEdit(c)} className="text-blue-500 hover:underline">
+            {user?._id === c.author?._id && editingId !== c._id && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => startEdit(c)}
+                  className="text-blue-500 hover:underline"
+                >
                   Edit
                 </button>
-                <button onClick={() => handleDeleteComment(c._id)} className="text-red-500 hover:underline">
+                <button
+                  onClick={() => handleDeleteComment(c._id)}
+                  className="text-red-500 hover:underline"
+                >
                   Delete
                 </button>
               </div>
@@ -177,32 +203,32 @@ const CommentsSection = ({ post, user, fetchPost }) => {
         <p className="text-gray-500 text-sm">No comments yet.</p>
       )}
 
-      {/* Load More Button */}
       {hasMore && (
         <button
-          onClick={handleLoadMore}
-          className="w-full mt-3 py-2 text-caribbean font-medium hover:bg-alice rounded-lg transition-colors"
+          onClick={() =>
+            setDisplayedCount((prev) => prev + COMMENTS_PER_PAGE)
+          }
+          className="w-full mt-3 py-2 font-medium hover:bg-gray-100 rounded-lg"
         >
-          Load More Comments ({displayedCount} of {sortedComments.length})
+          Load more ({displayedCount}/{sortedComments.length})
         </button>
       )}
 
-      {/* Add Comment */}
       <form onSubmit={handleAddComment} className="flex gap-2 mt-4">
         <input
           type="text"
-          placeholder={user?._id ? "Add a comment..." : "Login to comment"}
+          placeholder={user?._id ? "Add a comment…" : "Login to comment"}
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          className="flex-1 border border-gray-400 rounded-lg p-2"
+          className="flex-1 border rounded-lg p-2"
           disabled={!user?._id}
         />
         <button
           type="submit"
-          className="bg-caribbean text-white px-4 py-2 rounded-lg"
           disabled={adding || !user?._id}
+          className="bg-caribbean text-white px-4 py-2 rounded-lg"
         >
-          {adding ? "Posting..." : "Post"}
+          {adding ? "Posting…" : "Post"}
         </button>
       </form>
     </div>

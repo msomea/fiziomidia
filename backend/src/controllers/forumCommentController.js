@@ -44,14 +44,16 @@ export const updateComment = async (req, res) => {
   try {
     const { commentId } = req.params;
     const { content } = req.body;
-    const userId = req.user._id;
-    const comment = await Comment.findById(commentId);
-    if (!comment) return res.status(404).json({ error: "Comment not found" });
 
-    const authorId =
-      comment.author && comment.author._id
-        ? comment.author._id.toString()
-        : comment.author.toString();
+    const userId = req.user._id.toString();
+
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const authorId = comment.author.toString();
+
     if (authorId !== userId) {
       return res
         .status(403)
@@ -61,12 +63,16 @@ export const updateComment = async (req, res) => {
     comment.content = content;
     await comment.save();
 
-    res.json({ message: "Comment updated successfully", comment });
+    res.json({
+      message: "Comment updated successfully",
+      comment
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "❌ Failed to update comment" });
   }
 };
+
 
 
 // Delete a comment (owner only or admin)
