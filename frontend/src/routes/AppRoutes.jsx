@@ -78,8 +78,8 @@ export default function AppRoutes() {
 
       {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />
-      <Route path="/messages/:id" element={<ConversationPage />} />
       <Route path="/messages/user/:receiverId" element={<MessageRouterPage />} />
+      <Route path="/messages/:id" element={<ConversationPage />} />
 
       {/* Profile Settings Routes */}
       <Route path="/settings/pt/:id" element={<PTProfileSettings />} />

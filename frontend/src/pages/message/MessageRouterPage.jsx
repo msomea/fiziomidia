@@ -10,18 +10,20 @@ export default function MessageRouterPage() {
   useEffect(() => {
     const loadConversation = async () => {
       try {
-        // 1. Try fetch existing
+        // 1. Try fetch existing conversation with this user
         const res = await API.get(`/conversations/user/${receiverId}`);
         const conversation = res.data;
-        return navigate(`/messages/${conversation._id}`);
+        // Navigate using receiverId (otherUserId), not conversation._id
+        return navigate(`/messages/${receiverId}`);
       } catch (err) {
         if (err.response?.status === 404) {
-          // 2. Create new
+          // 2. Create new conversation
           try {
             const createRes = await API.post("/conversations", {
               receiver: receiverId,
             });
-            return navigate(`/messages/${createRes.data._id}`);
+            // Navigate using receiverId (otherUserId), not conversation._id
+            return navigate(`/messages/${receiverId}`);
           } catch (createErr) {
             console.error("Error creating conversation:", createErr);
             navigate("/messages");
