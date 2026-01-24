@@ -1,6 +1,6 @@
 import HeroSection from "../components/home/HeroSection";
 //import HeroSection from "../components/HeroSection";
-import ServiceCards from "../components/ServiceCards";
+import ServiceCards from "../components/home/ServiceCards";
 import CallToAction from "../components/home/CallToAction";
 import FindProfessionals from "../components/home/FindProfessionals";
 import SponsoredContent from "../components/home/SponsoredContent";

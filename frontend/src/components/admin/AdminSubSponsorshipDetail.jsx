@@ -95,7 +95,7 @@ export default function AdminSponsorshipDetail() {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sponsorship...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sub..</p>
       </div>
     );
   }

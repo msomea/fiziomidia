@@ -198,7 +198,7 @@ export default function ConversationPage() {
     }, 5000);
   };
 
-  if (loading || !product) {
+  if (loading || !conversation) {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />

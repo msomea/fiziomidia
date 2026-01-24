@@ -1,4 +1,4 @@
-import { Stethoscope, GraduationCap, Users } from "lucide-react";
+import { Stethoscope, GraduationCap, Users, Target } from "lucide-react";
 
 export default function ServiceCards() {
   const services = [
@@ -10,12 +10,17 @@ export default function ServiceCards() {
     {
       title: "Educational Resources",
       icon: <GraduationCap size={32} className="text-tufts" />,
-      desc: "Access Access verified educational content created by physiotherapy professionals.",
+      desc: "Access verified educational content created by physiotherapy professionals.",
     },
     {
       title: "Community Forum",
       icon: <Users size={32} className="text-caribbean" />,
       desc: "Discuss conditions, treatments, and get advice from professionals and peers",
+    },
+    {
+      title: "Product Promotion",
+      icon: <Target size={32} className="text-tufts" />,
+      desc: "Reach a targeted audience and potential customers of physiotherapy product, services and equipments.",
     },
   ];
 

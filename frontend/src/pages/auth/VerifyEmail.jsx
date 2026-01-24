@@ -29,7 +29,7 @@ export default function VerifyEmail() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-white">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Promotion...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading...</p>
       </div>
     );
   }
