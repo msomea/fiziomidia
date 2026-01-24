@@ -1,4 +1,4 @@
-import { Stethoscope, GraduationCap, Users, Target } from "lucide-react";
+import { Stethoscope, GraduationCap, Users, Target, MessageCircle } from "lucide-react";
 
 export default function ServiceCards() {
   const services = [
@@ -22,6 +22,11 @@ export default function ServiceCards() {
       icon: <Target size={32} className="text-tufts" />,
       desc: "Reach a targeted audience and potential customers of physiotherapy product, services and equipments.",
     },
+    {
+      title: "Instant Messaging",
+      icon: <MessageCircle size={32} className="text-caribbean" />,
+      desc: "Connect directly with physiotherapists in real-time to discuss your health concerns and get personalized guidance.",
+    },
   ];
 
   return (
@@ -31,7 +36,7 @@ export default function ServiceCards() {
           Everything you need for<span className="text-caribbean"> Physiotherapy </span>
         </h2>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
           {services.map((service, index) => (
             <div
               key={index}

@@ -12,6 +12,7 @@ import Experience from "../../components/ptsetting/Experience";
 import Education from "../../components/ptsetting/Education";
 import WorkingHours from "../../components/ptsetting/WorkingHours";
 import AvailabilitySection from "../../components/ptsetting/AvailabilitySection";
+import PasswordChangeSection from "../../components/ptsetting/PasswordChangeSection";
 import GallerySection from "../../components/ptsetting/GallerySection";
 import SaveButton from "../../components/ptsetting/SaveButton";
 import LocationSelector from "../../components/ptsetting/LocationSelector";
@@ -322,6 +323,7 @@ const PTProfileSettings = () => {
         {/* Right Column */}
         <div className="space-y-6">
           <AvailabilitySection formData={formData} handleChange={handleChange} />
+          <PasswordChangeSection />
           <SaveButton loading={loading} />
         </div>
       </form>
