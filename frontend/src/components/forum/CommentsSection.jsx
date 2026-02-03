@@ -5,6 +5,7 @@ import API from "../../api/axios";
 import { useForum } from "../../context/ForumContext";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
+import CommentItem from "./CommentItem";
 
 const COMMENTS_PER_PAGE = 5;
 
@@ -43,6 +44,24 @@ const CommentsSection = ({ post, user, fetchPost }) => {
       setAdding(false);
     }
   };
+  /* ----------------------- Reply Comment ----------------------- */
+  const handleReply = async (parentId, content) => {
+  if (!user?._id) return toast.error("Login to reply");
+
+  try {
+    const res = await API.post(
+      `/forum/posts/${post.postId}/comments`,
+      { content, parentComment: parentId }
+    );
+
+    updatePostComments(post.postId, res.data.comments);
+    fetchPost();
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to post reply");
+  }
+};
+
 
   /* ---------------- Delete Comment ---------------- */
   const handleDeleteComment = async (commentId) => {
@@ -95,7 +114,11 @@ const CommentsSection = ({ post, user, fetchPost }) => {
   };
 
   /* ---------------- Sorting & Pagination ---------------- */
-  const sortedComments = [...(post.comments || [])].sort((a, b) => {
+  const topLevelComments = (post.comments || []).filter(
+    (c) => !c.parentComment
+  );
+
+  const sortedComments = [...topLevelComments].sort((a, b) => {
     const dateA = new Date(a.updatedAt || a.createdAt);
     const dateB = new Date(b.updatedAt || b.createdAt);
     return sortBy === "newest" ? dateB - dateA : dateA - dateB;
@@ -129,79 +152,25 @@ const CommentsSection = ({ post, user, fetchPost }) => {
 
       {displayedComments.length ? (
         displayedComments.map((c) => (
-          <div
+          <CommentItem
             key={c._id}
-            className="p-3 border-b border-gray-300 flex gap-3"
-          >
-            <img
-              src={
-                c.author?.profileImageUrl
-                  ? `${API_URL}${c.author.profileImageUrl}`
-                  : avatar
-              }
-              alt={c.author?.fullName || "User"}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-
-            <div className="flex-1">
-              {editingId === c._id ? (
-                <>
-                  <textarea
-                    autoFocus
-                    value={editingContent}
-                    onChange={(e) => setEditingContent(e.target.value)}
-                    className="w-full border rounded-lg p-2 mb-2"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => saveEdit(c._id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={cancelEdit}
-                      className="bg-gray-400 text-white px-3 py-1 rounded"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-gray-800">{c.content}</p>
-                  <small className="text-gray-500">
-                    By <span className="font-medium">
-                      {c.author?.fullName || "Unknown"}
-                    </span>{" "}
-                    • {new Date(c.updatedAt || c.createdAt).toLocaleString()}
-                    {c.updatedAt !== c.createdAt && " (edited)"}
-                  </small>
-                </>
-              )}
-            </div>
-
-            {user?._id === c.author?._id && editingId !== c._id && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => startEdit(c)}
-                  className="text-blue-500 hover:underline"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDeleteComment(c._id)}
-                  className="text-red-500 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
+            comment={c}
+            user={user}
+            postId={post.postId}
+            onReply={handleReply}
+            onEdit={startEdit}
+            onDelete={handleDeleteComment}
+            editingId={editingId}
+            editingContent={editingContent}
+            setEditingContent={setEditingContent}
+            cancelEdit={cancelEdit}
+            saveEdit={saveEdit}
+          />
         ))
       ) : (
-        <p className="text-gray-500 text-sm">No comments yet.</p>
+        <p className="text-gray-500 text-sm">No comments yet. Be the first to add</p>
       )}
+
 
       {hasMore && (
         <button

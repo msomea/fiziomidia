@@ -7,6 +7,10 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ForumProvider } from "./context/ForumContext";
 import { setLogoutHandler } from "./api/axios";
 import { useEffect } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 function AppContent() {
   const { logout } = useAuth();

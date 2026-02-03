@@ -1,43 +1,64 @@
+import { error } from "node:console";
 import Comment from "../models/Comment.js";
 import Post from "../models/Post.js";
+import { buildCommentTree } from "../utils/comments.js"
 
 // Get all comments for a post
 export const listComments = async (req, res, next) => {
   try {
     const { id } = req.params;
     const comments = await Comment.find({ post: id })
-      .populate("author", "username email")
+      .populate("author", "fullName profileImageUrl email")
       .sort({ createdAt: 1 });
-    res.json(comments);
+
+    const nestedComments = buildCommentTree(comments);
+    res.json({ ...Post.toObject(), comments: nestedComments });
   } catch (err) {
     next(err);
   }
 };
 
 // Add a comment to a post
-export const addComment = async (req, res, next) => {
+export const addComment = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { content } = req.body;
+    const { id } = req.params; // postId
+    const { content, parentComment = null } = req.body;
     const author = req.user._id;
-    // Optional: check if post exists
-    const post = await Post.findById(id);
-    if (!post) return res.status(404).json({ message: "Post not found" });
 
-    const comment = await Comment.create({
+    // Check post
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Validate content
+    if (!content?.trim()) {
+      return res.status(400).json({ error: "Comment cannot be empty" });
+    }
+
+    // Create comment (top-level or reply)
+    await Comment.create({
       post: id,
       author,
-      content,
+      content: content.trim(),
+      parentComment
     });
 
-    await Post.findByIdAndUpdate(id, { $push: { comments: comment._id } });
+    // Fetch ALL comments for this post
+    const comments = await Comment.find({ post: id })
+      .populate("author", "fullName profileImageUrl")
+      .sort({ createdAt: 1 });
 
-    res.status(201).json({comment});
+    res.status(201).json({
+      message: "Comment added",
+      comments
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "❌ Failed to add comment" });
   }
 };
+
 
 // Update own comment
 export const updateComment = async (req, res) => {
@@ -72,8 +93,6 @@ export const updateComment = async (req, res) => {
     res.status(500).json({ error: "❌ Failed to update comment" });
   }
 };
-
-
 
 // Delete a comment (owner only or admin)
 export const deleteComment = async (req, res) => {

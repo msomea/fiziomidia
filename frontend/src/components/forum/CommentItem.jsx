@@ -1,0 +1,167 @@
+// src/components/forum/CommentItem.jsx
+import React, { useState } from "react";
+import dayjs from "dayjs";
+import avatar from "../../assets/avatar.jpg";
+import { API_URL } from "../../config/constants";
+
+const CommentItem = ({
+  comment,
+  user,
+  postId,
+  onReply,
+  onEdit,
+  onDelete,
+  editingId,
+  editingContent,
+  setEditingContent,
+  cancelEdit,
+  saveEdit
+}) => {
+  const [replying, setReplying] = useState(false);
+  const [replyContent, setReplyContent] = useState("");
+
+  const isAuthor = user?._id === comment.author?._id;
+  const isEditing = editingId === comment._id;
+
+  const getAvatar = (author) =>
+  author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
+
+
+  /* ---------------- Reply ---------------- */
+  const submitReply = () => {
+    if (!replyContent.trim()) return;
+    onReply(comment._id, replyContent.trim());
+    setReplyContent("");
+    setReplying(false);
+  };
+
+  return (
+    <div className="mt-4">
+      <div className="flex gap-3">
+        <img src={getAvatar(comment.author)}
+        alt="avatar"
+          className="w-8 h-8 rounded-full object-cover"
+      />
+
+        {/* <img
+          src={
+            comment.author?.profileImageUrl
+              ? `${API_URL}${comment.author.profileImageUrl}`
+              : avatar
+          }
+          alt="avatar"
+          className="w-8 h-8 rounded-full object-cover"
+        /> */}
+
+        <div className="flex-1">
+          <div className="bg-gray-100 rounded-lg p-3">
+            <div className="flex justify-between items-center mb-1">
+              <p className="font-medium text-sm">
+                {comment.author?.fullName || "Unknown"}
+              </p>
+              <span className="text-xs text-gray-500">
+                {dayjs(comment.createdAt).fromNow()}
+              </span>
+            </div>
+
+            {/* ---------------- Content / Edit ---------------- */}
+            {isEditing ? (
+              <>
+                <textarea
+                  value={editingContent}
+                  onChange={(e) => setEditingContent(e.target.value)}
+                  className="w-full border rounded p-2 text-sm"
+                />
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => saveEdit(comment._id)}
+                    className="text-sm text-caribbean font-medium"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="text-sm text-gray-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm">{comment.content}</p>
+            )}
+          </div>
+
+          {/* ---------------- Actions ---------------- */}
+          <div className="flex gap-3 mt-1 text-xs text-gray-500">
+            {user?._id && (
+              <button onClick={() => setReplying(!replying)}>Reply</button>
+            )}
+
+            {isAuthor && !isEditing && (
+              <>
+                <button onClick={() => onEdit(comment)}>Edit</button>
+                <button
+                  onClick={() => onDelete(comment._id)}
+                  className="text-red-500"
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* ---------------- Reply Box ---------------- */}
+          {replying && (
+            <div className="mt-2">
+              <textarea
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                placeholder="Write a reply…"
+                className="w-full border rounded p-2 text-sm"
+              />
+              <div className="flex gap-2 mt-1">
+                <button
+                  onClick={submitReply}
+                  className="text-sm text-caribbean font-medium"
+                >
+                  Reply
+                </button>
+                <button
+                  onClick={() => setReplying(false)}
+                  className="text-sm text-gray-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ---------------- Nested Replies ---------------- */}
+          {comment.replies?.length > 0 && (
+            <div className="ml-6 border-l pl-4 mt-3">
+              {comment.replies.map((reply) => (
+                <CommentItem
+                  key={reply._id}
+                  comment={reply}
+                  user={user}
+                  postId={postId}
+                  onReply={onReply}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  editingId={editingId}
+                  editingContent={editingContent}
+                  setEditingContent={setEditingContent}
+                  cancelEdit={cancelEdit}
+                  saveEdit={saveEdit}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CommentItem;
