@@ -85,20 +85,45 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
   /* ---------------- Delete Comment ---------------- */
   const handleDeleteComment = async (commentId) => {
-    try {
+    const backup = post.comments;
+    setComments((prev) => prev.filter((c) => c._id !== commentId));
 
-      const res = await API.delete(
-        `/forum/posts/${post.postId}/comments/${commentId}`
-      );
+    let undoClicked = false;
 
-      toast.success("Comment deleted");
-      setDisplayedCount(COMMENTS_PER_PAGE);
-      updatePostComments(post.postId, res.data.comments);
-      fetchPost();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to delete comment");
-    }
+    const toastUndo = toast((t) => (
+      <div className="flex items-center gap-3">
+        <span>Comment deleted</span>
+        <button
+          onClick={() => {
+            undoClicked = true;
+            setComments(backup);
+            toast.dismiss(t.id);
+          }}
+          className="text-blue-500 underline"
+        >
+          Undo
+        </button>
+      </div>
+    ));
+
+    const timeoutId = setTimeout(async () => {
+      // Only proceed with delete if undo was not clicked
+      if (undoClicked) return;
+
+      try {
+        const res = await API.delete(
+          `/forum/posts/${post.postId}/comments/${commentId}`
+        );
+
+        setDisplayedCount(COMMENTS_PER_PAGE);
+        updatePostComments(post.postId, res.data.comments);
+        fetchPost();
+      } catch (err) {
+        console.error(err);
+        setComments(backup);
+        toast.error("Failed to delete comment");
+      }
+    }, 5000);
   };
 
   /* ---------------- Edit Comment ---------------- */
