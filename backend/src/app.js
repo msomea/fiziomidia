@@ -77,6 +77,18 @@ const legacyUploadsDir = path.join(__dirname, "services", "uploads");
 app.use("/uploads", express.static(legacyUploadsDir));
 
 // --- Routes ---
+// Attach socket.io instance (set in server.js) to each request so
+// controllers can emit events using `req.io`.
+app.use((req, res, next) => {
+  try {
+    const io = req.app.get("io");
+    if (io) req.io = io;
+  } catch (e) {
+    // if not initialized yet, skip attaching
+  }
+  next();
+});
+
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

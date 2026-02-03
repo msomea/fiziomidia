@@ -4,6 +4,7 @@ import Conversation from "../models/Conversation.js";
 import { userInfo } from "os";
 
 let onlineUsers = {};
+let io;
 
 export const initSocket = (server) => {
   const io = new Server(server, {
@@ -29,6 +30,13 @@ export const initSocket = (server) => {
       if (onlineUsers[userId].length === 1) {
         io.emit("userWentOnline", { userId });
       }
+
+      // Broadcast new comment
+      socket.on("comment:new", async (data) => {
+        const { postId, comment } = data;
+        // Emit to everyone in the post room except sender
+        socket.to(postId).emit("comment:new", comment);
+      });
     });
 
     // SEND MESSAGE EVENT
@@ -93,6 +101,17 @@ export const initSocket = (server) => {
       } catch (err) {
         console.error("Socket sendMessage error:", err);
       }
+    });
+
+    // JOIN / LEAVE POST ROOMS (clients join a room per post to receive comment events)
+    socket.on("joinPostRoom", (postId) => {
+      if (!postId) return;
+      socket.join(postId);
+    });
+
+    socket.on("leavePostRoom", (postId) => {
+      if (!postId) return;
+      socket.leave(postId);
     });
 
     // MESSAGE DELIVERED (recipient acknowledges receipt)
@@ -236,3 +255,5 @@ export const initSocket = (server) => {
 
   return io;
 };
+
+export { io };

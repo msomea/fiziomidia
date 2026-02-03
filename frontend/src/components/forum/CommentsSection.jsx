@@ -1,5 +1,5 @@
 // src/components/forum/CommentsSection.jsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useForum } from "../../context/ForumContext";
@@ -9,8 +9,9 @@ import CommentItem from "./CommentItem";
 
 const COMMENTS_PER_PAGE = 5;
 
-const CommentsSection = ({ post, user, fetchPost }) => {
-  const [comment, setComment] = useState("");
+const CommentsSection = ({ post, user, fetchPost, socket }) => {
+  const [comments, setComments] = useState(post.comments || []);
+  const [newComment, setNewComment] = useState("");
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
@@ -19,21 +20,40 @@ const CommentsSection = ({ post, user, fetchPost }) => {
 
   const { updatePostComments } = useForum();
 
+  useEffect(() => {
+    setComments(post.comments || []);
+  }, [post.comments]);
+
+  useEffect(() => {
+    if (!socket || !post?.postId) return;
+    // For comment events we re-fetch the post so the client always
+    // receives the fully nested comment tree (keeps logic simple).
+    socket.on("comment:new", () => fetchPost());
+    socket.on("comment:updated", () => fetchPost());
+    socket.on("comment:deleted", () => fetchPost());
+
+    return () => {
+      socket.off("comment:new");
+      socket.off("comment:updated");
+      socket.off("comment:deleted");
+    };
+  }, [socket, post?.postId]);
+
+
   /* ---------------- Add Comment ---------------- */
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!comment.trim()) return;
+    if (!newComment.trim()) return;
     if (!user?._id) return toast.error("Login to comment");
 
     try {
       setAdding(true);
-      const res = await API.post(
-        `/forum/posts/${post.postId}/comments`,
-        { content: comment.trim() }
-      );
+      const res = await API.post(`/forum/posts/${post.postId}/comments`, {
+        content: newComment.trim(),
+      });
 
       toast.success("Comment added");
-      setComment("");
+      setNewComment("");
       setDisplayedCount(COMMENTS_PER_PAGE);
       updatePostComments(post.postId, res.data.comments);
       fetchPost();
@@ -66,6 +86,7 @@ const CommentsSection = ({ post, user, fetchPost }) => {
   /* ---------------- Delete Comment ---------------- */
   const handleDeleteComment = async (commentId) => {
     try {
+
       const res = await API.delete(
         `/forum/posts/${post.postId}/comments/${commentId}`
       );
@@ -114,9 +135,7 @@ const CommentsSection = ({ post, user, fetchPost }) => {
   };
 
   /* ---------------- Sorting & Pagination ---------------- */
-  const topLevelComments = (post.comments || []).filter(
-    (c) => !c.parentComment
-  );
+  const topLevelComments = comments.filter((c) => !c.parentComment);
 
   const sortedComments = [...topLevelComments].sort((a, b) => {
     const dateA = new Date(a.updatedAt || a.createdAt);
@@ -187,8 +206,8 @@ const CommentsSection = ({ post, user, fetchPost }) => {
         <input
           type="text"
           placeholder={user?._id ? "Add a comment…" : "Login to comment"}
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
           className="flex-1 border rounded-lg p-2"
           disabled={!user?._id}
         />

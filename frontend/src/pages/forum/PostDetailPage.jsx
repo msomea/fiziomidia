@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
 import dayjs from "dayjs";
+import { getSocket } from "../../socket";
 
 /* 🔧 Build nested comment tree (safe even if already nested) */
 const buildCommentTree = (comments = []) => {
@@ -35,10 +36,9 @@ const PostDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { updatePost } = useForum();
-
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const socket = getSocket();
   const fetchPost = async () => {
     try {
       const res = await API.get(`/forum/posts/${id}`);
@@ -64,6 +64,15 @@ const PostDetailPage = () => {
 
   useEffect(() => {
     fetchPost();
+    if (!id) return;
+
+    // Join a room for this post
+    socket.emit("joinPostRoom", id);
+
+    // Cleanup on unmount
+    return () => {
+      socket.emit("leavePostRoom", id);
+    };
   }, [id]);
 
   if (loading) {
@@ -100,7 +109,7 @@ const PostDetailPage = () => {
       <p className="mt-4 mb-6">{post.body}</p>
 
       {/* ✅ Nested comments now rendered */}
-      <CommentsSection post={post} user={user} fetchPost={fetchPost} />
+      <CommentsSection post={post} user={user} fetchPost={fetchPost} socket={socket}/>
     </div>
   );
 };
