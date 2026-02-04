@@ -1,31 +1,49 @@
 import { ShieldCheck, User, Stethoscope } from "lucide-react";
 
+const ROLE_CONFIG = {
+  admin: {
+    label: "Admin",
+    className: "badge badge-error text-white",
+    Icon: ShieldCheck,
+  },
+  physiotherapist: {
+    label: "Physiotherapist",
+    className: "badge badge-info text-white",
+    Icon: Stethoscope,
+  },
+  member: {
+    label: "Member",
+    className: "badge badge-success text-white",
+    Icon: User,
+  },
+};
+
 const ProfileBadge = ({ role }) => {
-  switch (role) {
-    case "Admin":
-      return (
-        <span className="badge badge-error gap-1 flex items-center text-white">
-          <ShieldCheck size={14} />
-          <span className="hidden sm:inline">Admin</span>
-        </span>
-      );
-    case "PT":
-      return (
-        <span className="badge badge-info gap-1 flex items-center text-white">
-          <Stethoscope size={14} />
-          <span className="hidden sm:inline">PT</span>
-        </span>
-      );
-    case "Member":
-      return (
-        <span className="badge badge-success gap-1 flex items-center text-white">
-          <User size={14} />
-          <span className="hidden sm:inline">Member</span>
-        </span>
-      );
-    default:
-      return null;
-  }
+  if (!role) return null;
+
+  const key = role.toLowerCase();
+  const config = ROLE_CONFIG[key];
+
+  if (!config) return null;
+
+  const { label, className, Icon } = config;
+
+  return (
+    <div className="relative group inline-flex">
+      {/* Badge */}
+      <span className={`${className} flex items-center justify-center p-2`}>
+        <Icon size={16} />
+      </span>
+
+      {/* Tooltip */}
+      <span className="absolute -top-9 left-1/2 -translate-x-1/2 
+                       whitespace-nowrap rounded bg-gray-900 px-2 py-1 
+                       text-xs text-white opacity-0 group-hover:opacity-100
+                       transition-opacity duration-200 pointer-events-none">
+        {label}
+      </span>
+    </div>
+  );
 };
 
 export default ProfileBadge;

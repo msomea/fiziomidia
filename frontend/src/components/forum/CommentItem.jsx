@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import dayjs from "dayjs";
 import avatar from "../../assets/avatar.jpg";
 import { API_URL } from "../../config/constants";
+import ProfileBadge from "../Badge";
 
 const CommentItem = ({
   comment,
@@ -55,10 +56,16 @@ const CommentItem = ({
 
         <div className="flex-1">
           <div className="bg-gray-100 rounded-lg p-3">
-            <div className="flex justify-between items-center mb-1">
-              <p className="font-medium text-sm">
-                {comment.author?.fullName || "Unknown"}
-              </p>
+            <div className="flex flex-wrap justify-between items-center mb-1 gap-y-1">
+              {/* Name + Badge */}
+              <div className="flex items-center gap-1">
+                <p className="font-medium text-sm truncate max-w-[70vw] sm:max-w-none">
+                  {comment.author?.fullName || "Guest"}
+                </p>
+                <ProfileBadge role={comment.author?.role} />
+              </div>
+
+              {/* Time */}
               <span className="text-xs text-gray-500">
                 {dayjs(comment.createdAt).fromNow()}
               </span>
@@ -139,7 +146,7 @@ const CommentItem = ({
 
           {/* ---------------- Nested Replies ---------------- */}
           {comment.replies?.length > 0 && (
-            <div className="ml-6 border-l pl-4 mt-3">
+            <div className="mt-3 ml-2 sm:ml-6 pl-2 sm:pl-4 border-l">
               {comment.replies.map((reply) => (
                 <CommentItem
                   key={reply._id}
@@ -158,6 +165,7 @@ const CommentItem = ({
               ))}
             </div>
           )}
+
         </div>
       </div>
     </div>

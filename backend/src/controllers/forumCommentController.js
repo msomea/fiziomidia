@@ -9,7 +9,7 @@ export const listComments = async (req, res, next) => {
   try {
     const { id } = req.params;
     const comments = await Comment.find({ post: id })
-      .populate("author", "fullName profileImageUrl email")
+      //.populate("author", "fullName profileImageUrl role")
       .sort({ createdAt: 1 });
 
     const nestedComments = buildCommentTree(comments);
