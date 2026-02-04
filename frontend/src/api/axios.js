@@ -25,8 +25,7 @@ const API = axios.create({
 // Request interceptor
 API.interceptors.request.use(
   (config) => {
-    const storedUser = localStorage.getItem("user");
-    let accessToken = storedUser ? JSON.parse(storedUser).accessToken : null;
+    const accessToken = localStorage.getItem("accessToken");
     if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   },
@@ -35,7 +34,30 @@ API.interceptors.request.use(
 
 // Response interceptor
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If backend refreshed the access token on activity, update stored token
+    const refreshed =
+      response.headers &&
+      (response.headers["x-access-token"] ||
+        response.headers["X-Access-Token"]);
+    if (refreshed) {
+      const token = refreshed;
+      localStorage.setItem("accessToken", token);
+      // keep `user` object in sync if present
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          const u = JSON.parse(storedUser);
+          u.accessToken = token;
+          localStorage.setItem("user", JSON.stringify(u));
+        } catch (e) {
+          // ignore malformed user
+        }
+      }
+      API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -76,7 +98,6 @@ API.interceptors.response.use(
           setTimeout(() => {
             logoutHandler(); // Will use navigate() internally
           }, 800);
-
         } else {
           toast.error("Session expired. Please log in again.");
         }
@@ -90,9 +111,8 @@ API.interceptors.response.use(
         });
         const newAccessToken = res.data.accessToken;
         localStorage.setItem("accessToken", newAccessToken);
-        API.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${newAccessToken}`;
+        API.defaults.headers.common["Authorization"] =
+          `Bearer ${newAccessToken}`;
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
         return API(originalRequest);
@@ -109,7 +129,7 @@ API.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default API;

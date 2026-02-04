@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import config from "../config/index.js";
 import User from "../models/User.js";
+import { signAccessToken } from "../services/tokenService.js";
 
 export const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
@@ -20,6 +21,23 @@ export const authenticate = async (req, res, next) => {
     if (!user) return res.status(401).json({ error: "Invalid token user" });
 
     req.user = user;
+    // Sliding session: if token is close to expiry, issue a refreshed token and
+    // return it in the `x-access-token` response header so frontend can update.
+    try {
+      if (payload && payload.exp) {
+        const timeLeftMs = payload.exp * 1000 - Date.now();
+        const renewThresholdMs =
+          (config.jwt.renewThresholdSeconds || 300) * 1000;
+        if (timeLeftMs < renewThresholdMs) {
+          const newAccessToken = signAccessToken(user);
+          res.setHeader("x-access-token", newAccessToken);
+          // Ensure the browser can read this header
+          res.setHeader("Access-Control-Expose-Headers", "x-access-token");
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to refresh access token:", e);
+    }
     next();
   } catch (err) {
     console.error("Authentication error:", err);

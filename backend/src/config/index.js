@@ -36,6 +36,11 @@ export default {
     refreshSecret: process.env.JWT_REFRESH_SECRET,
     accessExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
     refreshExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
+    // When an access token has less than this many seconds remaining,
+    // the server may issue a refreshed access token on activity (sliding session).
+    // Default: 300 seconds (5 minutes)
+    renewThresholdSeconds:
+      process.env.ACCESS_TOKEN_RENEW_THRESHOLD_SECONDS,
   },
 
   // Stripe
