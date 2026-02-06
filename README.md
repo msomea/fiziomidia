@@ -6,15 +6,23 @@
 Ensure MongoDB running and MONGO_URI set.
 `npm run dev` to start with nodemon.
 
-## Project structure
-See the `src/` directory layout.
+## Sub Permissions
+| Action                             | Owner | Mod | Sub_Mod |
+| ---------------------------------- | ----- | --- | ------- |
+| Delete sub                         | ❌     | ❌   | ❌       |
+| Edit sub (title/description/rules) | ✅     | ✅   | ❌       |
+| Manage sponsorship                 | ❌     | ❌   | ❌       |
+| Approve/reject sub_mod requests    | ✅     | ✅   | ❌       |
+| Moderate posts/comments            | ✅     | ✅   | ✅       |
+| Add/remove moderators              | ✅     | ❌   | ❌       |
+| Pin/unpin posts (optional)         | ✅     | ✅   | ⚪️      |
+| Manage rules                       | ✅     | ✅   | ⚪️      |
 
-## Next tasks
-- Integrate Cloudinary or S3 for file uploads
-- Integrate Stripe properly and webhook handling
-- Add input validation (e.g. Joi or express-validator)
-- Add tests, logging, rate-limiting, and production-ready error handling
 
-IMPORTANT
-Add product sponsoship creation page
-Add PT promotion creation page Page
+Stage 4
+
+➡️ PT-side “Request Moderator” button + status feedback
+
+Stage 5
+
+➡️ Moderator tools UI (pin, lock, remove)

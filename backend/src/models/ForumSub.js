@@ -35,8 +35,13 @@ const ForumSubSchema = new Schema(
     ],
     moderators: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        user: { type: Schema.Types.ObjectId, ref: "User" },
+        role: {
+          type: String,
+          enum: ["mod", "sub_mod"],
+          default: "sub_mod",
+        },
+        assignedAt: { type: Date, default: Date.now },
       }
     ],
 

@@ -7,6 +7,7 @@ import AppointmentsSection from "../../components/admin/AppointmentsSection";
 import PromotionsSection from "../../components/admin/PromotionsSection";
 import SponsorshipSection from "../../components/admin/SubSponsorshipSection";
 import SponsoredProductsSection from "../../components/admin/ProductSponsorshipSection";
+import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
         <AppointmentsSection />
         <PromotionsSection />
         <SponsorshipSection />
+        <ForumModRequestsSection />
         <SponsoredProductsSection />
       </div>
     </div>

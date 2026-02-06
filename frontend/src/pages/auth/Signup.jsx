@@ -27,7 +27,7 @@ export default function Signup() {
         password,
       });
 
-      toast.success("Registration successful!");
+      toast.success("Registration successfu! Please verify your email before logging in.");
       navigate("/login");
       
     } catch (err) {

@@ -1,6 +1,7 @@
 import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import * as admin from "../controllers/adminController.js";
+import * as modReq from "../controllers/adminForumModController.js";
 import { upload } from "../services/uploadService.js";
 
 const router = express.Router();
@@ -24,6 +25,10 @@ router.delete("/appointments/:id", admin.deleteAppointment);
 router.get("/subs/:id", admin.getSingleForumSub);
 router.put("/subs/:id/sponsorship", upload.single("logo"), admin.updateSponsorship);
 router.delete("/subs/:id", admin.deleteSub);
+// Moderator Requests
+router.get("/forum-mod-requests", modReq.listModRequests);
+router.put("/forum-mod-requests/:id/approve", modReq.approveModRequest);
+router.put("/forum-mod-requests/:id/reject", modReq.rejectModRequest);
 
 // Admin PT Promotions
 router.get("/promotions", admin.getAllPromotions);

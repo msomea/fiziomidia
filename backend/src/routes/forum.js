@@ -1,8 +1,10 @@
 import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
+import { requireForumPermission } from "../middlewares/forumPermissions.js";
 import * as forum from "../controllers/forumController.js";
 import * as comment from "../controllers/forumCommentController.js";
+import * as modReq from "../controllers/modReqController.js";
 
 const router = express.Router();
 
@@ -20,13 +22,18 @@ router.get("/posts/:id", forum.getPostById);
 router.post("/posts/:id/vote", authenticate, forum.votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), forum.createSub);
 router.post("/posts", authenticate, forum.createPost);
-router.delete("/posts/:id", authenticate, forum.deletePost);
+router.delete("/posts/:id", authenticate, requireForumPermission(["owner", "mod", "sub_mod"]), forum.deletePost);
 router.put("/posts/:id", authenticate, forum.updatePost);
+
+// Check if current user is already a mod or has pending request
+router.get("/subs/:subId/my-mod-request", authenticate, modReq.checkMyModStatus);
+// Request to become sub moderator
+router.post("/subs/:subId/mod-requests", authenticate, modReq.createModRequest);
+router.get("/subs/:subId/mod-request", authenticate, modReq.listModRequestsBySub);
 
 /* -------------------------------
    Physiotherapist Forum Activity
 --------------------------------*/
-
 // 🔹 Get all PT posts (paginated, e.g. PT forum page)
 router.get("/pt/:ptId", authenticate, forum.getPostsByPTId);
 

@@ -4,6 +4,7 @@ import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 
+
 // ===== SUBS =====
 // List all forum subs with pagination and totalPosts dynamically calculated
 export const listSubs = async (req, res) => {
@@ -65,16 +66,60 @@ export const listSubs = async (req, res) => {
 };
 
 // Get single sub
-export const getSubById = async (req, res) => {
-  const { id } = req.params;
+// GET /subs/:id
+export const getSubById= async (req, res) => {
   try {
-    const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ error: "Sub not found" });
-    res.json({ sub });
-  } catch {
-    res.status(400).json({ error: "Invalid Sub ID" });
+    const { id } = req.params;
+
+    // fetch sub with moderators
+    const sub = await ForumSub.findById(id)
+      .populate("createdBy", "name email role")
+      .populate("moderators.user", "name email role"); // <-- updated for role-based mods
+
+    if (!sub) return res.status(404).json({ message: "Sub not found" });
+
+    // 🔹 Determine role of current logged-in user
+    let myRole = null; 
+    if (req.user) {
+      if (sub.createdBy._id.equals(req.user._id)) myRole = "owner";
+      else {
+        const mod = sub.moderators.find((m) =>
+          m.user._id.equals(req.user._id)
+        );
+        myRole = mod ? mod.role : null;
+      }
+    }
+
+    // respond with sub + myRole
+    return res.json({
+      success: true,
+      sub: {
+        _id: sub._id,
+        title: sub.title,
+        slug: sub.slug,
+        description: sub.description,
+        rules: sub.rules,
+        moderators: sub.moderators,
+        createdBy: sub.createdBy,
+        isSponsored: sub.isSponsored,
+        sponsorName: sub.sponsorName,
+        sponsorLogo: sub.sponsorLogo,
+        sponsorMessage: sub.sponsorMessage,
+        sponsorWebsite: sub.sponsorWebsite,
+        startDate: sub.startDate,
+        endDate: sub.endDate,
+        createdAt: sub.createdAt,
+        updatedAt: sub.updatedAt,
+
+        myRole, // 🔹 THIS IS THE INJECTION
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 };
+
 
 // Create a new sub (PTs or Admin only)
 export const createSub = async (req, res) => {
@@ -101,8 +146,6 @@ export const createSub = async (req, res) => {
     res.status(500).json({ error: "Failed to create sub" });
   }
 };
-
-// Delete a sub (Admin only)
 
 
 // ===== POSTS =====
