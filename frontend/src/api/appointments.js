@@ -1,5 +1,4 @@
 import API from "./axios";
-import User from "../../../backend/src/models/User";
 
 // Request a new appointment
 export const requestAppointment = async (data) => {
