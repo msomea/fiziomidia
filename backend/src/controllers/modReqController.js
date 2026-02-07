@@ -5,32 +5,55 @@ import ForumSubModRequest from "../models/ForumSubModRequest.js";
 // List all requests for a specific sub
 export const listModRequestsBySub = async (req, res) => {
   try {
-    const subId = req.params.subId;
+    const { subId } = req.params;
+    const { status = "pending" } = req.query; // 👈 NEW
+
+    // validate status
+    const allowedStatuses = ["pending", "approved", "rejected"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status filter" });
+    }
 
     // find sub
     const sub = await ForumSub.findById(subId);
-    if (!sub) return res.status(404).json({ error: "Sub not found" });
+    if (!sub) {
+      return res.status(404).json({ error: "Sub not found" });
+    }
 
     const userId = req.user._id;
     const userRole = req.user.role;
 
-    // check permission
+    // permission check
     const isOwner = sub.createdBy.equals(userId);
-    const isMod = sub.moderators.some((m) => m.user.equals(userId) && m.role === "mod");
+    const isMod = sub.moderators.some(
+      (m) => m.user.equals(userId) && m.role === "mod"
+    );
 
     if (!isOwner && !isMod && userRole !== "admin") {
       return res.status(403).json({ error: "Permission denied" });
     }
 
-    const requests = await ForumSubModRequest.find({ sub: subId, status: "pending" })
-      .populate("user", "fullName email role");
+    // build filter dynamically
+    const filter = {
+      sub: subId,
+      status,
+    };
 
-    res.json({ requests });
+    const requests = await ForumSubModRequest.find(filter)
+      .populate("user", "fullName email role")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      status,
+      requests,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("listModRequestsBySub error:", err);
     res.status(500).json({ error: "Failed to fetch mod requests" });
   }
 };
+
 
 // Check if current user is already a mod or has pending request
 export const checkMyModStatus = async (req, res) => {

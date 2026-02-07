@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
-import ForumPosts from "../../components/dashboard/pt/ForumPosts";
+import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement";
 import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
 
 import {
@@ -106,10 +106,7 @@ export default function PTDashboard() {
 
       {/* Forum Posts & Promotion */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
-        <ForumPosts 
-        posts={forumPosts}
-        id={_id} 
-        viewAll={`/forum/pt/${_id}`} />
+        <ForumSubManagement />
         <PromotionStatus
           promotion={promotion}
           extendLink={`/promotions/pt/${_id}`}

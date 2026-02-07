@@ -19,7 +19,7 @@ import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 import VerifyEmail from "../pages/auth/VerifyEmail"; 
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import PTForumPage from "../pages/pt/PTForumPage";
+import PTSubManagementPage from "../pages/pt/PTSubmanagementPage";
 import EditPostPage from "../pages/forum/EditPostPage";
 import CreatePostPage from "../pages/forum/CreatePostPage"
 import PostDetailPage from "../pages/forum/PostDetailPage";
@@ -71,9 +71,9 @@ export default function AppRoutes() {
       <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />
       <Route path="/dashboard/member/:id" element={<MemberDashboard />} />
       <Route path="/upgrade-to-pt" element={<UpgradeToPT />} />
+      <Route path="/forum/sub/:subId/manage" element={<PTSubManagementPage />} />
 
       {/* Forum Routes */}
-      <Route path="/forum/pt/posts/:id" element={<PTForumPage />} />
       <Route path="/forum/edit/:ptId/:postId" element={<EditPostPage />} />
       <Route path="/forum/create" element={<CreatePostPage />} />
 

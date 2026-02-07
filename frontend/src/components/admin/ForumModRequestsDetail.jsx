@@ -62,7 +62,6 @@ export default function ForumModRequestsDetail() {
         <p><b>Sub:</b> {request.sub.title}</p>
         <p><b>Current Status:</b> {request.status}</p>
         <p><b>Current Role:</b> {request.role}</p>
-        <p><b>Reason:</b> {request.reason || "-"}</p>
 
         <div className="mt-3">
           <label className="block font-medium mb-1">Assign Role</label>

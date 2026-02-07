@@ -1,4 +1,5 @@
 import ForumSub from "../models/ForumSub.js";
+import ForumSubModRequest from "../models/ForumSubModRequest.js";
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
@@ -120,7 +121,6 @@ export const getSubById= async (req, res) => {
   }
 };
 
-
 // Create a new sub (PTs or Admin only)
 export const createSub = async (req, res) => {
   if (req.user.role !== "physiotherapist" && req.user.role !== "admin") {
@@ -191,9 +191,73 @@ export const editSub = async (req, res) => {
   }
 };
 
+export const getMySubs = async (req, res) => {
+  try {
+    const subs = await ForumSub.find({ createdBy: req.user._id });
+    res.json({ success: true, subs });
+  } catch (err) {
+    console.error("Failed to fetch subs:", err);
+    res.status(500).json({ success: false, error: "Failed to fetch subs" });
+  }
+};
 
+// Update mod request role by sub owner
+export const updateModRequestRoleByOwner = async (req, res) => {
+  try {
+    const { subId, requestId } = req.params;
+    const { role } = req.body; // "mod" | "sub_mod" | "member"
 
+    if (!["mod", "sub_mod", "member"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
+    }
 
+    const sub = await ForumSub.findById(subId);
+    if (!sub) return res.status(404).json({ error: "Sub not found" });
+
+    // Only sub owner or admin can change request
+    const isOwner = sub.createdBy.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    const request = await ForumSubModRequest.findById(requestId);
+    if (!request) return res.status(404).json({ error: "Request not found" });
+
+    // Update status based on role change
+    if (role === "mod" || role === "sub_mod") {
+      request.status = "approved";
+    } else if (role === "member") {
+      request.status = "rejected";
+    }
+
+    request.role = role;
+    request.reviewedBy = req.user._id;
+    request.reviewedAt = new Date();
+
+    // Update sub moderators array
+    let modEntry = sub.moderators.find((m) => m.user.equals(request.user));
+    if (role === "mod" || role === "sub_mod") {
+      if (!modEntry) {
+        sub.moderators.push({ user: request.user, role, assignedAt: new Date() });
+      } else {
+        modEntry.role = role; // upgrade/downgrade
+      }
+    } else {
+      // role === "member" → remove mod entry
+      sub.moderators = sub.moderators.filter((m) => !m.user.equals(request.user));
+    }
+
+    await sub.save();
+    await request.save();
+
+    res.json({ success: true, sub, request });
+  } catch (err) {
+    console.error("Failed to update mod request:", err);
+    res.status(500).json({ error: "Failed to update mod request" });
+  }
+};
 
 // ===== POSTS =====
 
