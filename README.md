@@ -21,5 +21,5 @@ Ensure MongoDB running and MONGO_URI set.
 Test
 1. register for domain
 2. MongoDb cruster ✅
-3. backend to Render
-4. frontend to Vercel
+3. backend to Render ✅ 
+4. frontend to Netlify
