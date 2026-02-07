@@ -73,8 +73,8 @@ export const getSubById= async (req, res) => {
 
     // fetch sub with moderators
     const sub = await ForumSub.findById(id)
-      .populate("createdBy", "name email role")
-      .populate("moderators.user", "name email role"); // <-- updated for role-based mods
+      .populate("createdBy", "fullName email role")
+      .populate("moderators.user", "fullName email role");
 
     if (!sub) return res.status(404).json({ message: "Sub not found" });
 
@@ -129,7 +129,7 @@ export const createSub = async (req, res) => {
       .json({ error: "Only verified PTs or admin can create subs" });
   }
 
-  const { title, slug, description } = req.body;
+  const { title, slug, description, rules } = req.body;
 
   try {
     const sub = new ForumSub({
@@ -137,6 +137,7 @@ export const createSub = async (req, res) => {
       slug,
       description,
       createdBy: req.user._id,
+      rules: Array.isArray(rules) ? rules : [], // ensure rules is an array
     });
 
     await sub.save();
@@ -146,6 +147,52 @@ export const createSub = async (req, res) => {
     res.status(500).json({ error: "Failed to create sub" });
   }
 };
+
+// Edit Sub (Admin, Mod, Sub Owner only)
+export const editSub = async (req, res) => {
+  const { subId } = req.params;
+  const { title, description, rules, slug } = req.body;
+
+  try {
+    const sub = await ForumSub.findById(subId);
+
+    if (!sub) {
+      return res.status(404).json({ error: "Sub not found" });
+    }
+
+    const isAdmin = req.user.role === "admin";
+    const isOwner = sub.createdBy.toString() === req.user._id.toString();
+    const isMod =
+      sub.moderators?.some(
+        (modId) => modId.toString() === req.user._id.toString()
+      );
+
+    if (!isAdmin && !isOwner && !isMod) {
+      return res
+        .status(403)
+        .json({ error: "You are not allowed to edit this sub" });
+    }
+
+    // Update allowed fields
+    if (title !== undefined) sub.title = title;
+    if (description !== undefined) sub.description = description;
+    if (rules !== undefined) sub.rules = rules;
+    if (slug !== undefined && isAdmin) sub.slug = slug; 
+    // slug usually admin-only to avoid breaking URLs
+
+    await sub.save();
+
+    res.json({
+      success: true,
+      sub,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update sub" });
+  }
+};
+
+
 
 
 // ===== POSTS =====
@@ -438,5 +485,33 @@ export const removeSubSponsorship = async (req, res) => {
   } catch (err) {
     console.error("Error removing sponsorship:", err);
     res.status(500).json({ error: "Failed to remove sponsorship" });
+  }
+};
+
+// Toggle pin/unpin post (admin or sub mod only, cannot pin sponsored posts)
+export const togglePinPost = async (req, res) => {
+  const { subId } = req.params;
+  const user = req.user; // from auth middleware
+  try {
+    const post = await Post.findById(subId).populate("sub");
+    if (!post) return res.status(404).json({ success: false, error: "Post not found" });
+
+    // Sponsored posts cannot be pinned/unpinned
+    // const sub = post.sub;
+    // if (sub.isSponsored) return res.status(403).json({ success: false, error: "Cannot pin/unpin sponsored posts" });
+
+    // Permissions check
+    const isAdmin = user.role === "admin";
+    const isSubMod = ForumSub.moderators?.some((modId) => modId.toString() === user._id.toString());
+    if (!isAdmin && !isSubMod) return res.status(403).json({ success: false, error: "You do not have permission to pin/unpin this post" });
+
+    // Toggle pinned
+    post.pinned = !post.pinned;
+    await post.save();
+
+    res.json({ success: true, message: `Post ${post.pinned ? "pinned" : "unpinned"} successfully`, post });
+  } catch (err) {
+    console.error("Toggle pin error:", err);
+    res.status(500).json({ success: false, error: "Failed to toggle pin" });
   }
 };

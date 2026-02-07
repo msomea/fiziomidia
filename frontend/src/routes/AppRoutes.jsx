@@ -35,6 +35,7 @@ import CreatePromotion from "../pages/services/CreatePromotion";
 import ListPromotions from "../pages/services/ListPromotions";
 import ListSponsoredProduct from "../pages/services/ListSponsoredProduct";
 import CreateSponsoredProduct from "../pages/services/CreateSponsoredProduct";
+import ForumModRequestsDetail from "../components/admin/ForumModRequestsDetail";
 
 export default function AppRoutes() {
   return (
@@ -93,6 +94,7 @@ export default function AppRoutes() {
       <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
       <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
       <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
+      <Route path="/admin/forum/mod-requests/:id" element={<ForumModRequestsDetail />} />
       {/* Temp routes for debugging */}
       
       

@@ -22,7 +22,7 @@ router.get("/posts/:id", forum.getPostById);
 router.post("/posts/:id/vote", authenticate, forum.votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), forum.createSub);
 router.post("/posts", authenticate, forum.createPost);
-router.delete("/posts/:id", authenticate, requireForumPermission(["owner", "mod", "sub_mod"]), forum.deletePost);
+router.delete("/posts/:id", authenticate, forum.deletePost);
 router.put("/posts/:id", authenticate, forum.updatePost);
 
 // Check if current user is already a mod or has pending request
@@ -30,6 +30,10 @@ router.get("/subs/:subId/my-mod-request", authenticate, modReq.checkMyModStatus)
 // Request to become sub moderator
 router.post("/subs/:subId/mod-requests", authenticate, modReq.createModRequest);
 router.get("/subs/:subId/mod-request", authenticate, modReq.listModRequestsBySub);
+// Pin/Unpin a post
+router.put("/posts/:subId/pin", authenticate, forum.togglePinPost);
+// Edit Sub (Admin, Mod, Sub Owner only)
+router.put("/subs/:subId", authenticate, forum.editSub);
 
 /* -------------------------------
    Physiotherapist Forum Activity

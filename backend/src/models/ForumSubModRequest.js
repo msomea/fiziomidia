@@ -17,6 +17,12 @@ const ForumSubModRequestSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+    // Role assigned to the user for this sub (updated by admin)
+    role: {
+      type: String,
+      enum: ["member", "sub-mod", "mod"],
+      default: "member",
+    },
     reviewedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -24,14 +30,21 @@ const ForumSubModRequestSchema = new mongoose.Schema(
     reviewedAt: {
       type: Date,
     },
+    // Optional notes from admin review
+    reviewNotes: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
-// prevent duplicate pending requests
+// Prevent duplicate pending requests per user per sub
 ForumSubModRequestSchema.index(
   { sub: 1, user: 1 },
   { unique: true }
 );
 
-export default mongoose.model("ForumSubModRequest", ForumSubModRequestSchema);
+export default mongoose.model(
+  "ForumSubModRequest",
+  ForumSubModRequestSchema
+);

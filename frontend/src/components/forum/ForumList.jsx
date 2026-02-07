@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2, RefreshCwOff } from "lucide-react";
+import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2, RefreshCwOff, Trash2 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
@@ -12,7 +12,7 @@ const DEFAULT_AUTHOR = {
   _id: null,
 };
 
-const ForumList = ({ posts = [], loading, user, currentTopic }) => {
+const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [postList, setPostList] = useState(posts);
   const postsPerPage = 10;
@@ -51,13 +51,12 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
-  const handleVote = async (postId, voteValue) => {
-    if (!user?._id) {
-      toast.error("You must be logged in to vote");
-      return;
-    }
+  const getAvatar = (author) =>
+    author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
 
-    // Optimistic UI update
+  const handleVote = async (postId, voteValue) => {
+    if (!user?._id) return toast.error("You must be logged in to vote");
+
     setPostList((prevPosts) =>
       prevPosts.map((p) => {
         if (p._id !== postId) return p;
@@ -84,7 +83,62 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
     }
   };
 
-  // --- Prepare Pinned Sponsor Post ---
+  const handleDeletePost = async (postId) => {
+    const backupPosts = [...postList];
+    setPostList((prev) => prev.filter((p) => p._id !== postId));
+
+    let undoClicked = false;
+
+    // Toast with Undo
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>Post deleted</span>
+          <button
+            onClick={() => {
+              undoClicked = true;
+              setPostList(backupPosts);
+              toast.dismiss(t.id);
+            }}
+            className="text-blue-500 underline"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      { duration: 5000 }
+    );
+
+    // Delay actual delete by 5s to allow undo
+    setTimeout(async () => {
+      if (undoClicked) return;
+      try {
+        await API.delete(`/forum/posts/${postId}`);
+        toast.success("Post permanently deleted");
+      } catch (err) {
+        console.error(err);
+        setPostList(backupPosts);
+        toast.error("Failed to delete post");
+      }
+    }, 5000);
+  };
+
+  const handleSharePost = (post) => {
+    const postUrl = `${window.location.origin}/forum/post/${post._id}`;
+    if (navigator.share) {
+      navigator
+        .share({
+          title: post.title,
+          text: post.body,
+          url: postUrl,
+        })
+        .catch((err) => console.error("Share failed:", err));
+    } else {
+      navigator.clipboard.writeText(postUrl);
+      toast.success("Post link copied to clipboard");
+    }
+  };
+
   const pinnedSponsorPost = currentTopic?.isSponsored
     ? {
         _id: `sponsor-${currentTopic._id}`,
@@ -99,10 +153,10 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
         downvotes: [],
         comments: [],
         createdAt: new Date(currentTopic.startDate || Date.now()),
+        pinned: true,
       }
     : null;
 
-  // --- Merge pinned post on top ---
   const displayedPosts = pinnedSponsorPost ? [pinnedSponsorPost, ...currentPosts] : currentPosts;
 
   return (
@@ -114,6 +168,8 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
       {displayedPosts.map((post) => {
         const author = post.author || DEFAULT_AUTHOR;
         const isSponsorPost = post._id.startsWith("sponsor-");
+        const canPin = !isSponsorPost && user && (user.role === "admin" || currentTopic?.moderators?.some((m) => m._id === user._id));
+        const canDelete = user?._id && (user.role === "admin" || author._id === user._id);
 
         return (
           <div
@@ -123,7 +179,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
             }`}
           >
             <img
-              src={author.profileImageUrl || avatar}
+              src={getAvatar(author)}
               alt={author.fullName || "Guest"}
               onError={(e) => { e.target.src = avatar; }}
               className="w-12 h-12 rounded-full object-cover"
@@ -135,26 +191,20 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
                     <p>
                       {author.fullName}
                       <span className="bg-yellow-400 text-black px-2 py-0.5 rounded text-xs ml-2">
-                      Sponsored
+                        Sponsored
                       </span>
                     </p>
-                  ):(
-                      <Link
-                        to={`/profile/pt/${author._id}`} >
-                          <span className="font-semibold text-black">{author.fullName}</span> 
-                      </Link>
+                  ) : (
+                    <Link to={`/profile/pt/${author._id}`}>
+                      <span className="font-semibold text-black">{author.fullName}</span>
+                    </Link>
                   )}
                 </span>
                 <span className="text-gray-400 text-sm">{formatDate(post.createdAt)}</span>
               </div>
 
               {isSponsorPost ? (
-                <a
-                  href={post.title}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-lg font-bold text-caribbean mb-2 block"
-                >
+                <a href={post.title} target="_blank" rel="noreferrer" className="text-lg font-bold text-caribbean mb-2 block">
                   {post.title}
                 </a>
               ) : (
@@ -182,13 +232,28 @@ const ForumList = ({ posts = [], loading, user, currentTopic }) => {
                   <ThumbsDown size={16} /> {post.downvotes?.length || 0}
                 </button>
 
+                {canPin && (
+                  <button
+                    onClick={() => onTogglePin(post._id, post.pinned)}
+                    className={`px-2 py-1 text-xs rounded ${post.pinned ? "bg-yellow-500 text-black" : "bg-gray-300 text-black hover:bg-gray-400"}`}
+                  >
+                    {post.pinned ? "Unpin" : "Pin"}
+                  </button>
+                )}
+
                 <div className="flex items-center gap-1 cursor-pointer">
                   <MessageCircle size={16} /> {post.comments?.length || 0}
                 </div>
 
-                <div className="flex items-center gap-1 cursor-pointer">
+                <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSharePost(post)}>
                   <Share2 size={16} /> Share
                 </div>
+
+                {canDelete && (
+                  <button onClick={() => handleDeletePost(post._id)} className="text-red-500 flex items-center gap-1">
+                    <Trash2 size={16} /> Delete
+                  </button>
+                )}
               </div>
             </div>
           </div>

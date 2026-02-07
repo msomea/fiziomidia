@@ -13,6 +13,7 @@ export default function AdminSponsorshipDetail() {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Sponsorship form
   const [form, setForm] = useState({
     isSponsored: false,
     sponsorName: "",
@@ -21,6 +22,13 @@ export default function AdminSponsorshipDetail() {
     sponsorWebsite: "",
     startDate: "",
     endDate: "",
+  });
+
+  // NEW: basic sub info form
+  const [basicForm, setBasicForm] = useState({
+    title: "",
+    description: "",
+    slug: "",
   });
 
   const [newLogo, setNewLogo] = useState(null);
@@ -33,20 +41,23 @@ export default function AdminSponsorshipDetail() {
     try {
       setLoading(true);
       const res = await API.get(`/admin/subs/${id}`);
-      setSub(res.data.sub);
+      const s = res.data.sub;
+      setSub(s);
 
       setForm({
-        isSponsored: res.data.sub.isSponsored,
-        sponsorName: res.data.sub.sponsorName || "",
-        sponsorLogo: res.data.sub.sponsorLogo || "",
-        sponsorMessage: res.data.sub.sponsorMessage || "",
-        sponsorWebsite: res.data.sub.sponsorWebsite || "",
-        startDate: res.data.sub.startDate
-          ? dayjs(res.data.sub.startDate).format("YYYY-MM-DD")
-          : "",
-        endDate: res.data.sub.endDate
-          ? dayjs(res.data.sub.endDate).format("YYYY-MM-DD")
-          : "",
+        isSponsored: s.isSponsored,
+        sponsorName: s.sponsorName || "",
+        sponsorLogo: s.sponsorLogo || "",
+        sponsorMessage: s.sponsorMessage || "",
+        sponsorWebsite: s.sponsorWebsite || "",
+        startDate: s.startDate ? dayjs(s.startDate).format("YYYY-MM-DD") : "",
+        endDate: s.endDate ? dayjs(s.endDate).format("YYYY-MM-DD") : "",
+      });
+
+      setBasicForm({
+        title: s.title || "",
+        description: s.description || "",
+        slug: s.slug || "",
       });
     } catch (err) {
       toast.error("Failed to load sub");
@@ -54,10 +65,30 @@ export default function AdminSponsorshipDetail() {
       setLoading(false);
     }
   };
-  const handleChange = (e) => {
+
+  const handleBasicChange = (e) => {
+    setBasicForm({ ...basicForm, [e.target.name]: e.target.value });
+  };
+
+  const handleSponsorChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // ✅ Update basic sub info
+  const updateSubInfo = async () => {
+    try {
+      const res = await API.put(`/forum/subs/${id}`, basicForm);
+
+      if (!res.data?.success) throw new Error();
+
+      toast.success("Sub information updated");
+      loadSub();
+    } catch (err) {
+      toast.error("Failed to update sub information");
+    }
+  };
+
+  // Sponsorship update (unchanged)
   const updateSponsorship = async () => {
     try {
       const data = new FormData();
@@ -95,16 +126,19 @@ export default function AdminSponsorshipDetail() {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sub..</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          Loading Sub...
+        </p>
       </div>
     );
   }
+
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       {/* HEADER */}
-      <div className="flex justify-between mb-4 ">
+      <div className="flex justify-between mb-4">
         <h2 className="font-semibold text-lg text-caribbean">
-          Manage Sponsorship — {sub.title}
+          Manage Sub — {sub.title}
         </h2>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-500 hover:text-red-800" />
@@ -113,17 +147,45 @@ export default function AdminSponsorshipDetail() {
 
       <div className="space-y-6 text-sm">
 
-        {/* BASIC INFO */}
-        <div className="bg-gray-100 p-3 rounded text-tufts">
-          <h3 className="font-semibold mb-2">Sub Information</h3>
-          <p><b>Title:</b> {sub.title}</p>
-          <p><b>Created By:</b> {sub.createdBy?.fullName}</p>
-          <p><b>Description:</b> {sub.description}</p>
+        {/* BASIC SUB INFO (NEW) */}
+        <div className="bg-gray-100 p-4 rounded space-y-3">
+          <h3 className="font-semibold text-caribbean">Sub Information</h3>
+
+          <input
+            name="title"
+            value={basicForm.title}
+            onChange={handleBasicChange}
+            placeholder="Sub title"
+            className="w-full border p-2 rounded"
+          />
+
+          <textarea
+            name="description"
+            value={basicForm.description}
+            onChange={handleBasicChange}
+            placeholder="Sub description"
+            className="w-full border p-2 rounded"
+          />
+
+          <input
+            name="slug"
+            value={basicForm.slug}
+            onChange={handleBasicChange}
+            placeholder="Sub slug (admin only)"
+            className="w-full border p-2 rounded"
+          />
+
+          <button
+            onClick={updateSubInfo}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Save Sub Info
+          </button>
         </div>
 
-        {/* SPONSORSHIP FIELDS */}
-        <div className="bg-gray-100 p-4 rounded space-y-3 text-tufts">
-          <h3 className="font-semibold mb-2 text-caribbean">Sponsorship Details</h3>
+        {/* SPONSORSHIP */}
+        <div className="bg-gray-100 p-4 rounded space-y-3">
+          <h3 className="font-semibold text-caribbean">Sponsorship</h3>
 
           <label className="flex items-center gap-2">
             <input
@@ -133,7 +195,7 @@ export default function AdminSponsorshipDetail() {
                 setForm({ ...form, isSponsored: e.target.checked })
               }
             />
-            <span>Enable Sponsorship</span>
+            Enable Sponsorship
           </label>
 
           {form.isSponsored && (
@@ -141,7 +203,7 @@ export default function AdminSponsorshipDetail() {
               <input
                 name="sponsorName"
                 value={form.sponsorName}
-                onChange={handleChange}
+                onChange={handleSponsorChange}
                 placeholder="Sponsor Name"
                 className="w-full border p-2 rounded"
               />
@@ -149,7 +211,7 @@ export default function AdminSponsorshipDetail() {
               <textarea
                 name="sponsorMessage"
                 value={form.sponsorMessage}
-                onChange={handleChange}
+                onChange={handleSponsorChange}
                 placeholder="Sponsor Message"
                 className="w-full border p-2 rounded"
               />
@@ -157,71 +219,57 @@ export default function AdminSponsorshipDetail() {
               <input
                 name="sponsorWebsite"
                 value={form.sponsorWebsite}
-                onChange={handleChange}
-                placeholder="Sponsor Website URL"
+                onChange={handleSponsorChange}
+                placeholder="Sponsor Website"
                 className="w-full border p-2 rounded"
               />
 
-              {/* LOGO UPLOAD */}
-              <div>
-                <p className="font-medium mb-1">Sponsor Logo</p>
-
-                {form.sponsorLogo && (
-                  <img
-                    src={`${API_URL}${form.sponsorLogo}`}
-                    alt="Logo"
-                    className="w-24 h-24 rounded object-cover mb-2 border"
-                  />
-                )}
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setNewLogo(e.target.files[0])}
+              {form.sponsorLogo && (
+                <img
+                  src={`${API_URL}${form.sponsorLogo}`}
+                  className="w-24 h-24 rounded border object-cover"
                 />
-              </div>
+              )}
 
-              {/* DATES */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setNewLogo(e.target.files[0])}
+              />
+
               <div className="flex gap-4">
-                <div className="flex-1">
-                  <label>Start Date</label>
-                  <input
-                    type="date"
-                    name="startDate"
-                    value={form.startDate}
-                    onChange={handleChange}
-                    className="w-full border p-2 rounded"
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <label>End Date</label>
-                  <input
-                    type="date"
-                    name="endDate"
-                    value={form.endDate}
-                    onChange={handleChange}
-                    className="w-full border p-2 rounded"
-                  />
-                </div>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={form.startDate}
+                  onChange={handleSponsorChange}
+                  className="border p-2 rounded w-full"
+                />
+                <input
+                  type="date"
+                  name="endDate"
+                  value={form.endDate}
+                  onChange={handleSponsorChange}
+                  className="border p-2 rounded w-full"
+                />
               </div>
             </>
           )}
         </div>
 
-        {/* ACTION BUTTONS */}
-        <div className="flex flex-col gap-3 mt-4">
+        {/* ACTIONS */}
+        <div className="flex flex-col gap-3">
           <button
             onClick={updateSponsorship}
-            className="w-full py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark"
+            className="bg-caribbean text-white py-2 rounded"
           >
-            Save Changes
+            Save Sponsorship
           </button>
 
           {sub.isSponsored && (
             <button
               onClick={removeSponsorship}
-              className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              className="bg-red-600 text-white py-2 rounded"
             >
               Remove Sponsorship
             </button>

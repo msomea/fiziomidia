@@ -430,8 +430,8 @@ export const getSingleForumSub = async (req, res) => {
     const { id } = req.params;
 
     const sub = await ForumSub.findById(id)
-      .populate("createdBy", "name email role")
-      .populate("moderators", "name email role");
+      .populate("createdBy", "fullName email role")
+      .populate("moderators", "fullName email role");
 
     if (!sub) {
       return res.status(404).json({ message: "Forum Sub not found" });

@@ -4,7 +4,7 @@ import { getUserForumRole } from "../utils/forumPermissions.js";
 
 export const requireForumPermission = (allowedRoles = []) => {
   return async (req, res, next) => {
-    const subId = req.params.subId || req.body.subId;
+    const subId = req.params.id;
     if (!subId) return res.status(400).json({ error: "Sub ID required" });
 
     const sub = await ForumSub.findById(subId);

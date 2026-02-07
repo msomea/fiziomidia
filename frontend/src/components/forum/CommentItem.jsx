@@ -1,4 +1,3 @@
-// src/components/forum/CommentItem.jsx
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import avatar from "../../assets/avatar.jpg";
@@ -9,6 +8,7 @@ const CommentItem = ({
   comment,
   user,
   postId,
+  sub,
   onReply,
   onEdit,
   onDelete,
@@ -24,9 +24,16 @@ const CommentItem = ({
   const isAuthor = user?._id === comment.author?._id;
   const isEditing = editingId === comment._id;
 
-  const getAvatar = (author) =>
-  author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
+  // Permissions: admin, sub owner, moderators
+  const canDelete =
+    user?._id &&
+    (user.role === "admin" ||
+      sub?.createdBy?._id === user._id ||
+      sub?.moderators?.includes(user._id) ||
+      isAuthor);
 
+  const getAvatar = (author) =>
+    author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
 
   /* ---------------- Reply ---------------- */
   const submitReply = () => {
@@ -39,20 +46,11 @@ const CommentItem = ({
   return (
     <div className="mt-4">
       <div className="flex gap-3">
-        <img src={getAvatar(comment.author)}
-        alt="avatar"
-          className="w-8 h-8 rounded-full object-cover"
-      />
-
-        {/* <img
-          src={
-            comment.author?.profileImageUrl
-              ? `${API_URL}${comment.author.profileImageUrl}`
-              : avatar
-          }
+        <img
+          src={getAvatar(comment.author)}
           alt="avatar"
           className="w-8 h-8 rounded-full object-cover"
-        /> */}
+        />
 
         <div className="flex-1">
           <div className="bg-gray-100 rounded-lg p-3">
@@ -105,9 +103,9 @@ const CommentItem = ({
               <button onClick={() => setReplying(!replying)}>Reply</button>
             )}
 
-            {isAuthor && !isEditing && (
+            {canDelete && !isEditing && (
               <>
-                <button onClick={() => onEdit(comment)}>Edit</button>
+                {isAuthor && <button onClick={() => onEdit(comment)}>Edit</button>}
                 <button
                   onClick={() => onDelete(comment._id)}
                   className="text-red-500"
@@ -152,6 +150,7 @@ const CommentItem = ({
                   key={reply._id}
                   comment={reply}
                   user={user}
+                  sub={sub}
                   postId={postId}
                   onReply={onReply}
                   onEdit={onEdit}
@@ -165,7 +164,6 @@ const CommentItem = ({
               ))}
             </div>
           )}
-
         </div>
       </div>
     </div>

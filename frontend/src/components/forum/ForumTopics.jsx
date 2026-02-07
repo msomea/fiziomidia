@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import CollapsibleSection from "../admin/CollapsibleSection";
 
-const ForumTopics = ({ onSelectTopic }) => {
+const ForumTopics = ({ onSelectTopic, user }) => {
   const [topics, setTopics] = useState([]);
   const [activeTopic, setActiveTopic] = useState(null);
   const [sortType, setSortType] = useState("alphabet");
@@ -12,9 +13,13 @@ const ForumTopics = ({ onSelectTopic }) => {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 5;
 
-  // NEW: Ref & height state
   const containerRef = useRef(null);
   const [minHeight, setMinHeight] = useState(null);
+
+  // Add Sub Modal state
+  const [showAddSub, setShowAddSub] = useState(false);
+  const [newSub, setNewSub] = useState({ title: "", slug: "", description: "", rules: [""] });
+  const [subSaving, setSubSaving] = useState(false);
 
   const fetchSubs = async (pageNum = 1, limit) => {
     try {
@@ -38,7 +43,6 @@ const ForumTopics = ({ onSelectTopic }) => {
     fetchSubs(page, limit);
   }, [page]);
 
-  // Calculate min height once topics are rendered
   useEffect(() => {
     if (containerRef.current) {
       const contentHeight = containerRef.current.offsetHeight;
@@ -62,10 +66,50 @@ const ForumTopics = ({ onSelectTopic }) => {
   const handlePrev = () => page > 1 && setPage((prev) => prev - 1);
   const handleNext = () => page < totalPages && setPage((prev) => prev + 1);
 
+  // --- Add New Sub Handlers ---
+  const handleRuleChange = (index, value) => {
+    const updatedRules = [...newSub.rules];
+    updatedRules[index] = value;
+    setNewSub({ ...newSub, rules: updatedRules });
+  };
+
+  const addRuleField = () => {
+    setNewSub({ ...newSub, rules: [...newSub.rules, ""] });
+  };
+
+  const removeRuleField = (index) => {
+    const updatedRules = newSub.rules.filter((_, i) => i !== index);
+    setNewSub({ ...newSub, rules: updatedRules });
+  };
+
+  const saveNewSub = async () => {
+    if (!newSub.title || !newSub.slug) {
+      toast.error("Title and slug are required");
+      return;
+    }
+
+    setSubSaving(true);
+    try {
+      const res = await API.post("/forum/subs", newSub);
+      if (res.data.sub) {
+        toast.success("New forum topic created!");
+        setShowAddSub(false);
+        setNewSub({ title: "", slug: "", description: "", rules: [""] });
+        fetchSubs(page, limit);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create forum topic");
+    } finally {
+      setSubSaving(false);
+    }
+  };
+
+  // --- Only verified PTs or admins can add ---
+  const canAddSub = user && (user.role === "physiotherapist" || user.role === "admin");
+
   return (
-    <div
-      className="bg-white text-black shadow-md rounded-2xl p-4"
-    >
+    <div className="bg-white text-black shadow-md rounded-2xl p-4">
       <div ref={containerRef} style={{ minHeight }}>
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -82,8 +126,86 @@ const ForumTopics = ({ onSelectTopic }) => {
           </fieldset>
         </div>
 
+        {/* Add Sub Button */}
+        {canAddSub && (
+          <div className="mb-4">
+            <button
+              className="btn bg-green-600 text-white hover:bg-green-800 p-2 rounded"
+              onClick={() => setShowAddSub(!showAddSub)}
+            >
+              {showAddSub ? "Cancel" : "Add New Topic"}
+            </button>
+          </div>
+        )}
+
+        {/* Add Sub Form */}
+        {showAddSub && (
+          <CollapsibleSection title="Create New Forum Topic" isOpen>
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Title"
+                className="border p-2 rounded w-full"
+                value={newSub.title}
+                onChange={(e) => setNewSub({ ...newSub, title: e.target.value })}
+              />
+              <input
+                type="text"
+                placeholder="Slug (URL-friendly)"
+                className="border p-2 rounded w-full"
+                value={newSub.slug}
+                onChange={(e) => setNewSub({ ...newSub, slug: e.target.value })}
+              />
+              <textarea
+                rows={3}
+                placeholder="Description"
+                className="border p-2 rounded w-full"
+                value={newSub.description}
+                onChange={(e) => setNewSub({ ...newSub, description: e.target.value })}
+              />
+
+              {/* Rules Section */}
+              <CollapsibleSection title="Sub Rules" isOpen>
+                {newSub.rules.map((rule, idx) => (
+                  <div key={idx} className="flex gap-2 items-center mt-2">
+                    <input
+                      type="text"
+                      placeholder={`Rule #${idx + 1}`}
+                      className="border p-2 rounded flex-1"
+                      value={rule}
+                      onChange={(e) => handleRuleChange(idx, e.target.value)}
+                    />
+                    {newSub.rules.length > 1 && (
+                      <button
+                        className="btn bg-red-600 text-white p-1 rounded"
+                        onClick={() => removeRuleField(idx)}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button
+                  className="btn bg-blue-600 text-white p-2 rounded mt-2"
+                  onClick={addRuleField}
+                >
+                  Add Rule
+                </button>
+              </CollapsibleSection>
+
+              <button
+                className="btn bg-caribbean text-white p-2 rounded mt-3"
+                onClick={saveNewSub}
+                disabled={subSaving}
+              >
+                {subSaving ? "Saving..." : "Save Topic"}
+              </button>
+            </div>
+          </CollapsibleSection>
+        )}
+
         {/* Topics List */}
-        <ul className="space-y-3">
+        <ul className="space-y-3 mt-4">
           {sortedTopics.map((topic) => (
             <li
               key={topic._id}
@@ -94,9 +216,7 @@ const ForumTopics = ({ onSelectTopic }) => {
             >
               <div className="flex justify-between items-center">
                 <span className="font-medium flex items-center gap-2">
-                  {topic.isSponsored
-                    ? `${topic.sponsorName} - ${topic.title}`
-                    : topic.title}
+                  {topic.isSponsored ? `${topic.sponsorName} - ${topic.title}` : topic.title}
                 </span>
                 <span
                   className={`text-sm ${
@@ -106,46 +226,31 @@ const ForumTopics = ({ onSelectTopic }) => {
                   {topic.totalPosts || 0} posts
                 </span>
               </div>
-
-              {topic.isSponsored && topic.sponsorWebsite && (
-                <p className="text-xs text-black mt-1">
-                  Sponsored by{" "}
-                  <a
-                    href={`https://${topic.sponsorWebsite}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-tufts underline"
-                  >
-                    {topic.sponsorName}
-                  </a>
-                </p>
-              )}
             </li>
           ))}
         </ul>
-
-        
       </div>
+
       {/* Pagination */}
-        <div className="flex justify-between text-accent items-center mt-4">
-          <button
-            className="btn btn-sm bg-gray-200 border border-caribbean p-1"
-            disabled={page <= 1}
-            onClick={handlePrev}
-          >
-            <ArrowBigLeftIcon />
-          </button>
-          <span className="text-sm text-gray-500">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            className="btn btn-sm bg-gray-200 border border-caribbean p-1"
-            disabled={page >= totalPages}
-            onClick={handleNext}
-          >
-            <ArrowBigRightIcon />
-          </button>
-        </div>
+      <div className="flex justify-between text-accent items-center mt-4">
+        <button
+          className="btn btn-sm bg-gray-200 border border-caribbean p-1"
+          disabled={page <= 1}
+          onClick={() => setPage((prev) => prev - 1)}
+        >
+          <ArrowBigLeftIcon />
+        </button>
+        <span className="text-sm text-gray-500">
+          Page {page} of {totalPages}
+        </span>
+        <button
+          className="btn btn-sm bg-gray-200 border border-caribbean p-1"
+          disabled={page >= totalPages}
+          onClick={() => setPage((prev) => prev + 1)}
+        >
+          <ArrowBigRightIcon />
+        </button>
+      </div>
     </div>
   );
 };

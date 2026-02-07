@@ -11,6 +11,7 @@ const PostSchema = new Schema(
     upvotes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     downvotes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     score: { type: Number, default: 0 },
+    pinned: { type: Boolean, default: false }, 
     createdAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
