@@ -286,7 +286,6 @@ export const listPosts = async (req, res) => {
 
   try {
     const totalPosts = await Post.countDocuments({ sub: subId });
-
     const posts = await Post.find({ sub: subId })
       .populate("author", "fullName role profileImageUrl")
       .populate("comments", "_id")
@@ -385,12 +384,17 @@ export const updatePost = async (req, res) => {
 // Get single post (with vote info)
 export const getPostById = async (req, res) => {
   try {
+
     const { id } = req.params;
     if (!id) return res.status(400).json({ error: "Post ID is required" });
-    // Fetch post and populate author
+    // Fetch post and populate
     const post = await Post.findById(id)
-      .populate("author", "fullName role profileImageUrl") // include avatar if needed
+      .populate("author", "fullName role profileImageUrl")
       .populate("comments", "_id")
+      .populate({
+        path: "sub",
+        select: "createdBy moderators",
+      })
       .lean();
 
     if (!post) return res.status(404).json({ error: "Post not found" });
@@ -411,6 +415,7 @@ export const getPostById = async (req, res) => {
       title: post.title,
       body: post.body,
       author: post.author,
+      sub: post.sub,
       createdAt: post.createdAt,
       comments, 
       upvotesCount,

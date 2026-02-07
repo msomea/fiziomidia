@@ -7,6 +7,7 @@ import ProfileBadge from "../Badge";
 const CommentItem = ({
   comment,
   user,
+  post,
   postId,
   sub,
   onReply,
@@ -20,17 +21,23 @@ const CommentItem = ({
 }) => {
   const [replying, setReplying] = useState(false);
   const [replyContent, setReplyContent] = useState("");
-
+  /* ---------------- Permissions ---------------- */
   const isAuthor = user?._id === comment.author?._id;
   const isEditing = editingId === comment._id;
-
-  // Permissions: admin, sub owner, moderators
+  const isAdmin = user?.role === "admin";
+  const isSubOwner = post?.sub?.createdBy?.toString()  === user?._id;
+  const isMod =
+    post?.sub?.moderators?.some(
+      (m) =>
+        m.user?.toString() === user?._id?.toString() &&
+        (m.role === "mod" || m.role === "sub_mod")
+    );
+  
   const canDelete =
-    user?._id &&
-    (user.role === "admin" ||
-      sub?.createdBy?._id === user._id ||
-      sub?.moderators?.includes(user._id) ||
-      isAuthor);
+  user?._id &&
+  (
+    isAuthor || isAdmin || isSubOwner || isMod
+  );
 
   const getAvatar = (author) =>
     author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
@@ -151,6 +158,7 @@ const CommentItem = ({
                   comment={reply}
                   user={user}
                   sub={sub}
+                  post={post}
                   postId={postId}
                   onReply={onReply}
                   onEdit={onEdit}

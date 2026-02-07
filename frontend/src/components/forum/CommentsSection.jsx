@@ -39,7 +39,6 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
     };
   }, [socket, post?.postId]);
 
-
   /* ---------------- Add Comment ---------------- */
   const handleAddComment = async (e) => {
     e.preventDefault();
@@ -200,6 +199,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
             key={c._id}
             comment={c}
             user={user}
+            post={post}
             postId={post.postId}
             onReply={handleReply}
             onEdit={startEdit}

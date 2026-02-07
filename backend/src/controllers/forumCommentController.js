@@ -9,7 +9,7 @@ export const listComments = async (req, res, next) => {
   try {
     const { id } = req.params;
     const comments = await Comment.find({ post: id })
-      //.populate("author", "fullName profileImageUrl role")
+      .populate("author", "fullName profileImageUrl role")
       .sort({ createdAt: 1 });
 
     const nestedComments = buildCommentTree(comments);
@@ -103,24 +103,32 @@ export const updateComment = async (req, res) => {
 // Delete a comment (owner only or admin)
 export const deleteComment = async (req, res) => {
   try {
-    const { id, commentId } = req.params; // id = postId, commentId = comment._id
+    const { id, commentId } = req.params;
+    const userId = req.user._id;
 
     // Optional: check if post exists
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate("sub");
     if (!post) return res.status(404).json({ message: "Post not found" });
 
     // Find comment by its own collection
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    // Check ownership
-    const commentAuthorId =
-      comment.author && comment.author._id
-        ? comment.author._id.toString()
-        : comment.author.toString();
+    // Check Permissions
+    const isAuthor = comment.author.equals(userId);
+    const isAdmin = req.user.role === "admin";
+    const isOwner = post.sub.createdBy.equals(userId);
+    const isMod = post.sub.moderators.some(
+      (m) =>
+        m.user.equals(userId) &&
+        (m.role === "mod" || m.role === "sub_mod")
+    );
+
     if (
-      commentAuthorId !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      !isAuthor &&
+      !isAdmin &&
+      !isOwner &&
+      !isMod
     ) {
       return res
         .status(403)
