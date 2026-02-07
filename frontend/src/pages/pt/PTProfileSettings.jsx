@@ -16,7 +16,6 @@ import PasswordChangeSection from "../../components/ptsetting/PasswordChangeSect
 import GallerySection from "../../components/ptsetting/GallerySection";
 import SaveButton from "../../components/ptsetting/SaveButton";
 import LocationSelector from "../../components/ptsetting/LocationSelector";
-import { set } from "mongoose";
 
 const PTProfileSettings = () => {
   const navigate = useNavigate();
