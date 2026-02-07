@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, Loader2, ThumbsDown, MessageCircle, Share2, RefreshCwOff, Trash2 } from "lucide-react";
+import {
+  ThumbsUp,
+  Loader2,
+  ThumbsDown,
+  MessageCircle,
+  Share2,
+  RefreshCwOff,
+  Trash2,
+} from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
@@ -26,7 +34,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Posts...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          Loading Posts...
+        </p>
       </div>
     );
   }
@@ -35,7 +45,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     return (
       <div className="mt-4 flex flex-col items-center justify-center">
         <RefreshCwOff className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">No Post Yet...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          No Post Yet...
+        </p>
       </div>
     );
   }
@@ -89,7 +101,6 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
 
     let undoClicked = false;
 
-    // Toast with Undo
     toast(
       (t) => (
         <div className="flex items-center gap-3">
@@ -109,7 +120,6 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       { duration: 5000 }
     );
 
-    // Delay actual delete by 5s to allow undo
     setTimeout(async () => {
       if (undoClicked) return;
       try {
@@ -144,7 +154,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         _id: `sponsor-${currentTopic._id}`,
         author: {
           fullName: currentTopic.sponsorName,
-          profileImageUrl: currentTopic.sponsorLogo ? `${API_URL}${currentTopic.sponsorLogo}` : avatar,
+          profileImageUrl: currentTopic.sponsorLogo
+            ? `${API_URL}${currentTopic.sponsorLogo}`
+            : avatar,
           _id: null,
         },
         title: currentTopic.sponsorWebsite || currentTopic.title,
@@ -157,19 +169,37 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       }
     : null;
 
-  const displayedPosts = pinnedSponsorPost ? [pinnedSponsorPost, ...currentPosts] : currentPosts;
+  const displayedPosts = pinnedSponsorPost
+    ? [pinnedSponsorPost, ...currentPosts]
+    : currentPosts;
 
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
-        Showing {startIndex + 1} to {Math.min(endIndex, totalPosts)} of {totalPosts} posts
+        Showing {startIndex + 1} to {Math.min(endIndex, totalPosts)} of{" "}
+        {totalPosts} posts
       </p>
 
       {displayedPosts.map((post) => {
         const author = post.author || DEFAULT_AUTHOR;
         const isSponsorPost = post._id.startsWith("sponsor-");
-        const canPin = !isSponsorPost && user && (user.role === "admin" || currentTopic?.moderators?.some((m) => m._id === user._id));
-        const canDelete = user?._id && (user.role === "admin" || author._id === user._id);
+
+        // Role-based permissions
+        const isAdmin = user?.role === "admin";
+        const isSubOwner = currentTopic?.createdBy?._id === user?._id;
+        const isMod =
+          currentTopic?.moderators?.some(
+            (m) => m.user._id === user?._id && m.role === "mod"
+          ) ?? false;
+        const isAuthor = author._id === user?._id;
+        const isSubMod =
+          currentTopic?.moderators?.some(
+            (m) => m.user._id === user?._id && m.role === "sub_mod"
+          ) ?? false;
+
+        const canDelete = !isSponsorPost && (isAdmin || isSubOwner || isMod || isSubMod || isAuthor);
+        const canShare = !isSponsorPost;
+        const canPin = !isSponsorPost && (isAdmin || isSubOwner || isMod);
 
         return (
           <div
@@ -181,7 +211,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
             <img
               src={getAvatar(author)}
               alt={author.fullName || "Guest"}
-              onError={(e) => { e.target.src = avatar; }}
+              onError={(e) => {
+                e.target.src = avatar;
+              }}
               className="w-12 h-12 rounded-full object-cover"
             />
             <div className="flex-1">
@@ -196,19 +228,31 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                     </p>
                   ) : (
                     <Link to={`/profile/pt/${author._id}`}>
-                      <span className="font-semibold text-black">{author.fullName}</span>
+                      <span className="font-semibold text-black">
+                        {author.fullName}
+                      </span>
                     </Link>
                   )}
                 </span>
-                <span className="text-gray-400 text-sm">{formatDate(post.createdAt)}</span>
+                <span className="text-gray-400 text-sm">
+                  {formatDate(post.createdAt)}
+                </span>
               </div>
 
               {isSponsorPost ? (
-                <a href={post.title} target="_blank" rel="noreferrer" className="text-lg font-bold text-caribbean mb-2 block">
+                <a
+                  href={`https:\\${post.title}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-lg font-bold text-caribbean mb-2 block"
+                >
                   {post.title}
                 </a>
               ) : (
-                <Link to={`/forum/post/${post._id}`} className="text-lg font-bold text-caribbean mb-2 block">
+                <Link
+                  to={`/forum/post/${post._id}`}
+                  className="text-lg font-bold text-caribbean mb-2 block"
+                >
                   {post.title}
                 </Link>
               )}
@@ -218,7 +262,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
               <div className="flex items-center gap-4 mt-3 text-gray-500">
                 <button
                   onClick={() => handleVote(post._id, 1)}
-                  className={`flex items-center gap-1 ${user?._id ? "hover:text-green-600" : "cursor-not-allowed opacity-50"}`}
+                  className={`flex items-center gap-1 ${
+                    user?._id ? "hover:text-green-600" : "cursor-not-allowed opacity-50"
+                  }`}
                   disabled={!user?._id || isSponsorPost}
                 >
                   <ThumbsUp size={16} /> {post.upvotes?.length || 0}
@@ -226,7 +272,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
 
                 <button
                   onClick={() => handleVote(post._id, -1)}
-                  className={`flex items-center gap-1 ${user?._id ? "hover:text-red-600" : "cursor-not-allowed opacity-50"}`}
+                  className={`flex items-center gap-1 ${
+                    user?._id ? "hover:text-red-600" : "cursor-not-allowed opacity-50"
+                  }`}
                   disabled={!user?._id || isSponsorPost}
                 >
                   <ThumbsDown size={16} /> {post.downvotes?.length || 0}
@@ -235,7 +283,11 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                 {canPin && (
                   <button
                     onClick={() => onTogglePin(post._id, post.pinned)}
-                    className={`px-2 py-1 text-xs rounded ${post.pinned ? "bg-yellow-500 text-black" : "bg-gray-300 text-black hover:bg-gray-400"}`}
+                    className={`px-2 py-1 text-xs rounded ${
+                      post.pinned
+                        ? "bg-yellow-500 text-black"
+                        : "bg-gray-300 text-black hover:bg-gray-400"
+                    }`}
                   >
                     {post.pinned ? "Unpin" : "Pin"}
                   </button>
@@ -245,12 +297,20 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                   <MessageCircle size={16} /> {post.comments?.length || 0}
                 </div>
 
-                <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSharePost(post)}>
-                  <Share2 size={16} /> Share
-                </div>
+                {canShare && (
+                  <div
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={() => handleSharePost(post)}
+                  >
+                    <Share2 size={16} /> Share
+                  </div>
+                )}
 
                 {canDelete && (
-                  <button onClick={() => handleDeletePost(post._id)} className="text-red-500 flex items-center gap-1">
+                  <button
+                    onClick={() => handleDeletePost(post._id)}
+                    className="text-red-500 flex items-center gap-1"
+                  >
                     <Trash2 size={16} /> Delete
                   </button>
                 )}
@@ -264,7 +324,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         {[...Array(totalPages)].map((_, i) => (
           <button
             key={i}
-            className={`btn p-1 border border-caribbean text-caribbean hover:bg-tufts hover:text-white ${currentPage === i + 1 ? "btn-active" : ""}`}
+            className={`btn p-1 border border-caribbean text-caribbean hover:bg-tufts hover:text-white ${
+              currentPage === i + 1 ? "btn-active" : ""
+            }`}
             onClick={() => setCurrentPage(i + 1)}
           >
             {i + 1}

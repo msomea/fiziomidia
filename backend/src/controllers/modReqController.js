@@ -39,26 +39,42 @@ export const checkMyModStatus = async (req, res) => {
     const userId = req.user._id;
 
     const sub = await ForumSub.findById(subId);
+    if (!sub) {
+      return res.status(404).json({ error: "Sub not found" });
+    }
 
-    if (!sub) return res.status(404).json({ error: "Sub not found" });
+    // ✅ role-aware moderator check
+    const modEntry = sub.moderators.find((m) => m.user.equals(userId));
 
-    // Check if user is already a moderator
-    const isMod = sub.moderators.some((m) => m.equals(userId));
-    if (isMod) return res.json({ requested: true, alreadyMod: true });
+    if (modEntry) {
+      return res.json({
+        requested: true,
+        alreadyMod: true,
+        role: modEntry.role, // "mod" | "sub_mod"
+      });
+    }
 
-    // Check if user has a pending request
+    // check for existing request (pending or rejected)
     const request = await ForumSubModRequest.findOne({
       sub: subId,
       user: userId,
-      status: "pending",
+      status: { $in: ["pending", "rejected"] },
     });
 
-    res.json({ requested: !!request, alreadyMod: false });
+    res.json({
+      requested: !!request,
+      alreadyMod: false,
+      requestStatus: request?.status || null, // frontend can use to show "Request Sent" or "Rejected"
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to check mod request status" });
+    res.status(500).json({
+      error: "Failed to check mod request status",
+    });
   }
 };
+
+
 
 // Request to become sub moderator
 export const createModRequest = async (req, res) => {

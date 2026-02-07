@@ -61,7 +61,7 @@ export default function ForumModRequestsDetail() {
         <p><b>User:</b> {request.user.fullName}</p>
         <p><b>Sub:</b> {request.sub.title}</p>
         <p><b>Current Status:</b> {request.status}</p>
-        <p><b>Requested Role:</b> {request.role}</p>
+        <p><b>Current Role:</b> {request.role}</p>
         <p><b>Reason:</b> {request.reason || "-"}</p>
 
         <div className="mt-3">
@@ -72,9 +72,8 @@ export default function ForumModRequestsDetail() {
             className="border p-2 rounded"
           >
             <option value="member">Member</option>
-            <option value="sub-mod">Sub-Moderator</option>
+            <option value="sub_mod">Sub-Moderator</option>
             <option value="mod">Moderator</option>
-            <option value="rejected">Rejected</option>
           </select>
           <button
             onClick={updateRole}

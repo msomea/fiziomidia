@@ -164,7 +164,7 @@ export const editSub = async (req, res) => {
     const isOwner = sub.createdBy.toString() === req.user._id.toString();
     const isMod =
       sub.moderators?.some(
-        (modId) => modId.toString() === req.user._id.toString()
+        (m) => m.user.toString() === req.user._id.toString() && m.role === "mod"
       );
 
     if (!isAdmin && !isOwner && !isMod) {
@@ -177,8 +177,7 @@ export const editSub = async (req, res) => {
     if (title !== undefined) sub.title = title;
     if (description !== undefined) sub.description = description;
     if (rules !== undefined) sub.rules = rules;
-    if (slug !== undefined && isAdmin) sub.slug = slug; 
-    // slug usually admin-only to avoid breaking URLs
+    if (slug !== undefined && isAdmin) sub.slug = slug; // admin-only for slug
 
     await sub.save();
 
@@ -191,6 +190,7 @@ export const editSub = async (req, res) => {
     res.status(500).json({ error: "Failed to update sub" });
   }
 };
+
 
 
 
@@ -406,21 +406,27 @@ export const getPostsByPTId = async (req, res) => {
 export const deletePost = async (req, res) => {
   const { id } = req.params;
 
-
   try {
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ error: "Post not found" });
 
-    // Author or admin can delete
-    if (
-      post.author.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
-    ) {
-      return res
-        .status(403)
-        .json({ error: "Only author or admin can delete this post" });
+    // Get the sub this post belongs to
+    const sub = await ForumSub.findById(post.sub);
+
+    // Check permissions: author, admin, or moderator of the sub
+    const isAuthor = post.author.toString() === req.user._id.toString();
+    const isAdmin = req.user.role === "admin";
+    const isMod =
+      sub?.moderators?.some((m) => m.user.toString() === req.user._id.toString()) ||
+      false;
+
+    if (!isAuthor && !isAdmin && !isMod) {
+      return res.status(403).json({
+        error: "Only the post author, admin, or moderators of this sub can delete this post",
+      });
     }
-    await Post.findByIdAndDelete(req.params.id);
+
+    await Post.findByIdAndDelete(id);
 
     res.json({ message: "Post deleted successfully" });
   } catch (err) {
@@ -488,28 +494,46 @@ export const removeSubSponsorship = async (req, res) => {
   }
 };
 
-// Toggle pin/unpin post (admin or sub mod only, cannot pin sponsored posts)
+// Toggle pin/unpin post (admin, sub creator or sub mod only, cannot pin sponsored posts)
 export const togglePinPost = async (req, res) => {
   const { subId } = req.params;
   const user = req.user; // from auth middleware
+
   try {
     const post = await Post.findById(subId).populate("sub");
     if (!post) return res.status(404).json({ success: false, error: "Post not found" });
 
+    const sub = post.sub;
+    if (!sub) return res.status(404).json({ success: false, error: "Forum sub not found" });
+
     // Sponsored posts cannot be pinned/unpinned
-    // const sub = post.sub;
-    // if (sub.isSponsored) return res.status(403).json({ success: false, error: "Cannot pin/unpin sponsored posts" });
+    if (sub.isSponsored) {
+      return res.status(403).json({ success: false, error: "Cannot pin/unpin sponsored posts" });
+    }
 
     // Permissions check
     const isAdmin = user.role === "admin";
-    const isSubMod = ForumSub.moderators?.some((modId) => modId.toString() === user._id.toString());
-    if (!isAdmin && !isSubMod) return res.status(403).json({ success: false, error: "You do not have permission to pin/unpin this post" });
+    const isSubOwner = sub.createdBy.toString() === user._id.toString();
+    const isMod = sub.moderators?.some(
+      (m) => m.user.toString() === user._id.toString() && m.role === "mod"
+    );
+
+    if (!isAdmin && !isSubOwner && !isMod) {
+      return res.status(403).json({
+        success: false,
+        error: "You do not have permission to pin/unpin this post",
+      });
+    }
 
     // Toggle pinned
     post.pinned = !post.pinned;
     await post.save();
 
-    res.json({ success: true, message: `Post ${post.pinned ? "pinned" : "unpinned"} successfully`, post });
+    res.json({
+      success: true,
+      message: `Post ${post.pinned ? "pinned" : "unpinned"} successfully`,
+      post,
+    });
   } catch (err) {
     console.error("Toggle pin error:", err);
     res.status(500).json({ success: false, error: "Failed to toggle pin" });

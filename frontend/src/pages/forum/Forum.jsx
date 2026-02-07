@@ -7,7 +7,7 @@ import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 import CollapsibleSection from "../../components/admin/CollapsibleSection";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 const Forum = () => {
   const navigate = useNavigate();
@@ -36,22 +36,19 @@ const Forum = () => {
   }, [selectedSub]);
 
   /* ------------------ Permissions ------------------ */
-
+  const isMOd = selectedSub?.moderators?.some((m) => m.user._id === user._id && m.role === "mod");
+  const isOwner = selectedSub?.createdBy?._id === user._id;
   const canEditRules =
     user &&
     selectedSub &&
-    (
-      user.role === "admin" ||
-      selectedSub.createdBy?._id === user._id ||
-      selectedSub.moderators?.some((mod) => mod._id === user._id)
-    );
+    (user.role === "admin" || isMOd || isOwner);
 
   /* ------------------ Handlers ------------------ */
 
   const handleSelectTopic = async (topic) => {
     await fetchSub(topic._id);
     await fetchPosts(topic._id);
-    checkModRequestStatus(topic._id);
+    await checkModRequestStatus(topic._id);
   };
 
   const handleAddRule = () => {
@@ -71,8 +68,8 @@ const Forum = () => {
       const res = await API.put(`/forum/subs/${selectedSub._id}`, {
         rules: cleanedRules,
       });
-
-      if (!res.data?.success) {
+      console.log("Res", res.data.success)
+      if (!res?.data.success) {
         throw new Error("Update failed");
       }
 
@@ -89,14 +86,15 @@ const Forum = () => {
     }
   };
 
-
   /* ------------------ Moderator Request ------------------ */
 
   const checkModRequestStatus = async (subId) => {
     if (!user || user.role !== "physiotherapist") return;
+
     try {
       const res = await API.get(`/forum/subs/${subId}/my-mod-request`);
-      setHasRequested(res.data.requested || false);
+      console.log("my mod request", res.data)
+      setHasRequested(res.data.requested || res.data.alreadyMod || false);
     } catch (err) {
       console.error("Failed to check mod request:", err);
     }
@@ -105,11 +103,16 @@ const Forum = () => {
   const requestModerator = async () => {
     if (!selectedSub) return;
     setRequesting(true);
+
     try {
       const res = await API.post(`/forum/subs/${selectedSub._id}/mod-requests`);
+
       if (res.data.success) {
         toast.success("Moderator request sent");
         setHasRequested(true);
+
+        // refresh sub to reflect new moderator if auto-approved
+        await fetchSub(selectedSub._id);
       } else {
         toast.error(res.data.error || "Request failed");
       }
@@ -124,8 +127,9 @@ const Forum = () => {
   const showRequestButton =
     user?.role === "physiotherapist" &&
     selectedSub &&
-    !selectedSub.moderators?.some((m) => m._id === user._id) &&
-    selectedSub.createdBy?._id !== user._id;
+    !selectedSub.moderators?.some((m) => m.user._id === user._id) &&
+    selectedSub.createdBy?._id !== user._id &&
+    !hasRequested;
 
   /* ------------------ Pin Logic ------------------ */
 
@@ -134,6 +138,7 @@ const Forum = () => {
       const res = await API.put(`/forum/posts/${postId}/pin`, {
         pinned: !pinned,
       });
+
       if (res.data.success) {
         toast.success(!pinned ? "Post pinned" : "Post unpinned");
         await fetchPosts(selectedSub._id);
@@ -158,7 +163,6 @@ const Forum = () => {
   };
 
   /* ------------------ Render ------------------ */
-
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">

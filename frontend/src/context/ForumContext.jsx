@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from "react";
 import API from "../api/axios";
 import { toast } from "react-hot-toast";
+import { set } from "mongoose";
 
 const ForumContext = createContext();
 
@@ -75,6 +76,7 @@ export const ForumProvider = ({ children }) => {
         posts,
         setPosts,
         selectedSub,
+        setSelectedSub,
         loadingPosts,
         loadingSub,
         fetchSub,

@@ -30,8 +30,7 @@ router.delete("/subs/:id", admin.deleteSub);
 router.get("/forum/mod-requests", modReq.listModRequests);
 router.get("/forum/mod-requests/:id", modReq.getModRequestDetail);
 router.put("/forum/mod-requests/:id/role", modReq.updateModRequestRole);
-router.put("/forum/mod-requests/:id/approve", modReq.approveModRequest);
-router.put("/forum/mod-requests/:id/reject", modReq.rejectModRequest);
+
 
 // Admin PT Promotions
 router.get("/promotions", admin.getAllPromotions);

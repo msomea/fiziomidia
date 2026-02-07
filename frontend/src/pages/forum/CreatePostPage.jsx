@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import API from "../../api/axios";
-import { Loader2 } from "lucide-react";
+import {X, Loader2 } from "lucide-react";
 import { ArrowBigLeftIcon, ArrowBigRightIcon, Search } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -80,7 +80,12 @@ const CreatePost = () => {
   return (
     <div className="min-h-screen bg-alice p-6 mt-20">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded-xl p-6">
-        <h1 className="text-2xl font-bold text-caribbean mb-4">Create New Post</h1>
+        <div className="flex justify-between mb-4">
+        <h2 className="text-xl font-bold text-caribbean">Create New Post</h2>
+        <button onClick={() => navigate(-1)}>
+          <X className="text-red-500 hover:text-red-800" />
+        </button>
+      </div>
 
         {/* Search + Topics List */}
         <div className="mb-6">

@@ -57,48 +57,17 @@ export const getModRequestDetail = async (req, res) => {
 // ------------------------------------
 export const updateModRequestRole = async (req, res) => {
   try {
-    const { id } = req.params; // make sure frontend sends the request ID
+    const { id } = req.params;
     const { role } = req.body;
 
-    const request = await ForumSubModRequest.findById(id);
-    if (!request) return res.status(404).json({ error: "Request not found" });
-
-    // update role
-    request.role = role;
-
-    // auto-approve if role changed
-    if (role === "mod" || role === "sub-mod") {
-      request.status = "approved";
-      request.reviewedBy = req.user._id;
-      request.reviewedAt = new Date();
-
-      // also update the sub moderators array if promoting to mod/sub-mod
-      const sub = await ForumSub.findById(request.sub);
-      if (sub && !sub.moderators.includes(request.user)) {
-        sub.moderators.push(request.user);
-        await sub.save();
-      }
+    // allowed roles only
+    if (!["mod", "sub_mod", "member"].includes(role)) {
+      return res.status(400).json({ error: "Invalid role" });
     }
 
-    await request.save();
-
-    res.json({ success: true, request });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to update request role" });
-  }
-};
-
-// ------------------------------------
-// APPROVE MODERATOR REQUEST
-// ------------------------------------
-export const approveModRequest = async (req, res) => {
-  try {
-    const { id } = req.params;
-
     const request = await ForumSubModRequest.findById(id);
-    if (!request || request.status !== "pending") {
-      return res.status(404).json({ error: "Request not found or processed" });
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
     }
 
     const sub = await ForumSub.findById(request.sub);
@@ -106,44 +75,49 @@ export const approveModRequest = async (req, res) => {
       return res.status(404).json({ error: "Forum sub not found" });
     }
 
-    if (!sub.moderators.includes(request.user)) {
-      sub.moderators.push(request.user);
+    // find moderator entry (if exists)
+    const modEntry = sub.moderators.find((m) => m.user.equals(request.user));
+
+    // If role is member, remove from moderators
+    if (role === "member") {
+      request.status = "rejected"; // mark approved for admin demotion
+      if (modEntry) {
+        sub.moderators = sub.moderators.filter((m) => !m.user.equals(request.user));
+        await sub.save();
+      }
+    } else {
+      // role = mod or sub_mod
+      request.status = "approved";
+      if (!modEntry) {
+        // first-time moderator
+        sub.moderators.push({
+          user: request.user,
+          role,
+          assignedAt: new Date(),
+        });
+      } else {
+        // upgrade/downgrade mod <-> sub_mod
+        modEntry.role = role;
+      }
       await sub.save();
     }
 
-    request.status = "approved";
-    request.reviewedBy = req.user._id;
-    request.reviewedAt = new Date();
-    request.role = "sub-mod"; // default role on approval
-    await request.save();
-
-    res.json({ message: "Moderator request approved" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to approve request" });
-  }
-};
-
-// ------------------------------------
-// REJECT MODERATOR REQUEST
-// ------------------------------------
-export const rejectModRequest = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const request = await ForumSubModRequest.findById(id);
-    if (!request || request.status !== "pending") {
-      return res.status(404).json({ error: "Request not found or processed" });
-    }
-
-    request.status = "rejected";
+    request.role = role;
     request.reviewedBy = req.user._id;
     request.reviewedAt = new Date();
     await request.save();
 
-    res.json({ message: "Moderator request rejected" });
+    res.json({
+      success: true,
+      request,
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to reject request" });
+    res.status(500).json({
+      error: "Failed to update request role",
+    });
   }
 };
+
+
+

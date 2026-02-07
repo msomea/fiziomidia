@@ -20,7 +20,7 @@ const ForumSubModRequestSchema = new mongoose.Schema(
     // Role assigned to the user for this sub (updated by admin)
     role: {
       type: String,
-      enum: ["member", "sub-mod", "mod"],
+      enum: ["member", "sub_mod", "mod"],
       default: "member",
     },
     reviewedBy: {
