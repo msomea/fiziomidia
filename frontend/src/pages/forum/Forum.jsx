@@ -36,8 +36,8 @@ const Forum = () => {
   }, [selectedSub]);
 
   /* ------------------ Permissions ------------------ */
-  const isMOd = selectedSub?.moderators?.some((m) => m.user._id === user._id && m.role === "mod");
-  const isOwner = selectedSub?.createdBy?._id === user._id;
+  const isMOd = selectedSub?.moderators?.some((m) => m.user?.toString() === user._id && m.role === "mod");
+  const isOwner = selectedSub?.createdBy?.toString() === user._id;
   const canEditRules =
     user &&
     selectedSub &&

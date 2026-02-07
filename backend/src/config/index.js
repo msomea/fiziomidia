@@ -7,11 +7,7 @@ const requiredVars = [
   "MONGO_URI",
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
-  "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
-  "CLOUDINARY_URL",
   "CLIENT_URL",
-  "RESEND_API_KEY",
 ];
 
 for (const key of requiredVars) {

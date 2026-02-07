@@ -186,15 +186,15 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
 
         // Role-based permissions
         const isAdmin = user?.role === "admin";
-        const isSubOwner = currentTopic?.createdBy?._id === user?._id;
+        const isSubOwner = currentTopic?.createdBy?.toString() === user?._id;
         const isMod =
           currentTopic?.moderators?.some(
-            (m) => m.user._id === user?._id && m.role === "mod"
+            (m) => m.user?.toString() === user?._id && m.role === "mod"
           ) ?? false;
         const isAuthor = author._id === user?._id;
         const isSubMod =
           currentTopic?.moderators?.some(
-            (m) => m.user._id === user?._id && m.role === "sub_mod"
+            (m) => m.user?.toString() === user?._id && m.role === "sub_mod"
           ) ?? false;
 
         const canDelete = !isSponsorPost && (isAdmin || isSubOwner || isMod || isSubMod || isAuthor);

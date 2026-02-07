@@ -15,14 +15,11 @@ Ensure MongoDB running and MONGO_URI set.
 | Approve/reject sub_mod requests    | ✅     | ✅   | ❌       |
 | Moderate posts/comments            | ✅     | ✅   | ✅       |
 | Add/remove moderators              | ✅     | ❌   | ❌       |
-| Pin/unpin posts (optional)         | ✅     | ✅   | ⚪️      |
-| Manage rules                       | ✅     | ✅   | ⚪️      |
+| Pin/unpin posts (optional)         | ✅     | ✅   | ❌      |
+| Manage rules                       | ✅     | ✅   | ❌      |
 
-
-Stage 4
-
-➡️ PT-side “Request Moderator” button + status feedback
-
-Stage 5
-
-➡️ Moderator tools UI (pin, lock, remove)
+Test
+1. register for domain
+2. MongoDb cruster ✅
+3. backend to Render
+4. frontend to Vercel
