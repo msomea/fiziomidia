@@ -9,7 +9,7 @@ import TextAreaField from "../../components/form/TextAreaField";
 import AvatarUpload from "../../components/form/AvatarUpload";
 
 export default function MemberProfileSettings() {
-  const API_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:4000";
+  const API_URL = import.meta.env.VITE_SOCKET_URL;
   const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState({

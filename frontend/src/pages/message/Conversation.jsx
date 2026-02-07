@@ -4,15 +4,17 @@ import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
-import { API_URL } from "../../config/constants";
+import { SOCKET_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 
 import ConversationHeader from "../../components/message/ConversationHeader";
 import ConversationMessages from "../../components/message/ConversationMessages";
 import ConversationInput from "../../components/message/ConversationInput";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
-const socket = io(SOCKET_URL || "http://localhost:4000");
+const socket = io(SOCKET_URL, {
+  transports: ["websocket"],
+  withCredentials: true
+});
 
 export default function ConversationPage() {
   const { id: otherUserId } = useParams();
