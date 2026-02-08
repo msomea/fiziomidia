@@ -49,7 +49,8 @@ const CommentItem = ({
     setReplyContent("");
     setReplying(false);
   };
-
+console.log(`ASSET URL is ${ASSET_URL}${comment.author?.profileImageUrl}`)
+console.log("API URL", API_URL)
   return (
     <div className="mt-4">
       <div className="flex gap-3">
