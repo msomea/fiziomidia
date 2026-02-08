@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { ASSET_URL } from "../../config/constants";
 
 const PTGallery = ({ gallery }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +29,7 @@ const PTGallery = ({ gallery }) => {
           {recentGallery.map((item, index) => (
             <div key={index} className="rounded overflow-hidden shadow-sm">
               <img
-                src={`${API_URL}${item.imageUrl}`}
+                src={`${ASSET_URL}${item.imageUrl}`}
                 alt={item.caption || `Image ${index + 1}`}
                 className="w-full h-40 object-cover"
               />

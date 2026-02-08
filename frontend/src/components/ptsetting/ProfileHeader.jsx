@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { ASSET_URL} from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 
 const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) => {
@@ -21,7 +21,7 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
                 : formData.profileImageUrl
                 ? formData.profileImageUrl.startsWith("http")
                   ? formData.profileImageUrl
-                  : `${API_URL}${formData.profileImageUrl}`
+                  : `${ASSET_URL}${formData.profileImageUrl}`
                 : avatar
             }
             alt="Physiotherapist"

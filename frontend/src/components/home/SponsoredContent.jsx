@@ -2,7 +2,7 @@ import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 
 const SponsoredContent = () => {
   const [products, setProducts] = useState([]);
@@ -117,7 +117,7 @@ const SponsoredContent = () => {
                 className="min-w-[300px] max-w-[300px] bg-alice shadow-md hover:shadow-lg transition rounded-2xl p-4 flex-shrink-0"
               >
                 <img
-                  src={`${API_URL}${product.image}`}
+                  src={`${ASSET_URL}${product.image}`}
                   alt={product.name}
                   className="rounded-xl w-full h-40 object-cover"
                 />

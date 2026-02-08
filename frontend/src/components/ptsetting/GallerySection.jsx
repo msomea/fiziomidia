@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown, X } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { ASSET_URL } from "../../config/constants";
 
 const GallerySection = ({ formData, setFormData }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +15,7 @@ const GallerySection = ({ formData, setFormData }) => {
       };
     }
     return {
-      src: `${API_URL}${item.imageUrl}`,
+      src: `${ASSET_URL}${item.imageUrl}`,
       caption: item.caption || "",
       file: null,
     };

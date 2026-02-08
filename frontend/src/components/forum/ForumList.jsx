@@ -12,7 +12,7 @@ import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 
 const DEFAULT_AUTHOR = {
   fullName: "Guest",
@@ -64,7 +64,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   };
 
   const getAvatar = (author) =>
-    author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
+    author?.profileImageUrl ? `${ASSET_URL}${author.profileImageUrl}` : avatar;
 
   const handleVote = async (postId, voteValue) => {
     if (!user?._id) return toast.error("You must be logged in to vote");

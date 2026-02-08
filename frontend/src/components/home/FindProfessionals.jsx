@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 
@@ -96,7 +96,7 @@ export default function FindProfessionals() {
                     <img
                       src={
                         pt.profileImageUrl
-                          ? `${API_URL}${pt.profileImageUrl}`
+                          ? `${ASSET_URL}${pt.profileImageUrl}`
                           : avatar
                       }
                       alt={pt.fullName || "Physiotherapist"}

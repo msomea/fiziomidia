@@ -1,5 +1,5 @@
 import { ArrowLeft, PhoneIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { ASSET_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 
 export default function ConversationHeader({
@@ -19,7 +19,7 @@ export default function ConversationHeader({
             <img
               src={
                 otherUser?.profileImageUrl
-                  ? `${API_URL}${otherUser.profileImageUrl}`
+                  ? `${ASSET_URL}${otherUser.profileImageUrl}`
                   : avatar
               }
               alt="User"
