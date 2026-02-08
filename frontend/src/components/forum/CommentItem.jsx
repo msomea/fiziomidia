@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import ProfileBadge from "../Badge";
 
 const CommentItem = ({
@@ -40,7 +40,7 @@ const CommentItem = ({
   );
 
   const getAvatar = (author) =>
-    author?.profileImageUrl ? `${API_URL}${author.profileImageUrl}` : avatar;
+    author?.profileImageUrl ? `${ASSET_URL}/${author.profileImageUrl}` : avatar;
 
   /* ---------------- Reply ---------------- */
   const submitReply = () => {

@@ -3,7 +3,7 @@ import { getSponsoredProducts } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 
 export default function ProductSponsorshipSection() {
   const [products, setProducts] = useState([]);
@@ -69,7 +69,7 @@ export default function ProductSponsorshipSection() {
           className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"
         >
           <img
-            src={`${API_URL}${product.image}`}
+            src={`${ASSET_URL}/${product.image}`}
             alt={product.name}
             className="w-20 h-20 rounded object-cover border"
           />

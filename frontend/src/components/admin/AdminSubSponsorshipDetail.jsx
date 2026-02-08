@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -226,7 +226,7 @@ export default function AdminSponsorshipDetail() {
 
               {form.sponsorLogo && (
                 <img
-                  src={`${API_URL}${form.sponsorLogo}`}
+                  src={`${ASSET_URL}/${form.sponsorLogo}`}
                   className="w-24 h-24 rounded border object-cover"
                 />
               )}

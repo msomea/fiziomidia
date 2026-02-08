@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
 import { X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import { getSponsoredProductById } from "../../api/admin";
 
 const CATEGORIES = ["equipment", "digital", "services", "others"];
@@ -272,7 +272,7 @@ export default function AdminProductSponsorshipDetail() {
 
             {form.image && (
               <img
-                src={`${API_URL}${form.image}`}
+                src={`${ASSET_URL}/${form.image}`}
                 alt="Product"
                 className="w-24 h-24 rounded object-cover mb-2 border"
               />
