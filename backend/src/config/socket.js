@@ -9,7 +9,12 @@ let io;
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: [
+        "http://localhost:5173",
+        "https://fiziomidia.netlify.app",
+        "https://fiziomidia.pages.dev"
+
+      ],
       methods: ["GET", "POST"],
       // Ensure socket.io responses include Access-Control-Allow-Credentials: true
       credentials: true,

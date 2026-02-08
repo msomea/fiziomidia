@@ -41,8 +41,31 @@ import fs from "fs";
 // Initialize Express
 const app = express();
 
+// Allwed Origins for CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://fiziomidia.org",
+  "https://fiziomidia.netlify.app",
+  "https://fiziomidia.pages.dev",
+  "https://fiziomidia.com",
+];
+
 // --- Middleware ---
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow REST tools (Postman, curl) with no origin
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));

@@ -76,31 +76,33 @@ export const updateModRequestRole = async (req, res) => {
     }
 
     // find moderator entry (if exists)
-    const modEntry = sub.moderators.find((m) => m.user.equals(request.user));
+    const modEntry = sub.moderators.find(
+      (m) => m.user && m.user.equals(request.user)
+    );
 
     // If role is member, remove from moderators
     if (role === "member") {
-      request.status = "rejected"; // mark approved for admin demotion
+      request.status = "rejected";
       if (modEntry) {
-        sub.moderators = sub.moderators.filter((m) => !m.user.equals(request.user));
+        sub.moderators = sub.moderators.filter(
+          (m) => m.user && !m.user.equals(request.user)
+        );
         await sub.save();
       }
     } else {
-      // role = mod or sub_mod
       request.status = "approved";
       if (!modEntry) {
-        // first-time moderator
         sub.moderators.push({
           user: request.user,
           role,
           assignedAt: new Date(),
         });
       } else {
-        // upgrade/downgrade mod <-> sub_mod
         modEntry.role = role;
       }
       await sub.save();
     }
+
 
     request.role = role;
     request.reviewedBy = req.user._id;
