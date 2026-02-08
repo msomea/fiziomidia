@@ -6,10 +6,10 @@ import { updateProfile } from "../../api/profile";
 import LocationSelector from "../../components/membersetting/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
+import { ASSET_URL } from "../../config/constants";
 import AvatarUpload from "../../components/form/AvatarUpload";
 
 export default function MemberProfileSettings() {
-  const API_URL = import.meta.env.VITE_SOCKET_URL;
   const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -41,7 +41,7 @@ export default function MemberProfileSettings() {
         password: "",
         confirmPassword: "",
         profileImageUrl: user.profileImageUrl
-          ? `${API_URL}${user.profileImageUrl}?t=${Date.now()}`
+          ? `${ASSET_URL}${user.profileImageUrl}?t=${Date.now()}`
           : "",
       });
 

@@ -155,7 +155,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         author: {
           fullName: currentTopic.sponsorName,
           profileImageUrl: currentTopic.sponsorLogo
-            ? `${API_URL}${currentTopic.sponsorLogo}`
+            ? `${ASSET_URL}${currentTopic.sponsorLogo}`
             : avatar,
           _id: null,
         },

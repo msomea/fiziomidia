@@ -142,7 +142,7 @@ const UpgradeToPT = () => {
 
           {/* LICENSE DOCUMENT UPLOAD */}
           <div>
-            <label className="block font-medium mb-1">Upload License Document</label>
+            <label className="block text-tufts font-medium mb-1">Upload License Document</label>
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"

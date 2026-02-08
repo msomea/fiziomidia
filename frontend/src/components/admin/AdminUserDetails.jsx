@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { X } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 
 export default function AdminUserDetails() {
@@ -105,7 +105,7 @@ export default function AdminUserDetails() {
           <p>License Number: {license.licenseNumber}</p>
           <p>Status: {license.verificationStatus}</p>
           <a
-            href={`${API_URL}${license.licenseFileUrl}`}
+            href={`${ASSET_URL}${license.licenseFileUrl}`}
             target="_blank"
             rel="noreferrer"
             className="text-blue-600 underline"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
+import { ASSET_URL } from "../../config/constants";
 
 
 const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
@@ -161,7 +161,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                  
                   {license.licenseFileUrl && (
                     <a
-                      href={`${API_URL}${license.licenseFileUrl}`}
+                      href={`${ASSET_URL}${license.licenseFileUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-caribbean underline mt-2 block"
