@@ -5,7 +5,6 @@ import { io } from "socket.io-client";
 import API from "../../api/axios";
 import { API_URL, SOCKET_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
-import { SOCKET_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 
 import ConversationHeader from "../../components/message/ConversationHeader";
