@@ -287,42 +287,37 @@ export const updateProfile = async (req, res) => {
       upgradeToPhysiotherapist === true ||
       upgradeToPhysiotherapist === "true"
     ) {
-      // Create new license entry (only ONE allowed)
-      const providedLicenseNumber =
-        req.body["ptProfile[licenseNumber]"] || req.body.licenseNumber || null;
+      if (!req.files?.licenseDocument?.[0]) {
+        return res.status(400).json({ error: "License document required" });
+      }
+
+      if (!req.body.licenseNumber) {
+        return res.status(400).json({ error: "License number required" });
+      }
+
       const newLicense = {
-        licenseNumber: providedLicenseNumber,
-        licenseFileUrl:
-          req.files && req.files.licenseDocument && req.files.licenseDocument[0]
-            ? `/uploads/licenses/${req.files.licenseDocument[0].filename}`
-            : null,
-        licenseFileType:
-          req.files && req.files.licenseDocument && req.files.licenseDocument[0]
-            ? req.files.licenseDocument[0].mimetype
-            : null,
+        licenseNumber: req.body.licenseNumber,
+        licenseFileUrl: `/uploads/licenses/${req.files.licenseDocument[0].filename}`,
+        licenseFileType: req.files.licenseDocument[0].mimetype,
         verificationStatus: "pending",
         verified: false,
         submittedAt: new Date(),
       };
 
-      // Prepare ptProfile on updateData (do not mutate `user` directly)
       const basePtProfile =
-        (user.ptProfile &&
-          user.ptProfile.toObject &&
-          user.ptProfile.toObject()) ||
-        user.ptProfile ||
-        {};
+        user.ptProfile?.toObject?.() || user.ptProfile || {};
+
       updateData.ptProfile = {
-        ...(updateData.ptProfile || {}),
         ...basePtProfile,
-        licenses: [newLicense],
+        ...(updateData.ptProfile || {}),
+        licenses: [newLicense], // ONLY ONE
         isVerified: false,
       };
 
-      // Update PT profile meta
       updateData.role = "pendingPhysiotherapist";
       updateData.physioApproval = false;
     }
+
 
     // ------------------------------------------------------------
     // 7️⃣ Save and return final updated user

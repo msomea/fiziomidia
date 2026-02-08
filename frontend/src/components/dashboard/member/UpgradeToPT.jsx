@@ -49,7 +49,8 @@ const UpgradeToPT = () => {
       });
 
       // --- Single License (Upgrade requires only one) ---
-      body.append(`ptProfile[licenses][0][licenseNumber]`, formData.licenseNumber);
+      body.append("licenseNumber", formData.licenseNumber);
+
 
       // File type from user's selected file (if available)
       if (licenseFile) {
