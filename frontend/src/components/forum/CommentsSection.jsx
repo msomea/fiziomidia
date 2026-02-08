@@ -47,7 +47,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
     try {
       setAdding(true);
-      const res = await API.post(`/forum/posts/${post.postId}/comments`, {
+      const res = await API.post(`${API_URL}/forum/posts/${post.postId}/comments`, {
         content: newComment.trim(),
       });
 
@@ -69,7 +69,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
   try {
     const res = await API.post(
-      `/forum/posts/${post.postId}/comments`,
+      `${API_URL}/forum/posts/${post.postId}/comments`,
       { content, parentComment: parentId }
     );
 
@@ -111,7 +111,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
       try {
         const res = await API.delete(
-          `/forum/posts/${post.postId}/comments/${commentId}`
+          `${API_URL}/forum/posts/${post.postId}/comments/${commentId}`
         );
 
         setDisplayedCount(COMMENTS_PER_PAGE);
@@ -144,7 +144,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
     try {
       const res = await API.put(
-        `/forum/posts/${post.postId}/comments/${commentId}`,
+        `${API_URL}/forum/posts/${post.postId}/comments/${commentId}`,
         { content: editingContent.trim() }
       );
 

@@ -87,7 +87,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     );
 
     try {
-      await API.post(`/forum/posts/${postId}/vote`, { vote: voteValue });
+      await API.post(`${API_URL}/forum/posts/${postId}/vote`, { vote: voteValue });
     } catch (err) {
       console.error(err);
       toast.error("Failed to vote");
@@ -123,7 +123,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     setTimeout(async () => {
       if (undoClicked) return;
       try {
-        await API.delete(`/forum/posts/${postId}`);
+        await API.delete(`${API_URL}/forum/posts/${postId}`);
         toast.success("Post permanently deleted");
       } catch (err) {
         console.error(err);

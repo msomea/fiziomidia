@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import toast from "react-hot-toast";
+import { API_URL } from "../../config/constants";
 import CollapsibleSection from "../admin/CollapsibleSection";
 
 const ForumTopics = ({ onSelectTopic, user }) => {
@@ -23,7 +24,7 @@ const ForumTopics = ({ onSelectTopic, user }) => {
 
   const fetchSubs = async (pageNum = 1, limit) => {
     try {
-      const res = await API.get(`/forum/subs?page=${pageNum}&limit=${limit}`);
+      const res = await API.get(`${API_URL}/forum/subs?page=${pageNum}&limit=${limit}`);
       const data = res.data;
 
       setTopics(data.subs || []);
@@ -90,7 +91,7 @@ const ForumTopics = ({ onSelectTopic, user }) => {
 
     setSubSaving(true);
     try {
-      const res = await API.post("/forum/subs", newSub);
+      const res = await API.post(`${API_URL}/forum/subs`, newSub);
       if (res.data.sub) {
         toast.success("New forum topic created!");
         setShowAddSub(false);

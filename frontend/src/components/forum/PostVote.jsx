@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { toast } from "react-hot-toast";
 
 const PostVote = ({ post, user, refreshPost }) => {
@@ -15,7 +16,7 @@ const PostVote = ({ post, user, refreshPost }) => {
     setLoading(true);
 
     try {
-      await API.post(`/forum/posts/${post.postId}/vote`, { vote: voteValue });
+      await API.post(`${API_URL}/forum/posts/${post.postId}/vote`, { vote: voteValue });
       // Refresh post from backend to get updated vote counts
       refreshPost();
     } catch (err) {

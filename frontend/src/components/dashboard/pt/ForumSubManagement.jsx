@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import axios from "axios";
 import { Link } from "react-router";
+import { API_URL } from "../../../config/constants";
+import API from "../../../api/axios";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -17,9 +19,7 @@ const ForumSubManagement = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("accessToken");
-        const res = await axios.get("/api/forum/my-subs", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.get(`${API_URL}/api/forum/my-subs`);
 
         if (res.data.success) setSubs(res.data.subs);
       } catch (err) {
