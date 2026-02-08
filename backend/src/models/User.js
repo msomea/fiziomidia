@@ -300,7 +300,7 @@ UserSchema.pre("save", function (next) {
         first.verificationStatus = first.verificationStatus || "pending";
         first.submittedAt = first.submittedAt || new Date();
 
-        const licenseNumberRegex = /^MCT([A-Z]{2,3})?\d{4}$/;
+        //const licenseNumberRegex = /^MCT([A-Z]{2,3})?\d{4}$/;
         if (
           first.licenseNumber &&
           !licenseNumberRegex.test(first.licenseNumber)
