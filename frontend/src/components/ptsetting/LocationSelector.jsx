@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { ChevronDown } from "lucide-react";
 
@@ -23,7 +24,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
     const fetchRegions = async () => {
       try {
         setLoading(true);
-        const res = await API.get("/locations/regions");
+        const res = await API.get(`${API_URL}/locations/regions`);
         if (!Array.isArray(res.data)) return toast.error("Invalid region response");
         setRegions(res.data);
       } catch (err) {
@@ -41,7 +42,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedRegion) return setDistricts([]);
       try {
         setLoading(true);
-        const res = await API.get(`/locations/districts/${selectedRegion}`);
+        const res = await API.get(`${API_URL}/locations/districts/${selectedRegion}`);
         setDistricts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         toast.error("Failed to load districts");
@@ -58,7 +59,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedDistrict) return setWards([]);
       try {
         setLoading(true);
-        const res = await API.get(`/locations/wards/${selectedDistrict}`);
+        const res = await API.get(`${API_URL}/locations/wards/${selectedDistrict}`);
         setWards(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         toast.error("Failed to load wards");
@@ -75,7 +76,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedWard) return setStreets([]);
       try {
         setLoading(true);
-        const res = await API.get(`/locations/streets/${selectedWard}`);
+        const res = await API.get(`${API_URL}/locations/streets/${selectedWard}`);
         setStreets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         toast.error("Failed to load streets");

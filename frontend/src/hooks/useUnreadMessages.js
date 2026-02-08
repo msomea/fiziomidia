@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import API from "../api/axios";
+import { API_URL } from "../config/constants";
 import { getSocket } from "../socket";
 import { useAuth } from "../context/AuthContext";
 
@@ -22,7 +23,7 @@ export const useUnreadMessages = () => {
 
     const fetchUnreadCount = async () => {
       try {
-        const res = await API.get("/conversations");
+        const res = await API.get(`${API_URL}/conversations`);
         const conversations = res.data;
 
         // Build a map of conversation unread counts

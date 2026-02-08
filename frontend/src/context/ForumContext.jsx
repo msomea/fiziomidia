@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import API from "../api/axios";
+import { API_URL } from "../config/constants";
 import { toast } from "react-hot-toast";
 
 const ForumContext = createContext();
@@ -16,7 +17,7 @@ export const ForumProvider = ({ children }) => {
 
     try {
       setLoadingSub(true);
-      const res = await API.get(`/forum/subs/${subId}`);
+      const res = await API.get(`${API_URL}/forum/subs/${subId}`);
       const fullSub = res.data.sub || res.data;
 
       setSelectedSub(fullSub);
@@ -44,7 +45,7 @@ export const ForumProvider = ({ children }) => {
         fullSub = await fetchSub(subId);
       }
 
-      const res = await API.get(`/forum/subs/${subId}/posts?page=1&limit=10`);
+      const res = await API.get(`${API_URL}/forum/subs/${subId}/posts?page=1&limit=10`);
       setPosts(res.data.posts || []);
 
     } catch (err) {

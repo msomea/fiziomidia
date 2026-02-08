@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 
 export default function LocationSelector({ onLocationSelect, initialLocation }) {
@@ -22,7 +23,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
     const fetchRegions = async () => {
       try {
         setLoading(true);
-        const res = await API.get("/locations/regions");
+        const res = await API.get(`${API_URL}/locations/regions`);
 
         if (!Array.isArray(res.data)) {
           toast.error("Invalid region response");
@@ -50,7 +51,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
       try {
         setLoading(true);
-        const res = await API.get(`/locations/districts/${selectedRegion}`);
+        const res = await API.get(`${API_URL}/locations/districts/${selectedRegion}`);
         setDistricts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
@@ -73,7 +74,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
       try {
         setLoading(true);
-        const res = await API.get(`/locations/wards/${selectedDistrict}`);
+        const res = await API.get(`${API_URL}/locations/wards/${selectedDistrict}`);
         setWards(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
@@ -96,7 +97,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
       try {
         setLoading(true);
-        const res = await API.get(`/locations/streets/${selectedWard}`);
+        const res = await API.get(`${API_URL}/locations/streets/${selectedWard}`);
         setStreets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown, Eye, EyeOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 
 const PasswordChangeSection = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,7 +60,7 @@ const PasswordChangeSection = () => {
 
     setLoading(true);
     try {
-      await API.post("/auth/change-password", {
+      await API.post(`${API_URL}/auth/change-password`, {
         oldPassword: formData.oldPassword,
         newPassword: formData.newPassword,
       });
