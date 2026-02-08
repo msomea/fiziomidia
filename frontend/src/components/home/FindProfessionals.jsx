@@ -1,50 +1,63 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
-import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
+import {
+  ArrowBigLeftIcon,
+  ArrowBigRightIcon,
+  Loader2,
+} from "lucide-react";
 import { API_URL, ASSET_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 
 const ITEMS_PER_PAGE = 5;
-const AUTO_PLAY_INTERVAL = 5000; // 5 seconds
+const AUTO_PLAY_INTERVAL = 5000;
 
 export default function FindProfessionals() {
   const [pts, setPts] = useState([]);
-  const [page, setPage] = useState(0); // 0-indexed pages
-  const intervalRef = useRef(null);
-  const [containerHeight, setContainerHeight] = useState(0);
-  const itemsRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
 
+  const intervalRef = useRef(null);
+  const itemsRef = useRef(null);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   useEffect(() => {
     const fetchPTs = async () => {
       try {
+        setLoading(true);
         const res = await API.get(`${API_URL}/pts/promotions`);
         setPts(res.data || []);
       } catch (err) {
         console.error("Failed to load PTs:", err);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchPTs();
   }, []);
 
-  // Total number of pages
   const totalPages = Math.ceil(pts.length / ITEMS_PER_PAGE);
+  const hasPagination = totalPages > 1;
 
-  // Auto-play effect
+  // Auto play
   useEffect(() => {
+    if (!hasPagination) return;
+
     startAutoPlay();
+
     if (itemsRef.current) {
       const height = itemsRef.current.offsetHeight;
       if (height > containerHeight) {
         setContainerHeight(height);
       }
     }
-    return () => stopAutoPlay();
+
+    return stopAutoPlay;
   }, [page, pts]);
 
   const startAutoPlay = () => {
-    stopAutoPlay(); // reset existing interval
+    stopAutoPlay();
     intervalRef.current = setInterval(() => {
       setPage((prev) => (prev + 1) % totalPages);
     }, AUTO_PLAY_INTERVAL);
@@ -75,100 +88,112 @@ export default function FindProfessionals() {
         Find Professionals
       </h2>
 
-      {/* Carousel container */}
-      <div
-        className="relative transition-all duration-300"
-        style={{ minHeight: containerHeight || "auto" }}
-      >
-        {/* Measure height */}
-        <div ref={itemsRef}>
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 transition-all duration-500">
-            {currentItems.length > 0 ? (
-              currentItems.map((pt, index) => (
-
-              <div
-                key={pt._id || index}
-                className="card bg-white shadow-md hover:shadow-lg transition-shadow rounded-2xl p-4 text-center"
-              >
-                {/* Avatar */}
-                <div className="avatar mx-auto mb-3">
-                  <div className="w-20 h-20 rounded-full ring ring-caribbean ring-offset-base-100 ring-offset-2 overflow-hidden">
-                    <img
-                      src={
-                        pt.profileImageUrl
-                          ? `${ASSET_URL}${pt.profileImageUrl}`
-                          : avatar
-                      }
-                      alt={pt.fullName || "Physiotherapist"}
-                      onError={(e) => {
-                        e.target.src = avatar;
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* PT Details */}
-                <h3 className="font-semibold text-lg text-black">
-                  {pt.fullName || "Unnamed PT"}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {pt.ptProfile?.speciality?.length
-                    ? pt.ptProfile.speciality.join(", ")
-                    : "No specialities listed"}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {pt.ptProfile?.institution || "No institution listed"}
-                </p>
-
-                {/* View Profile */}
-                <Link
-                  to={`/profile/pt/${pt._id}`}
-                  className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts"
-                >
-                  View Profile
-                </Link>
-              </div>
-            ))
-          ) : (
-            <p className="col-span-full text-center text-gray-600">
-              No promoted physiotherapists found.
-            </p>
-          )}
+      {/* Loading */}
+      {loading && (
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-10 h-10 text-caribbean animate-spin" />
         </div>
-      </div>
+      )}
 
-        {/* Prev Button */}
-        <button
-          onClick={handlePrev}
-          className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white text-caribbean shadow p-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowBigLeftIcon size={22} />
-        </button>
+      {/* Empty state */}
+      {!loading && pts.length === 0 && (
+        <p className="text-center text-gray-500">
+          No promoted professionals available at the moment
+        </p>
+      )}
 
-        {/* Next Button */}
-        <button
-          onClick={handleNext}
-          className="absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white text-caribbean shadow p-2 rounded-full hover:bg-gray-100"
-        >
-          <ArrowBigRightIcon size={22} />
-        </button>
-      </div>
+      {/* Carousel */}
+      {!loading && pts.length > 0 && (
+        <>
+          <div
+            className="relative transition-all duration-300"
+            style={{ minHeight: containerHeight || "auto" }}
+          >
+            <div ref={itemsRef}>
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                {currentItems.map((pt) => (
+                  <div
+                    key={pt._id}
+                    className="bg-white shadow-md hover:shadow-lg transition-shadow rounded-2xl p-4 text-center"
+                  >
+                    <div className="mx-auto mb-3 w-20 h-20 rounded-full ring ring-caribbean ring-offset-2 overflow-hidden">
+                      <img
+                        src={
+                          pt.profileImageUrl
+                            ? `${ASSET_URL}${pt.profileImageUrl}`
+                            : avatar
+                        }
+                        alt={pt.fullName}
+                        onError={(e) => (e.target.src = avatar)}
+                      />
+                    </div>
 
-      {/* Pagination Dots */}
-      <div className="flex justify-center mt-6 space-x-2">
-        {Array.from({ length: totalPages }).map((_, i) => (
-          <button
-            key={i}
-            onClick={() => {
-              stopAutoPlay();
-              setPage(i);
-            }}
-            className={`h-3 w-3 rounded-full transition-all ${
-              i === page ? "bg-caribbean scale-125" : "bg-gray-300"
-            }`}
-          ></button>
-        ))}
-      </div>
+                    <h3 className="font-semibold text-lg">
+                      {pt.fullName || "Unnamed PT"}
+                    </h3>
+
+                    <p className="text-sm text-gray-600">
+                      {pt.ptProfile?.speciality?.length
+                        ? pt.ptProfile.speciality.join(", ")
+                        : "No speciality listed"}
+                    </p>
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      {pt.ptProfile?.institution || "No institution"}
+                    </p>
+
+                    <Link
+                      to={`/profile/pt/${pt._id}`}
+                      className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts"
+                    >
+                      View Profile
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Arrows */}
+            {hasPagination && (
+              <>
+                <button
+                  onClick={handlePrev}
+                  className="absolute top-1/2 -left-4 -translate-y-1/2 bg-white text-caribbean shadow p-2 rounded-full"
+                >
+                  <ArrowBigLeftIcon size={22} />
+                </button>
+
+                <button
+                  onClick={handleNext}
+                  className="absolute top-1/2 -right-4 -translate-y-1/2 bg-white text-caribbean shadow p-2 rounded-full"
+                >
+                  <ArrowBigRightIcon size={22} />
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Pagination dots */}
+          {hasPagination && (
+            <div className="flex justify-center mt-6 gap-2">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    stopAutoPlay();
+                    setPage(i);
+                  }}
+                  className={`h-3 w-3 rounded-full transition-all ${
+                    i === page
+                      ? "bg-caribbean scale-125"
+                      : "bg-gray-300"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </section>
   );
 }

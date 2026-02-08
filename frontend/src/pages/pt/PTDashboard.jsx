@@ -66,7 +66,7 @@ export default function PTDashboard() {
         setStats(statsRes.data || statsRes);
       } catch (err) {
         console.error("Error loading PT dashboard:", err.response?.data || err.message);
-        toast.error("Failed to load dashboard. Check console for details.");
+        toast.error("Failed to load dashboard.");
       } finally {
         setLoading(false);
       }

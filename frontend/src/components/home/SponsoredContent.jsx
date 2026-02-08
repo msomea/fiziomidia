@@ -8,6 +8,7 @@ const SponsoredContent = () => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
+  const [loading, setLoading] = useState(true);
   const carouselRef = useRef(null);
   const sectionRef = useRef(null);
 
@@ -15,10 +16,13 @@ const SponsoredContent = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        setLoading(true);
         const res = await API.get(`${API_URL}/sponsored-products`);
         setProducts(res.data.products);
       } catch (err) {
         toast.error("Failed to load sponsored products");
+      } finally {
+        setLoading(false);
       }
     };
     load();
@@ -98,69 +102,85 @@ const SponsoredContent = () => {
         {/* Carousel container */}
         <div className="relative flex items-center w-full">
           {/* Left arrow */}
-          <button
-            onClick={scrollLeft}
-            className="absolute left-0 z-20 bg-gray-100 p-2 rounded-full shadow text-caribbean hover:bg-gray-200"
-          >
-            <ArrowBigLeftIcon />
-          </button>
+          {products.length > itemsPerPage && !loading && (
+            <button
+              onClick={scrollLeft}
+              className="absolute left-0 z-20 bg-gray-100 p-2 rounded-full shadow text-caribbean hover:bg-gray-200"
+            >
+              <ArrowBigLeftIcon />
+            </button>
+          )}
 
           {/* Scrollable carousel */}
           <div
             ref={carouselRef}
-            className="flex overflow-x-hidden gap-4 px-12 scroll-smooth"
-            style={{ scrollBehavior: "smooth" }}
+            className="flex overflow-x-hidden gap-4 px-12 scroll-smooth justify-center items-center w-full"
           >
-            {products.map((product) => (
-              <div
-                key={product._id}
-                className="min-w-[300px] max-w-[300px] bg-alice shadow-md hover:shadow-lg transition rounded-2xl p-4 flex-shrink-0"
-              >
-                <img
-                  src={`${ASSET_URL}${product.image}`}
-                  alt={product.name}
-                  className="rounded-xl w-full h-40 object-cover"
-                />
-
-                <h3 className="text-lg font-semibold text-black mt-3">
-                  {product.name}
-                </h3>
-
-                <p className="text-caribbean font-bold">Tsh: {product.price}</p>
-                <p className="text-sm text-tufts">{product.description}</p>
-
-                <a
-                  href={`https://${product.link}`}
-                  target="_blank"
-                  className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts w-full"
+            {loading ? (
+              <p className="flex justify-center items-center h-40">
+                <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+              </p>
+            ) : products.length === 0 ? (
+              <p className="text-center text-tufts font-medium py-10">
+                No sponsored products available at the moment
+              </p>
+            ) : (
+              products.map((product) => (
+                <div
+                  key={product._id}
+                  className="min-w-[300px] max-w-[300px] bg-alice shadow-md hover:shadow-lg transition rounded-2xl p-4 flex-shrink-0"
                 >
-                  View Product
-                </a>
-              </div>
-            ))}
+                  <img
+                    src={`${ASSET_URL}${product.image}`}
+                    alt={product.name}
+                    className="rounded-xl w-full h-40 object-cover"
+                  />
+
+                  <h3 className="text-lg font-semibold text-black mt-3">
+                    {product.name}
+                  </h3>
+
+                  <p className="text-caribbean font-bold">Tsh: {product.price}</p>
+                  <p className="text-sm text-tufts">{product.description}</p>
+
+                  <a
+                    href={`https://${product.link}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts w-full"
+                  >
+                    View Product
+                  </a>
+                </div>
+              ))
+            )}
           </div>
 
           {/* Right arrow */}
-          <button
-            onClick={scrollRight}
-            className="absolute right-0 z-20 bg-gray-100 p-2 rounded-full text-caribbean shadow hover:bg-gray-200"
-          >
-            <ArrowBigRightIcon />
-          </button>
+          {products.length > itemsPerPage && !loading && (
+            <button
+              onClick={scrollRight}
+              className="absolute right-0 z-20 bg-gray-100 p-2 rounded-full text-caribbean shadow hover:bg-gray-200"
+            >
+              <ArrowBigRightIcon />
+            </button>
+          )}
         </div>
 
         {/* Pagination dots */}
-        <div className="flex justify-center mt-6 gap-3">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goToPage(i)}
-              className={`w-3 h-3 rounded-full transition ${
-                i === page ? "bg-caribbean" : "bg-gray-300"
-              }`}
-            ></button>
-          ))}
-        </div>
+        {!loading && totalPages > 1 && (
+          <div className="flex justify-center mt-6 gap-3">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPage(i)}
+                className={`w-3 h-3 rounded-full transition ${
+                  i === page ? "bg-caribbean" : "bg-gray-300"
+                }`}
+              ></button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
