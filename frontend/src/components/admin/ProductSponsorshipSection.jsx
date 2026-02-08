@@ -3,7 +3,6 @@ import { getSponsoredProducts } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
-import { dayjs } from "dayjs";
 import { API_URL } from "../../config/constants";
 
 export default function ProductSponsorshipSection() {

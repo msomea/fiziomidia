@@ -18,20 +18,20 @@ export default function AdminUserDetails() {
   }, []);
 
   const load = async () => {
-    const res = await API.get(`/admin/users/${id}`);
+    const res = await API.get(`${API_URL}/admin/users/${id}`);
     setUser(res.data.user);
     setNewRole(res.data.user.role);
   };
 
   const updateRole = async () => {
-    await API.put(`/admin/users/${id}/role`, { role: newRole });
+    await API.put(`${API_URL}/admin/users/${id}/role`, { role: newRole });
     toast.success("Role updated");
     load();
   };
 
   const verifyLicense = async (status, idx) => {
   try {
-    const response = await API.put(`/admin/users/${id}/license`, {
+    const response = await API.put(`${API_URL}/admin/users/${id}/license`, {
       status,
       notes: notes[idx] || "",
       index: idx,

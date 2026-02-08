@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -21,7 +22,7 @@ export default function AdminPromotionDetail() {
   const loadPromotion = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/admin/promotions/${id}`);
+      const res = await API.get(`${API_URL}/admin/promotions/${id}`);
       setPromo(res.data.promotion);
       setStatus(res.data.promotion.status);
 
@@ -36,7 +37,7 @@ export default function AdminPromotionDetail() {
 
   const updatePromotion = async () => {
     try {
-      await API.put(`/admin/promotions/${id}`, {
+      await API.put(`${API_URL}/admin/promotions/${id}`, {
         status,
         endAt,
       });
@@ -52,7 +53,7 @@ export default function AdminPromotionDetail() {
     if (!confirm("Are you sure you want to delete this promotion?")) return;
 
     try {
-      await API.delete(`/admin/promotions/${id}`);
+      await API.delete(`${API_URL}/admin/promotions/${id}`);
       toast.success("Promotion deleted");
       navigate("/dashboard/admin");
     } catch (err) {

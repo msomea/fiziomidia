@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import CollapsibleSection from "./CollapsibleSection";
@@ -18,7 +19,7 @@ export default function ForumModRequestsSection() {
   const loadRequests = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/admin/forum/mod-requests", {
+      const res = await API.get(`${API_URL}/admin/forum/mod-requests`, {
         params: { status },
       });
       setRequests(res.data.requests || []);

@@ -1,35 +1,36 @@
 import API from "./axios";
+import { API_URL } from "../config/constants";
 
 //User Management
 export const fetchAllUsers = async () => {
-  const { data } = await API.get("/admin/users");
+  const { data } = await API.get(`${API_URL}/admin/users`);
   return data;
 };
 
 export const fetchAdminAppointments = async () => {
-  const { data } = await API.get("/admin/appointments");
+  const { data } = await API.get(`${API_URL}/admin/appointments`);
   return data;
 };
 
 export const fetchAdminPromotions = async (params = {}) => {
-  const res = await API.get("/admin/promotions", { params });
+  const res = await API.get(`${API_URL}/admin/promotions`, { params });
   return res.data;
 };
 
 
 // Forum Sub Sponsorship
 export const fetchForumSubs = async () => {
-  const { data } = await API.get("/forum/subs");
+  const { data } = await API.get(`${API_URL}/forum/subs`);
   return data;
 };
 
 export const updateSponsorship = async (id, payload) => {
-  const { data } = await API.put(`/admin/subs/${id}/sponsorship`, payload);
+  const { data } = await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, payload);
   return data;
 };
 
 export const removeSponsorship = async (id) => {
-  const { data } = await API.put(`/admin/subs/${id}/sponsorship/remove`);
+  const { data } = await API.put(`${API_URL}/admin/subs/${id}/sponsorship/remove`);
   return data;
 };
 
@@ -37,7 +38,7 @@ export const removeSponsorship = async (id) => {
 // Fetch sponsored products for admin with pagination & optional filters
 export const getSponsoredProducts = async ({ page = 1, ...filters } = {}) => {
   try {
-    const res = await API.get("/admin/sponsored-products", {
+    const res = await API.get(`${API_URL}/admin/sponsored-products`, {
       params: { page, ...filters },
     });
     return res.data; // { page, totalPages, products }
@@ -48,15 +49,15 @@ export const getSponsoredProducts = async ({ page = 1, ...filters } = {}) => {
 };
 
 export const getSponsoredProductById = async (id) => {
-  const res = await API.get(`/admin/sponsored-products/${id}`);
+  const res = await API.get(`${API_URL}/admin/sponsored-products/${id}`);
   return res.data;
 };
 
 export const createSponsoredProduct = (data) =>
-  API.post("/admin/sponsored", data);
+  API.post(`${API_URL}/admin/sponsored`, data);
 
 export const updateSponsoredProduct = (id, data) =>
-  API.put(`/admin/sponsored/${id}`, data);
+  API.put(`${API_URL}/admin/sponsored/${id}`, data);
 
 export const deleteSponsoredProduct = (id) =>
-  API.delete(`/admin/sponsored/${id}`);
+  API.delete(`${API_URL}/admin/sponsored/${id}`);

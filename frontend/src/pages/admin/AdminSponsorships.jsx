@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
 import {toast} from "react-hot-toast";
 import { Loader2 } from "lucide-react";
+import { API_URL } from "../../config/constants";
 
 const AdminSponsorships = () => {
   const [subs, setSubs] = useState([]);
@@ -19,7 +20,7 @@ const AdminSponsorships = () => {
   // Fetch all forum subs
   const fetchSubs = async () => {
     try {
-      const res = await API.get("/api/forum/subs"); // authenticated admin route
+      const res = await API.get(`${API_URL}/forum/subs`); // authenticated admin route
       setSubs(res.data.subs || []);
     } catch (err) {
       console.error(err);
@@ -65,7 +66,7 @@ const AdminSponsorships = () => {
     if (!form.subId) return toast.error("Select a forum sub first.");
 
     try {
-      const res = await API.put(`/admin/subs/${form.subId}/sponsorship`, form);
+      const res = await API.put(`${API_URL}/admin/subs/${form.subId}/sponsorship`, form);
       toast.success("Sponsorship updated successfully.");
       fetchSubs();
     } catch (err) {
@@ -78,7 +79,7 @@ const AdminSponsorships = () => {
   const handleRemove = async (subId) => {
     if (!window.confirm("Remove sponsorship?")) return;
     try {
-      await API.put(`/admin/subs/${subId}/sponsorship/remove`);
+      await API.put(`${API_URL}/admin/subs/${subId}/sponsorship/remove`);
       toast.success("Sponsorship removed.");
       fetchSubs();
     } catch (err) {

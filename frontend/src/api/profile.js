@@ -1,8 +1,9 @@
 import API from "./axios";
+import { API_URL } from "../config/constants";
 
 // Fetch current user profile (generic)
 export const getProfile = async () => {
-  const res = await API.get("/users/profile");
+  const res = await API.get(`${API_URL}/users/profile`);
   return res.data;
 };
 
@@ -13,13 +14,13 @@ export const updateProfile = async (data) => {
   if (!(data instanceof FormData)) {
     config.headers = { "Content-Type": "application/json" };
   }
-  const res = await API.put("/users/profile", data, config);
+  const res = await API.put(`${API_URL}/users/profile`, data, config);
   return res.data.user; // Return just the user object from the response
 };
 
 // Fetch any user's profile by ID (for public profile pages)
 export const getUserById = async (id) => {
-  const res = await API.get(`/users/${id}`);
+  const res = await API.get(`${API_URL}/users/${id}`);
   return res.data;
 };
 

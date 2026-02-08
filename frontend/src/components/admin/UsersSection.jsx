@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Search, Filter } from "lucide-react";
 import API from "../../api/axios";
 import CollapsibleSection from "./CollapsibleSection";
+import { API_URL } from "../../config/constants";
 import { Link } from "react-router";
 
 export default function AdminUsers() {
@@ -18,7 +19,7 @@ export default function AdminUsers() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await API.get("/admin/users", {
+      const res = await API.get(`${API_URL}/admin/users`, {
         params: {
           search,
           role: roleFilter,

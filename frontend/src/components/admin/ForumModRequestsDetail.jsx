@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
+import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 
 export default function ForumModRequestsDetail() {
@@ -19,7 +20,7 @@ export default function ForumModRequestsDetail() {
   const loadRequest = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/admin/forum/mod-requests/${id}`);
+      const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
       setRequest(res.data.request);
       setNewRole(res.data.request.role); // current requested role
     } catch (err) {
@@ -31,7 +32,7 @@ export default function ForumModRequestsDetail() {
 
   const updateRole = async () => {
     try {
-      await API.put(`/admin/forum/mod-requests/${id}/role`, { role: newRole });
+      await API.put(`${API_URL}/admin/forum/mod-requests/${id}/role`, { role: newRole });
       toast.success("Request role updated");
       loadRequest();
     } catch (err) {

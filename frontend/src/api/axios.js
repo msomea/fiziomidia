@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { API_URL } from "../config/constants";
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -18,7 +19,7 @@ const processQueue = (error, token = null) => {
 };
 
 const API = axios.create({
-  baseURL: "/api",
+  baseURL: API_URL,
   withCredentials: true,
 });
 
@@ -106,7 +107,7 @@ API.interceptors.response.use(
       }
 
       try {
-        const res = await axios.post("/api/auth/refresh", {
+        const res = await axios.post("/auth/refresh", {
           token: refreshToken,
         });
         const newAccessToken = res.data.accessToken;

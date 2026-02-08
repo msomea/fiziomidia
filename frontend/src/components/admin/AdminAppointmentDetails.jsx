@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { X, Loader2 } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
+import { API_URL } from "../../config/constants";
 
 export default function AdminAppointmentDetails() {
   const { id } = useParams();
@@ -20,7 +21,7 @@ export default function AdminAppointmentDetails() {
 
   const fetchDetails = async () => {
     try {
-      const res = await API.get(`/admin/appointments/${id}`);
+      const res = await API.get(`${API_URL}/admin/appointments/${id}`);
       const data = res.data;
 
       if (!data.success) throw new Error();
@@ -49,7 +50,7 @@ export default function AdminAppointmentDetails() {
 
   const handleSave = async () => {
     try {
-      const res = await API.put(`/admin/appointments/${id}`, {
+      const res = await API.put(`${API_URL}/admin/appointments/${id}`, {
         status: form.status,
         date: form.date,
         time: form.time,

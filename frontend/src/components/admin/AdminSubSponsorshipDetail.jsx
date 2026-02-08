@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -40,7 +41,7 @@ export default function AdminSponsorshipDetail() {
   const loadSub = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`/admin/subs/${id}`);
+      const res = await API.get(`${API_URL}/admin/subs/${id}`);
       const s = res.data.sub;
       setSub(s);
 
@@ -77,7 +78,7 @@ export default function AdminSponsorshipDetail() {
   // ✅ Update basic sub info
   const updateSubInfo = async () => {
     try {
-      const res = await API.put(`/forum/subs/${id}`, basicForm);
+      const res = await API.put(`${API_URL}/forum/subs/${id}`, basicForm);
 
       if (!res.data?.success) throw new Error();
 
@@ -101,7 +102,7 @@ export default function AdminSponsorshipDetail() {
 
       if (newLogo) data.append("logo", newLogo);
 
-      await API.put(`/admin/subs/${id}/sponsorship`, data);
+      await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, data);
 
       toast.success("Sponsorship updated");
       loadSub();
@@ -114,7 +115,7 @@ export default function AdminSponsorshipDetail() {
     if (!confirm("Remove sponsorship completely?")) return;
 
     try {
-      await API.put(`/admin/subs/${id}/sponsorship`, { isSponsored: false });
+      await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, { isSponsored: false });
       toast.success("Sponsorship removed");
       navigate(-1);
     } catch (err) {

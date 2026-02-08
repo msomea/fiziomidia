@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { Loader2 } from "lucide-react";
+import { API_URL } from "../../config/constants";
 import CollapsibleSection from "./CollapsibleSection";
 
 export default function AdminAppointments() {
@@ -24,7 +25,7 @@ export default function AdminAppointments() {
     try {
       setLoading(true);
 
-      const res = await API.get("/admin/appointments", {
+      const res = await API.get(`${API_URL}/admin/appointments`, {
         params: {
           search,
           clinic,
@@ -44,7 +45,7 @@ export default function AdminAppointments() {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await API.put(`/admin/appointments/${id}`, { status: newStatus });
+      await API.put(`${API_URL}/admin/appointments/${id}`, { status: newStatus });
       toast.success("Status updated");
       loadAppointments();
     } catch {
@@ -61,7 +62,7 @@ export default function AdminAppointments() {
     if (!confirm) return;
 
     try {
-      await API.delete(`/admin/appointments/${id}`);
+      await API.delete(`${API_URL}/admin/appointments/${id}`);
       toast.success("Appointment deleted");
       loadAppointments();
     } catch (err) {

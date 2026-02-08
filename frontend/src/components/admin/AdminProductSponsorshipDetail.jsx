@@ -77,7 +77,7 @@ export default function AdminProductSponsorshipDetail() {
 
       if (newImage) data.append("image", newImage);
 
-      await API.put(`/admin/sponsored-products/${id}`, data);
+      await API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
 
       toast.success("Product updated");
       loadProduct();
@@ -90,7 +90,7 @@ export default function AdminProductSponsorshipDetail() {
     if (!confirm("Delete this sponsored product permanently?")) return;
 
     try {
-      await API.delete(`/admin/sponsored-products/${id}`);
+      await API.delete(`${API_URL}/admin/sponsored-products/${id}`);
       toast.success("Product deleted");
       navigate(-1);
     } catch (err) {
