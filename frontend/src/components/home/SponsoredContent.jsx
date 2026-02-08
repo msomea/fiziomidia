@@ -1,4 +1,4 @@
-import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
+import { ArrowBigLeftIcon, ArrowBigRightIcon, Loader2 } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import API from "../../api/axios";
