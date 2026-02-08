@@ -25,14 +25,14 @@ const roles = [
 
 const Education = () => {
   return (
-    <section className="education-section py-16 px-4 md:px-16 bg-gradient-to-r from-[#E0F7FA] to-[#D0F0F7]">
+    <section className="education-section mt-8 py-16 px-4 md:px-16 bg-gradient-to-r from-[#E0F7FA] to-[#D0F0F7]">
       <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold text-[#0E4D92]">
+        <h2 className="text-4xl md:text-5xl font-bold text-caribbean">
           Join FizioMidia in Educating the Community
         </h2>
         <p className="mt-4 text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">
-          Become a Supporter, Investor, or Collaborator to help physiotherapists
-          and the community grow through knowledge, training, and innovation.
+          Become a Supporter, Investor or Collaborator to help physiotherapists
+          and the community grow through knowledge, training and innovation.
         </p>
       </div>
 

@@ -6,17 +6,20 @@ import { userInfo } from "os";
 let onlineUsers = {};
 let io;
 
+// Allwed Origins for CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://fiziomidia.org",
+  "https://fiziomidia.netlify.app",
+  "https://fiziomidia.pages.dev",
+  "https://fiziomidia.com",
+];
+
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: [
-        "http://localhost:5173",
-        "https://fiziomidia.netlify.app",
-        "https://fiziomidia.pages.dev"
-
-      ],
+      origin:allowedOrigins,
       methods: ["GET", "POST"],
-      // Ensure socket.io responses include Access-Control-Allow-Credentials: true
       credentials: true,
     },
   });

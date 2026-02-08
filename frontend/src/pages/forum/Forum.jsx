@@ -128,8 +128,8 @@ const Forum = () => {
   const showRequestButton =
     user?.role === "physiotherapist" &&
     selectedSub &&
-    !selectedSub.moderators?.some((m) => m.user._id === user._id) &&
-    selectedSub.createdBy?._id !== user._id &&
+    !selectedSub.moderators?.some((m) => m.user?.toString() === user._id) &&
+    selectedSub.createdBy?.toString() !== user._id &&
     !hasRequested;
 
   /* ------------------ Pin Logic ------------------ */

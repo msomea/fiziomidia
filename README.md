@@ -23,4 +23,4 @@ Test
 2. MongoDb cruster ✅
 3. backend to Render ✅ 
 4. frontend to Netlify ✅ has limitation
-5. Cloudflare
+5. Cloudflare ✅ ✅ ✅ 
