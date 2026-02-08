@@ -4,6 +4,7 @@ import { useParams } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
@@ -41,7 +42,7 @@ const PostDetailPage = () => {
   const socket = getSocket();
   const fetchPost = async () => {
     try {
-      const res = await API.get(`/forum/posts/${id}`);
+      const res = await API.get(`${API_URL}/forum/posts/${id}`);
       const p = res.data;
 
       // ✅ Ensure comments are nested

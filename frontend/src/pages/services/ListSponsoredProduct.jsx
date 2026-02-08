@@ -18,7 +18,7 @@ export default function SponsoredProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await API.get("/sponsored-products");
+        const res = await API.get(`${API_URL}/sponsored-products`);
         setProducts(res.data.products || []);
       } catch (err) {
         console.error("Failed to load sponsored products:", err);

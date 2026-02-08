@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
 import API from "../../api/axios";
+import { API_URL, SOCKET_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
 import { SOCKET_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
@@ -43,7 +44,7 @@ export default function ConversationPage() {
     const load = async () => {
       try {
         setLoading(true);
-        const res = await API.get(`/conversations/user/${otherUserId}`);
+        const res = await API.get(`${API_URL}/conversations/user/${otherUserId}`);
         setConversation(res.data);
         setMessages(res.data.messages);
 
@@ -192,7 +193,7 @@ export default function ConversationPage() {
 
     setTimeout(async () => {
       try {
-        await API.delete(`/messages/${messageId}`);
+        await API.delete(`${API_URL}/messages/${messageId}`);
       } catch (error) {
         setMessages(backup);
         toast.error("Could not delete message");

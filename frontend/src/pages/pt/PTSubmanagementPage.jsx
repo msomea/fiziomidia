@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { X } from "lucide-react";
 
@@ -25,7 +26,7 @@ export default function PTSubManagementPage() {
     try {
       setLoading(true);
 
-      const subRes = await API.get(`/forum/subs/${subId}`);
+      const subRes = await API.get(`${API_URL}/forum/subs/${subId}`);
       const subData = subRes.data.sub;
 
       setSub(subData);
@@ -47,7 +48,7 @@ export default function PTSubManagementPage() {
   const fetchRequests = async () => {
     try {
       const res = await API.get(
-        `/forum/subs/${subId}/mod-requests?status=${activeTab}`
+        `${API_URL}/forum/subs/${subId}/mod-requests?status=${activeTab}`
       );
       setRequests(res.data.requests || []);
     } catch (err) {
@@ -71,7 +72,7 @@ export default function PTSubManagementPage() {
           .filter(Boolean),
       };
 
-      const res = await API.put(`/forum/subs/${subId}`, payload);
+      const res = await API.put(`${API_URL}/forum/subs/${subId}`, payload);
 
       if (!res.data.success) throw new Error();
 
@@ -88,7 +89,7 @@ export default function PTSubManagementPage() {
   const handleUpdateRequest = async (requestId, role) => {
     try {
       await API.patch(
-        `/forum/subs/${subId}/mod-requests/${requestId}`,
+        `${API_URL}/forum/subs/${subId}/mod-requests/${requestId}`,
         { role }
       );
 
@@ -101,7 +102,7 @@ export default function PTSubManagementPage() {
 
   if (loading) return <p>Loading...</p>;
   if (!sub) return <p>Sub not found.</p>;
-console.log(requests)
+
   return (
     <div className="p-4 space-y-8 mt-20">
       <div className="flex justify-between mb-3">

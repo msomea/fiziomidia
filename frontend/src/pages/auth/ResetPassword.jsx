@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import AuthForm from "../../components/auth/AuthForm";
 import toast from "react-hot-toast";
 
@@ -15,7 +16,7 @@ export default function ResetPassword() {
     }
 
     try {
-      await API.post(`/auth/reset-password/${token}`, {
+      await API.post(`${API_URL}/auth/reset-password/${token}`, {
         newPassword: data.password,
       });
 

@@ -28,7 +28,7 @@ const PTProfile = () => {
   useEffect(() => {
     const fetchPT = async () => {
       try {
-        const res = await API.get(`/pts/${id}`);
+        const res = await API.get(`${API_URL}/pts/${id}`);
         setPt(res.data); 
       } catch (err) {
         console.error("Error fetching PT profile:", err);

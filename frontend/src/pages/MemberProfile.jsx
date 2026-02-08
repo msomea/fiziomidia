@@ -15,7 +15,7 @@ const MemberProfile = () => {
   useEffect(() => {
     const fetchMember = async () => {
       try {
-        const response = await API.get(`/users/${id}`);
+        const response = await API.get(`${API_URL}/users/${id}`);
         setMember(response.data.user);
       } catch (error) {
         console.error("Error fetching member profile:", error);

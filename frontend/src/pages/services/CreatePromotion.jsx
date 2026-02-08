@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { toast } from "react-hot-toast";
 import { ImagePlus, Loader2 } from "lucide-react";
 
@@ -61,7 +62,7 @@ export default function CreatePromotion() {
       fd.append("duration", form.duration);
       fd.append("image", image);
 
-      await API.post("/services/promotions/create", fd, {
+      await API.post(`${API_URL}/services/promotions/create`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

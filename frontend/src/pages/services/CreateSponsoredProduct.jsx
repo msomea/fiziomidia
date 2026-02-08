@@ -40,7 +40,7 @@ const CreateSponsoredProduct = () => {
 
     try {
       setLoading(true);
-      const res = await API.post("/sponsored-products", data, {
+      const res = await API.post(`${API_URL}/sponsored-products`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

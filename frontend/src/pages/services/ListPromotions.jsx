@@ -18,7 +18,7 @@ export default function ListPromotions() {
   useEffect(() => {
     const fetchPromotions = async () => {
       try {
-        const res = await API.get("/pts/promotions");
+        const res = await API.get(`${API_URL}/pts/promotions`);
         setPts(res.data || []);
       } catch (err) {
         console.error("Failed to load promotions:", err);

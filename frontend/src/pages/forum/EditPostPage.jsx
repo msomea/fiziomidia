@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 
@@ -17,7 +18,7 @@ const EditPostPage = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await API.get(`/forum/posts/${postId}`);
+        const res = await API.get(`${API_URL}/forum/posts/${postId}`);
         setPost(res.data);
         setTitle(res.data.title);
         setBody(res.data.body);
@@ -35,7 +36,7 @@ const EditPostPage = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await API.put(`/forum/posts/${postId}`, { title, body });
+      await API.put(`${API_URL}/forum/posts/${postId}`, { title, body });
       toast.success("Post updated successfully");
       navigate(`/forum/pt/posts/${ptId}`); 
     } catch (err) {

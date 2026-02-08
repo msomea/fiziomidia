@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
-import API from "../../api/axios"; // use same axios instance
+import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext"; // optional for auto-login
 
 export default function Signup() {
@@ -21,7 +22,7 @@ export default function Signup() {
 
     try {
       // ✅ Send registration data
-      const res = await API.post("/auth/register", {
+      const res = await API.post(`${API_URL}/auth/register`, {
         fullName: name,
         email,
         password,

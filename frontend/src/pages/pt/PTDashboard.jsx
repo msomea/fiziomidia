@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import { useParams, useNavigate, Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import Statistics from "../../components/dashboard/pt/Statistics";
@@ -50,11 +52,11 @@ export default function PTDashboard() {
       setLoading(true);
       try {
         const [ptRes, apptRes, forumRes, promoRes, statsRes] = await Promise.all([
-          axios.get(`/api/pts/${_id}`, { headers }),
-          axios.get(`/api/appointments?ptId=${_id}&limit=3`, { headers }),
-          axios.get(`/api/forum?ptId=${_id}&limit=3`, { headers }),
-          axios.get(`/api/promotions?ptId=${_id}`, { headers }),
-          axios.get(`/api/pts/${_id}/dashboard-stats`, { headers }),
+          API.get(`${API_URL}/api/pts/${_id}`),
+          API.get(`${API_URL}/api/appointments?ptId=${_id}&limit=3`),
+          API.get(`${API_URL}/api/forum?ptId=${_id}&limit=3`),
+          API.get(`${API_URL}/api/promotions?ptId=${_id}`),
+          API.get(`${API_URL}/api/pts/${_id}/dashboard-stats`),
         ]);
         
         setPtProfile(ptRes.data); // PT profile object

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
 import { Loader2 } from "lucide-react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 
 export default function VerifyEmail() {
@@ -12,7 +13,7 @@ export default function VerifyEmail() {
   useEffect(() => {
     const verify = async () => {
       try {
-        const res = await API.get(`/auth/verify-email/${token}`);
+        const res = await API.get(`${API_URL}/auth/verify-email/${token}`);
         toast.success(res.data.message || "Email verified!");
         setStatus("success");
       } catch (err) {

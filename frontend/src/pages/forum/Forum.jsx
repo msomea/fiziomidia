@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import CollapsibleSection from "../../components/admin/CollapsibleSection";
 import { Plus, Trash2 } from "lucide-react";
@@ -65,7 +66,7 @@ const Forum = () => {
       .filter(Boolean);
 
     try {
-      const res = await API.put(`/forum/subs/${selectedSub._id}`, {
+      const res = await API.put(`${API_URL}/forum/subs/${selectedSub._id}`, {
         rules: cleanedRules,
       });
       console.log("Res", res.data.success)
@@ -92,7 +93,7 @@ const Forum = () => {
     if (!user || user.role !== "physiotherapist") return;
 
     try {
-      const res = await API.get(`/forum/subs/${subId}/my-mod-request`);
+      const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
       console.log("my mod request", res.data)
       setHasRequested(res.data.requested || res.data.alreadyMod || false);
     } catch (err) {
@@ -105,7 +106,7 @@ const Forum = () => {
     setRequesting(true);
 
     try {
-      const res = await API.post(`/forum/subs/${selectedSub._id}/mod-requests`);
+      const res = await API.post(`${API_URL}/forum/subs/${selectedSub._id}/mod-requests`);
 
       if (res.data.success) {
         toast.success("Moderator request sent");
@@ -135,7 +136,7 @@ const Forum = () => {
 
   const togglePin = async (postId, pinned) => {
     try {
-      const res = await API.put(`/forum/posts/${postId}/pin`, {
+      const res = await API.put(`${API_URL}/forum/posts/${postId}/pin`, {
         pinned: !pinned,
       });
 

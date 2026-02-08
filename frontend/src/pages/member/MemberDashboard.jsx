@@ -50,7 +50,7 @@ const MemberDashboard = () => {
     }
 
     try {
-      const response = await API.get("/users/profile");
+      const response = await API.get(`${API_URL}/users/profile`);
       const fullUserData = response.data;
       const timestamp = new Date().getTime();
       if (fullUserData.profileImageUrl) {

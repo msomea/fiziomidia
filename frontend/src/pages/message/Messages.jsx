@@ -5,11 +5,11 @@ import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL } from "../../config/constants";
+import { API_URL, SOCKET_URL } from "../../config/constants";
 import { io } from "socket.io-client";
 import { Loader2 } from "lucide-react";
 
-const socket = io(API_URL, { withCredentials: true });
+const socket = io(SOCKET_URL, { withCredentials: true });
 
 const MessagesPage = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const MessagesPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await API.get("/conversations");
+        const res = await API.get(`${API_URL}/conversations`);
         setConversations(res.data);
       } catch (err) {
         console.error("Error fetching conversations:", err);
@@ -131,7 +131,7 @@ const MessagesPage = () => {
   // ------------------------------------------
   const handleOpenConversation = async (convId, otherId) => {
     try {
-      await API.put(`/conversations/${convId}/mark-read`);
+      await API.put(`${API_URL}/conversations/${convId}/mark-read`);
 
       setConversations((prev) =>
         prev.map((c) =>
@@ -172,7 +172,7 @@ const MessagesPage = () => {
 
     setTimeout(async () => {
       try {
-        await API.delete(`/conversations/${convId}`);
+        await API.delete(`${API_URL}/conversations/${convId}`);
       } catch (error) {
         setConversations(backup);
         toast.error("Could not delete conversation");

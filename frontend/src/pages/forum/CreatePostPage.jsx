@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import {X, Loader2 } from "lucide-react";
 import { ArrowBigLeftIcon, ArrowBigRightIcon, Search } from "lucide-react";
 import toast from "react-hot-toast";
@@ -30,7 +31,7 @@ const CreatePost = () => {
     setLoading(true);
     try {
       const res = await API.get(
-        `/forum/subs?page=${pageNum}&limit=${limit}&search=${searchTerm}`
+        `${API_URL}/forum/subs?page=${pageNum}&limit=${limit}&search=${searchTerm}`
       );
       setTopics(res.data.subs || []);
       setTotalPages(res.data.pagination.totalPages || 1);
@@ -54,7 +55,7 @@ const CreatePost = () => {
 
     setSubmitting(true);
     try {
-      await API.post("/forum/posts", {
+      await API.post(`${API_URL}/forum/posts`, {
         title,
         body,
         sub: selectedTopic._id,

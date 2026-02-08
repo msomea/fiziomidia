@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../../api/axios";
+import { API_URL } from "../../config/constants";
 import AuthForm from "../../components/auth/AuthForm";
 import toast from "react-hot-toast";
 
@@ -8,7 +9,7 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (data) => {
     try {
-      await API.post("/auth/forgot-password", {
+      await API.post(`${API_URL}/auth/forgot-password`, {
         email: data.email,
       });
 

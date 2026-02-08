@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../api/axios";
+import { API_URL } from "../config/constants";
 
 const servicesList = [
   { title: "Physiotherapy Consultation", description: "Expert advice and treatment plans for your condition." },
@@ -28,7 +29,7 @@ const About = () => {
     setLoading(true);
     try {
       // Send form data to backend - adjust endpoint as needed
-      await API.post("/contacts", formData);
+      await API.post(`${API_URL}/contacts`, formData);
       toast.success("Message sent successfully!");
       setFormData({ name: "", email: "", message: "" });
     } catch (err) {
