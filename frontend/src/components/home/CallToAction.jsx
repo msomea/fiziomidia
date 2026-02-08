@@ -9,7 +9,7 @@ export default function CallToAction() {
         <img
           src={about}
           alt="About physiotherapy"
-          className="rounded-2xl shadow-lg max-w-sm mx-auto"
+          className="w-full max-w-xs sm:max-w-sm rounded-2xl shadow-lg mx-auto"
         />
 
         {/* Right: Text */}
