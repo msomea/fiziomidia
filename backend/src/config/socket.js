@@ -253,7 +253,6 @@ export const initSocket = (server) => {
         // If no more sockets remain for this user, mark offline and broadcast
         if (onlineUsers[userId].length === 0) {
           delete onlineUsers[userId];
-          console.log("✅ ✅ User went offline", userId);
           // Broadcast to all connected clients that this user went offline
           io.emit("userWentOffline", { userId });
         }
