@@ -97,9 +97,9 @@ export default function FindProfessionals() {
 
       {/* Empty state */}
       {!loading && pts.length === 0 && (
-        <p className="text-center text-gray-500">
-          No promoted professionals available at the moment
-        </p>
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-10 h-10 text-caribbean animate-spin" />
+        </div>
       )}
 
       {/* Carousel */}

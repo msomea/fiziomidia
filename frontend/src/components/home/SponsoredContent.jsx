@@ -121,8 +121,8 @@ const SponsoredContent = () => {
                 <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
               </p>
             ) : products.length === 0 ? (
-              <p className="text-center text-tufts font-medium py-10">
-                No sponsored products available at the moment
+              <p className="flex justify-center items-center h-40">
+                <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
               </p>
             ) : (
               products.map((product) => (

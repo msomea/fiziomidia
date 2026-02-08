@@ -101,13 +101,13 @@ const legacyUploadsDir = path.join(__dirname, "services", "uploads");
 app.use("/uploads", express.static(legacyUploadsDir));
 
 // Catch header
-app.use(
-  "/uploads",
-  express.static(uploadsDir, {
-    maxAge: "7d",
-    immutable: true,
-  })
-);
+// app.use(
+//   "/uploads",
+//   express.static(uploadsDir, {
+//     maxAge: "7d",
+//     immutable: true,
+//   })
+// );
 
 // --- Routes ---
 // Attach socket.io instance (set in server.js) to each request so
