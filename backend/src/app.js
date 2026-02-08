@@ -36,7 +36,6 @@ const __dirname = path.dirname(__filename);
 
 // Middleware
 import { errorHandler } from "./middlewares/errorHandler.js";
-import fs from "fs";
 
 // Initialize Express
 const app = express();
@@ -69,35 +68,46 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
-// Serve uploads folder (resolve relative to backend root)
-const uploadsDir = path.join(__dirname, "..", config.uploadDir || "uploads");
+
+
 
 // Ensure CORS headers for uploads responses so files served here are
 // accessible from the frontend (which may run on a different origin).
 app.use((req, res, next) => {
-  // Only add CORS headers for requests to /uploads
-  if (
-    req.path.startsWith("/uploads") ||
-    req.originalUrl.startsWith("/uploads")
-  ) {
-    res.header("Access-Control-Allow-Origin", ENV.CLIENT_URL || "*");
+  if (req.path.startsWith("/uploads")) {
+    const origin = req.headers.origin;
+
+    if (allowedOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+    }
+
     res.header("Access-Control-Allow-Methods", "GET,OPTIONS");
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    // If browsers send OPTIONS preflight, respond immediately
-    if (req.method === "OPTIONS") return res.sendStatus(200);
+
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
   }
   next();
 });
 
+// uploads/main folder
+const uploadsDir = path.join(__dirname, "..", "uploads");
 app.use("/uploads", express.static(uploadsDir));
 
-// Backwards-compatibility: some files were previously written to
-// `backend/src/services/uploads` (when uploadService used __dirname
-// directly). If a file isn't found in the main uploads folder, allow
-// Express to try the legacy location as a fallback so existing files
-// remain accessible.
+// legacy fallback
 const legacyUploadsDir = path.join(__dirname, "services", "uploads");
 app.use("/uploads", express.static(legacyUploadsDir));
+
+// Catch header
+app.use(
+  "/uploads",
+  express.static(uploadsDir, {
+    maxAge: "7d",
+    immutable: true,
+  })
+);
 
 // --- Routes ---
 // Attach socket.io instance (set in server.js) to each request so
@@ -125,7 +135,7 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/sponsored-products", sponsoredProduct);
 
 // --- Health check ---
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({ ok: true, env: ENV.env });
 });
 

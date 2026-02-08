@@ -69,7 +69,7 @@ export default function ProductSponsorshipSection() {
           className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"
         >
           <img
-            src={`${ASSET_URL}/${product.image}`}
+            src={`${ASSET_URL}${product.image}`}
             alt={product.name}
             className="w-20 h-20 rounded object-cover border"
           />

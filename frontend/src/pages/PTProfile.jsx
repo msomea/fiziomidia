@@ -16,7 +16,7 @@ import {
 } from "../components/profiles";
 
 import avatarFallback from "../assets/avatar.jpg";
-import { API_URL } from "../config/constants";
+import { API_URL, ASSET_URL } from "../config/constants";
 
 const PTProfile = () => {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const PTProfile = () => {
     );
   }
   const ptProfile = pt.ptProfile;
-  const avatarSrc = pt.profileImageUrl ? `${API_URL}${pt.profileImageUrl}` : avatarFallback;
+  const avatarSrc = pt.profileImageUrl ? `$${ASSET_URL}${pt.profileImageUrl}` : avatarFallback;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">

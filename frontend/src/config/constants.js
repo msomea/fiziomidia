@@ -4,4 +4,4 @@ export const API_URL =
 export const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL;
 
-export const ASSET_URL = API_URL.replace(/\/api\/?$/, "");
+export const ASSET_URL = import.meta.env.VITE_SOCKET_URL;

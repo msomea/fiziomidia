@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 
@@ -91,7 +91,7 @@ export default function ListPromotions() {
                   <div className="w-60 h-60 rounded-full ring ring-caribbean ring-offset-base-100 ring-offset-2 overflow-hidden">
                     <img
                       src={
-                        pt.profileImageUrl ? `${API_URL}${pt.profileImageUrl}` : avatar
+                        pt.profileImageUrl ? `${ASSET_URL}${pt.profileImageUrl}` : avatar
                       }
                       alt={pt.fullName}
                       className="w-full h-full object-cover"

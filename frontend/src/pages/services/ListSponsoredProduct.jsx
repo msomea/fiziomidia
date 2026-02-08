@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import { Link } from "react-router";
 
 const ITEMS_PER_PAGE = 4;
@@ -88,7 +88,7 @@ export default function SponsoredProductList() {
                   {/* Product Image */}
                   <div className="w-56 h-56 rounded-xl overflow-hidden ring ring-caribbean ring-offset-base-100 ring-offset-2 mb-4">
                     <img
-                      src={`${API_URL}${item.image}`}
+                      src={`${ASSET_URL}${item.image}`}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       onError={(e) => (e.target.src = avatar)}

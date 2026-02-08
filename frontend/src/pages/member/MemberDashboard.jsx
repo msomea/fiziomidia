@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
 import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { API_URL, ASSET_URL } from "../../config/constants";
 import {
   Home,
   Calendar,
@@ -101,7 +101,7 @@ const MemberDashboard = () => {
   const profileImage = memberData.profileImageUrl
     ? memberData.profileImageUrl.startsWith("http")
       ? memberData.profileImageUrl
-      : `${API_URL}${memberData.profileImageUrl}`
+      : `${ASSET_URL}${memberData.profileImageUrl}`
     : avatar;
 
   return (

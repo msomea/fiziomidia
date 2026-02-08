@@ -4,7 +4,7 @@ import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { MessageSquare, Loader2 } from "lucide-react";
 import avatar from "../assets/avatar.jpg";
-import { API_URL } from "../config/constants";
+import { API_URL, ASSET_URL } from "../config/constants";
 
 const MemberProfile = () => {
   const { id } = useParams();
@@ -48,7 +48,7 @@ const MemberProfile = () => {
 
         {/* Avatar */}
         <img
-          src={`${API_URL}${member.profileImageUrl}` || avatar}
+          src={`${ASSET_URL}${member.profileImageUrl}` || avatar}
           alt="avatar"
           className="w-24 h-24 rounded-full object-cover border"
         />

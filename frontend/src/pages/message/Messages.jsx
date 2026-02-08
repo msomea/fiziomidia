@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL, SOCKET_URL } from "../../config/constants";
+import { API_URL, ASSET_URL, SOCKET_URL } from "../../config/constants";
 import { io } from "socket.io-client";
 import { Loader2 } from "lucide-react";
 
@@ -224,7 +224,7 @@ const MessagesPage = () => {
                     <img
                       src={
                         other?.profileImageUrl
-                          ? `${API_URL}${other.profileImageUrl}`
+                          ? `$${ASSET_URL}${other.profileImageUrl}`
                           : avatar
                       }
                       alt={other?.fullName}
