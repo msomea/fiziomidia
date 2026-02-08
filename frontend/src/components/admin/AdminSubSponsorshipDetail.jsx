@@ -5,7 +5,6 @@ import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 
 export default function AdminSponsorshipDetail() {
   const { id } = useParams();
