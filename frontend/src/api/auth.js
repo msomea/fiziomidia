@@ -1,10 +1,11 @@
 import API from "./axios";
+import { API_URL } from "../config/constants";
 
 // ---------------------------
 // Register user
 // ---------------------------
 export const registerUser = async (data) => {
-  const res = await API.post("/auth/register", data);
+  const res = await API.post(`${API_URL}/auth/register`, data);
   const { accessToken, refreshToken } = res.data;
   if (accessToken) {
     localStorage.setItem("accessToken", accessToken);
@@ -17,7 +18,7 @@ export const registerUser = async (data) => {
 // Login user
 // ---------------------------
 export const loginUser = async (data) => {
-  const res = await API.post("/auth/login", data);
+  const res = await API.post(`${API_URL}/auth/login`, data);
   const { accessToken, refreshToken } = res.data;
   if (accessToken) {
     localStorage.setItem("accessToken", accessToken);
@@ -33,7 +34,7 @@ export const loginUser = async (data) => {
 export const logoutUser = async () => {
   try {
     const refreshToken = localStorage.getItem("refreshToken");
-    await API.post("/auth/logout", { token: refreshToken });
+    await API.post(`${API_URL}/auth/logout`, { token: refreshToken });
   } catch (err) {
     console.warn("Error logging out:", err);
   } finally {
@@ -48,8 +49,8 @@ export const logoutUser = async () => {
 export const fetchCurrentUser = async () => {
   // Fetch both basic auth data and complete profile
   const [authData, profileData] = await Promise.all([
-    API.get("/auth/me"),
-    API.get("/users/profile"),
+    API.get(`${API_URL}/auth/me`),
+    API.get(`${API_URL}/users/profile`),
   ]);
 
   // Combine the data, preferring profile data for overlapping fields

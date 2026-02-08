@@ -9,7 +9,7 @@ let io;
 export const initSocket = (server) => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      origin: process.env.CLIENT_URL,
       methods: ["GET", "POST"],
       // Ensure socket.io responses include Access-Control-Allow-Credentials: true
       credentials: true,
