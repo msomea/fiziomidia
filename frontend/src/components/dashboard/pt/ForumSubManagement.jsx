@@ -19,7 +19,7 @@ const ForumSubManagement = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("accessToken");
-        const res = await API.get(`${API_URL}/api/forum/my-subs`);
+        const res = await API.get(`${API_URL}/forum/my-subs`);
 
         if (res.data.success) setSubs(res.data.subs);
       } catch (err) {
