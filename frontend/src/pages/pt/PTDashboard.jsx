@@ -52,11 +52,11 @@ export default function PTDashboard() {
       setLoading(true);
       try {
         const [ptRes, apptRes, forumRes, promoRes, statsRes] = await Promise.all([
-          API.get(`${API_URL}/api/pts/${_id}`),
-          API.get(`${API_URL}/api/appointments?ptId=${_id}&limit=3`),
-          API.get(`${API_URL}/api/forum?ptId=${_id}&limit=3`),
-          API.get(`${API_URL}/api/promotions?ptId=${_id}`),
-          API.get(`${API_URL}/api/pts/${_id}/dashboard-stats`),
+          API.get(`${API_URL}/pts/${_id}`),
+          API.get(`${API_URL}/appointments?ptId=${_id}&limit=3`),
+          API.get(`${API_URL}/forum?ptId=${_id}&limit=3`),
+          API.get(`${API_URL}/promotions?ptId=${_id}`),
+          API.get(`${API_URL}/pts/${_id}/dashboard-stats`),
         ]);
         
         setPtProfile(ptRes.data); // PT profile object
