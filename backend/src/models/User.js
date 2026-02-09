@@ -45,6 +45,7 @@ const WorkingHoursSchema = new Schema(
 const LicenseSchema = new Schema({
   licenseNumber: { type: String, required: true },
   licenseFileUrl: String,
+  licenseFilePublicId: String,
   licenseFileType: String,  
   verificationStatus: {
     type: String,
@@ -116,6 +117,7 @@ const PtProfileSchema = new Schema(
     gallery: [
       {
         imageUrl: String,
+        imagePublicId: String,
         caption: String,
         uploadedAt: { type: Date, default: Date.now },
       },
@@ -221,6 +223,7 @@ const UserSchema = new Schema({
   savedPTs: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   phone: String,
   profileImageUrl: String,
+  profileImagePublicId: String, 
   ptProfile: PtProfileSchema,
   bio: String,
   createdAt: { type: Date, default: Date.now },

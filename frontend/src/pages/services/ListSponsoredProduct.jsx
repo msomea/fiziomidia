@@ -88,7 +88,7 @@ export default function SponsoredProductList() {
                   {/* Product Image */}
                   <div className="w-56 h-56 rounded-xl overflow-hidden ring ring-caribbean ring-offset-base-100 ring-offset-2 mb-4">
                     <img
-                      src={`${ASSET_URL}${item.image}`}
+                      src={item.image}
                       alt={item.name}
                       className="w-full h-full object-cover"
                       onError={(e) => (e.target.src = avatar)}

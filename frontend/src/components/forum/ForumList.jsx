@@ -64,7 +64,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   };
 
   const getAvatar = (author) =>
-    author?.profileImageUrl ? `${ASSET_URL}${author.profileImageUrl}` : avatar;
+    author?.profileImageUrl ? author?.profileImageUrl : avatar;
 
   const handleVote = async (postId, voteValue) => {
     if (!user?._id) return toast.error("You must be logged in to vote");

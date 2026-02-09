@@ -224,7 +224,7 @@ const MessagesPage = () => {
                     <img
                       src={
                         other?.profileImageUrl
-                          ? `$${ASSET_URL}${other.profileImageUrl}`
+                          ? other.profileImageUrl
                           : avatar
                       }
                       alt={other?.fullName}

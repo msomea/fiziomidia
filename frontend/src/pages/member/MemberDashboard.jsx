@@ -101,7 +101,7 @@ const MemberDashboard = () => {
   const profileImage = memberData.profileImageUrl
     ? memberData.profileImageUrl.startsWith("http")
       ? memberData.profileImageUrl
-      : `${ASSET_URL}${memberData.profileImageUrl}`
+      : memberData.profileImageUrl
     : avatar;
 
   return (

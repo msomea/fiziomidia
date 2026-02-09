@@ -29,7 +29,7 @@ const PTGallery = ({ gallery }) => {
           {recentGallery.map((item, index) => (
             <div key={index} className="rounded overflow-hidden shadow-sm">
               <img
-                src={`${ASSET_URL}${item.imageUrl}`}
+                src={item.imageUrl}
                 alt={item.caption || `Image ${index + 1}`}
                 className="w-full h-40 object-cover"
               />

@@ -19,7 +19,7 @@ export default function ConversationHeader({
             <img
               src={
                 otherUser?.profileImageUrl
-                  ? `${ASSET_URL}${otherUser.profileImageUrl}`
+                  ? otherUser?.profileImageUrl
                   : avatar
               }
               alt="User"

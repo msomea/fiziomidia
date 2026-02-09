@@ -48,7 +48,7 @@ const MemberProfile = () => {
 
         {/* Avatar */}
         <img
-          src={`${ASSET_URL}${member.profileImageUrl}` || avatar}
+          src={member.profileImageUrl}
           alt="avatar"
           className="w-24 h-24 rounded-full object-cover border"
         />

@@ -119,8 +119,8 @@ export default function FindProfessionals() {
                     <div className="mx-auto mb-3 w-20 h-20 rounded-full ring ring-caribbean ring-offset-2 overflow-hidden">
                       <img
                         src={
-                          pt.profileImageUrl
-                            ? `${ASSET_URL}${pt.profileImageUrl}`
+                          pt?.profileImageUrl
+                            ? pt?.profileImageUrl
                             : avatar
                         }
                         alt={pt.fullName}

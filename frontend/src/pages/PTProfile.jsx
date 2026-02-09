@@ -58,7 +58,7 @@ const PTProfile = () => {
     );
   }
   const ptProfile = pt.ptProfile;
-  const avatarSrc = pt.profileImageUrl ? `$${ASSET_URL}${pt.profileImageUrl}` : avatarFallback;
+  const avatarSrc = pt.profileImageUrl ? pt.profileImageUrl : avatarFallback;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">

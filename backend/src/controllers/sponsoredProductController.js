@@ -19,7 +19,6 @@ export const getSponsoredProducts = async (req, res) => {
 };
 
 // CREATE product
-// CREATE product
 export const createSponsoredProduct = async (req, res) => {
   try {
     let imageUrl = "";
@@ -60,9 +59,6 @@ export const createSponsoredProduct = async (req, res) => {
   }
 };
 
-
-
-// Admin — UPDATE product
 // Admin — UPDATE product
 export const updateSponsoredProduct = async (req, res) => {
   try {
@@ -100,8 +96,6 @@ export const updateSponsoredProduct = async (req, res) => {
   }
 };
 
-
-// Admin — DELETE product
 // Admin — DELETE product
 export const deleteSponsoredProduct = async (req, res) => {
   try {

@@ -24,7 +24,7 @@ export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFi
       toast.error("Please select an image file");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       toast.error("Image size should be less than 5MB");
       return;
     }

@@ -15,7 +15,7 @@ const GallerySection = ({ formData, setFormData }) => {
       };
     }
     return {
-      src: `${ASSET_URL}${item.imageUrl}`,
+      src: item.imageUrl,
       caption: item.caption || "",
       file: null,
     };

@@ -105,7 +105,7 @@ export default function AdminUserDetails() {
           <p>License Number: {license.licenseNumber}</p>
           <p>Status: {license.verificationStatus}</p>
           <a
-            href={`${ASSET_URL}${license.licenseFileUrl}`}
+            href={license.licenseFileUrl}
             target="_blank"
             rel="noreferrer"
             className="text-blue-600 underline"

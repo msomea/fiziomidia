@@ -21,7 +21,7 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
                 : formData.profileImageUrl
                 ? formData.profileImageUrl.startsWith("http")
                   ? formData.profileImageUrl
-                  : `${ASSET_URL}${formData.profileImageUrl}`
+                  : formData.profileImageUrl
                 : avatar
             }
             alt="Physiotherapist"
