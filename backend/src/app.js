@@ -94,6 +94,14 @@ app.use((req, res, next) => {
 });
 
 /* ---------------------------------- */
+/* Serve logo file                     */
+/* ---------------------------------- */
+app.get("/api/logo", (req, res) => {
+  res.setHeader("Cache-Control", "public, max-age=86400"); // 24h
+  res.sendFile(path.join(process.cwd(), "public", "logo.png"));
+});
+
+/* ---------------------------------- */
 /* API Routes                          */
 /* ---------------------------------- */
 app.use("/api/admin", adminRoutes);

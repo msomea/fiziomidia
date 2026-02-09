@@ -21,8 +21,8 @@ for (const key of requiredVars) {
 // Export environment configuration
 export const ENV = {
   // Server
-  PORT: process.env.PORT || 4000,
-  NODE_ENV: process.env.NODE_ENV || "development",
+  PORT: process.env.PORT,
+  NODE_ENV: process.env.NODE_ENV,
 
   // Database
   MONGO_URI: process.env.MONGO_URI,
@@ -44,15 +44,15 @@ export const ENV = {
   UPLOAD_DIR: process.env.UPLOAD_DIR || "uploads/",
 
   // Frontend (CORS)
-  CLIENT_URL: process.env.CLIENT_URL || "http://localhost:5173",
+  CLIENT_URL: process.env.CLIENT_URL,
 
   // Socket.io
   SOCKET_PORT: process.env.SOCKET_PORT || 4000,
 
   // Frontend (Vite)
-  VITE_API_URL: process.env.VITE_API_URL || "http://localhost:4000/api",
-  VITE_SOCKET_URL: process.env.VITE_SOCKET_URL || "http://localhost:4000",
-  VITE_APP_NAME: process.env.VITE_APP_NAME || "Fiziomidia",
+  VITE_API_URL: process.env.VITE_API_URL,
+  VITE_SOCKET_URL: process.env.VITE_SOCKET_URL,
+  VITE_APP_NAME: process.env.VITE_APP_NAME || "FizioMidia",
 
   // Logging / Debugging
   DEBUG_MODE: process.env.DEBUG_MODE === "true",

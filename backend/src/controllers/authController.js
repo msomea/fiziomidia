@@ -195,9 +195,9 @@ export async function resetPassword(req, res) {
     // Notify user of password change
     const notifyHTML = generateFiziomidiaEmail({
       title: "Your Password has been Changed",
-      body: "<p>Your password was changed. If you did not perform this action, please contact support and login immediately to secure your account.</p>",
-      buttonText: "Login",
-      buttonURL: `${config.clientUrl}/login`,
+      body: "<p>Your FizioMidia account password has been changed. If you did not perform this action, please reset your password or contact support immediately to secure your account.</p>",
+      buttonText: "Reset Password",
+      buttonURL: `${config.clientUrl}/forgot-password`,
     });
 
     await sendEmail({

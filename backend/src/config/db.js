@@ -4,7 +4,7 @@ import config from "./index.js";
 export const connectDB = async () => {
   try {
     await mongoose.connect(config.mongoUri, {
-      dbName: "fiziomidia_dev", // optional: matches .env development DB
+      dbName: "fiziomidia",
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

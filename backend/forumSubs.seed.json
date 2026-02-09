@@ -1,0 +1,162 @@
+[
+  {
+    "title": "Musculoskeletal Physiotherapy",
+    "slug": "musculoskeletal-physiotherapy",
+    "description": "Assessment, treatment and rehabilitation of musculoskeletal conditions such as back pain, joint disorders, sports injuries and post-operative cases.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Use evidence-based practice where possible",
+      "Do not diagnose patients online",
+      "Anonymize all clinical cases",
+      "Respect different treatment approaches"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Neurological Physiotherapy",
+    "slug": "neurological-physiotherapy",
+    "description": "Discussion of neurological rehabilitation including stroke, spinal cord injury, traumatic brain injury, Parkinson’s disease and related conditions.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Maintain strict patient confidentiality",
+      "Avoid unverified or experimental claims",
+      "Support posts with guidelines or research",
+      "Professional tone is mandatory"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Gait, Posture & Biomechanics",
+    "slug": "gait-posture-biomechanics",
+    "description": "Analysis of gait, posture, movement patterns, biomechanics and functional assessment techniques.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Keep discussions technical and educational",
+      "Use diagrams or videos where helpful",
+      "No ridicule of movement impairments",
+      "Stay on topic"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Sports Physiotherapy",
+    "slug": "sports-physiotherapy-rehabilitation",
+    "description": "Injury prevention, rehabilitation, return-to-sport protocols, taping and athletic performance optimization.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "No unsafe or unproven practices",
+      "Declare conflicts of interest",
+      "Evidence-based recommendations only",
+      "Respect all athlete levels"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Career Development",
+    "slug": "career-development",
+    "description": "Support space for students and interns to discuss clinical rotations, ward experiences, learning challenges and practical tips and shaping future Physiotherapists.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Do not name or shame institutions or supervisors",
+      "Keep discussions constructive",
+      "Academic honesty required",
+      "Support fellow learners"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Education & Research",
+    "slug": "education-research",
+    "description": "Research papers, outcome measures, academic writing, case studies, exams and evidence-based learning.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Cite sources properly",
+      "No plagiarism",
+      "Respect intellectual property",
+      "Constructive academic critique only"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Professional Practice & Ethics",
+    "slug": "professional-practice-ethics",
+    "description": "Ethical practice, scope of practice, consent, documentation, professionalism and legal considerations in physiotherapy.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Maintain professional language",
+      "No legal advice presented as facts",
+      "Respect cultural and ethical diversity",
+      "Zero tolerance for harassment"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Physiotherapy in Tanzania & Africa",
+    "slug": "physiotherapy-tanzania-africa",
+    "description": "Discussion of local practice realities, education, policies, challenges and opportunities across Tanzania and Africa.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Respect local contexts",
+      "No political arguments",
+      "Share real experiences",
+      "Avoid stereotypes"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "Tools, Equipment & Technology",
+    "slug": "tools-equipment-technology",
+    "description": "Rehabilitation equipment, digital tools, apps, electrotherapy and emerging physiotherapy technologies.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "No spam or hidden advertising",
+      "Honest reviews only",
+      "Disclose affiliations",
+      "Keep comparisons fair"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  },
+  {
+    "title": "General Discussion & Announcements",
+    "slug": "general-discussion-announcements",
+    "description": "Community updates, introductions, events, workshops and non-clinical physiotherapy discussions.",
+    "createdBy": "6986036dbab39b63db11152f",
+    "rules": [
+      "Stay respectful",
+      "No spam",
+      "Keep discussions relevant",
+      "Follow community guidelines"
+    ],
+    "moderators": [],
+    "isSponsored": false,
+    "createdAt": "2026-02-01T00:00:00.000Z",
+    "updatedAt": "2026-02-01T00:00:00.000Z"
+  }
+]

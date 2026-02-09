@@ -55,7 +55,7 @@ export default {
   uploadDir: process.env.UPLOAD_DIR || "uploads/",
 
   // Frontend / CORS
-  clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  clientUrl: process.env.CLIENT_URL,
 
   // Socket.io
   socketPort: process.env.SOCKET_PORT || 4000,

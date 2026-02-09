@@ -16,7 +16,7 @@ export const generateFiziomidiaEmail = ({
   body,
   buttonText,
   buttonURL,
-  logoURL = "https://www.fiziomidia.org/logo.png"
+  logoURL = "https://fiziomidia.org/api/logo"
 }) => `
 <table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
   <tr>
