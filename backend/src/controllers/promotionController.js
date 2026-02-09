@@ -2,56 +2,66 @@ import Promotion from "../models/Promotion.js";
 import User from "../models/User.js";
 import Stripe from "stripe";
 import config from "../config/index.js";
+import { uploadToCloudinary } from "../services/uploadService.js";
 import dayjs from "dayjs"
 
 const stripe = new Stripe(config.stripe.secretKey);
 
 // Create a promotion (creates a pending promotion and Stripe checkout session)
-export const createPromotionCheckout = async (req, res) => {
-  try {
-    const { durationDays = 7, price = 1000 } = req.body; // price in smallest currency unit
 
-    // Create a pending promotion
+const TITLE_CONFIG = {
+  Silver: { duration: 7, price: 5000 },
+  Gold: { duration: 14, price: 12000 },
+  Platinum: { duration: 30, price: 25000 },
+};
+
+export const createPromotion = async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const pt = req.user;
+
+    if (!title || !description) {
+      return res.status(400).json({ error: "Title and description are required" });
+    }
+
+    if (!["Silver", "Gold", "Platinum"].includes(title)) {
+      return res.status(400).json({ error: "Invalid title" });
+    }
+
+    // Set duration and price based on title
+    const { duration, price } = TITLE_CONFIG[title];
+
+    let imageUrl = pt.profileImageUrl; // fallback
+    let imagePublicId = null;
+
+    // Upload image to Cloudinary if provided
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file);
+      imageUrl = result.secure_url;
+      imagePublicId = result.public_id;
+    }
+
     const promotion = new Promotion({
-      pt: req.user._id,
-      status: "pending", // will be updated via webhook
-      startAt: null,
-      endAt: null,
+      pt: pt._id,
+      title,
+      description,
+      duration,
+      price,
+      imageUrl,
+      imagePublicId,
+      startAt: new Date(),
+      // endAt will be calculated by schema pre-save hook
     });
 
     await promotion.save();
 
-    // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      mode: "payment",
-      customer_email: req.user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: "PT Promotion",
-              description: `Promotion for ${durationDays} days`,
-            },
-            unit_amount: price,
-          },
-          quantity: 1,
-        },
-      ],
-      success_url: `${config.clientUrl}/promotion-success`,
-      cancel_url: `${config.clientUrl}/promotion-cancel`,
-      metadata: {
-        promotionId: promotion._id.toString(),
-        ptId: req.user._id.toString(),
-        durationDays,
-      },
+    res.status(201).json({
+      message: "Promotion created successfully",
+      promotion,
     });
-
-    res.status(201).json({ promotion, checkoutUrl: session.url });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to create promotion checkout" });
+    console.error("❌ Create promotion error:", err);
+    res.status(500).json({ error: "Failed to create promotion" });
   }
 };
 

@@ -161,7 +161,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                  
                   {license.licenseFileUrl && (
                     <a
-                      href={`${ASSET_URL}${license.licenseFileUrl}`}
+                      href={license.licenseFileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-caribbean underline mt-2 block"

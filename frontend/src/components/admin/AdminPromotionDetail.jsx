@@ -70,13 +70,25 @@ export default function AdminPromotionDetail() {
     );
   }
 
+  // Determine image: use promotion image if uploaded, otherwise PT profile image
+  const promoImage = promo.imageUrl || promo.pt.profileImageUrl;
+
   return (
-    <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20">
+    <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       <div className="flex justify-between mb-3">
         <h3 className="font-semibold text-caribbean">Manage Promotion</h3>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-400 hover:text-red-800" />
         </button>
+      </div>
+
+      {/* IMAGE */}
+      <div className="mb-4">
+        <img
+          src={promoImage}
+          alt="Promotion"
+          className="w-full h-64 object-cover rounded-lg border"
+        />
       </div>
 
       <div className="space-y-4 text-sm text-tufts">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
@@ -10,7 +10,6 @@ export default function CreatePromotion() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Only physiotherapists allowed
   if (user.role !== "physiotherapist") {
     return (
       <div className="pt-24 pb-16 text-center">
@@ -19,6 +18,12 @@ export default function CreatePromotion() {
       </div>
     );
   }
+
+  const promotionOptions = {
+    Silver: { duration: "7 days", price: 20000 },
+    Gold: { duration: "2 weeks", price: 50000 },
+    Platinum: { duration: "1 month", price: 100000 },
+  };
 
   const [form, setForm] = useState({
     title: "",
@@ -31,26 +36,30 @@ export default function CreatePromotion() {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Handle input change
+  // Update price/duration when title changes
+  useEffect(() => {
+    if (form.title && promotionOptions[form.title]) {
+      const { duration, price } = promotionOptions[form.title];
+      setForm((prev) => ({ ...prev, duration, price }));
+    }
+  }, [form.title]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle image
   const handleImage = (e) => {
     const file = e.target.files[0];
     setImage(file);
     if (file) setImagePreview(URL.createObjectURL(file));
   };
 
-  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.title || !form.description || !form.price || !form.duration) {
-      return toast.error("Please fill all fields");
+    if (!form.title || !form.description) {
+      return toast.error("Please fill all required fields");
     }
-    if (!image) return toast.error("Please upload an image");
 
     try {
       setLoading(true);
@@ -60,14 +69,16 @@ export default function CreatePromotion() {
       fd.append("description", form.description);
       fd.append("price", form.price);
       fd.append("duration", form.duration);
-      fd.append("image", image);
 
-      await API.post(`${API_URL}/services/promotions/create`, fd, {
+      // Only append image if user uploaded one
+      if (image) fd.append("image", image);
+
+      await API.post(`${API_URL}/promotions/create`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
       toast.success("Promotion created successfully!");
-      navigate("/services/promotions");
+      navigate("/services");
     } catch (err) {
       console.error(err);
       toast.error("Failed to create promotion");
@@ -89,15 +100,22 @@ export default function CreatePromotion() {
         {/* Title */}
         <div>
           <label className="font-semibold">Title</label>
-          <input
-            type="text"
+          <select
             name="title"
-            placeholder="Promotion title"
             value={form.title}
             onChange={handleChange}
-            className="input input-bordered w-full mt-1"
+            className="select select-bordered w-full mt-1"
             required
-          />
+          >
+            <option value="" disabled>
+              Select Promotion Level
+            </option>
+            {Object.keys(promotionOptions).map((level) => (
+              <option key={level} value={level}>
+                {level}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Price */}
@@ -108,9 +126,8 @@ export default function CreatePromotion() {
             name="price"
             placeholder="Enter price"
             value={form.price}
-            onChange={handleChange}
-            className="input input-bordered w-full mt-1"
-            required
+            readOnly
+            className="input input-bordered w-full mt-1 bg-gray-100 text-caribbean"
           />
         </div>
 
@@ -120,11 +137,10 @@ export default function CreatePromotion() {
           <input
             type="text"
             name="duration"
-            placeholder="1 week, 2 weeks, 30 days..."
+            placeholder="Duration"
             value={form.duration}
-            onChange={handleChange}
-            className="input input-bordered w-full mt-1"
-            required
+            readOnly
+            className="input input-bordered w-full mt-1 bg-gray-100 text-caribbean"
           />
         </div>
 
@@ -145,7 +161,6 @@ export default function CreatePromotion() {
         {/* Image Upload */}
         <div>
           <label className="font-semibold">Promotion Image</label>
-
           <div className="mt-2">
             {imagePreview ? (
               <img
@@ -154,9 +169,11 @@ export default function CreatePromotion() {
                 className="w-full h-48 object-cover rounded-lg border"
               />
             ) : (
-              <div className="w-full h-48 bg-gray-100 flex items-center justify-center border rounded-lg">
-                <ImagePlus className="text-gray-400 w-10 h-10" />
-              </div>
+              <img
+                src={user.profileImageUrl} // fallback to user profile
+                alt="Profile Fallback"
+                className="w-full h-48 object-cover rounded-lg border"
+              />
             )}
           </div>
 
@@ -165,7 +182,6 @@ export default function CreatePromotion() {
             accept="image/*"
             onChange={handleImage}
             className="file-input file-input-bordered w-full mt-3"
-            required
           />
         </div>
 
