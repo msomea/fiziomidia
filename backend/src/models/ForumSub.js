@@ -49,6 +49,7 @@ const ForumSubSchema = new Schema(
     isSponsored: { type: Boolean, default: false },
     sponsorName: { type: String, trim: true },
     sponsorLogo: { type: String, trim: true },
+    sponsorLogoPublicId: { type: String, trim: true },
     sponsorMessage: { type: String, trim: true },
     sponsorWebsite: { type: String, trim: true },
     startDate: { type: Date },

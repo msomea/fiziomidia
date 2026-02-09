@@ -131,7 +131,7 @@ const SponsoredContent = () => {
                   className="min-w-[300px] max-w-[300px] bg-alice shadow-md hover:shadow-lg transition rounded-2xl p-4 flex-shrink-0"
                 >
                   <img
-                    src={`${ASSET_URL}${product.image}`}
+                    src={product.image}
                     alt={product.name}
                     className="rounded-xl w-full h-40 object-cover"
                   />
@@ -140,11 +140,11 @@ const SponsoredContent = () => {
                     {product.name}
                   </h3>
 
-                  <p className="text-caribbean font-bold">Tsh: {product.price}</p>
+                  <p className="text-caribbean font-bold">Tsh: {product.price.toLocaleString()}</p>
                   <p className="text-sm text-tufts">{product.description}</p>
 
                   <a
-                    href={`https://${product.link}`}
+                    href={product.link.startsWith("http") ? product.link : `https://${product.link}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts w-full"

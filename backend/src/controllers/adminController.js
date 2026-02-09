@@ -7,6 +7,10 @@ import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../services/uploadService.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -478,48 +482,92 @@ export const updateSponsorship = async (req, res) => {
 
   try {
     const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ success: false, error: "Forum sub not found" });
+    if (!sub) {
+      return res.status(404).json({
+        success: false,
+        error: "Forum sub not found",
+      });
+    }
 
-    // Convert isSponsored from string to boolean
-    const isSponsored = req.body.isSponsored === "true" || req.body.isSponsored === true;
+    // Convert isSponsored safely
+    const isSponsored =
+      req.body.isSponsored === true ||
+      req.body.isSponsored === "true";
 
+    /* --------------------------------------------------
+       Sponsorship OFF → reset everything
+    -------------------------------------------------- */
     if (!isSponsored) {
+      // Remove logo from Cloudinary if exists
+      if (sub.sponsorLogoPublicId) {
+        await deleteFromCloudinary(sub.sponsorLogoPublicId);
+      }
+
       sub.isSponsored = false;
       sub.sponsorName = "";
       sub.sponsorLogo = "";
+      sub.sponsorLogoPublicId = "";
       sub.sponsorMessage = "";
       sub.sponsorWebsite = "";
       sub.startDate = null;
       sub.endDate = null;
 
       await sub.save();
-      return res.json({ success: true, message: "Sponsorship disabled", sub });
+
+      return res.json({
+        success: true,
+        message: "Sponsorship disabled",
+        sub,
+      });
     }
 
-    // Sponsorship ON → update fields
+    /* --------------------------------------------------
+       Sponsorship ON → update fields
+    -------------------------------------------------- */
     sub.isSponsored = true;
 
-    if (req.body.sponsorName !== undefined) sub.sponsorName = req.body.sponsorName;
-    if (req.body.sponsorMessage !== undefined) sub.sponsorMessage = req.body.sponsorMessage;
-    if (req.body.sponsorWebsite !== undefined) sub.sponsorWebsite = req.body.sponsorWebsite;
+    if (req.body.sponsorName !== undefined)
+      sub.sponsorName = req.body.sponsorName;
 
-    // Logo
+    if (req.body.sponsorMessage !== undefined)
+      sub.sponsorMessage = req.body.sponsorMessage;
+
+    if (req.body.sponsorWebsite !== undefined)
+      sub.sponsorWebsite = req.body.sponsorWebsite;
+
+    // Handle logo upload
     if (req.file) {
-      sub.sponsorLogo = `/uploads/sponsor_logo/${req.file.filename}`;
-    } else if (req.body.sponsorLogo !== undefined) {
-      sub.sponsorLogo = req.body.sponsorLogo;
+      // Delete old logo if exists
+      if (sub.sponsorLogoPublicId) {
+        await deleteFromCloudinary(sub.sponsorLogoPublicId);
+      }
+
+      const result = await uploadToCloudinary(req.file);
+
+      sub.sponsorLogo = result.secure_url;
+      sub.sponsorLogoPublicId = result.public_id;
     }
 
     // Dates
-    if (req.body.startDate) sub.startDate = new Date(req.body.startDate);
-    if (req.body.endDate) sub.endDate = new Date(req.body.endDate);
+    if (req.body.startDate)
+      sub.startDate = new Date(req.body.startDate);
+
+    if (req.body.endDate)
+      sub.endDate = new Date(req.body.endDate);
 
     await sub.save();
 
-    return res.json({ success: true, message: "Sponsorship updated successfully", sub });
+    return res.json({
+      success: true,
+      message: "Sponsorship updated successfully",
+      sub,
+    });
   } catch (err) {
     console.error("❌ Error updating sponsorship:", err);
-    return res.status(500).json({ success: false, error: "Failed to update sponsorship" });
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update sponsorship",
+    });
   }
 };
 
@@ -552,12 +600,48 @@ export const deleteSub = async (req, res) => {
 // Create a new Sponsored Product
 export const createSponsoredProduct = async (req, res) => {
   try {
-    const product = new SponsoredProduct(req.body);
+    // Convert isActive / isSponsored safely
+    const isActive =
+      req.body.isActive === "true" || req.body.isActive === true;
+
+    const productData = {
+      name: req.body.name,
+      description: req.body.description || "",
+      price: req.body.price,
+      sponsorName: req.body.sponsorName || "",
+      sponsorWebsite: req.body.sponsorWebsite || "",
+      sponsorMessage: req.body.sponsorMessage || "",
+      isActive,
+    };
+
+    // Handle image / logo upload
+    if (req.file) {
+      productData.image = `/uploads/sponsored_products/${req.file.filename}`;
+    }
+
+    // Optional dates
+    if (req.body.startDate) {
+      productData.startDate = new Date(req.body.startDate);
+    }
+
+    if (req.body.endDate) {
+      productData.endDate = new Date(req.body.endDate);
+    }
+
+    const product = new SponsoredProduct(productData);
     await product.save();
-    res.status(201).json({ message: "Sponsored product created", product });
+
+    return res.status(201).json({
+      success: true,
+      message: "Sponsored product created successfully",
+      product,
+    });
   } catch (err) {
-    console.error("Create error:", err);
-    res.status(500).json({ error: "Failed to create product" });
+    console.error("❌ Create sponsored product error:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to create sponsored product",
+    });
   }
 };
 
@@ -627,6 +711,7 @@ export const getSponsoredProductById = async (req, res) => {
 };
 
 // Update Sponsored Product
+// Update Sponsored Product (ADMIN)
 export const updateSponsoredProduct = async (req, res) => {
   const { id } = req.params;
 
@@ -635,7 +720,7 @@ export const updateSponsoredProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        error: "Product not found",
+        error: "Sponsored product not found",
       });
     }
 
@@ -644,15 +729,37 @@ export const updateSponsoredProduct = async (req, res) => {
     ========================== */
     if (req.body.name !== undefined) product.name = req.body.name;
     if (req.body.category !== undefined) product.category = req.body.category;
-    if (req.body.description !== undefined) product.description = req.body.description;
-    if (req.body.price !== undefined) product.price = Number(req.body.price);
-    if (req.body.duration !== undefined) product.duration = Number(req.body.duration);
+    if (req.body.description !== undefined)
+      product.description = req.body.description;
+
+    if (req.body.price !== undefined) {
+      const price = Number(req.body.price);
+      if (Number.isNaN(price)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid price value",
+        });
+      }
+      product.price = price;
+    }
+
+    if (req.body.duration !== undefined) {
+      const duration = Number(req.body.duration);
+      if (Number.isNaN(duration)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid duration value",
+        });
+      }
+      product.duration = duration;
+    }
+
     if (req.body.link !== undefined) product.link = req.body.link;
 
     /* =========================
-       STATUS CHANGE (ADMIN)
-       approved | rejected | pending
-       → dates & activation handled by schema hook
+       STATUS CHANGE (ADMIN ONLY)
+       pending | approved | rejected
+       Dates & activation handled by schema hook
     ========================== */
     if (req.body.status !== undefined) {
       const validStatus = ["pending", "approved", "rejected"];
@@ -664,26 +771,24 @@ export const updateSponsoredProduct = async (req, res) => {
       }
 
       product.status = req.body.status;
-      // ⚠️ startDate, endDate & isActive are handled in pre-save hook
     }
 
     /* =========================
        MANUAL ACTIVE TOGGLE
-       (Allowed only if approved)
+       (Only allowed if approved)
     ========================== */
     if (req.body.isActive !== undefined) {
-      const isActiveValue =
+      const isActive =
         req.body.isActive === true || req.body.isActive === "true";
 
-      // Only block if trying to ACTIVATE
-      if (isActiveValue && product.status !== "approved") {
+      if (isActive && product.status !== "approved") {
         return res.status(400).json({
           success: false,
           error: "Only approved products can be activated",
         });
       }
 
-      product.isActive = isActiveValue;
+      product.isActive = isActive;
     }
 
     /* =========================
@@ -702,7 +807,6 @@ export const updateSponsoredProduct = async (req, res) => {
       message: "Sponsored product updated successfully",
       product,
     });
-
   } catch (err) {
     console.error("❌ Error updating sponsored product:", err);
     return res.status(500).json({
@@ -714,16 +818,28 @@ export const updateSponsoredProduct = async (req, res) => {
 
 
 
-// Delete Sponsored Product
+// Delete Sponsored Product (ADMIN)
 export const deleteSponsoredProduct = async (req, res) => {
   try {
     const product = await SponsoredProduct.findByIdAndDelete(req.params.id);
 
-    if (!product) return res.status(404).json({ error: "Not found" });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: "Sponsored product not found",
+      });
+    }
 
-    res.json({ message: "Product deleted" });
+    return res.json({
+      success: true,
+      message: "Sponsored product deleted successfully",
+    });
   } catch (err) {
-    console.error("Delete error:", err);
-    res.status(500).json({ error: "Failed to delete product" });
+    console.error("❌ Delete sponsored product error:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to delete sponsored product",
+    });
   }
 };
+

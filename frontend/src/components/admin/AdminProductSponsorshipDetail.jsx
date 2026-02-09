@@ -272,7 +272,7 @@ export default function AdminProductSponsorshipDetail() {
 
             {form.image && (
               <img
-                src={`${ASSET_URL}${form.image}`}
+                src={form.image}
                 alt="Product"
                 className="w-24 h-24 rounded object-cover mb-2 border"
               />

@@ -226,7 +226,7 @@ export default function AdminSponsorshipDetail() {
 
               {form.sponsorLogo && (
                 <img
-                  src={`${ASSET_URL}${form.sponsorLogo}`}
+                  src={form.sponsorLogo}
                   className="w-24 h-24 rounded border object-cover"
                 />
               )}
