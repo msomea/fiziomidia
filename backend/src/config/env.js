@@ -8,6 +8,9 @@ const requiredVars = [
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
   "CLIENT_URL",
+  "CLOUDINARY_API_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
 ];
 
 // Validate required environment variables
@@ -38,6 +41,9 @@ export const ENV = {
   STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
 
   // Cloudinary
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_URL: process.env.CLOUDINARY_URL,
 
   // File Uploads

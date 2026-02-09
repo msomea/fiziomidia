@@ -1,53 +1,25 @@
 // uploadService.js
 import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { fileURLToPath } from "url";
+import { v2 as cloudinary } from "cloudinary";
 import config from "../config/index.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Base uploads folder inside backend (use configured uploadDir and resolve
-// relative to the backend folder). __dirname is backend/src/services; move
-// two levels up to reach backend/.
-const BASE_UPLOAD_DIR = path.join(
-  __dirname,
-  "..",
-  "..",
-  config.uploadDir || "uploads/"
-);
-// Ensure folder exists
-if (!fs.existsSync(BASE_UPLOAD_DIR)) fs.mkdirSync(BASE_UPLOAD_DIR, { recursive: true });
-// Gallery uploads folder (subfolder under BASE_UPLOAD_DIR)
-const GALLERY_DIR = path.join(BASE_UPLOAD_DIR, "gallery");
-if (!fs.existsSync(GALLERY_DIR)) fs.mkdirSync(GALLERY_DIR, { recursive: true });
-
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    let folderName = "others"; // default folder
-
-    if (file.fieldname === "avatar") folderName = "avatars";
-    else if (file.fieldname === "licenseDocument") folderName = "licenses";
-    else if (file.fieldname === "galleryImages") folderName = "gallery";
-    else if (file.fieldname === "logo") folderName = "sponsor_logo";
-    else if (file.fieldname === "product") folderName = "products";
-
-
-    const dir = path.join(BASE_UPLOAD_DIR, folderName);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const safeName = file.originalname.replace(/\s+/g, "_");
-    cb(null, `${Date.now()}-${safeName}`);
-  },
+/* ------------------------------------------------------------------
+   Cloudinary configuration
+------------------------------------------------------------------- */
+cloudinary.config({
+  cloud_name: config.cloudinaryCloudName,
+  api_key: config.cloudinaryApiKey,
+  api_secret: config.cloudinaryApiSecret,
 });
 
+/* ------------------------------------------------------------------
+   Multer configuration (MEMORY storage – Render safe)
+------------------------------------------------------------------- */
+const storage = multer.memoryStorage();
 
-// File filter to accept only images or pdf
+/* ------------------------------------------------------------------
+   File filter (images + PDF only)
+------------------------------------------------------------------- */
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
     "image/jpeg",
@@ -55,16 +27,108 @@ const fileFilter = (req, file, cb) => {
     "image/jpg",
     "application/pdf",
   ];
-  if (allowedMimeTypes.includes(file.mimetype)) cb(null, true);
-  else cb(new Error("Only PDF or image files are allowed"));
+
+  if (allowedMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image or PDF files are allowed"), false);
+  }
 };
 
-// Limits
+/* ------------------------------------------------------------------
+   Upload limits
+------------------------------------------------------------------- */
 const limits = {
-  fileSize: 5 * 1024 * 1024, // 5MB
+  fileSize: 2 * 1024 * 1024, // 2MB
 };
 
-// Export multer instance
-const upload = multer({ storage, fileFilter, limits });
+/* ------------------------------------------------------------------
+   Multer instance
+------------------------------------------------------------------- */
+const upload = multer({
+  storage,
+  fileFilter,
+  limits,
+});
 
-export { upload, BASE_UPLOAD_DIR, GALLERY_DIR };
+/* ------------------------------------------------------------------
+   Cloudinary folder mapping (keeps your original logic)
+------------------------------------------------------------------- */
+const getCloudinaryFolder = (fieldname) => {
+  switch (fieldname) {
+    case "avatar":
+      return "avatars";
+    case "licenseDocument":
+      return "licenses";
+    case "galleryImages":
+      return "gallery";
+    case "logo":
+      return "sponsor_logos";
+    case "product":
+      return "products";
+    default:
+      return "others";
+  }
+};
+
+/* ------------------------------------------------------------------
+   Upload to Cloudinary helper
+------------------------------------------------------------------- */
+const uploadToCloudinary = (file) => {
+  return new Promise((resolve, reject) => {
+    if (!file) return reject(new Error("No file provided"));
+
+    const folder = getCloudinaryFolder(file.fieldname);
+    const resourceType =
+      file.mimetype === "application/pdf" ? "raw" : "image";
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: resourceType,
+        use_filename: true,
+        unique_filename: true,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    uploadStream.end(file.buffer);
+  });
+};
+
+/* ------------------------------------------------------------------
+   Multiple files upload helper
+------------------------------------------------------------------- */
+const uploadMultipleToCloudinary = async (files = []) => {
+  const results = [];
+
+  for (const file of files) {
+    const result = await uploadToCloudinary(file);
+    results.push(result);
+  }
+
+  return results;
+};
+
+/* ------------------------------------------------------------------
+   Delete file from Cloudinary
+------------------------------------------------------------------- */
+const deleteFromCloudinary = async (publicId, resourceType = "image") => {
+  if (!publicId) return;
+  await cloudinary.uploader.destroy(publicId, {
+    resource_type: resourceType,
+  });
+};
+
+/* ------------------------------------------------------------------
+   Exports
+------------------------------------------------------------------- */
+export {
+  upload,                    // multer middleware
+  uploadToCloudinary,        // single file upload
+  uploadMultipleToCloudinary,// multiple files upload
+  deleteFromCloudinary,      // cleanup helper
+};

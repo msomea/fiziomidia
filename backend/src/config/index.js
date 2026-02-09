@@ -8,6 +8,9 @@ const requiredVars = [
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
   "CLIENT_URL",
+  "CLOUDINARY_API_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
 ];
 
 for (const key of requiredVars) {

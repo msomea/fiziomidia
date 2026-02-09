@@ -50,6 +50,11 @@ const SponsoredProductSchema = new mongoose.Schema(
       required: true, // stored image URL
     },
 
+    imagePublicId: {
+      type: String,
+      required: true, // Cloudinary public ID for deletion
+    },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],

@@ -1,5 +1,8 @@
 import SponsoredProduct from "../models/SponsoredProduct.js";
-
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../services/uploadService.js";
 
 // GET all sponsored products (public)
 export const getSponsoredProducts = async (req, res) => {
@@ -16,16 +19,21 @@ export const getSponsoredProducts = async (req, res) => {
 };
 
 // CREATE product
+// CREATE product
 export const createSponsoredProduct = async (req, res) => {
   try {
-    let imageUrl = req.body.imageUrl; // default image path
-    // If user uploaded a file
+    let imageUrl = "";
+    let imagePublicId = "";
+
+    // If user uploaded an image
     if (req.file) {
-      imageUrl = `/uploads/products/${req.file.filename}`;
+      const result = await uploadToCloudinary(req.file);
+      imageUrl = result.secure_url;
+      imagePublicId = result.public_id;
     }
 
     const productData = {
-      owner: req.user._id, // logged-in user creating product
+      owner: req.user._id,
       name: req.body.name,
       category: req.body.category,
       description: req.body.description,
@@ -33,6 +41,7 @@ export const createSponsoredProduct = async (req, res) => {
       duration: req.body.duration,
       link: req.body.link || "",
       image: imageUrl,
+      imagePublicId,
     };
 
     const product = await SponsoredProduct.create(productData);
@@ -52,14 +61,27 @@ export const createSponsoredProduct = async (req, res) => {
 };
 
 
+
+// Admin — UPDATE product
 // Admin — UPDATE product
 export const updateSponsoredProduct = async (req, res) => {
   try {
+    const product = await SponsoredProduct.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Not found" });
+
     let updateData = { ...req.body };
 
+    // If new image uploaded
     if (req.file) {
-      // store local uploads path (cloud upload helper not present here)
-      updateData.image = `/uploads/products/${req.file.filename}`;
+      // Delete old image from Cloudinary
+      if (product.imagePublicId) {
+        await deleteFromCloudinary(product.imagePublicId);
+      }
+
+      // Upload new image
+      const result = await uploadToCloudinary(req.file);
+      updateData.image = result.secure_url;
+      updateData.imagePublicId = result.public_id;
     }
 
     const updated = await SponsoredProduct.findByIdAndUpdate(
@@ -68,13 +90,18 @@ export const updateSponsoredProduct = async (req, res) => {
       { new: true }
     );
 
-    res.json({ message: "Sponsored product updated", product: updated });
+    res.json({
+      message: "Sponsored product updated",
+      product: updated,
+    });
   } catch (err) {
     console.error("Update Sponsored Product Error:", err);
     res.status(500).json({ message: "Failed to update product" });
   }
 };
 
+
+// Admin — DELETE product
 // Admin — DELETE product
 export const deleteSponsoredProduct = async (req, res) => {
   try {
@@ -90,10 +117,17 @@ export const deleteSponsoredProduct = async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
+    // Delete image from Cloudinary
+    if (product.imagePublicId) {
+      await deleteFromCloudinary(product.imagePublicId);
+    }
+
     await SponsoredProduct.findByIdAndDelete(req.params.id);
+
     res.json({ message: "Sponsored product deleted" });
   } catch (err) {
     console.error("Delete Sponsored Product Error:", err);
     res.status(500).json({ message: "Failed to delete product" });
   }
 };
+

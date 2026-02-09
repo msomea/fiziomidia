@@ -24,3 +24,4 @@ Test
 3. backend to Render ✅ 
 4. frontend to Netlify ✅ has limitation
 5. Cloudflare ✅ ✅ ✅ 
+6. Image on Cloudinary
