@@ -33,10 +33,9 @@ const app = express();
 /* ---------------------------------- */
 const allowedOrigins = [
   "http://localhost:5173",
-  "http://fiziomidia.org",
-  "https://fiziomidia.netlify.app",
-  "https://fiziomidia.pages.dev",
-  "https://fiziomidia.com",
+  "https://fiziomidia.org",
+  "https://www.fiziomidia.org",
+  
 ];
 
 /* ---------------------------------- */
