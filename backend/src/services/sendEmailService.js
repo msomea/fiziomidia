@@ -1,21 +1,13 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import config from "../config/index.js";
 
-if (!config.mailPass) {
+if (!config.resendApiKey) {
   console.warn(
-    "📮 MAIL_PASS is not configured — emails will fail to send in non-dev environments."
+    "📮 RESEND_API_KEY is not configured — emails will fail to send in non-dev environments."
   );
 }
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "msomearaphael@gmail.com",
-    pass: config.mailPass,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
  * Send an email using SMTP (ImprovMX)
@@ -26,8 +18,8 @@ const transporter = nodemailer.createTransport({
  */
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const response = await transporter.sendMail({
-      from: `"Fiziomidia" <info@fiziomidia.org>`,
+    const response = await resend.emails.send({
+      from: `"FizioMidia" <info@fiziomidia.org>`,
       to,
       subject,
       html,

@@ -11,10 +11,7 @@ const requiredVars = [
   "CLOUDINARY_API_SECRET",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
-  "MAIL_PASS",
-  "MAIL_HOST",
-  "MAIL_PORT",
-  "MAIL_USER",
+  "RESEND_API_KEY",
 ];
 
 // Validate required environment variables
@@ -49,6 +46,9 @@ export const ENV = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_URL: process.env.CLOUDINARY_URL,
+
+  // Resend (email)
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
 
   // Mail (SMTP)
   MAIL_HOST: process.env.MAIL_HOST,

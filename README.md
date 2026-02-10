@@ -24,6 +24,7 @@ Test
 3. backend to Render
 4. Front end Cloudflare
 5. Image on Cloudinary
-6. Zoho for mail
+6. GMAIL stmp to send mail
+7. ImproveMX to receive email
 
 

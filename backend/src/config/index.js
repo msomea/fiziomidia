@@ -11,10 +11,7 @@ const requiredVars = [
   "CLOUDINARY_API_SECRET",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
-  "MAIL_PASS",
-  "MAIL_HOST",
-  "MAIL_PORT",
-  "MAIL_USER",
+  "RESEND_API_KEY",
 ];
 
 for (const key of requiredVars) {
@@ -52,6 +49,9 @@ export default {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   },
 
+  //Resend
+  resendApiKey: process.env.RESEND_API_KEY,
+
   // Mail (SMTP)
   mailHost: process.env.MAIL_HOST,
   mailPort: process.env.MAIL_PORT,
@@ -78,7 +78,7 @@ export default {
   vite: {
     apiUrl: process.env.VITE_API_URL || "http://localhost:4000/api",
     socketUrl: process.env.VITE_SOCKET_URL || "http://localhost:4000",
-    appName: process.env.VITE_APP_NAME || "Fiziomidia",
+    appName: process.env.VITE_APP_NAME || "FizioMidia",
   },
 
   // Logging / Debugging
