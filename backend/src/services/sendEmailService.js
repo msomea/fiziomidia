@@ -1,25 +1,33 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import config from "../config/index.js";
 
-if (!config.resendApiKey) {
+if (!config.mailPass) {
   console.warn(
-    "RESEND_API_KEY is not configured — emails will fail to send in non-dev environments.",
+    "📮 MAIL_PASS is not configured — emails will fail to send in non-dev environments."
   );
 }
 
-const resend = new Resend(config.resendApiKey);
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "msomearaphael@gmail.com",
+    pass: config.mailPass,
+  },
+});
 
 /**
- * Send an email using Resend API
+ * Send an email using SMTP (ImprovMX)
  * @param {Object} options
- * @param {string} options.to - Recipient email
+ * @param {string|string[]} options.to - Recipient email(s)
  * @param {string} options.subject - Email subject
  * @param {string} options.html - Email HTML content
  */
 export const sendEmail = async ({ to, subject, html }) => {
   try {
-    const response = await resend.emails.send({
-      from: `"FizioMidia" <onboarding@resend.dev>`,
+    const response = await transporter.sendMail({
+      from: `"Fiziomidia" <info@fiziomidia.org>`,
       to,
       subject,
       html,

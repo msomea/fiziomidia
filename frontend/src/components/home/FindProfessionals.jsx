@@ -133,7 +133,7 @@ export default function FindProfessionals() {
                   key={pt._id}
                   className="flex-shrink-0 w-[85%] sm:w-[300px] bg-alice rounded-2xl p-4 shadow hover:shadow-lg transition text-center"
                 >
-                  <div className="mx-auto mb-4 w-20 h-20 rounded-full ring ring-caribbean ring-offset-2 overflow-hidden">
+                  <div className="mx-auto mb-4 w-full h-40 object-cover rounded-xl ring ring-caribbean ring-offset-2 overflow-hidden">
                     <img
                       src={
                         pt.promotion?.imageUrl // first use promotion image
@@ -150,7 +150,7 @@ export default function FindProfessionals() {
 
                   </div>
 
-                  <h3 className="font-semibold text-lg">
+                  <h3 className="font-semibold text-caribbean text-lg">
                     {pt.fullName || "Unnamed PT"}
                   </h3>
 

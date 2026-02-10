@@ -11,6 +11,10 @@ const requiredVars = [
   "CLOUDINARY_API_SECRET",
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
+  "MAIL_PASS",
+  "MAIL_HOST",
+  "MAIL_PORT",
+  "MAIL_USER",
 ];
 
 for (const key of requiredVars) {
@@ -48,14 +52,18 @@ export default {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   },
 
+  // Mail (SMTP)
+  mailHost: process.env.MAIL_HOST,
+  mailPort: process.env.MAIL_PORT,
+  mailUser: process.env.MAIL_USER,
+  mailPass: process.env.MAIL_PASS,
+
+  
   // Cloudinary
   cloudinaryUrl: process.env.CLOUDINARY_URL,
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
-
-  // Resend (email)
-  resendApiKey: process.env.RESEND_API_KEY,
 
   // Upload Directory
   uploadDir: process.env.UPLOAD_DIR || "uploads/",

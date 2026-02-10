@@ -139,7 +139,7 @@ const SponsoredContent = () => {
                     src={product.image}
                     alt={product.name}
                     loading="lazy"
-                    className="w-full h-40 object-cover rounded-xl"
+                    className="mx-auto mb-4 w-full h-40 object-cover rounded-xl ring ring-caribbean ring-offset-2 overflow-hidden"
                   />
 
                   <h3 className="text-lg font-semibold mt-3">
