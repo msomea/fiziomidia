@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import config from "../config/index.js";
 import User from "../models/User.js";
 import { sendEmail } from "../services/sendEmailService.js";
+import { EMAIL_FROM } from "../services/sendEmailService.js";
 import {
   signAccessToken,
   signRefreshToken,
@@ -74,6 +75,7 @@ export async function registerUser(req, res) {
     });
 
     await sendEmail({
+      from: EMAIL_FROM.NO_REPLY,
       to: email,
       subject: "Verify your FizioMidia account",
       html: verifyHTML
@@ -150,6 +152,7 @@ export async function requestPasswordReset(req, res) {
     });
 
     await sendEmail({
+      from: EMAIL_FROM.NO_REPLY,
       to: email,
       subject: "Reset your Fiziomidia password",
       html: resetHTML
@@ -195,12 +198,13 @@ export async function resetPassword(req, res) {
     // Notify user of password change
     const notifyHTML = generateFiziomidiaEmail({
       title: "Your Password has been Changed",
-      body: "<p>Your FizioMidia account password has been changed. If you did not perform this action, please reset your password or contact support immediately to secure your account.</p>",
+      body: "<p>Your FizioMidia account password has been changed. If you did not perform this action, please reset your password or contact support at admin@fiziomidia.org immediately to secure your account.</p>",
       buttonText: "Reset Password",
       buttonURL: `${config.clientUrl}/forgot-password`,
     });
 
     await sendEmail({
+      from: EMAIL_FROM.NO_REPLY,
       to: user.email,
       subject: "Password Change",
       html: notifyHTML

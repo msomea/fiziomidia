@@ -3,29 +3,40 @@ import config from "../config/index.js";
 
 if (!config.resendApiKey) {
   console.warn(
-    "📮 RESEND_API_KEY is not configured — emails will fail to send in non-dev environments."
+    "📮 RESEND_API_KEY is not configured — emails will fail to send."
   );
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(config.resendApiKey);
+
+// Centralized sender identities
+export const EMAIL_FROM = {
+  INFO: "FizioMidia <info@fiziomidia.org>",
+  ADMIN: "FizioMidia Admin <admin@fiziomidia.org>",
+  NO_REPLY: "FizioMidia <no-reply@fiziomidia.org>",
+};
 
 /**
- * Send an email using SMTP (ImprovMX)
+ * Send an email using Resend
  * @param {Object} options
  * @param {string|string[]} options.to - Recipient email(s)
  * @param {string} options.subject - Email subject
  * @param {string} options.html - Email HTML content
+ * @param {string} [options.from] - Sender identity
  */
-export const sendEmail = async ({ to, subject, html }) => {
+export const sendEmail = async ({
+  to,
+  subject,
+  html,
+  from = EMAIL_FROM.INFO,
+}) => {
   try {
-    const response = await resend.emails.send({
-      from: `"FizioMidia" <info@fiziomidia.org>`,
+    return await resend.emails.send({
+      from,
       to,
       subject,
       html,
     });
-
-    return response;
   } catch (err) {
     console.error("📮 Email sending failed:", err);
     throw err;
