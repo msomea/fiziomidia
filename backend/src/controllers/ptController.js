@@ -80,16 +80,27 @@ export const getSavedPTsByMember = async (req, res) => {
 export const getPTsWithActivePromotions = async (req, res) => {
   try {
     // Find all active promotions
-    const activePromotions = await Promotion.find({ status: "active" });
-    // Get all physiotherapists linked to active promotions
-    const ptIds = activePromotions.map((promo) => promo.pt);
-    const pts = await User.find({
-      _id: { $in: ptIds },
-      role: "physiotherapist",
-    }).select("-passwordHash");
-    res.status(200).json(pts);
-    
+    const activePromotions = await Promotion.find({ status: "active" })
+      .populate("pt", "fullName profileImageUrl ptProfile role");
 
+    // Map PTs to include their active promotion
+    const ptsWithPromotion = activePromotions
+      .filter(promo => promo.pt?.role === "physiotherapist")
+      .map((promo) => {
+        const pt = promo.pt.toObject(); // convert mongoose doc to plain object
+        pt.promotion = {
+          _id: promo._id,
+          title: promo.title,
+          price: promo.price,
+          imageUrl: promo.imageUrl,
+          startAt: promo.startAt,
+          endAt: promo.endAt,
+          duration: promo.duration,
+        };
+        return pt;
+      });
+
+    res.status(200).json(ptsWithPromotion);
   } catch (error) {
     console.error("Error fetching PTs with promotions:", error);
     res.status(500).json({ message: "Server Error" });

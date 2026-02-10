@@ -119,10 +119,8 @@ export const getPTPromotion = async (req, res) => {
     const { ptId } = req.query;
     if (!ptId) return res.status(400).json({ error: "ptId is required" });
 
-    const promotion = await Promotion.findOne({
-      pt: ptId,
-      status: "active",
-    });
+    const promotion = await Promotion.findOne({ pt: ptId, status: "active" })
+      //.populate("pt", "fullName profileImageUrl");
 
     if (!promotion) {
       return res.json({ active: false });

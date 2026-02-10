@@ -19,9 +19,9 @@ Ensure MongoDB running and MONGO_URI set.
 | Manage rules                       | ✅     | ✅   | ❌      |
 
 Test
-1. register for domain
-2. MongoDb cruster ✅
-3. backend to Render ✅ 
-4. frontend to Netlify ✅ has limitation
-5. Cloudflare ✅ ✅ ✅ 
-6. Image on Cloudinary
+1. registered for domain
+2. MongoDb cruster
+3. backend to Render
+4. Front end Cloudflare
+5. Image on Cloudinary
+6. Zoho for mail

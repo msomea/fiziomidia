@@ -1,16 +1,22 @@
-import { ArrowBigLeftIcon, ArrowBigRightIcon, Loader2 } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import {
+  ArrowBigLeftIcon,
+  ArrowBigRightIcon,
+  Loader2,
+} from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import API from "../../api/axios";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { API_URL } from "../../config/constants";
+import SkeletonSponsoredCard from "./SkeletonSponsoredCard";
 
 const SponsoredContent = () => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [paused, setPaused] = useState(false);
+
   const carouselRef = useRef(null);
-  const sectionRef = useRef(null);
 
   /* ---------- Load products ---------- */
   useEffect(() => {
@@ -18,7 +24,7 @@ const SponsoredContent = () => {
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/sponsored-products`);
-        setProducts(res.data.products);
+        setProducts(res.data.products || []);
       } catch (err) {
         toast.error("Failed to load sponsored products");
       } finally {
@@ -28,21 +34,7 @@ const SponsoredContent = () => {
     load();
   }, []);
 
-  /* ---------- Calculate dynamic height to match parent sections ---------- */
-  useEffect(() => {
-    const adjustHeight = () => {
-      if (sectionRef.current) {
-        const vh = window.innerHeight * 0.25;
-        sectionRef.current.style.minHeight = `${vh}px`;
-      }
-    };
-
-    adjustHeight();
-    window.addEventListener("resize", adjustHeight);
-    return () => window.removeEventListener("resize", adjustHeight);
-  }, []);
-
-  /* ---------- Detect number of items per page ---------- */
+  /* ---------- Detect items per page ---------- */
   useEffect(() => {
     const calculateItems = () => {
       if (!carouselRef.current) return;
@@ -61,93 +53,116 @@ const SponsoredContent = () => {
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
-  /* ---------- Auto-scroll every 4 seconds ---------- */
-  useEffect(() => {
-    const interval = setInterval(() => {
-      goToPage((page + 1) % totalPages);
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [page, totalPages]);
-
-  /* ---------- Scroll to selected page ---------- */
+  /* ---------- Scroll helper ---------- */
   const goToPage = (newPage) => {
     if (!carouselRef.current) return;
 
-    const scrollAmount = carouselRef.current.offsetWidth * newPage;
+    const card = carouselRef.current.firstChild;
+    if (!card) return;
+
+    const cardWidth = card.offsetWidth;
+    const gap = 16; // gap-4 = 16px
+    const scrollX = newPage * itemsPerPage * (cardWidth + gap);
 
     carouselRef.current.scrollTo({
-      left: scrollAmount,
+      left: scrollX,
       behavior: "smooth",
     });
 
     setPage(newPage);
   };
 
-  const scrollLeft = () => {
+  const scrollLeft = () =>
     goToPage(page === 0 ? totalPages - 1 : page - 1);
-  };
 
-  const scrollRight = () => {
+  const scrollRight = () =>
     goToPage((page + 1) % totalPages);
-  };
+
+  /* ---------- Auto-scroll ---------- */
+  useEffect(() => {
+    if (totalPages <= 1 || paused) return;
+
+    const interval = setInterval(() => {
+      setPage((prev) => {
+        const next = (prev + 1) % totalPages;
+        goToPage(next);
+        return next;
+      });
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [totalPages, paused]);
 
   return (
-    <section ref={sectionRef} className="bg-white py-16 flex items-center">
-      <div className="max-w-6xl mx-auto px-4 relative w-full">
+    <section className="bg-white py-16 min-h-[25vh] flex items-center">
+      <div className="max-w-6xl mx-auto px-4 w-full relative">
         <h2 className="text-3xl font-bold text-caribbean mb-8 text-center">
           Sponsored Content
         </h2>
 
-        {/* Carousel container */}
-        <div className="relative flex items-center w-full">
-          {/* Left arrow */}
-          {products.length > itemsPerPage && !loading && (
+        <div
+          className="relative flex items-center"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          {/* Left Arrow */}
+          {!loading && products.length > itemsPerPage && (
             <button
               onClick={scrollLeft}
+              aria-label="Previous"
               className="absolute left-0 z-20 bg-gray-100 p-2 rounded-full shadow text-caribbean hover:bg-gray-200"
             >
               <ArrowBigLeftIcon />
             </button>
           )}
 
-          {/* Scrollable carousel */}
+          {/* Carousel */}
           <div
             ref={carouselRef}
-            className="flex overflow-x-hidden gap-4 px-12 scroll-smooth justify-center items-center w-full"
+            className="flex gap-4 overflow-x-hidden px-12 w-full scroll-smooth"
           >
-            {loading ? (
-              <p className="flex justify-center items-center h-40">
-                <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-              </p>
-            ) : products.length === 0 ? (
-              <p className="flex justify-center items-center h-40">
-                <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-              </p>
-            ) : (
+            {loading || products.length < 1 ? (
+              Array.from({ length: itemsPerPage }).map((_, i) => (
+              <SkeletonSponsoredCard key={i} />
+            ))
+          ) : products.length === 0 ? (
+            <div className="flex justify-center items-center w-full h-40 text-gray-500">
+              No sponsored products available
+            </div>
+          ) : (
               products.map((product) => (
                 <div
                   key={product._id}
-                  className="min-w-[300px] max-w-[300px] bg-alice shadow-md hover:shadow-lg transition rounded-2xl p-4 flex-shrink-0"
+                  className="flex-shrink-0 w-[85%] sm:w-[300px] bg-alice rounded-2xl p-4 shadow hover:shadow-lg transition"
                 >
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="rounded-xl w-full h-40 object-cover"
+                    loading="lazy"
+                    className="w-full h-40 object-cover rounded-xl"
                   />
 
-                  <h3 className="text-lg font-semibold text-black mt-3">
+                  <h3 className="text-lg font-semibold mt-3">
                     {product.name}
                   </h3>
 
-                  <p className="text-caribbean font-bold">Tsh: {product.price.toLocaleString()}</p>
-                  <p className="text-sm text-tufts">{product.description}</p>
+                  <p className="text-caribbean font-bold">
+                    Tsh {product.price?.toLocaleString()}
+                  </p>
+
+                  <p className="text-sm text-tufts line-clamp-2">
+                    {product.description}
+                  </p>
 
                   <a
-                    href={product.link.startsWith("http") ? product.link : `https://${product.link}`}
+                    href={
+                      product.link?.startsWith("http")
+                        ? product.link
+                        : `https://${product.link}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-sm bg-caribbean text-white mt-3 hover:bg-tufts w-full"
+                    className="btn btn-sm bg-caribbean text-white mt-3 w-full hover:bg-tufts"
                   >
                     View Product
                   </a>
@@ -156,20 +171,21 @@ const SponsoredContent = () => {
             )}
           </div>
 
-          {/* Right arrow */}
-          {products.length > itemsPerPage && !loading && (
+          {/* Right Arrow */}
+          {!loading && products.length > itemsPerPage && (
             <button
               onClick={scrollRight}
-              className="absolute right-0 z-20 bg-gray-100 p-2 rounded-full text-caribbean shadow hover:bg-gray-200"
+              aria-label="Next"
+              className="absolute right-0 z-20 bg-gray-100 p-2 rounded-full shadow text-caribbean hover:bg-gray-200"
             >
               <ArrowBigRightIcon />
             </button>
           )}
         </div>
 
-        {/* Pagination dots */}
+        {/* Pagination Dots */}
         {!loading && totalPages > 1 && (
-          <div className="flex justify-center mt-6 gap-3">
+          <div className="flex justify-center gap-3 mt-6">
             {Array.from({ length: totalPages }).map((_, i) => (
               <button
                 key={i}
@@ -177,7 +193,8 @@ const SponsoredContent = () => {
                 className={`w-3 h-3 rounded-full transition ${
                   i === page ? "bg-caribbean" : "bg-gray-300"
                 }`}
-              ></button>
+                aria-label={`Go to page ${i + 1}`}
+              />
             ))}
           </div>
         )}

@@ -43,10 +43,15 @@ const WorkingHoursSchema = new Schema(
 
 // PT License Schema
 const LicenseSchema = new Schema({
-  licenseNumber: { type: String, required: true },
   licenseFileUrl: String,
   licenseFilePublicId: String,
   licenseFileType: String,  
+  licenseNumber: {
+    type: String,
+    required: function () {
+      return this.role === "physiotherapist";
+    },
+  },
   verificationStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],

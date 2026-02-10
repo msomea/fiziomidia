@@ -17,5 +17,15 @@ export default {
       },
     },
   },
+  animation: {
+    shimmer: "shimmer 1.6s infinite linear",
+  },
+  keyframes: {
+    shimmer: {
+      "0%": { backgroundPosition: "-400px 0" },
+      "100%": { backgroundPosition: "400px 0" },
+    },
+  },
+
   plugins: [daisyui],
 }
