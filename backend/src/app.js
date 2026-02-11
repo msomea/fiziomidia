@@ -97,7 +97,7 @@ app.use((req, res, next) => {
 /* ---------------------------------- */
 app.get("/api/logo", (req, res) => {
   res.setHeader("Cache-Control", "public, max-age=86400"); // 24h
-  res.sendFile(path.join(process.cwd(), "public", "fiziomidia_logo.png"));
+  res.sendFile(path.join(process.cwd(), "public", "fiziomidia_logo_trans.png"));
 });
 
 /* ---------------------------------- */
