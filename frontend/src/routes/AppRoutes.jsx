@@ -30,6 +30,7 @@ import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
 import AdminSponsorshipDetail from "../components/admin/AdminSubSponsorshipDetail";
 import AdminProductSponsorshipDetail from "../components/admin/AdminProductSponsorshipDetail";
+import AdminProfileSettings from "../pages/admin/AdminProfileSetting";
 import Services from "../pages/services/Services";
 import CreatePromotion from "../pages/services/CreatePromotion";
 import ListPromotions from "../pages/services/ListPromotions";
@@ -97,6 +98,7 @@ export default function AppRoutes() {
       <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
       <Route path="/admin/forum/mod-requests/:id" element={<ForumModRequestsDetail />} />
       <Route path="/users/:id/send-email" element={<AdminSendEmail />} />
+      <Route path="/settings/admin" element={<AdminProfileSettings />} />
 
       {/* Temp routes for debugging */}
       
