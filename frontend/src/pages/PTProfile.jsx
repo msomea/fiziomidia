@@ -87,20 +87,25 @@ const PTProfile = () => {
             <div className="mt-4 flex flex-wrap gap-3">
               {loggedInUser.role !== "guest" && id !== loggedInUser._id ? (
                 <>
-                  <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts">
+                  <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition">
                     Book Appointment
                   </button>
+
                   <Link
-                  to={`/messages/user/${pt._id}`}
-                  className="btn btn-outline border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white">
+                    to={`/messages/user/${pt._id}`}
+                    className="border border-caribbean text-caribbean px-4 py-2 rounded-lg 
+                              hover:bg-caribbean hover:text-white transition"
+                  >
                     Message
                   </Link>
                 </>
-              ):(
+              ) : loggedInUser.role === "guest" ? (
                 <p className="text-sm text-gray-500 italic">
-                  Login to message or book appointment                </p>
-              )}
+                  Login to message or book appointment
+                </p>
+              ) : null}
             </div>
+
           </div>
         </div>
       </div>

@@ -258,10 +258,8 @@ export const createPost = async (req, res) => {
 
     // 1️⃣ Create new post
     const post = new Post({ title, body, sub, author });
-    await post.save();
 
-    // 2️⃣ Increment totalPosts on the sub
-    await ForumSub.findByIdAndUpdate(sub, { $inc: { totalPosts: 1 } });
+    await post.save();
 
     res.status(201).json({ post });
   } catch (err) {
@@ -487,9 +485,8 @@ export const deletePost = async (req, res) => {
     }
 
     // Delete the post
-    await Post.findByIdAndDelete(id);
+    await Post.findByIdAndRemove(id);
 
-    // ✅ Decrement totalPosts on the sub
     if (sub) {
       await ForumSub.findByIdAndUpdate(sub._id, { $inc: { totalPosts: -1 } });
     }

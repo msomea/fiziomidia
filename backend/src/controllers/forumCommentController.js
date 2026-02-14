@@ -28,14 +28,18 @@ export const addComment = async (req, res) => {
 
     const post = await Post.findById(id);
     if (!post) return res.status(404).json({ message: "Post not found" });
-    if (!content?.trim()) return res.status(400).json({ error: "Comment cannot be empty" });
+    if (!content?.trim())
+      return res.status(400).json({ error: "Comment cannot be empty" });
 
     const comment = await Comment.create({
       post: id,
       author,
       content: content.trim(),
-      parentComment
+      parentComment,
     });
+
+    // 🔹 Add comment ID to post's comments array
+    await Post.findByIdAndUpdate(id, { $push: { comments: comment._id } });
 
     // Populate for frontend
     const populatedComment = await Comment.findById(comment._id)
@@ -43,13 +47,13 @@ export const addComment = async (req, res) => {
       .lean();
 
     // Emit to post room
-    if(req.io) {
+    if (req.io) {
       req.io.to(id).emit("comment:new", populatedComment);
     }
 
     res.status(201).json({
       message: "Comment added",
-      comment: populatedComment
+      comment: populatedComment,
     });
   } catch (err) {
     console.error(err);

@@ -108,7 +108,7 @@ const ForumTopics = ({ onSelectTopic, user }) => {
 
   // --- Only verified PTs or admins can add ---
   const canAddSub = user && (user.role === "physiotherapist" || user.role === "admin");
-
+console.log("Topic", topics)
   return (
     <div className="bg-white text-black shadow-md rounded-2xl p-4">
       <div ref={containerRef} style={{ minHeight }}>

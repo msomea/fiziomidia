@@ -25,7 +25,6 @@ const ForumSubSchema = new Schema(
       ref: "User",
       required: true,
     },
-    totalPosts: { type: Number, default: 0 },
 
     // Array of rules
     rules: [
