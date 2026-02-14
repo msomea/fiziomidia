@@ -95,8 +95,8 @@ export default function AdminPromotionDetail() {
         {/* PT INFO */}
         <div className="bg-gray-100 p-3 rounded">
           <h3 className="font-semibold mb-1 text-caribbean">PT Information</h3>
-          <p><b>Name:</b> {promo.pt.fullName}</p>
-          <p><b>Email:</b> {promo.pt.email}</p>
+          <p><b>Name:</b> {promo.pt?.fullName}</p>
+          <p><b>Email:</b> {promo.pt?.email}</p>
         </div>
 
         {/* PROMOTION INFO */}

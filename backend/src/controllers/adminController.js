@@ -6,11 +6,14 @@ import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
+import asyncHandler from "express-async-handler";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import {
   uploadToCloudinary,
   deleteFromCloudinary,
 } from "../services/uploadService.js";
+import { sendEmail, EMAIL_FROM} from "../services/sendEmailService.js";
+import { generateFiziomidiaEmail } from "../templates/emailHelper.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -112,7 +115,7 @@ export const updateUserRole = async (req, res) => {
 ;
 
 // VERIFY OR REJECT PT LICENSE
-export const updateLicenseStatus = async (req, res) => {
+export const updateLicenseStatus = asyncHandler( async (req, res) => {
   try {
     const { status, notes, index } = req.body;
 
@@ -165,7 +168,7 @@ export const updateLicenseStatus = async (req, res) => {
 
     } else if (status === "rejected") {
       user.physioApproval = false;
-      user.role = "pendingPhysiotherapist"; // or "member"
+      user.role = "member";
 
     } else if (status === "pending") {
       user.physioApproval = false;
@@ -173,6 +176,30 @@ export const updateLicenseStatus = async (req, res) => {
     }
 
     await user.save();
+
+    // Generate email
+    const emailHTML = generateFiziomidiaEmail({
+      title: "🎉 License Approved!",
+      body: `
+        <p>Hello ${user.fullName || "there"},</p>
+        <p>Great news! Your professional license has been <strong>approved</strong>.</p>
+        <p>You now have full access to the Fiziomidia platform features.</p>
+        <p>We’re excited to have you onboard and look forward to your contribution.</p>
+      `,
+      buttonText: "Login",
+      buttonURL: `https://fiziomidia.org/login`
+    });
+
+    // Send email (non-blocking safe pattern)
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Your License Has Been Approved - FizioMidia",
+        html: emailHTML
+      });
+    } catch (error) {
+      console.error("License approval email failed:", error.message);
+    }
 
     res.json({
       success: true,
@@ -185,8 +212,8 @@ export const updateLicenseStatus = async (req, res) => {
     console.error("License update error:", err);
     res.status(500).json({ success: false, message: "Failed to update license status" });
   }
-};
-
+}
+);
 
 
 // ============================================

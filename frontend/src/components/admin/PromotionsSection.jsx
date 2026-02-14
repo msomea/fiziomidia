@@ -29,7 +29,7 @@ export default function PromotionsSection() {
       toast.error("Failed to load promotions");
     }
   };
-
+console.log(promotions)
   return (
     <CollapsibleSection title="PT Promotions">
 
@@ -65,8 +65,8 @@ export default function PromotionsSection() {
             </h3>
           </Link>
           <div className="text-sm">
-            <p><b>PT:</b> {promo.pt.fullName}</p>
-            <p><b>Email:</b> {promo.pt.email}</p>
+            <p><b>PT:</b> {promo.pt?.fullName}</p>
+            <p><b>Email:</b> {promo.pt?.email}</p>
             <p><b>Status:</b> {promo.status || "unknown"}</p>
             <p><b>Due Date:</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>
           </div>

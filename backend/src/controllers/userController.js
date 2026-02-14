@@ -43,7 +43,9 @@ export const updateProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Load existing user
+    // -------------------------------------------------
+    // Load user
+    // -------------------------------------------------
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -57,18 +59,22 @@ export const updateProfile = async (req, res) => {
       upgradeToPhysiotherapist,
     } = req.body;
 
-    const updateData = {
-      ...(fullName && { fullName }),
-      ...(email && { email }),
-      ...(phone && { phone }),
-      ...(bio && { bio }),
-    };
+    const updateData = {};
 
-    // --------------------------
-    // Handle Location
-    // --------------------------
+    // -------------------------------------------------
+    // Basic fields (prevent role tampering)
+    // -------------------------------------------------
+    if (fullName) updateData.fullName = fullName;
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (bio) updateData.bio = bio;
+
+    // -------------------------------------------------
+    // Location handling
+    // -------------------------------------------------
     if (location) {
-      let loc = typeof location === "string" ? JSON.parse(location) : location;
+      const loc = typeof location === "string" ? JSON.parse(location) : location;
+
       updateData.location = {
         type: "Point",
         coordinates: loc?.coordinates || [0, 0],
@@ -79,23 +85,43 @@ export const updateProfile = async (req, res) => {
       };
     }
 
-    // --------------------------
+    // -------------------------------------------------
     // Avatar Upload
-    // --------------------------
+    // -------------------------------------------------
     if (req.files?.avatar?.[0]) {
-      // Delete old avatar if exists
-      if (user.profileImageUrl?.includes("cloudinary")) {
-        const oldPublicId = user.profileImageUrl.split("/").pop().split(".")[0];
-        await deleteFromCloudinary(`avatars/${oldPublicId}`);
+      if (user.profileImagePublicId) {
+        await deleteFromCloudinary(user.profileImagePublicId);
       }
 
       const uploaded = await uploadToCloudinary(req.files.avatar[0]);
+
       updateData.profileImageUrl = uploaded.secure_url;
+      updateData.profileImagePublicId = uploaded.public_id;
     }
 
-    // --------------------------
-    // PT Profile Handling
-    // --------------------------
+    // -------------------------------------------------
+    // Email uniqueness check
+    // -------------------------------------------------
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ email });
+      if (existing && existing._id.toString() !== userId.toString()) {
+        return res.status(409).json({ error: "Email already in use" });
+      }
+    }
+
+    // -------------------------------------------------
+    // Password hashing
+    // -------------------------------------------------
+    if (password) {
+      updateData.passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    }
+
+    // -------------------------------------------------
+    // PT Profile handling
+    // -------------------------------------------------
+    let ptProfile = user.ptProfile?.toObject?.() || {};
+
+    // Parse incoming ptProfile
     let ptProfilePayload = {};
     if (req.body.ptProfile) {
       ptProfilePayload =
@@ -104,111 +130,122 @@ export const updateProfile = async (req, res) => {
           : req.body.ptProfile;
     }
 
-    // Initialize ptProfile if not present
-    if (!user.ptProfile) user.ptProfile = {};
+    // Merge base PT profile
+    ptProfile = { ...ptProfile, ...ptProfilePayload };
 
-    // --------------------------
-    // License Upload
-    // --------------------------
+    // -------------------------------------------------
+    // License Upload (safe replace)
+    // -------------------------------------------------
     if (req.files?.licenseDocument?.[0]) {
       const licenseFile = req.files.licenseDocument[0];
 
-      // Delete previous license if exists
-      const oldLicenseUrl = user.ptProfile?.licenses?.[0]?.licenseFileUrl;
-      if (oldLicenseUrl?.includes("cloudinary")) {
-        const oldPublicId = oldLicenseUrl.split("/").pop().split(".")[0];
-        await deleteFromCloudinary(`licenses/${oldPublicId}`, "raw");
+      // Delete previous license safely
+      const oldLicense = ptProfile?.licenses?.[0];
+      if (oldLicense?.licenseFilePublicId) {
+        await deleteFromCloudinary(oldLicense.licenseFilePublicId);
       }
 
       const uploadedLicense = await uploadToCloudinary(licenseFile);
+
       const newLicense = {
-        licenseNumber: req.body.licenseNumber || ptProfilePayload?.licenses?.[0]?.licenseNumber || "",
+        licenseNumber:
+          req.body.licenseNumber ||
+          ptProfilePayload?.licenses?.[0]?.licenseNumber ||
+          "",
         licenseFileUrl: uploadedLicense.secure_url,
+        licenseFilePublicId: uploadedLicense.public_id,
         licenseFileType: licenseFile.mimetype,
         verificationStatus: "pending",
         verified: false,
         submittedAt: new Date(),
       };
 
-      updateData.ptProfile = {
-        ...(user.ptProfile?.toObject?.() || user.ptProfile),
-        licenses: [newLicense],
-      };
+      ptProfile.licenses = [newLicense];
     }
 
-    // --------------------------
-    // Merge ptProfile payload (gallery, experience, etc.)
-    // --------------------------
-    if (Object.keys(ptProfilePayload).length > 0) {
-      const merged = {
-        ...(user.ptProfile?.toObject?.() || user.ptProfile),
-        ...ptProfilePayload,
-      };
+    // -------------------------------------------------
+    // Gallery Upload
+    // -------------------------------------------------
+    if (req.files?.galleryImages?.length > 0) {
+      const uploads = await Promise.all(
+        req.files.galleryImages.map((file) => uploadToCloudinary(file))
+      );
 
-      // Merge gallery images if new ones uploaded
-      if (req.files?.galleryImages?.length > 0) {
-        const galleryUploads = await Promise.all(
-          req.files.galleryImages.map((file) => uploadToCloudinary(file))
-        );
+      const galleryItems = uploads.map((up, i) => ({
+        imageUrl: up.secure_url,
+        imagePublicId: up.public_id,
+        caption:
+          typeof req.body.galleryCaption === "string"
+            ? req.body.galleryCaption
+            : req.body.galleryCaption?.[i] || "",
+        uploadedAt: new Date(),
+      }));
 
-        const galleryItems = galleryUploads.map((up, i) => ({
-          imageUrl: up.secure_url,
-          caption:
-            typeof req.body.galleryCaption === "string"
-              ? req.body.galleryCaption
-              : req.body.galleryCaption?.[i] || "",
-          uploadedAt: new Date(),
-        }));
-
-        merged.gallery = [...(merged.gallery || []), ...galleryItems];
-      }
-
-      updateData.ptProfile = merged;
+      ptProfile.gallery = [...(ptProfile.gallery || []), ...galleryItems];
     }
 
-    // --------------------------
-    // Email uniqueness
-    // --------------------------
-    if (email && email !== user.email) {
-      const other = await User.findOne({ email });
-      if (other && other._id.toString() !== userId.toString()) {
-        return res.status(409).json({ error: "Email already in use" });
-      }
-    }
+    updateData.ptProfile = ptProfile;
 
-    // --------------------------
-    // Password hashing
-    // --------------------------
-    if (password) {
-      updateData.passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    }
-
-    // --------------------------
-    // Upgrade to Physiotherapist
-    // --------------------------
+    // -------------------------------------------------
+    // Upgrade to Physiotherapist (STRICT VALIDATION)
+    // -------------------------------------------------
     if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
-      if (!updateData.ptProfile?.licenses?.[0]) {
+
+      if (user.role === "pendingPhysiotherapist") {
+        return res.status(400).json({ error: "Upgrade request already pending" });
+      }
+
+      if (user.role === "physiotherapist") {
+        return res.status(400).json({ error: "Already a physiotherapist" });
+      }
+
+      const license = ptProfile?.licenses?.[0];
+
+      if (!license?.licenseNumber) {
+        return res.status(400).json({ error: "License number required" });
+      }
+
+      if (!license?.licenseFileUrl) {
         return res.status(400).json({ error: "License document required" });
       }
+
+      if (!ptProfile?.institution) {
+        return res.status(400).json({ error: "Institution required" });
+      }
+
+      if (!ptProfile?.yearsOfExperience) {
+        return res.status(400).json({ error: "Years of experience required" });
+      }
+
+      if (!ptProfile?.speciality?.length) {
+        return res.status(400).json({ error: "At least one speciality required" });
+      }
+
       updateData.role = "pendingPhysiotherapist";
       updateData.physioApproval = false;
+      updateData.upgradeRequestedAt = new Date();
     }
 
-    // --------------------------
+    // -------------------------------------------------
     // Save user
-    // --------------------------
+    // -------------------------------------------------
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
+      runValidators: true,
     }).select("-passwordHash");
 
     res.json({
-      message: upgradeToPhysiotherapist
-        ? "Profile updated and upgraded to Physiotherapist"
-        : "Profile updated successfully",
+      message:
+        upgradeToPhysiotherapist === true ||
+        upgradeToPhysiotherapist === "true"
+          ? "Upgrade request submitted successfully"
+          : "Profile updated successfully",
       user: updatedUser,
     });
+
   } catch (err) {
     console.error("❌ Update profile error:", err);
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
+

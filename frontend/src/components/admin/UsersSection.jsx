@@ -113,7 +113,13 @@ export default function AdminUsers() {
                 const license = u?.ptProfile?.licenses?.[0];
                 return (
                   <tr key={u._id} className="border-t">
-                    <td className="p-2">{u.fullName}</td>
+                    <td className="p-2">
+                      <Link
+                        to={`/admin/users/${u._id}`}
+                        className="text-blue-600 underline"
+                      >
+                        {u.fullName}
+                      </Link></td>
                     <td className="p-2">{u.email}</td>
                     <td className="p-2 capitalize">{u.role}</td>
                     <td className="p-2">
@@ -121,14 +127,6 @@ export default function AdminUsers() {
                     </td>
                     <td className="p-2 capitalize">
                       {license?.verificationStatus || "N/A"}
-                    </td>
-                    <td className="p-2">
-                      <Link
-                        to={`/admin/users/${u._id}`}
-                        className="text-blue-600 underline"
-                      >
-                        View
-                      </Link>
                     </td>
                   </tr>
                 );

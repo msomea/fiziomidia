@@ -49,17 +49,7 @@ const UpgradeToPT = () => {
       });
 
       // --- Single License (Upgrade requires only one) ---
-      body.append("licenseNumber", formData.licenseNumber);
-
-
-      // File type from user's selected file (if available)
-      if (licenseFile) {
-        body.append(`ptProfile[licenses][0][licenseFileType]`, licenseFile.type);
-      }
-
-      // Default verification status
-      body.append(`ptProfile[licenses][0][verificationStatus]`, "pending");
-      body.append(`ptProfile[licenses][0][verified]`, false);
+      body.append(`ptProfile[licenses][0][licenseNumber]`, formData.licenseNumber);
 
       // --- Attach License File (REQUIRED) ---
       if (licenseFile) {
@@ -78,7 +68,7 @@ const UpgradeToPT = () => {
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Your upgrade request has been submitted. Await admin approval.");
+      toast.success("Your request has been submitted. Await admin approval.");
       navigate(`/dashboard/member/${updatedUser._id}`);
 
     } catch (err) {

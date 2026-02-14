@@ -79,7 +79,7 @@ export default function ProductSponsorshipSection() {
                 {product.name}
               </h3>
             </Link>
-            <p><b>Owner:</b> {product.owner.fullName}</p>
+            <p><b>Owner:</b> {product.owner?.fullName}</p>
             <p><b>Price:</b> {product.price}</p>
             <p><b>Descriptiom:</b> {product.description}</p>
             <p><b>Due Date:</b> {product.endDate}</p>

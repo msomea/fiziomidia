@@ -133,7 +133,7 @@ const SponsoredContent = () => {
               products.map((product) => (
                 <div
                   key={product._id}
-                  className="flex-shrink-0 w-[85%] sm:w-[300px] bg-alice rounded-2xl p-4 shadow hover:shadow-lg transition"
+                  className="flex-shrink-0 w-[85%] sm:w-[300px] bg-alice rounded-2xl p-4 shadow text-center hover:shadow-lg transition"
                 >
                   <img
                     src={product.image}
@@ -142,15 +142,15 @@ const SponsoredContent = () => {
                     className="mx-auto mb-4 w-full h-40 object-cover rounded-xl ring ring-caribbean ring-offset-2 overflow-hidden"
                   />
 
-                  <h3 className="text-lg font-semibold mt-3">
+                  <h3 className="text-lg font-semibold text-caribbean mt-3">
                     {product.name}
                   </h3>
 
-                  <p className="text-caribbean font-bold">
+                  <p className="text-gray-600 font-bold">
                     Tsh {product.price?.toLocaleString()}
                   </p>
 
-                  <p className="text-sm text-tufts line-clamp-2">
+                  <p className="text-sm text-gray-600 line-clamp-2">
                     {product.description}
                   </p>
 

@@ -160,7 +160,7 @@ export default function FindProfessionals() {
                       : "No speciality listed"}
                   </p>
 
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 mt-1">
                     {pt.ptProfile?.institution || "No institution"}
                   </p>
 
