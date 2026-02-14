@@ -258,12 +258,17 @@ export const createPost = async (req, res) => {
 
     // 1️⃣ Create new post
     const post = new Post({ title, body, sub, author });
-
     await post.save();
 
-    res.status(201).json({ post });
+    // 2️⃣ Manually increment totalPosts to ensure it's updated immediately
+    await ForumSub.findByIdAndUpdate(sub, { $inc: { totalPosts: 1 } });
+
+    // 3️⃣ Fetch updated sub to return with post
+    const updatedSub = await ForumSub.findById(sub);
+
+    res.status(201).json({ post, sub: updatedSub });
   } catch (err) {
-    console.error(err);
+    console.error("Error creating post:", err);
     res.status(500).json({ error: "Failed to create post" });
   }
 };

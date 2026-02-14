@@ -8,7 +8,10 @@ export const buildCommentTree = (comments) => {
 
   comments.forEach(c => {
     if (c.parentComment) {
-      map[c.parentComment]?.replies.push(map[c._id]);
+      // Only add to replies if parent is a top-level comment
+      if (map[c.parentComment]) {
+        map[c.parentComment].replies.push(map[c._id]);
+      }
     } else {
       roots.push(map[c._id]);
     }

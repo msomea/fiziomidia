@@ -25,13 +25,14 @@ const ForumSubSchema = new Schema(
       ref: "User",
       required: true,
     },
+    totalPosts: { type: Number, default: 0 },
 
     // Array of rules
     rules: [
       {
         type: String,
         trim: true,
-      }
+      },
     ],
     moderators: [
       {
@@ -42,7 +43,7 @@ const ForumSubSchema = new Schema(
           default: "sub_mod",
         },
         assignedAt: { type: Date, default: Date.now },
-      }
+      },
     ],
 
     // 🔹 Sponsorship fields
@@ -55,7 +56,7 @@ const ForumSubSchema = new Schema(
     startDate: { type: Date },
     endDate: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // 🔹 Cascade delete posts when a sub is removed

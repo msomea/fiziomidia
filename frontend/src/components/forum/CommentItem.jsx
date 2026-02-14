@@ -17,10 +17,14 @@ const CommentItem = ({
   editingContent,
   setEditingContent,
   cancelEdit,
-  saveEdit
+  saveEdit,
+  depth = 1
 }) => {
   const [replying, setReplying] = useState(false);
   const [replyContent, setReplyContent] = useState("");
+  
+  // 🔹 Check if this is a level 3 comment (depth = 3, cannot reply further)
+  const isLevel3 = depth >= 3;
   /* ---------------- Permissions ---------------- */
   const isAuthor = user?._id === comment.author?._id;
   const isEditing = editingId === comment._id;
@@ -49,7 +53,7 @@ const CommentItem = ({
     setReplyContent("");
     setReplying(false);
   };
-console.log(`ASSET URL is ${ASSET_URL}${comment.author?.profileImageUrl}`)
+
 
   return (
     <div className="mt-4">
@@ -107,7 +111,7 @@ console.log(`ASSET URL is ${ASSET_URL}${comment.author?.profileImageUrl}`)
 
           {/* ---------------- Actions ---------------- */}
           <div className="flex gap-3 mt-1 text-xs text-gray-500">
-            {user?._id && (
+            {user?._id && !isLevel3 && (
               <button onClick={() => setReplying(!replying)}>Reply</button>
             )}
 
@@ -169,6 +173,7 @@ console.log(`ASSET URL is ${ASSET_URL}${comment.author?.profileImageUrl}`)
                   setEditingContent={setEditingContent}
                   cancelEdit={cancelEdit}
                   saveEdit={saveEdit}
+                  depth={depth + 1}
                 />
               ))}
             </div>

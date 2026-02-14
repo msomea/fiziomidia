@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { API_URL } from "../../config/constants";
 import CollapsibleSection from "../admin/CollapsibleSection";
 
-const ForumTopics = ({ onSelectTopic, user }) => {
+const ForumTopics = ({ onSelectTopic, user, socket }) => {
   const [topics, setTopics] = useState([]);
   const [activeTopic, setActiveTopic] = useState(null);
   const [sortType, setSortType] = useState("alphabet");
@@ -43,6 +43,19 @@ const ForumTopics = ({ onSelectTopic, user }) => {
   useEffect(() => {
     fetchSubs(page, limit);
   }, [page]);
+
+  // 🔹 Listen for post creation/deletion to update totalPosts count
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("post:created", () => fetchSubs(page, limit));
+    socket.on("post:deleted", () => fetchSubs(page, limit));
+
+    return () => {
+      socket.off("post:created");
+      socket.off("post:deleted");
+    };
+  }, [socket, page, limit]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -108,7 +121,7 @@ const ForumTopics = ({ onSelectTopic, user }) => {
 
   // --- Only verified PTs or admins can add ---
   const canAddSub = user && (user.role === "physiotherapist" || user.role === "admin");
-console.log("Topic", topics)
+
   return (
     <div className="bg-white text-black shadow-md rounded-2xl p-4">
       <div ref={containerRef} style={{ minHeight }}>

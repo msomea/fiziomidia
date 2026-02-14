@@ -31,6 +31,30 @@ export const addComment = async (req, res) => {
     if (!content?.trim())
       return res.status(400).json({ error: "Comment cannot be empty" });
 
+    // 🔹 If replying to a comment, check nesting depth (max 3 levels)
+    if (parentComment) {
+      const parentCommentDoc = await Comment.findById(parentComment);
+      if (!parentCommentDoc) {
+        return res.status(404).json({ message: "Parent comment not found" });
+      }
+
+      // Calculate depth of parent comment
+      let depth = 1;
+      let current = parentCommentDoc;
+      while (current.parentComment) {
+        depth++;
+        current = await Comment.findById(current.parentComment);
+      }
+
+      // Only allow replies up to level 3 (max depth of parent is 2)
+      if (depth >= 3) {
+        return res.status(400).json({
+          error:
+            "Cannot reply to level 3 comments. Maximum 3 levels of nesting allowed.",
+        });
+      }
+    }
+
     const comment = await Comment.create({
       post: id,
       author,

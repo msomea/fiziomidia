@@ -17,26 +17,7 @@ const PostSchema = new Schema(
   { timestamps: true }
 );
 
-// 🔹 When a post is created — increment totalPosts on the related sub
-PostSchema.post("save", async function (doc) {
-  try {
-    await mongoose.model("ForumSub").findByIdAndUpdate(doc.sub, {
-      $inc: { totalPosts: 1 },
-    });
-  } catch (err) {
-    console.error("Error incrementing totalPosts:", err);
-  }
-});
+const Post = mongoose.model("Post", PostSchema);
+export default Post;
 
-// 🔹 When a post is removed — decrement totalPosts on the related sub
-PostSchema.post("remove", async function (doc) {
-  try {
-    await mongoose.model("ForumSub").findByIdAndUpdate(doc.sub, {
-      $inc: { totalPosts: -1 },
-    });
-  } catch (err) {
-    console.error("Error decrementing totalPosts:", err);
-  }
-});
 
-export default mongoose.model("Post", PostSchema);

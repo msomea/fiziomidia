@@ -9,6 +9,7 @@ import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import CollapsibleSection from "../../components/admin/CollapsibleSection";
 import { Plus, Trash2 } from "lucide-react";
+import { socket } from "../../socket";
 
 const Forum = () => {
   const navigate = useNavigate();
@@ -69,7 +70,7 @@ const Forum = () => {
       const res = await API.put(`${API_URL}/forum/subs/${selectedSub._id}`, {
         rules: cleanedRules,
       });
-      console.log("Res", res.data.success)
+
       if (!res?.data.success) {
         throw new Error("Update failed");
       }
@@ -94,7 +95,7 @@ const Forum = () => {
 
     try {
       const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
-      console.log("my mod request", res.data)
+ 
       setHasRequested(res.data.requested || res.data.alreadyMod || false);
     } catch (err) {
       console.error("Failed to check mod request:", err);
@@ -200,7 +201,7 @@ const Forum = () => {
         {/* Grid */}
         <div className="grid md:grid-cols-3 gap-6">
           <div>
-            <ForumTopics onSelectTopic={handleSelectTopic} user={user} />
+            <ForumTopics onSelectTopic={handleSelectTopic} user={user} socket={socket} />
           </div>
 
           <div className="md:col-span-2 space-y-4">

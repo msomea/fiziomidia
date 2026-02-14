@@ -158,6 +158,15 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
     }
   };
 
+  /* 🔹 Count total comments including nested replies */
+  const countAllComments = (comments) => {
+    return comments.reduce((total, comment) => {
+      return total + 1 + (comment.replies?.length ? countAllComments(comment.replies) : 0);
+    }, 0);
+  };
+
+  const totalCommentCount = countAllComments(comments);
+
   /* ---------------- Sorting & Pagination ---------------- */
   const topLevelComments = comments.filter((c) => !c.parentComment);
 
@@ -170,12 +179,13 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
   const displayedComments = sortedComments.slice(0, displayedCount);
   const hasMore = displayedCount < sortedComments.length;
 
+
   /* ---------------- UI ---------------- */
   return (
     <div className="mt-6 bg-white shadow-sm rounded-xl p-4">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold">
-          Comments ({post.comments?.length || 0})
+          Comments ({totalCommentCount})
         </h3>
 
         {post.comments?.length > 0 && (
