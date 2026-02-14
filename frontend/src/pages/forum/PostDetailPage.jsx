@@ -9,22 +9,20 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
-import dayjs from "dayjs";
 import { getSocket } from "../../socket";
 
-/* 🔧 Build nested comment tree (safe even if already nested) */
+/* 🔧 Build nested comment tree */
 const buildCommentTree = (comments = []) => {
   const map = {};
   const roots = [];
 
   comments.forEach((c) => {
-    map[c._id] = { ...c, replies: c.replies || [] };
+    map[c._id] = { ...c, replies: [] };
   });
 
   comments.forEach((c) => {
-    if (c.parentComment) {
-      map[c.parentComment]?._id &&
-        map[c.parentComment].replies.push(map[c._id]);
+    if (c.parentComment && map[c.parentComment]) {
+      map[c.parentComment].replies.push(map[c._id]);
     } else {
       roots.push(map[c._id]);
     }
@@ -37,20 +35,29 @@ const PostDetailPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { updatePost } = useForum();
+
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+
   const socket = getSocket();
+
+  const canEdit =
+    user &&
+    (user.role === "admin" || user._id === post?.author?._id);
+
   const fetchPost = async () => {
     try {
       const res = await API.get(`${API_URL}/forum/posts/${id}`);
       const p = res.data;
 
-      // ✅ Ensure comments are nested
       const nestedComments = buildCommentTree(p.comments || []);
 
       const normalizedPost = {
         ...p,
-        comments: nestedComments
+        comments: nestedComments,
       };
 
       setPost(normalizedPost);
@@ -64,17 +71,44 @@ const PostDetailPage = () => {
   };
 
   useEffect(() => {
-    fetchPost();
     if (!id) return;
 
-    // Join a room for this post
+    fetchPost();
+
     socket.emit("joinPostRoom", id);
 
-    // Cleanup on unmount
     return () => {
       socket.emit("leavePostRoom", id);
     };
   }, [id]);
+
+  const handleEditStart = () => {
+    setEditTitle(post.title);
+    setEditBody(post.body);
+    setIsEditing(true);
+  };
+
+  const handleEditSave = async () => {
+    try {
+      const res = await API.put(`${API_URL}/forum/posts/${id}`, {
+        title: editTitle,
+        body: editBody,
+      });
+
+      const updatedPost = {
+        ...res.data.post,
+        comments: buildCommentTree(res.data.post.comments || []),
+      };
+
+      setPost(updatedPost);
+      updatePost(updatedPost);
+      toast.success("Post updated successfully");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update post");
+    }
+  };
 
   if (loading) {
     return (
@@ -93,24 +127,73 @@ const PostDetailPage = () => {
 
   return (
     <div className="max-w-3xl mt-20 mx-auto p-6 bg-white text-black rounded-xl shadow-md">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold text-caribbean mb-2">
-            {post.title}
-          </h1>
-          <p className="text-gray-600 mb-2">
-            By {post.author?.fullName || "Unknown"} •{" "}
-            {dayjs(post.createdAt).format("ddd, DD/MM/YYYY")}
-          </p>
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1">
+
+          {/* Title */}
+          {isEditing ? (
+            <input
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              className="w-full text-2xl font-bold border p-2 rounded mb-3"
+            />
+          ) : (
+            <h1 className="text-2xl font-bold text-caribbean mb-3">
+              {post.title}
+            </h1>
+          )}
+
+          {/* Body */}
+          {isEditing ? (
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              className="w-full border p-3 rounded mb-6 min-h-[150px]"
+            />
+          ) : (
+            <p className="mt-2 mb-6 whitespace-pre-wrap break-words">
+              {post.body}
+            </p>
+          )}
+
+          {/* Edit Buttons */}
+          {canEdit && !isEditing && (
+            <button
+              onClick={handleEditStart}
+              className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              Edit
+            </button>
+          )}
+
+          {isEditing && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleEditSave}
+                className="text-sm px-3 py-1 bg-caribbean text-white rounded"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-sm px-3 py-1 bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
         <PostVote post={post} user={user} refreshPost={fetchPost} />
       </div>
 
-      <p className="mt-4 mb-6">{post.body}</p>
-
-      {/* ✅ Nested comments now rendered */}
-      <CommentsSection post={post} user={user} fetchPost={fetchPost} socket={socket}/>
+      {/* Comments */}
+      <CommentsSection
+        post={post}
+        user={user}
+        fetchPost={fetchPost}
+        socket={socket}
+      />
     </div>
   );
 };
