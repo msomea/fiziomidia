@@ -34,13 +34,9 @@ export default function AdminDashboard() {
       {user && (
         <div className="bg-white shadow-md rounded-2xl p-4 mb-6 flex items-center justify-between">
           
-          {/* Left Side: Avatar + Info */}
           <div className="flex items-center gap-4">
             <img
-              src={
-                user.profileImageUrl ||
-                "https://ui-avatars.com/api/?name=Admin&background=00CC99&color=fff"
-              }
+              src={ user.profileImageUrl }
               alt="Admin Avatar"
               className="w-16 h-16 rounded-full object-cover border-2 border-caribbean shadow-sm"
             />
@@ -55,19 +51,6 @@ export default function AdminDashboard() {
               </p>
             </div>
           </div>
-
-          {/* Right Side: Settings Button */}
-          <button
-            onClick={() => navigate("/settings/admin")}
-            className="flex items-center gap-2 px-4 py-2 
-                      border-2 border-caribbean text-caribbean 
-                      rounded-lg font-medium 
-                      hover:bg-caribbean hover:text-white 
-                      transition-all duration-200"
-          >
-            <Settings size={18} />
-            Settings
-          </button>
         </div>
       )}
 
@@ -81,6 +64,20 @@ export default function AdminDashboard() {
         <ForumModRequestsSection />
         <SponsoredProductsSection />
       </div>
+      <div className="flex justify-center items-center mt-4">
+        <button
+          onClick={() => navigate("/settings/admin")}
+          className="flex items-center gap-2 px-4 py-2 
+                    border-2 border-caribbean text-caribbean 
+                    rounded-lg font-medium 
+                    hover:bg-caribbean hover:text-white 
+                    transition-all duration-200"
+        >
+          <Settings size={18} />
+          Settings
+        </button>
+      </div>
+
       
     </div>
   );

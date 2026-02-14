@@ -181,22 +181,57 @@ const MessagesPage = () => {
   };
 
   if (loading) {
+    // ------------------- Loading Skeleton -------------------
     return (
-      <div className="h-screen flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Conversations...</p>
+      <div className="container mx-auto mt-20 px-4">
+        <h1 className="text-2xl font-semibold text-caribbean mb-6 flex items-center gap-2">
+          <MessageSquare /> Messages
+        </h1>
+
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-4 p-4 bg-white rounded-lg shadow animate-pulse"
+            >
+              <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+              </div>
+              <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (conversations.length < 1)
+  if (!loading && conversations.length < 1) {
+    // ------------------- Empty State -------------------
     return (
-      <div className="container mx-auto mt-20 px-4 py-6">
-        <p className="font-semibold text-caribbean mb-6 flex items-center gap-2">
-          Welcome to FizioMidia Messages! Your conversations will appear here.
+      <div className="h-[70vh] flex flex-col items-center justify-center text-center px-6">
+        <div className="bg-caribbean/10 p-6 rounded-full mb-6">
+          <MessageSquare className="w-12 h-12 text-caribbean" />
+        </div>
+        <h2 className="text-2xl font-semibold text-caribbean mb-2">
+          No Conversations Yet
+        </h2>
+        <p className="text-gray-500 max-w-md mb-6">
+          Start connecting with professionals and patients. 
+          Your conversations will appear here once messages are sent.
         </p>
+        {/* <button
+          onClick={() => navigate("/explore")}
+          className="px-6 py-2.5 bg-caribbean text-white rounded-xl 
+                    hover:bg-tufts transition-all duration-200 shadow-sm"
+        >
+          Find Someone to Message
+        </button> */}
       </div>
     );
+  }
+
 
   return (
     <div className="container mx-auto mt-10 px-4 py-6">
