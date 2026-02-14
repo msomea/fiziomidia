@@ -217,7 +217,63 @@ export const updateLicenseStatus = asyncHandler( async (req, res) => {
 );
 
 
+
 // ============================================
+// ADMIN SEND EMAIL TO USER
+export const sendEmailToUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { title, body, buttonText, buttonURL, logoURL } = req.body;
+
+  // Validate required fields
+  if (!title || !body) {
+    return res.status(400).json({
+      success: false,
+      message: "Email title and body are required"
+    });
+  }
+
+  // Find user
+  const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found"
+    });
+  }
+
+  // Generate branded email HTML
+  const emailHTML = generateFiziomidiaEmail({
+    title,
+    body,
+    buttonText,
+    buttonURL,
+    logoURL : "https://api.fiziomidia.org/api/logo"
+  });
+
+  // Send email
+  try {
+    await sendEmail({
+      to: user.email,
+      from: EMAIL_FROM.ADMIN,
+      subject: title,
+      html: emailHTML
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Email sent successfully"
+    });
+  } catch (err) {
+    console.error("Admin send email error:", err.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send email"
+    });
+  }
+});
+
+
 // APPOINTMENTS CONTROLLER
 // ============================================
 export const getAllAppointments = async (req, res) => {

@@ -75,7 +75,7 @@ export async function registerUser(req, res) {
     });
 
     await sendEmail({
-      from: EMAIL_FROM.NO_REPLY,
+      from: EMAIL_FROM.SUPPORT,
       to: email,
       subject: "Verify your FizioMidia account",
       html: verifyHTML
@@ -152,7 +152,7 @@ export async function requestPasswordReset(req, res) {
     });
 
     await sendEmail({
-      from: EMAIL_FROM.NO_REPLY,
+      from: EMAIL_FROM.SUPPORT,
       to: email,
       subject: "Reset your Fiziomidia password",
       html: resetHTML
@@ -204,7 +204,7 @@ export async function resetPassword(req, res) {
     });
 
     await sendEmail({
-      from: EMAIL_FROM.NO_REPLY,
+      from: EMAIL_FROM.SUPPORT,
       to: user.email,
       subject: "Password Change",
       html: notifyHTML

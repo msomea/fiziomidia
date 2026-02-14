@@ -15,6 +15,9 @@ router.get("/users/:id", admin.getUserDetails);
 router.put("/users/:id/role", admin.updateUserRole);
 router.put("/users/:id/license", admin.updateLicenseStatus);
 
+// Send email to user
+router.post("/users/:id/email", admin.sendEmailToUser);
+
 // Appointments Section
 router.get("/appointments", admin.getAllAppointments);
 router.get("/appointments/:id", admin.getAppointmentDetails);

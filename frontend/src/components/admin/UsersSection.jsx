@@ -116,11 +116,21 @@ export default function AdminUsers() {
                     <td className="p-2">
                       <Link
                         to={`/admin/users/${u._id}`}
-                        className="text-blue-600 underline"
+                        className="text-tufts underline hover:text-caribbean"
                       >
                         {u.fullName}
-                      </Link></td>
-                    <td className="p-2">{u.email}</td>
+                      </Link>
+                    </td>
+                    <td className="p-2">
+                      <Link
+                        to={`/users/${u._id}/send-email`}
+                        className="text-tufts underline hover:text-caribbean"
+                        
+                      >
+                        {u.email}
+                      </Link>
+                    </td>
+
                     <td className="p-2 capitalize">{u.role}</td>
                     <td className="p-2">
                       {u.role === "physiotherapist" ? "PT" : "-"}

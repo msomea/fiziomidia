@@ -11,9 +11,9 @@ const resend = new Resend(config.resendApiKey);
 
 // Centralized sender identities
 export const EMAIL_FROM = {
-  INFO: "FizioMidia <info@fiziomidia.org>",
-  ADMIN: "FizioMidia Admin <admin@fiziomidia.org>",
-  NO_REPLY: "FizioMidia <no-reply@fiziomidia.org>",
+  INFO: "FizioMidia <info@mail.fiziomidia.org>",
+  ADMIN: "FizioMidia Admin <admin@mail.fiziomidia.org>",
+  SUPPORT: "FizioMidia <support@mail.fiziomidia.org>",
 };
 
 /**
