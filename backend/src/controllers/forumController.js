@@ -11,45 +11,32 @@ import escapeRegExp from "../utils/escapeRegExp.js";
 export const listSubs = async (req, res) => {
   try {
     const search = req.query.search || "";
-    const page = parseInt(req.query.page) || 1; 
-    const limit = parseInt(req.query.limit) || 100;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100); // limit max to 100
     const skip = (page - 1) * limit;
 
-    const matchStage = search
+    // Build search filter
+    const match = search
       ? {
-          $match: {
-            $or: [
-              { title: { $regex: escapeRegExp(search), $options: "i" } },
-              { slug: { $regex: escapeRegExp(search), $options: "i" } },
-              { description: { $regex: escapeRegExp(search), $options: "i" } },
-            ],
-          },
+          $or: [
+            { title: { $regex: escapeRegExp(search), $options: "i" } },
+            { slug: { $regex: escapeRegExp(search), $options: "i" } },
+            { description: { $regex: escapeRegExp(search), $options: "i" } },
+          ],
         }
-      : { $match: {} };
+      : {};
 
-    const subs = await ForumSub.aggregate([
-      matchStage,
-      {
-        $lookup: {
-          from: "posts",
-          localField: "_id",
-          foreignField: "sub",
-          as: "posts",
-        },
-      },
-      {
-        $addFields: {
-          totalPosts: { $size: "$posts" },
-        },
-      },
-      { $project: { posts: 0 } },
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-    ]);
+    // Fetch paginated subs
+    const subs = await ForumSub.find(match)
+      .sort({ createdAt: -1, _id: -1 }) // stable sort
+      .skip(skip)
+      .limit(limit)
+      .select(
+        "title slug description totalPosts isSponsored sponsorName sponsorLogo startDate endDate createdAt"
+      ); // only select needed fields
 
-    // Count with search filter
-    const totalCount = await ForumSub.countDocuments(matchStage.$match);
+    // Total count for pagination
+    const totalCount = await ForumSub.countDocuments(match);
 
     res.json({
       subs,
@@ -61,7 +48,7 @@ export const listSubs = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching forum subs:", err);
     res.status(500).json({ error: "Failed to fetch subs" });
   }
 };
@@ -263,14 +250,19 @@ export const updateModRequestRoleByOwner = async (req, res) => {
 
 // Create a post under a sub
 export const createPost = async (req, res) => {
- 
   try {
     const { title, body, sub } = req.body;
-    const author = req.user._id; 
+    const author = req.user._id;
+
     if (!sub) return res.status(400).json({ error: "Sub (topic) is required" });
 
+    // 1️⃣ Create new post
     const post = new Post({ title, body, sub, author });
     await post.save();
+
+    // 2️⃣ Increment totalPosts on the sub
+    await ForumSub.findByIdAndUpdate(sub, { $inc: { totalPosts: 1 } });
+
     res.status(201).json({ post });
   } catch (err) {
     console.error(err);
@@ -486,8 +478,7 @@ export const deletePost = async (req, res) => {
     const isAuthor = post.author.toString() === req.user._id.toString();
     const isAdmin = req.user.role === "admin";
     const isMod =
-      sub?.moderators?.some((m) => m.user.toString() === req.user._id.toString()) ||
-      false;
+      sub?.moderators?.some((m) => m.user.toString() === req.user._id.toString()) || false;
 
     if (!isAuthor && !isAdmin && !isMod) {
       return res.status(403).json({
@@ -495,7 +486,13 @@ export const deletePost = async (req, res) => {
       });
     }
 
+    // Delete the post
     await Post.findByIdAndDelete(id);
+
+    // ✅ Decrement totalPosts on the sub
+    if (sub) {
+      await ForumSub.findByIdAndUpdate(sub._id, { $inc: { totalPosts: -1 } });
+    }
 
     res.json({ message: "Post deleted successfully" });
   } catch (err) {
@@ -503,7 +500,6 @@ export const deletePost = async (req, res) => {
     res.status(500).json({ error: "Failed to delete post" });
   }
 };
-
 
 // ===== SUB SPONSORSHIP  =====
 

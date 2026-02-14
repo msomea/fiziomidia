@@ -5,7 +5,6 @@ import {
   ThumbsDown,
   MessageCircle,
   Share2,
-  RefreshCwOff,
   Trash2,
 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
@@ -13,6 +12,7 @@ import { Link } from "react-router";
 import API from "../../api/axios";
 import { toast } from "react-hot-toast";
 import { API_URL, ASSET_URL } from "../../config/constants";
+import { PostSkeleton } from "../../components/forum/PostSkeleton";
 
 const DEFAULT_AUTHOR = {
   fullName: "Guest",
@@ -42,15 +42,19 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   }
 
   if (!posts.length) {
-    return (
-      <div className="mt-4 flex flex-col items-center justify-center">
-        <RefreshCwOff className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">
-          No Post Yet...
-        </p>
-      </div>
-    );
-  }
+  // Show 3 skeletons as placeholder
+  return (
+    <div className="space-y-4 mt-4">
+      {[...Array(3)].map((_, i) => (
+        <PostSkeleton key={i} />
+      ))}
+      <p className="text-center text-gray-500 mt-2">
+        No posts yet. Be the first to post!
+      </p>
+    </div>
+  );
+}
+
 
   const totalPosts = postList.length;
   const totalPages = Math.ceil(totalPosts / postsPerPage);

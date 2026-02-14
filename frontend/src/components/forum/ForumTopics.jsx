@@ -224,7 +224,7 @@ const ForumTopics = ({ onSelectTopic, user }) => {
                     activeTopic === topic._id ? "text-white/80" : "text-gray-500"
                   }`}
                 >
-                  {topic.totalPosts || 0} posts
+                  {(topic.totalPosts ?? 0)} {(Number(topic.totalPosts) === 1 ? "post" : "posts")}
                 </span>
               </div>
             </li>
