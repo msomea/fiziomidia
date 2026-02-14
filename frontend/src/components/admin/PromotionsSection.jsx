@@ -29,7 +29,7 @@ export default function PromotionsSection() {
       toast.error("Failed to load promotions");
     }
   };
-console.log(promotions)
+
   return (
     <CollapsibleSection title="PT Promotions">
 
@@ -52,7 +52,7 @@ console.log(promotions)
           <option value="pending">Pending</option>
           <option value="active">Active</option>
           <option value="expired">Expired</option>
-          <option value="failed">Failed</option>
+          <option value="suspended">Suspended</option>
         </select>
       </div>
 

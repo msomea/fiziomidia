@@ -23,7 +23,7 @@ const PromotionSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["pending", "active", "failed"],
+      enum: ["pending", "active", "suspended", "expired"],
       default: "pending",
     },
   },

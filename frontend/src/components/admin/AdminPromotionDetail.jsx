@@ -50,16 +50,49 @@ export default function AdminPromotionDetail() {
   };
 
   const deletePromotion = async () => {
-    if (!confirm("Are you sure you want to delete this promotion?")) return;
+  // Backup current promo
+    const backupPromo = { ...promo };
 
-    try {
-      await API.delete(`${API_URL}/admin/promotions/${id}`);
-      toast.success("Promotion deleted");
-      navigate("/dashboard/admin");
-    } catch (err) {
-      toast.error("Delete failed");
-    }
+    // Remove from UI immediately
+    setPromo(null);
+
+    let undoClicked = false;
+
+    // Show toast with Undo button
+    toast(
+      (t) => (
+        <div className="flex items-center gap-3">
+          <span>Promotion deleted</span>
+          <button
+            onClick={() => {
+              undoClicked = true;
+              setPromo(backupPromo);
+              toast.dismiss(t.id);
+            }}
+            className="text-blue-500 underline"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      { duration: 5000 } // 5 seconds to undo
+    );
+
+    // Wait 5 seconds, then call backend if not undone
+    setTimeout(async () => {
+      if (undoClicked) return;
+      try {
+        await API.delete(`${API_URL}/admin/promotions/${id}`);
+        toast.success("Promotion permanently deleted");
+        navigate("/dashboard/admin"); // redirect after deletion
+      } catch (err) {
+        console.error(err);
+        setPromo(backupPromo);
+        toast.error("Failed to delete promotion");
+      }
+    }, 5000);
   };
+
 
   if (loading || !promo) {
     return (

@@ -193,6 +193,7 @@ export const updateLicenseStatus = asyncHandler( async (req, res) => {
     // Send email (non-blocking safe pattern)
     try {
       await sendEmail({
+        from: EMAIL_FROM.ADMIN,
         to: user.email,
         subject: "Your License Has Been Approved - FizioMidia",
         html: emailHTML
@@ -411,20 +412,27 @@ export const updateAdminPromotion = async (req, res) => {
     if (!promotion)
       return res.status(404).json({ message: "Promotion not found" });
 
-    // Update status if sent
-    if (status) {
-      promotion.status = status;
-    }
-
-    // Update end date if sent
+    // Update end date if provided
     if (endAt) {
       const formattedEndAt = new Date(endAt);
-
       if (isNaN(formattedEndAt)) {
         return res.status(400).json({ message: "Invalid endAt date format" });
       }
-
       promotion.endAt = formattedEndAt;
+    }
+
+    // Determine current status
+    const now = new Date();
+
+    if (status === "suspended") {
+      // Suspended promotions stay suspended until reactivated
+      promotion.status = "suspended";
+    } else if (promotion.endAt && promotion.endAt < now) {
+      // If endAt is past, mark as expired
+      promotion.status = "expired";
+    } else {
+      // Otherwise active
+      promotion.status = "active";
     }
 
     await promotion.save();
@@ -438,6 +446,7 @@ export const updateAdminPromotion = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 // DELETE PROMOTION
