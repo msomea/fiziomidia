@@ -75,12 +75,12 @@ const MessagesPage = () => {
       }
 
       setConversations((prev) => {
-        const existing = prev.find((c) => c._id === conversationId);
+        const existing = prev.find((c) => String(c._id) === String(conversationId));
 
         // If conversation exists → update it
         if (existing) {
           return prev.map((c) => {
-            if (c._id !== conversationId) return c;
+            if (String(c._id) !== String(conversationId)) return c;
 
             const isFromOther = sender !== loggedInUser._id;
 
@@ -94,7 +94,10 @@ const MessagesPage = () => {
         }
 
         // If new conversation → insert it at top
-        return [
+          // Prevent duplicate insertion if a conversation with same id already exists (defensive)
+          if (prev.some((c) => String(c._id) === String(conversationId))) return prev;
+
+          return [
           {
             _id: conversationId,
             participants: [

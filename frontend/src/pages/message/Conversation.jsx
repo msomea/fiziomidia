@@ -41,7 +41,17 @@ export default function ConversationPage() {
         setLoading(true);
         const res = await API.get(`${API_URL}/conversations/user/${otherUserId}`);
         setConversation(res.data);
-        setMessages(res.data.messages);
+
+        // Mark incoming messages as read locally so sender UI updates immediately
+        const normalizedMessages = (res.data.messages || []).map((m) => {
+          const receiverId = m.receiver?._id || m.receiver;
+          if (String(receiverId) === String(loggedInUser._id)) {
+            return { ...m, status: "read" };
+          }
+          return m;
+        });
+
+        setMessages(normalizedMessages);
 
         const otherUser = res.data.participants.find(
           (p) => p._id !== loggedInUser._id
@@ -134,6 +144,26 @@ export default function ConversationPage() {
     socket.on("message:status", statusHandler);
     return () => socket.off("message:status", statusHandler);
   }, []);
+
+  // When server notifies that the conversation was read, mark local incoming messages as read
+  useEffect(() => {
+    const convReadHandler = ({ conversationId, unread }) => {
+      if (conversationId !== conversation?._id) return;
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          const receiverId = m.receiver?._id || m.receiver;
+          if (String(receiverId) === String(loggedInUser?._id) && m.status !== "read") {
+            return { ...m, status: "read" };
+          }
+          return m;
+        })
+      );
+    };
+
+    socket.on("conversation:read", convReadHandler);
+    return () => socket.off("conversation:read", convReadHandler);
+  }, [conversation, loggedInUser]);
 
   // Track online/offline
   useEffect(() => {

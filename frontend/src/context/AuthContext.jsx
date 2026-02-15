@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
 import { toast } from "react-hot-toast";
+import { getSocket } from "../socket";
 
 export const AuthContext = createContext(null);
 
@@ -52,6 +53,17 @@ export const AuthProvider = ({ children }) => {
     loadUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Ensure the socket joins the user's personal room whenever we have a logged in user
+  useEffect(() => {
+    if (!user?._id) return;
+    try {
+      const socket = getSocket();
+      socket.emit("joinRoom", user._id);
+    } catch (err) {
+      console.warn("Failed to emit joinRoom:", err);
+    }
+  }, [user?._id]);
 
   // Login function
   const login = async ({ email, password }) => {

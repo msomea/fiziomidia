@@ -139,6 +139,7 @@ export const initSocket = (server) => {
         io.to(msg.sender.toString()).emit("message:status", {
           messageId,
           status: "delivered",
+          conversationId: msg.conversation?.toString(),
         });
       }
     });
@@ -159,6 +160,7 @@ export const initSocket = (server) => {
         io.to(msg.sender.toString()).emit("message:status", {
           messageId,
           status: "read",
+          conversationId: msg.conversation?.toString(),
         });
       }
     });
@@ -180,6 +182,7 @@ export const initSocket = (server) => {
         io.to(m.sender.toString()).emit("message:status", {
           messageId: m._id,
           status: "read",
+          conversationId: m.conversation?.toString(),
         });
       }
 

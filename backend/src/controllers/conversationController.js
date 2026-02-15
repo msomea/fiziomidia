@@ -1,6 +1,7 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
+import { io } from "../config/socket.js";
 
 export const createConversation = async (req, res) => {
   try {
@@ -168,15 +169,42 @@ export const updateUnreadCount = async (req, res) => {
     if (!convo)
       return res.status(404).json({ message: "Conversation not found" });
 
-    // Mark all messages from other user to current user as read
-    await Message.updateMany(
-      {
-        conversation: req.params.id,
-        receiver: req.user._id,
-        status: { $ne: "read" },
-      },
-      { status: "read" }
-    );
+    // Find unread messages from others to current user
+    const unreadMessages = await Message.find({
+      conversation: req.params.id,
+      receiver: req.user._id,
+      status: { $ne: "read" },
+    });
+
+    // Mark each as read and notify the original sender via socket
+    for (const m of unreadMessages) {
+      m.status = "read";
+      await m.save();
+
+      try {
+        if (io && m.sender) {
+          io.to(m.sender.toString()).emit("message:status", {
+            messageId: m._id,
+            status: "read",
+            conversationId: m.conversation?.toString(),
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to emit message:status in mark-read:", err);
+      }
+    }
+
+    // Also notify the current user that the conversation is read (unread:0)
+    try {
+      if (io) {
+        io.to(req.user._id.toString()).emit("conversation:read", {
+          conversationId: convo._id.toString(),
+          unread: 0,
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to emit conversation:read in mark-read:", err);
+    }
 
     res.json({ success: true });
   } catch (error) {
