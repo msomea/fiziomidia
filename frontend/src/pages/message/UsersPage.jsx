@@ -1,30 +1,17 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
-import { io } from "socket.io-client";
-import { API_URL, SOCKET_URL } from "../../config/constants";
+import { getSocket } from "../../socket";
+import { API_URL } from "../../config/constants";
+import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
 import { Search } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 
-const socket = io(SOCKET_URL, {
-  transports: ["websocket"],
-  withCredentials: true,
-});
-
-// Debug socket connection
-socket.on("connect", () => {
-});
-
-socket.on("connect_error", (error) => {
-  console.error("❌ Socket connection error:", error);
-});
-
-socket.on("disconnect", () => {
-});
-
-export default function UsersPage({ currentUser }) {
+export default function UsersPage() {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+  const socket = getSocket(); // Use the shared socket instance
 
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -55,26 +42,29 @@ export default function UsersPage({ currentUser }) {
   }, []);
 
   // ===============================
-  // SOCKET
+  // SOCKET - Listen for online users
   // ===============================
   useEffect(() => {
     if (!currentUser?._id) return;
 
     const handleOnlineUsers = (userIds) => {
-      setOnlineUsers(userIds);
+      console.log("📡 UsersPage: Received onlineUsers:", userIds);
+      setOnlineUsers(userIds || []);
     };
 
-    const handleUserOnline = ({ userId }) => {
+    const handleUserOnline = (data) => {
+      const userId = data?.userId || data;
       setOnlineUsers((prev) =>
         prev.includes(userId) ? prev : [...prev, userId]
       );
     };
 
-    const handleUserOffline = ({ userId }) => {
+    const handleUserOffline = (data) => {
+      const userId = data?.userId || data;
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     };
 
-    // Set up listeners FIRST
+    // Set up listeners
     socket.on("onlineUsers", handleOnlineUsers);
     socket.on("userWentOnline", handleUserOnline);
     socket.on("userWentOffline", handleUserOffline);
@@ -103,18 +93,21 @@ export default function UsersPage({ currentUser }) {
         },
       }));
     });
-    
-    // Wait for socket to be connected, then emit joinRoom
-    const joinRoom = () => {
+
+    // Emit joinRoom to get online users list (wait for connection)
+    const emitJoin = () => {
+      console.log("📤 UsersPage: Emitting joinRoom for:", currentUser._id);
       socket.emit("joinRoom", currentUser._id);
     };
 
     if (socket.connected) {
-      joinRoom();
+      emitJoin();
     } else {
-      socket.once("connect", joinRoom);
+      console.log("⏳ UsersPage: socket not connected yet, waiting to emit joinRoom...");
+      socket.once("connect", emitJoin);
     }
 
+    // Cleanup
     return () => {
       socket.off("onlineUsers", handleOnlineUsers);
       socket.off("userWentOnline", handleUserOnline);
@@ -151,6 +144,7 @@ export default function UsersPage({ currentUser }) {
   // ===============================
   // UX
   // ===============================
+  console.log(onlineUsers)
   return (
     <div className="h-screen flex flex-col  mx-auto mt-10 px-4 py-6">
 

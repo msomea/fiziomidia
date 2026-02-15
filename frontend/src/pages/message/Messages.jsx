@@ -5,15 +5,14 @@ import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL, ASSET_URL, SOCKET_URL } from "../../config/constants";
-import { io } from "socket.io-client";
+import { API_URL, ASSET_URL } from "../../config/constants";
+import { getSocket } from "../../socket";
 import { Loader2 } from "lucide-react";
-
-const socket = io(SOCKET_URL, { withCredentials: true });
 
 const MessagesPage = () => {
   const navigate = useNavigate();
   const { user: loggedInUser } = useAuth();
+  const socket = getSocket(); // Use shared socket instance
 
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);

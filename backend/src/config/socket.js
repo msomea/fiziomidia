@@ -25,10 +25,17 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
+    console.log("✅ Backend: User connected:", socket.id);
+    console.log(
+      "👥 Backend: Current online users count:",
+      Object.keys(onlineUsers).length,
+    );
+
     // =============================
     // JOIN PERSONAL ROOM
     // =============================
     socket.on("joinRoom", (userId) => {
+      console.log("📥 Backend: joinRoom received from userId:", userId);
       socket.join(userId);
 
       if (!onlineUsers[userId]) onlineUsers[userId] = [];
@@ -36,13 +43,17 @@ export const initSocket = (server) => {
         onlineUsers[userId].push(socket.id);
       }
 
+      console.log("👥 Backend: Current onlineUsers:", Object.keys(onlineUsers));
+
       // First connection = user online
       if (onlineUsers[userId].length === 1) {
         io.emit("userWentOnline", { userId });
+        console.log("🟢 Backend: Broadcasting userWentOnline:", userId);
       }
 
       // Emit full online list (important)
       const onlineList = Object.keys(onlineUsers);
+      console.log("📡 Backend: Broadcasting onlineUsers:", onlineList);
       io.emit("onlineUsers", onlineList);
     });
 
@@ -182,6 +193,7 @@ export const initSocket = (server) => {
     // DISCONNECT
     // =============================
     socket.on("disconnect", () => {
+      console.log("🔌 Backend: User disconnecting:", socket.id);
       const userId = Object.keys(onlineUsers).find((id) =>
         onlineUsers[id].includes(socket.id),
       );
@@ -191,12 +203,15 @@ export const initSocket = (server) => {
           (id) => id !== socket.id,
         );
 
+        console.log("🔴 Backend: User going offline:", userId);
+
         if (onlineUsers[userId].length === 0) {
           delete onlineUsers[userId];
           io.emit("userWentOffline", { userId });
         }
 
         const onlineList = Object.keys(onlineUsers);
+        console.log("👥 Backend: Updated onlineUsers:", onlineList);
         io.emit("onlineUsers", onlineList);
       }
     });

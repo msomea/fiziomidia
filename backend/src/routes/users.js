@@ -10,7 +10,7 @@ const router = express.Router();
 
 // routes /api/users
 // Get all users (for messaging)
-router.get("/", authenticate, requireRole("member", "pt", "admin"), userController.getAllUsers);
+router.get("/", authenticate, userController.getAllUsers);
 
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);
@@ -32,6 +32,6 @@ router.put(
 router.get("/:id", userController.getUserById);
 
 // Get saved PTs for a member
-router.get("/:id/saved-pts", authenticate, requireRole("member", "admin"), getSavedPTsByMember );
+router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
 
 export default router;

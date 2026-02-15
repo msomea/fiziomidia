@@ -18,10 +18,12 @@ const startServer = async () => {
     app.set("io", io);
 
     // Start server
+    console.log("🔧 Backend server config - ENV.PORT:", ENV.PORT);
     server.listen(ENV.PORT, () => {
       console.log(
         `🚀 Server running in ${ENV.NODE_ENV} mode at PORT ${ENV.PORT}`
       );
+      console.log(`🔌 Socket.IO listen setup at http://0.0.0.0:${ENV.PORT}`);
       if (ENV.debug) console.log("✅ Socket.io initialized");
     });
   } catch (err) {

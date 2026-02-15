@@ -1,25 +1,21 @@
 import { useParams, useNavigate } from "react-router";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { io } from "socket.io-client";
 import API from "../../api/axios";
-import { API_URL, SOCKET_URL } from "../../config/constants";
+import { API_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2 } from "lucide-react";
+import { getSocket } from "../../socket";
 
 import ConversationHeader from "../../components/message/ConversationHeader";
 import ConversationMessages from "../../components/message/ConversationMessages";
 import ConversationInput from "../../components/message/ConversationInput";
 
-const socket = io(SOCKET_URL, {
-  transports: ["websocket"],
-  withCredentials: true
-});
-
 export default function ConversationPage() {
   const { id: otherUserId } = useParams();
   const { user: loggedInUser } = useAuth();
   const navigate = useNavigate();
+  const socket = getSocket(); // Use shared socket instance
 
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
