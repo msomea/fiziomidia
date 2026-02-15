@@ -24,18 +24,37 @@ export const listPts = async (req, res) => {
 // GET /api/pts/:id
 export const getPTById = async (req, res) => {
   try {
-    const pt = await User.findById(req.params.id)
+    const ptId = req.params.id;
+
+    const pt = await User.findById(ptId)
       .select("-passwordHash")
       .lean();
 
-    if (!pt) return res.status(404).json({ error: "PT not found" });
+    if (!pt) {
+      return res.status(404).json({ error: "PT not found" });
+    }
 
-    res.json(pt);
+    let isSaved = false;
+
+    // If user is logged in and is a member
+    if (req.user && req.user.role === "member") {
+      const member = await User.findById(req.user._id).select("savedPTs");
+
+      if (member?.savedPTs?.includes(ptId)) {
+        isSaved = true;
+      }
+    }
+
+    res.json({
+      ...pt,
+      isSaved,
+    });
   } catch (err) {
-    console.error(err);
+    console.error("Get PT error:", err);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 // PUT /api/pts/:id - only owner or admin
 export const updatePTProfile = async (req, res) => {

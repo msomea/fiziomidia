@@ -31,6 +31,9 @@ router.put(
 // Public: get profile by ID
 router.get("/:id", userController.getUserById);
 
+// Save PT to member's saved list
+router.post("/save-pt/:ptId", authenticate, requireRole("member"), userController.toggleSavePT);
+
 // Get saved PTs for a member
 router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
 

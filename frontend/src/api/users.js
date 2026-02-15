@@ -25,6 +25,13 @@ export const listUsers = async () => {
   return res.data;
 };
 
+// Toggle save/unsave PT for a member
+export const toggleSavePT = async (ptId) => {
+  const res = await API.post(`${API_URL}/users/save-pt/${ptId}`);
+  return res.data;
+}; 
+
+
 // Get saved PTs for a member (admin or the member themselves)
 export const getSavedPTsByMember = async (memberId) => {
   const res = await API.get(`${API_URL}/users/${memberId}/saved-pts`);

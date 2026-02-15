@@ -38,9 +38,9 @@ export const getAllUsers = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     const userId = req.user._id;
-    const user = await User.findById(userId).select(
-      "-passwordHash -refreshTokens"
-    );
+    const user = await User.findById(userId)
+    .select("-passwordHash -refreshTokens")
+    .populate("savedPTs", "fullName profileImageUrl ptProfile.speciality")
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -274,4 +274,39 @@ export const updateProfile = async (req, res) => {
     res.status(500).json({ error: "Failed to update profile" });
   }
 };
+
+// Toggle save/unsave a PT for a member
+export const toggleSavePT = async (req, res) => {
+  try {
+    const memberId = req.user._id;
+    const { ptId } = req.params;
+
+    const member = await User.findById(memberId);
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    const alreadySaved = member.savedPTs.includes(ptId);
+
+    if (alreadySaved) {
+      member.savedPTs = member.savedPTs.filter(
+        (id) => id.toString() !== ptId
+      );
+    } else {
+      member.savedPTs.push(ptId);
+    }
+
+    await member.save();
+
+    res.status(200).json({
+      success: true,
+      saved: !alreadySaved,
+    });
+  } catch (error) {
+    console.error("Toggle save PT error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 

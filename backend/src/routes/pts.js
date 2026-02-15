@@ -7,7 +7,7 @@ const router = express.Router();
 
 // routes /api/pts
 // public list
-router.get("/", ptController.listPts);
+router.get("/",authenticate, ptController.listPts);
 
 // Get all physiotherapists (PTs) with active promotions
 router.get("/promotions", ptController.getPTsWithActivePromotions);

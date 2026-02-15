@@ -3,7 +3,9 @@ import { Link, useParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import { useNavigate } from "react-router";
-import { Loader2 } from "lucide-react";
+import { Loader2, Heart } from "lucide-react";
+import { toggleSavePT } from "../api/users";
+import toast from "react-hot-toast";
 
 import {
   PTOverview,
@@ -16,30 +18,70 @@ import {
 } from "../components/profiles";
 
 import avatarFallback from "../assets/avatar.jpg";
-import { API_URL, ASSET_URL } from "../config/constants";
+import { API_URL } from "../config/constants";
 
 const PTProfile = () => {
   const navigate = useNavigate();
-  const { id } = useParams(); // user._id of PT to view
-  const { user: loggedInUser } = useAuth(); // logged-in user for actions
+  const { id } = useParams(); // PT ID
+  const { user: loggedInUser } = useAuth();
   const [pt, setPt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     const fetchPT = async () => {
       try {
         const res = await API.get(`${API_URL}/pts/${id}`);
         setPt(res.data); 
+        // Determine if this PT is already saved by the logged-in member
+        const saved = loggedInUser?.savedPTs?.some((savedPT) => savedPT._id === id);
+        setIsSaved(!!saved);
       } catch (err) {
         console.error("Error fetching PT profile:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPT();
-  }, [id]);
+  }, [id, loggedInUser]);
 
+  const handleSave = async () => {
+    if (!pt) return;
+
+    // Optimistic toggle
+    const prevState = isSaved;
+    setIsSaved(!prevState);
+
+    // Toast with undo
+    const toastId = toast(
+      (t) => (
+        <div className="flex items-center justify-between gap-4">
+          <span>{!prevState ? "Saved PT" : "Removed from saved"}</span>
+          <button
+            onClick={() => {
+              setIsSaved(prevState); // undo
+              toast.dismiss(t.id);
+            }}
+            className="text-caribbean font-semibold hover:underline"
+          >
+            Undo
+          </button>
+        </div>
+      ),
+      { duration: 5000 }
+    );
+
+    // Backend update after 5s
+    setTimeout(async () => {
+      try {
+        await toggleSavePT(pt._id);
+      } catch (err) {
+        console.error("Failed to update saved PT:", err);
+        setIsSaved(prevState); // revert if failed
+        toast.error("Failed to update saved PT");
+      }
+    }, 5000);
+  };
 
   if (loading) {
     return (
@@ -57,8 +99,9 @@ const PTProfile = () => {
       </div>
     );
   }
+
   const ptProfile = pt.ptProfile;
-  const avatarSrc = pt.profileImageUrl ? pt.profileImageUrl : avatarFallback;
+  const avatarSrc = pt.profileImageUrl || avatarFallback;
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
@@ -73,18 +116,16 @@ const PTProfile = () => {
 
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-black">{pt.fullName}</h1>
-
             <p className="text-sm md:text-base text-gray-600">
               {ptProfile.title || "Physiotherapist"}
               {ptProfile.yearsOfExperience ? ` | ${ptProfile.yearsOfExperience}+ Years Experience` : ""}
             </p>
-
             <p className="mt-2 text-sm text-gray-500">
               {pt.location?.region}, {pt.location?.district}
             </p>
 
             {/* Actions */}
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-3 items-center">
               {loggedInUser.role !== "guest" && id !== loggedInUser._id ? (
                 <>
                   <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition">
@@ -98,6 +139,19 @@ const PTProfile = () => {
                   >
                     Message
                   </Link>
+
+                  {/* Heart Toggle */}
+                  <button
+                    onClick={handleSave}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                      isSaved
+                        ? "bg-red-100 text-red-600 hover:bg-red-200"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                  >
+                    <Heart size={18} className={isSaved ? "text-red-600" : "text-white"} />
+                    {isSaved ? "Saved" : "Save PT"}
+                  </button>
                 </>
               ) : loggedInUser.role === "guest" ? (
                 <p className="text-sm text-gray-500 italic">
@@ -105,7 +159,6 @@ const PTProfile = () => {
                 </p>
               ) : null}
             </div>
-
           </div>
         </div>
       </div>

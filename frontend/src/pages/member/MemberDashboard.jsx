@@ -96,6 +96,8 @@ const MemberDashboard = () => {
       </div>
     );
   }
+  // Safe passing of savedPT to avoid undefined errors
+  const savedPT = memberData.savedPTs || [];
 
   // Safe avatar rendering
   const profileImage = memberData.profileImageUrl
@@ -171,7 +173,7 @@ const MemberDashboard = () => {
           <div className="lg:col-span-2 space-y-6">
             <MemberDetails member={memberData} />
             <MemberAppointments memberId={memberData._id} />
-            <MemberSavedPTs memberId={memberData._id} />
+            <MemberSavedPTs memberId={memberData._id} savedPTs={savedPT} />
           </div>
         )}
 
