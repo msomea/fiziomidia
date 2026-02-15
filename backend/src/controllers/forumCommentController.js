@@ -90,7 +90,7 @@ export const addComment = async (req, res) => {
 // Update own comment
 export const updateComment = async (req, res) => {
   try {
-    console.log("Request", req.params)
+
     const { commentId } = req.params;
     const { content } = req.body;
 

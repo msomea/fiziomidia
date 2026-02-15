@@ -14,7 +14,6 @@ const socket = io(SOCKET_URL, {
 
 // Debug socket connection
 socket.on("connect", () => {
-  console.log("✅ Socket connected:", socket.id);
 });
 
 socket.on("connect_error", (error) => {
@@ -22,7 +21,6 @@ socket.on("connect_error", (error) => {
 });
 
 socket.on("disconnect", () => {
-  console.log("🔌 Socket disconnected");
 });
 
 export default function UsersPage({ currentUser }) {
@@ -63,19 +61,16 @@ export default function UsersPage({ currentUser }) {
     if (!currentUser?._id) return;
 
     const handleOnlineUsers = (userIds) => {
-      console.log("📡 onlineUsers received:", userIds);
       setOnlineUsers(userIds);
     };
 
     const handleUserOnline = ({ userId }) => {
-      console.log("🟢 User went online:", userId);
       setOnlineUsers((prev) =>
         prev.includes(userId) ? prev : [...prev, userId]
       );
     };
 
     const handleUserOffline = ({ userId }) => {
-      console.log("🔴 User went offline:", userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     };
 
@@ -111,7 +106,6 @@ export default function UsersPage({ currentUser }) {
     
     // Wait for socket to be connected, then emit joinRoom
     const joinRoom = () => {
-      console.log("📤 Emitting joinRoom for user:", currentUser._id);
       socket.emit("joinRoom", currentUser._id);
     };
 
@@ -157,7 +151,6 @@ export default function UsersPage({ currentUser }) {
   // ===============================
   // UX
   // ===============================
-console.log(onlineUsers)
   return (
     <div className="h-screen flex flex-col  mx-auto mt-10 px-4 py-6">
 

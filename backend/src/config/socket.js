@@ -8,9 +8,11 @@ let io;
 const allowedOrigins = [
   "http://localhost:5173",
   "http://fiziomidia.org",
+  "https://fiziomidia.org",
+  "https://www.fiziomidia.org",
+  "https://api.fiziomidia.org",
   "https://fiziomidia.netlify.app",
   "https://fiziomidia.pages.dev",
-  "https://www.fiziomidia.org",
 ];
 
 export const initSocket = (server) => {
@@ -23,17 +25,10 @@ export const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("✅ User connected:", socket.id);
-    console.log(
-      "👥 Current online users count:",
-      Object.keys(onlineUsers).length,
-    );
-
     // =============================
     // JOIN PERSONAL ROOM
     // =============================
     socket.on("joinRoom", (userId) => {
-      console.log("📥 joinRoom received from userId:", userId);
       socket.join(userId);
 
       if (!onlineUsers[userId]) onlineUsers[userId] = [];
@@ -41,17 +36,13 @@ export const initSocket = (server) => {
         onlineUsers[userId].push(socket.id);
       }
 
-      console.log("👥 Current onlineUsers:", Object.keys(onlineUsers));
-
       // First connection = user online
       if (onlineUsers[userId].length === 1) {
         io.emit("userWentOnline", { userId });
-        console.log("🟢 Broadcasting userWentOnline:", userId);
       }
 
       // Emit full online list (important)
       const onlineList = Object.keys(onlineUsers);
-      console.log("📡 Broadcasting onlineUsers:", onlineList);
       io.emit("onlineUsers", onlineList);
     });
 
@@ -191,7 +182,6 @@ export const initSocket = (server) => {
     // DISCONNECT
     // =============================
     socket.on("disconnect", () => {
-      console.log("🔌 User disconnecting:", socket.id);
       const userId = Object.keys(onlineUsers).find((id) =>
         onlineUsers[id].includes(socket.id),
       );
@@ -201,15 +191,12 @@ export const initSocket = (server) => {
           (id) => id !== socket.id,
         );
 
-        console.log("🔴 User going offline:", userId);
-
         if (onlineUsers[userId].length === 0) {
           delete onlineUsers[userId];
           io.emit("userWentOffline", { userId });
         }
 
         const onlineList = Object.keys(onlineUsers);
-        console.log("👥 Updated onlineUsers:", onlineList);
         io.emit("onlineUsers", onlineList);
       }
     });
