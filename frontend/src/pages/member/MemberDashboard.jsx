@@ -180,7 +180,7 @@ const MemberDashboard = () => {
           <div className="bg-white shadow-sm rounded-2xl p-5">
             <h2 className="text-lg font-semibold text-black mb-3">Reminders</h2>
             <p className="text-sm text-gray-600">
-              Stay consistent with your exercises. Your next appointment is in 2 days!
+              Your Important reminder will appear here!
             </p>
           </div>
         </div>

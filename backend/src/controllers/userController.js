@@ -7,6 +7,31 @@ import {
 
 
 const SALT_ROUNDS = 10;
+// Get all users (for messaging - can be optimized later with pagination/search)
+export const getAllUsers = async (req, res) => {
+  try {
+    const { role } = req.query;
+
+    const filter = {};
+
+    if (role && role !== "all") {
+      filter.role = role;
+    }
+
+    // Exclude current logged in user
+    const users = await User.find({
+      ...filter,
+      _id: { $ne: req.user._id },
+    })
+      .select("_id fullName profileImageUrl role isLoggedIn")
+      .sort({ fullName: 1 });
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Fetch users error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // Get current user's profile
 export const getProfile = async (req, res) => {

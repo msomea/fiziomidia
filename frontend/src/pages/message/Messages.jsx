@@ -221,23 +221,35 @@ const MessagesPage = () => {
           Start connecting with professionals and patients. 
           Your conversations will appear here once messages are sent.
         </p>
-        {/* <button
-          onClick={() => navigate("/explore")}
+        <button
+          onClick={() => navigate("/messages/users")}
           className="px-6 py-2.5 bg-caribbean text-white rounded-xl 
                     hover:bg-tufts transition-all duration-200 shadow-sm"
         >
           Find Someone to Message
-        </button> */}
+        </button>
       </div>
     );
   }
 
 
   return (
-    <div className="container mx-auto mt-10 px-4 py-6">
-      <h1 className="text-2xl font-semibold text-caribbean mb-6 flex items-center gap-2">
-        <MessageSquare /> Messages
-      </h1>
+    <div className="container mx-auto mt-12 px-4 py-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold text-caribbean flex items-center gap-2">
+          Messages
+        </h1>
+
+        <button
+          onClick={() => navigate("/messages/users")}
+          className="flex items-center gap-2 px-6 py-2.5 
+                    bg-caribbean text-white rounded-xl 
+                    hover:bg-tufts transition-all duration-200 shadow-sm"
+        >
+          <MessageSquare size={16} />
+          New
+        </button>
+      </div>
 
       <div className="bg-base-200 rounded-lg shadow-md divide-y divide-base-300">
         {conversations.map((conv) => {

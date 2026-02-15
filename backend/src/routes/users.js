@@ -9,6 +9,8 @@ const router = express.Router();
 
 
 // routes /api/users
+// Get all users (for messaging)
+router.get("/", authenticate, requireRole("member", "pt", "admin"), userController.getAllUsers);
 
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);

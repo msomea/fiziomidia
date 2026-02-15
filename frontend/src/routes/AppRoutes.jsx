@@ -25,6 +25,7 @@ import CreatePostPage from "../pages/forum/CreatePostPage"
 import PostDetailPage from "../pages/forum/PostDetailPage";
 import UpgradeToPT from "../components/dashboard/member/UpgradeToPT";
 import MessageRouterPage  from "../pages/message/MessageRouterPage";
+import UsersPage from "../pages/message/UsersPage";
 import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
@@ -83,6 +84,7 @@ export default function AppRoutes() {
       <Route path="/messages" element={<MessagesPage />} />
       <Route path="/messages/user/:receiverId" element={<MessageRouterPage />} />
       <Route path="/messages/:id" element={<ConversationPage />} />
+      <Route path="/messages/users" element={<UsersPage />} />
 
       {/* Profile Settings Routes */}
       <Route path="/settings/pt/:id" element={<PTProfileSettings />} />
