@@ -107,7 +107,7 @@ const MemberDashboard = () => {
     : avatar;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
+    <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
       {/* Header Section */}
       <div className="relative bg-white shadow-md rounded-b-3xl">
         <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">

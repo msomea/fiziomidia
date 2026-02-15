@@ -1,22 +1,35 @@
 import Appointment from "../models/Appointment.js";
 import Clinic from "../models/Clinic.js";
+import mongoose from "mongoose";
+
 // Request a new appointment
 export const requestAppointment = async (req, res) => {
   try {
-    const { ptId, clinicId, scheduledAt, notes, durationMinutes } = req.body;
+    const { pt, date, time, notes } = req.body; // pt = selected PT ID
+    const requesterId = req.user._id; // get logged-in member
+
+    if (!pt) return res.status(400).json({ message: "PT is required" });
+
     const appointment = new Appointment({
-      requester: req.user._id,
-      pt: ptId,
-      clinic: clinicId,
-      scheduledAt,
+      requester: new mongoose.Types.ObjectId(requesterId),
+      pt: new mongoose.Types.ObjectId(pt),
+      scheduledDate: date,
+      scheduledTime: time,
       notes,
-      durationMinutes,
     });
+
     await appointment.save();
-    res.status(201).json({ appointment });
-  } catch (err) {
-    console.error("Request appointment error:", err);
-    res.status(500).json({ error: "Failed to create appointment" });
+
+    res.status(201).json({
+      message: "Appointment booked successfully",
+      appointment,
+    });
+  } catch (error) {
+    console.error("Request appointment error:", error);
+    res.status(400).json({
+      message: "Appointment validation failed",
+      error: error.message,
+    });
   }
 };
 
@@ -41,7 +54,9 @@ export const getAppointments = async (req, res) => {
     }
 
     const appts = await Appointment.find(filter)
-      .populate("requester pt clinic")
+      .populate("pt", "fullName email specialization")  
+      .populate("requester", "fullName email")
+      .populate("clinic")
       .sort({ createdAt: -1 })
       .limit(Number(limit) || 3);
 
@@ -51,7 +66,6 @@ export const getAppointments = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch appointments" });
   }
 };
-
 
 
 // Update appointment status
@@ -111,7 +125,6 @@ export const getAppointmentById = async (req, res) => {
   }
 };
 
-
 // Get appointments by member
 export const getAppointmentsByMember = async (req, res) => {
   try {
@@ -123,7 +136,9 @@ export const getAppointmentsByMember = async (req, res) => {
     }
 
     const appts = await Appointment.find({ requester: memberId })
-      .populate("requester pt clinic")
+      .populate("pt", "fullName email specialization")  
+      .populate("requester", "fullName email")
+      .populate("clinic")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ appts });

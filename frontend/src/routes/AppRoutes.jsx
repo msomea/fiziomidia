@@ -40,6 +40,8 @@ import CreateSponsoredProduct from "../pages/services/CreateSponsoredProduct";
 import ForumModRequestsDetail from "../components/admin/ForumModRequestsDetail";
 import AdminSendEmail from "../pages/admin/AdminSendEmail";
 
+import BookAppointment from "../pages/appointment/RequestAppointment";
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -79,6 +81,9 @@ export default function AppRoutes() {
       {/* Forum Routes */}
       <Route path="/forum/edit/:ptId/:postId" element={<EditPostPage />} />
       <Route path="/forum/create" element={<CreatePostPage />} />
+
+      {/* Appointment Routes */}
+      <Route path="/appointments/book/:ptId" element={<BookAppointment />} />
 
       {/* Message Routes */ }      
       <Route path="/messages" element={<MessagesPage />} />

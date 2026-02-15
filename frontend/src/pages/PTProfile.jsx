@@ -104,7 +104,7 @@ const PTProfile = () => {
   const avatarSrc = pt.profileImageUrl || avatarFallback;
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 mt-20">
+    <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
       {/* Header */}
       <div className="relative bg-white shadow-md rounded-b-3xl">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
@@ -128,7 +128,9 @@ const PTProfile = () => {
             <div className="mt-4 flex flex-wrap gap-3 items-center">
               {loggedInUser.role !== "guest" && id !== loggedInUser._id ? (
                 <>
-                  <button className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition">
+                  <button 
+                    onClick={() => navigate(`/appointments/book/${pt._id}`)}
+                    className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition">
                     Book Appointment
                   </button>
 

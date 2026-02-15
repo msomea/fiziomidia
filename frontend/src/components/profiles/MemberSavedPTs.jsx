@@ -13,10 +13,7 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
     // Optimistically remove
     setPts((prev) => prev.filter((p) => p._id !== pt._id));
 
-    // Clear any previous timer
-    if (pendingDelete.current) {
-      clearTimeout(pendingDelete.current.timer);
-    }
+    if (pendingDelete.current) clearTimeout(pendingDelete.current.timer);
 
     const toastId = toast(
       (t) => (
@@ -24,7 +21,6 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
           <span>Removed from saved</span>
           <button
             onClick={() => {
-              // Undo action
               setPts((prev) => [pt, ...prev]);
               clearTimeout(pendingDelete.current?.timer);
               toast.dismiss(t.id);
@@ -38,13 +34,11 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
       { duration: 5000 }
     );
 
-    // Delay backend call
     const timer = setTimeout(async () => {
       try {
         await toggleSavePT(pt._id);
       } catch (err) {
         toast.error("Failed to remove PT");
-        // Restore if backend fails
         setPts((prev) => [pt, ...prev]);
       }
     }, 5000);
@@ -60,19 +54,18 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
           <Heart className="text-red-500" size={20} />
           Saved Physiotherapists
         </h2>
-        <span className="text-sm text-gray-500">
-          {pts.length} saved
-        </span>
+        <span className="text-sm text-gray-500">{pts.length} saved</span>
       </div>
 
       {pts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-4">
           {pts.map((pt) => (
             <div
               key={pt._id}
-              className="group bg-gray-50 rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-gray-100"
+              className="group bg-gray-50 rounded-2xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border border-gray-100 w-full flex flex-col sm:flex-row items-start sm:items-center justify-between"
             >
-              <div className="flex items-center gap-4">
+              {/* PT Info */}
+              <div className="flex items-center gap-4 flex-1">
                 <img
                   src={pt.profileImageUrl || avatarFallback}
                   alt={pt.fullName}
@@ -82,8 +75,7 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
                     e.target.src = avatarFallback;
                   }}
                 />
-
-                <div className="flex-1">
+                <div>
                   <h3 className="font-semibold text-gray-900">
                     {pt.fullName}
                   </h3>
@@ -93,14 +85,14 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center justify-between">
+              {/* Actions */}
+              <div className="mt-4 sm:mt-0 flex items-center gap-4">
                 <Link
                   to={`/profile/pt/${pt._id}`}
                   className="text-sm font-medium text-caribbean hover:underline"
                 >
                   View Profile →
                 </Link>
-
                 <button
                   onClick={() => handleRemove(pt)}
                   className="flex items-center gap-1 text-red-500 text-sm hover:text-red-600 transition"
