@@ -12,8 +12,6 @@ export const getSocket = () => {
       SOCKET_URL = SOCKET_URL.slice(0, -4); // Remove last 4 chars (/api)
     }
 
-    console.log("🔌 socket.js: Creating socket with URL:", SOCKET_URL);
-
     socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"], // Add polling as fallback
       withCredentials: true,

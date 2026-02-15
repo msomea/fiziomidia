@@ -48,7 +48,6 @@ export default function UsersPage() {
     if (!currentUser?._id) return;
 
     const handleOnlineUsers = (userIds) => {
-      console.log("📡 UsersPage: Received onlineUsers:", userIds);
       setOnlineUsers(userIds || []);
     };
 
@@ -96,14 +95,12 @@ export default function UsersPage() {
 
     // Emit joinRoom to get online users list (wait for connection)
     const emitJoin = () => {
-      console.log("📤 UsersPage: Emitting joinRoom for:", currentUser._id);
       socket.emit("joinRoom", currentUser._id);
     };
 
     if (socket.connected) {
       emitJoin();
     } else {
-      console.log("⏳ UsersPage: socket not connected yet, waiting to emit joinRoom...");
       socket.once("connect", emitJoin);
     }
 
@@ -144,7 +141,7 @@ export default function UsersPage() {
   // ===============================
   // UX
   // ===============================
-  console.log(onlineUsers)
+
   return (
     <div className="h-screen flex flex-col  mx-auto mt-10 px-4 py-6">
 

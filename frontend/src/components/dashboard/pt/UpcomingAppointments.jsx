@@ -22,9 +22,9 @@ export default function UpcomingAppointments({ appointments }) {
           <tbody className="divide-y divide-gray-200">
             {appointments.map((appt, i) => (
               <tr key={i}>
-                <td>{appt.requester.fullName}</td>
+                <td>{appt.requester?.fullName}</td>
                 <td>{dayjs(appt.scheduledAt).format("ddd, DD/MM/YYYY")}</td>
-                <td>{appt.clinic.name}</td>
+                <td>{appt.clinic?.name}</td>
                 <td
                   className={`font-semibold ${
                     appt.status === "accepted"

@@ -64,7 +64,7 @@ ForumSubSchema.pre("remove", async function (next) {
   try {
     const Post = mongoose.model("Post");
     await Post.deleteMany({ sub: this._id });
-    console.log(`All posts under sub "${this.title}" removed.`);
+    console.log(`📤 All posts under sub "${this.title}" removed.`);
     next();
   } catch (err) {
     console.error("Error deleting related posts:", err);
@@ -78,7 +78,7 @@ ForumSubSchema.post("findOneAndDelete", async function (doc) {
   try {
     const Post = mongoose.model("Post");
     await Post.deleteMany({ sub: doc._id });
-    console.log(`All posts under sub "${doc.title}" removed (findOneAndDelete).`);
+    console.log(`📤 All posts under sub "${doc.title}" removed (findOneAndDelete).`);
   } catch (err) {
     console.error("Error deleting related posts on findOneAndDelete:", err);
   }

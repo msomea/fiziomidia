@@ -66,7 +66,7 @@ export default function BookAppointment() {
       </div>
     );
   }
-console.log(pt)
+
   return (
     <div className="max-w-lg mx-auto p-6 bg-white text-tufts rounded-lg shadow-md mt-20">
       <h2 className="text-2xl text-caribbean font-semibold mb-4">
