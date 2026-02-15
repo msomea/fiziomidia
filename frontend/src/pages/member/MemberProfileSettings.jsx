@@ -40,9 +40,7 @@ export default function MemberProfileSettings() {
         currentPassword: "",
         password: "",
         confirmPassword: "",
-        profileImageUrl: user.profileImageUrl
-          ? `${ASSET_URL}${user.profileImageUrl}?t=${Date.now()}`
-          : "",
+        profileImageUrl: user.profileImageUrl || "",
       });
 
       if (user.location) {
