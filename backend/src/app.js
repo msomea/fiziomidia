@@ -11,6 +11,7 @@ import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Routes
+import contactRoutes from "./routes/contact.js";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/users.js";
 import ptRoutes from "./routes/pts.js";
@@ -106,6 +107,7 @@ app.get("/api/logo", (req, res) => {
 /* ---------------------------------- */
 /* API Routes                          */
 /* ---------------------------------- */
+app.use("/api/contact", contactRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);

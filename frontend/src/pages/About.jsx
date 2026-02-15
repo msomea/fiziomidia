@@ -29,7 +29,7 @@ const About = () => {
     setLoading(true);
     try {
       // Send form data to backend - adjust endpoint as needed
-      await API.post(`${API_URL}/contacts`, formData);
+      await API.post(`${API_URL}/contact`, formData);
       toast.success("Message sent successfully!");
       setFormData({ name: "", email: "", message: "" });
     } catch (err) {

@@ -24,6 +24,7 @@ export const getAllUsers = async (req, res) => {
       _id: { $ne: req.user._id },
     })
       .select("_id fullName profileImageUrl role isLoggedIn")
+      .collation({ locale: "en", strength: 2 }) 
       .sort({ fullName: 1 });
 
     res.status(200).json(users);
