@@ -4,30 +4,31 @@ import { Heart, Trash2 } from "lucide-react";
 import { toggleSavePT } from "../../api/users";
 import toast from "react-hot-toast";
 import avatarFallback from "../../assets/avatar.jpg";
+import { useTranslation } from "react-i18next";
 
 const MemberSavedPTs = ({ savedPTs = [] }) => {
+  const { t } = useTranslation();
   const [pts, setPts] = useState(savedPTs);
   const pendingDelete = useRef(null);
 
   const handleRemove = (pt) => {
-    // Optimistically remove
     setPts((prev) => prev.filter((p) => p._id !== pt._id));
 
     if (pendingDelete.current) clearTimeout(pendingDelete.current.timer);
 
     const toastId = toast(
-      (t) => (
+      (tToast) => (
         <div className="flex items-center justify-between gap-4">
-          <span>Removed from saved</span>
+          <span>{t("removed_from_saved")}</span>
           <button
             onClick={() => {
               setPts((prev) => [pt, ...prev]);
               clearTimeout(pendingDelete.current?.timer);
-              toast.dismiss(t.id);
+              toast.dismiss(tToast.id);
             }}
             className="text-caribbean font-semibold hover:underline"
           >
-            Undo
+            {t("undo")}
           </button>
         </div>
       ),
@@ -38,7 +39,7 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
       try {
         await toggleSavePT(pt._id);
       } catch (err) {
-        toast.error("Failed to remove PT");
+        toast.error(t("failed_remove_pt"));
         setPts((prev) => [pt, ...prev]);
       }
     }, 5000);
@@ -52,9 +53,11 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
           <Heart className="text-red-500" size={20} />
-          Saved Physiotherapists
+          {t("saved_physiotherapists")}
         </h2>
-        <span className="text-sm text-gray-500">{pts.length} saved</span>
+        <span className="text-sm text-gray-500">
+          {pts.length} {t("saved")}
+        </span>
       </div>
 
       {pts.length > 0 ? (
@@ -76,11 +79,9 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
                   }}
                 />
                 <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {pt.fullName}
-                  </h3>
+                  <h3 className="font-semibold text-gray-900">{pt.fullName}</h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    {pt.ptProfile?.speciality?.join(", ") || "Physiotherapist"}
+                    {pt.ptProfile?.speciality?.join(", ") || t("physiotherapist")}
                   </p>
                 </div>
               </div>
@@ -91,14 +92,14 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
                   to={`/profile/pt/${pt._id}`}
                   className="text-sm font-medium text-caribbean hover:underline"
                 >
-                  View Profile →
+                  {t("view_profile")} →
                 </Link>
                 <button
                   onClick={() => handleRemove(pt)}
                   className="flex items-center gap-1 text-red-500 text-sm hover:text-red-600 transition"
                 >
                   <Trash2 size={16} />
-                  Remove
+                  {t("remove")}
                 </button>
               </div>
             </div>
@@ -107,12 +108,8 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
       ) : (
         <div className="bg-gray-50 rounded-2xl p-10 text-center border border-dashed border-gray-200">
           <Heart className="mx-auto text-gray-400 mb-3" size={32} />
-          <p className="text-gray-600 font-medium">
-            You haven’t saved any physiotherapists yet.
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            Browse profiles and save your preferred PTs.
-          </p>
+          <p className="text-gray-600 font-medium">{t("no_saved_pts_yet")}</p>
+          <p className="text-sm text-gray-500 mt-1">{t("browse_and_save_pts")}</p>
         </div>
       )}
     </section>

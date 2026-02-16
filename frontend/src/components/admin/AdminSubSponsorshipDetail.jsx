@@ -4,6 +4,7 @@ import API from "../../api/axios";
 import { API_URL, ASSET_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
 
 export default function AdminSponsorshipDetail() {
@@ -33,6 +34,7 @@ export default function AdminSponsorshipDetail() {
   });
 
   const [newLogo, setNewLogo] = useState(null);
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadSub();
@@ -61,7 +63,7 @@ export default function AdminSponsorshipDetail() {
         slug: s.slug || "",
       });
     } catch (err) {
-      toast.error("Failed to load sub");
+      toast.error(t('failed_load_sub'));
     } finally {
       setLoading(false);
     }
@@ -84,10 +86,10 @@ export default function AdminSponsorshipDetail() {
 
       if (!res.data?.success) throw new Error();
 
-      toast.success("Sub information updated");
+      toast.success(t('sub_information_updated'));
       loadSub();
     } catch (err) {
-      toast.error("Failed to update sub information");
+      toast.error(t('failed_update_sub_information'));
     } finally {
       setSavingBasic(false);
     }
@@ -111,10 +113,10 @@ export default function AdminSponsorshipDetail() {
 
       await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, data);
 
-      toast.success("Sponsorship updated");
+      toast.success(t('sponsorship_updated'));
       loadSub();
     } catch (err) {
-      toast.error("Update failed");
+      toast.error(t('update_failed'));
     } finally {
       setSavingSponsor(false);
     }
@@ -122,14 +124,14 @@ export default function AdminSponsorshipDetail() {
 
 
   const removeSponsorship = async () => {
-    if (!confirm("Remove sponsorship completely?")) return;
+    if (!confirm(t('confirm_remove_sponsorship'))) return;
 
     try {
       await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, { isSponsored: false });
-      toast.success("Sponsorship removed");
+      toast.success(t('sponsorship_removed'));
       navigate(-1);
     } catch (err) {
-      toast.error("Failed to remove sponsorship");
+      toast.error(t('failed_remove_sponsorship'));
     }
   };
 
@@ -138,7 +140,7 @@ export default function AdminSponsorshipDetail() {
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
-          Loading Sub...
+          {t('loading_sub')}
         </p>
       </div>
     );
@@ -149,7 +151,7 @@ export default function AdminSponsorshipDetail() {
       {/* HEADER */}
       <div className="flex justify-between mb-4">
         <h2 className="font-semibold text-lg text-caribbean">
-          Manage Sub — {sub.title}
+          {t('manage_sub')} — {sub.title}
         </h2>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-500 hover:text-red-800" />
@@ -160,13 +162,13 @@ export default function AdminSponsorshipDetail() {
 
         {/* BASIC SUB INFO (NEW) */}
         <div className="bg-gray-100 p-4 rounded space-y-3">
-          <h3 className="font-semibold text-caribbean">Sub Information</h3>
+          <h3 className="font-semibold text-caribbean">{t('sub_information')}</h3>
 
           <input
             name="title"
             value={basicForm.title}
             onChange={handleBasicChange}
-            placeholder="Sub title"
+            placeholder={t('sub_title_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -174,7 +176,7 @@ export default function AdminSponsorshipDetail() {
             name="description"
             value={basicForm.description}
             onChange={handleBasicChange}
-            placeholder="Sub description"
+            placeholder={t('sub_description_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -182,7 +184,7 @@ export default function AdminSponsorshipDetail() {
             name="slug"
             value={basicForm.slug}
             onChange={handleBasicChange}
-            placeholder="Sub slug (admin only)"
+            placeholder={t('sub_slug_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -191,14 +193,14 @@ export default function AdminSponsorshipDetail() {
             disabled={savingBasic}
             className="bg-tufts text-white px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-50"
           >
-            {savingBasic ? "Saving..." : "Save Sub Info"}
+            {savingBasic ? t('saving') : t('save_sub_info')}
           </button>
 
         </div>
 
         {/* SPONSORSHIP */}
         <div className="bg-gray-100 p-4 rounded space-y-3">
-          <h3 className="font-semibold text-caribbean">Sponsorship</h3>
+          <h3 className="font-semibold text-caribbean">{t('sponsorship')}</h3>
 
           <label className="flex items-center gap-2">
             <input
@@ -208,7 +210,7 @@ export default function AdminSponsorshipDetail() {
                 setForm({ ...form, isSponsored: e.target.checked })
               }
             />
-            Enable Sponsorship
+            {t('enable_sponsorship')}
           </label>
 
           {form.isSponsored && (
@@ -217,7 +219,7 @@ export default function AdminSponsorshipDetail() {
                 name="sponsorName"
                 value={form.sponsorName}
                 onChange={handleSponsorChange}
-                placeholder="Sponsor Name"
+                placeholder={t('sponsor_name_placeholder')}
                 className="w-full border p-2 rounded"
               />
 
@@ -225,7 +227,7 @@ export default function AdminSponsorshipDetail() {
                 name="sponsorMessage"
                 value={form.sponsorMessage}
                 onChange={handleSponsorChange}
-                placeholder="Sponsor Message"
+                placeholder={t('sponsor_message_placeholder')}
                 className="w-full border p-2 rounded"
               />
 
@@ -233,7 +235,7 @@ export default function AdminSponsorshipDetail() {
                 name="sponsorWebsite"
                 value={form.sponsorWebsite}
                 onChange={handleSponsorChange}
-                placeholder="Sponsor Website"
+                placeholder={t('sponsor_website_placeholder')}
                 className="w-full border p-2 rounded"
               />
 
@@ -277,7 +279,7 @@ export default function AdminSponsorshipDetail() {
             disabled={savingSponsor}
             className="bg-caribbean text-white py-2 rounded hover:bg-tufts disabled:opacity-50"
           >
-            {savingSponsor ? "Saving..." : "Save Sponsorship"}
+            {savingSponsor ? t('saving') : t('save_sponsorship')}
           </button>
 
 
@@ -286,7 +288,7 @@ export default function AdminSponsorshipDetail() {
               onClick={removeSponsorship}
               className="bg-red-600 text-white py-2 rounded"
             >
-              Remove Sponsorship
+              {t('remove_sponsorship')}
             </button>
           )}
         </div>

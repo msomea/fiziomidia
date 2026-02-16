@@ -5,11 +5,13 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import SkeletonSponsoredCard from "./SkeletonSponsoredCard";
 
 const SponsoredContent = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
@@ -26,13 +28,13 @@ const SponsoredContent = () => {
         const res = await API.get(`${API_URL}/sponsored-products`);
         setProducts(res.data.products || []);
       } catch (err) {
-        toast.error("Failed to load sponsored products");
+        toast.error(t("failed_load_sponsored"));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   /* ---------- Detect items per page ---------- */
   useEffect(() => {
@@ -97,7 +99,7 @@ const SponsoredContent = () => {
     <section className="bg-white py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
         <h2 className="text-3xl font-bold text-caribbean mb-8 text-center">
-          Sponsored Content
+          {t("sponsored_content")}
         </h2>
 
         <div
@@ -127,7 +129,7 @@ const SponsoredContent = () => {
             ))
           ) : products.length === 0 ? (
             <div className="flex justify-center items-center w-full h-40 text-gray-500">
-              No sponsored products available
+              {t("no_sponsored_products")}
             </div>
           ) : (
               products.map((product) => (
@@ -164,7 +166,7 @@ const SponsoredContent = () => {
                     rel="noopener noreferrer"
                     className="btn btn-sm bg-caribbean text-white mt-3 w-full hover:bg-tufts"
                   >
-                    View Product
+                    {t("view_product")}
                   </a>
                 </div>
               ))

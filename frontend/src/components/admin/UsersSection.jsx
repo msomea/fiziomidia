@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Search, Filter } from "lucide-react";
+import { useTranslation } from 'react-i18next'
 import API from "../../api/axios";
 import CollapsibleSection from "./CollapsibleSection";
 import { API_URL } from "../../config/constants";
 import { Link } from "react-router";
 
 export default function AdminUsers() {
+  const { t } = useTranslation()
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -33,14 +35,14 @@ export default function AdminUsers() {
   };
 
   return (
-    <CollapsibleSection title="Users Managements">
+    <CollapsibleSection title={t('users_management')}>
       {/* Search + Filters */}
       <div className="flex items-center gap-3 mb-5">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name, email or phone..."
+            placeholder={t('search_placeholder_users')}
             className="w-full border rounded pl-8 p-2"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -52,7 +54,7 @@ export default function AdminUsers() {
           onClick={loadUsers}
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
-          Search
+          {t('search_button')}
         </button>
 
         <div className="flex items-center gap-2">
@@ -64,11 +66,11 @@ export default function AdminUsers() {
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
-            <option value="">All Roles</option>
-            <option value="physiotherapist">Physiotherapists</option>
-            <option value="pendingPhysiotherapist">Pending PT Request</option>
-            <option value="member">Members</option>
-            <option value="admin">Admins</option>
+            <option value="">{t('all_roles')}</option>
+            <option value="physiotherapist">{t('physiotherapists')}</option>
+            <option value="pendingPhysiotherapist">{t('pending_pt_request')}</option>
+            <option value="member">{t('members')}</option>
+            <option value="admin">{t('admins')}</option>
           </select>
 
           {/* License Verification Filter */}
@@ -77,10 +79,10 @@ export default function AdminUsers() {
             value={licenseFilter}
             onChange={(e) => setLicenseFilter(e.target.value)}
           >
-            <option value="">All License Status</option>
-            <option value="pending">Pending Verification</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="">{t('all_license_status')}</option>
+            <option value="pending">{t('pending_verification')}</option>
+            <option value="approved">{t('approved')}</option>
+            <option value="rejected">{t('rejected')}</option>
           </select>
         </div>
       </div>
@@ -88,13 +90,13 @@ export default function AdminUsers() {
       {/* Table */}
       <div className="border rounded">
         <table className="w-full text-sm">
-          <thead className="bg-gray-100 text-caribbean text-left">
+            <thead className="bg-gray-100 text-caribbean text-left">
             <tr>
-              <th className="p-2">Name</th>
-              <th className="p-2">Email</th>
-              <th className="p-2">Role</th>
-              <th className="p-2">PT Status</th>
-              <th className="p-2">License Status</th>
+              <th className="p-2">{t('name_label')}</th>
+              <th className="p-2">{t('email_label')}</th>
+              <th className="p-2">{t('role_label')}</th>
+              <th className="p-2">{t('pt_status_label')}</th>
+              <th className="p-2">{t('license_status_label')}</th>
               <th className="p-2"></th>
             </tr>
           </thead>
@@ -106,7 +108,7 @@ export default function AdminUsers() {
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td className="p-4 text-center" colSpan="6">No users found</td>
+                <td className="p-4 text-center" colSpan="6">{t('no_users_found')}</td>
               </tr>
             ) : (
               users.map((u) => {

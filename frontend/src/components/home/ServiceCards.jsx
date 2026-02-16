@@ -1,31 +1,34 @@
 import { Stethoscope, GraduationCap, Users, Target, MessageCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ServiceCards() {
+  const { t } = useTranslation();
+
   const services = [
     {
-      title: "Appointment System",
+      title: t("appointment_system"),
       icon: <Stethoscope size={32} className="text-caribbean" />,
-      desc: "Easily book appointments with verified physiotherapists in your area or online.",
+      desc: t("appointment_desc"),
     },
     {
-      title: "Educational Resources",
+      title: t("educational_resources"),
       icon: <GraduationCap size={32} className="text-tufts" />,
-      desc: "Access verified educational content created by physiotherapy professionals.",
+      desc: t("educational_resources_desc"),
     },
     {
-      title: "Community Forum",
+      title: t("community_forum"),
       icon: <Users size={32} className="text-caribbean" />,
-      desc: "Discuss conditions, treatments, and get advice from professionals and peers",
+      desc: t("community_forum_desc"),
     },
     {
-      title: "Product Promotion",
+      title: t("product_promotion"),
       icon: <Target size={32} className="text-tufts" />,
-      desc: "Reach a targeted audience and potential customers of physiotherapy product, services and equipments.",
+      desc: t("product_promotion_desc"),
     },
     {
-      title: "Instant Messaging",
+      title: t("instant_messaging"),
       icon: <MessageCircle size={32} className="text-caribbean" />,
-      desc: "Connect directly with physiotherapists in real-time to discuss your health concerns and get personalized guidance.",
+      desc: t("instant_messaging_desc"),
     },
   ];
 
@@ -33,7 +36,7 @@ export default function ServiceCards() {
     <section className="py-12 bg-white" id="services">
       <div className="container mx-auto px-4 text-center">
         <h2 className="text-2xl md:text-3xl font-bold text-black mb-8">
-          Everything you need for<span className="text-caribbean"> Physiotherapy </span>
+          {t("everything_you_need")}<span className="text-caribbean"> {t("Physiotherapy")} </span>
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">

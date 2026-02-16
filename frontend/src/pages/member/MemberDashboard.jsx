@@ -12,6 +12,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next'
 
 import {
   MemberDetails,
@@ -36,6 +37,7 @@ const DEFAULT_USER = {
 const MemberDashboard = () => {
   const navigate = useNavigate();
   const { user: authUser, logout, setUser } = useAuth();
+  const { t } = useTranslation()
 
   // Use authUser or guest as initial state
   const [memberData, setMemberData] = useState(authUser || DEFAULT_USER);
@@ -91,7 +93,7 @@ const MemberDashboard = () => {
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
-          Loading Your Profile...
+          {t('loading_your_profile')}
         </p>
       </div>
     );
@@ -125,13 +127,10 @@ const MemberDashboard = () => {
           {/* Basic Info */}
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-black">
-              {memberData.fullName || "Guest"}
+              {memberData.fullName || t('guest_label')}
             </h1>
             <p className="text-sm md:text-base text-gray-600">
-              Member since{" "}
-              {memberData.createdAt
-                ? new Date(memberData.createdAt).toLocaleDateString()
-                : "-"}
+              {t('member_since')} {memberData.createdAt ? new Date(memberData.createdAt).toLocaleDateString() : "-"}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
@@ -141,7 +140,7 @@ const MemberDashboard = () => {
                     to={`/settings/member/${memberData._id}`}
                     className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"
                   >
-                    Edit Profile
+                    {t('edit_profile')}
                   </Link>
 
                   {memberData.role === "member" && (
@@ -149,7 +148,7 @@ const MemberDashboard = () => {
                       to="/upgrade-to-pt"
                       className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"
                     >
-                      Become a Physiotherapist
+                       {t('become_physio')}
                     </Link>
                   )}
                 </>
@@ -159,7 +158,7 @@ const MemberDashboard = () => {
                 onClick={() => logout(navigate)}
                 className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white"
               >
-                Log Out
+                 {t('log_out')}
               </button>
             </div>
           </div>
@@ -180,10 +179,8 @@ const MemberDashboard = () => {
         {/* Right Sidebar */}
         <div className="space-y-6">
           <div className="bg-white shadow-sm rounded-2xl p-5">
-            <h2 className="text-lg font-semibold text-black mb-3">Reminders</h2>
-            <p className="text-sm text-gray-600">
-              Your Important reminder will appear here!
-            </p>
+            <h2 className="text-lg font-semibold text-black mb-3">{t('reminders')}</h2>
+            <p className="text-sm text-gray-600">{t('reminders_text')}</p>
           </div>
         </div>
       </div>
@@ -199,24 +196,24 @@ const MemberDashboard = () => {
 
         {isMenuOpen && (
           <div className="absolute bottom-16 right-0 bg-white shadow-lg rounded-2xl p-4 w-56 flex flex-col gap-3">
-            <MemberNavLink to="/" icon={<Home size={18} />} label="Home" />
+            <MemberNavLink to="/" icon={<Home size={18} />} label={t('home')} />
             <MemberNavLink
               to={`/appointments/${memberData._id}`}
               icon={<Calendar size={18} />}
-              label="Appointments"
+              label={t('appointments')}
             />
-            <MemberNavLink to="/forum" icon={<MessageSquare size={18} />} label="Forum" />
+            <MemberNavLink to="/forum" icon={<MessageSquare size={18} />} label={t('forum')} />
             <MemberNavLink
               to={`/settings/member/${memberData._id}`}
               icon={<Settings size={18} />}
-              label="Settings"
+              label={t('admin_settings')}
             />
             <button
               onClick={() => logout(navigate)}
               className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
             >
               <LogOut size={18} />
-              <span>Logout</span>
+              <span>{t('log_out')}</span>
             </button>
           </div>
         )}

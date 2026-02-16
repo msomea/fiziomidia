@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
+import { Link } from "react-router";
+import { useTranslation } from 'react-i18next'
 import API from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import { MessageSquare, Loader2 } from "lucide-react";
@@ -11,6 +13,7 @@ const MemberProfile = () => {
   const { user: loggedInUser } = useAuth();
   const [loading, setLoading] = useState(true);
     const [member, setMember] = useState();
+  const { t } = useTranslation()
 
   useEffect(() => {
     const fetchMember = async () => {
@@ -31,13 +34,13 @@ const MemberProfile = () => {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Member Profile...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">{t('loading_member_profile')}</p>
       </div>
     );
   }
 
   if (!member)
-    return <p className="p-4 text-red-600">Member not found.</p>;
+    return <p className="p-4 text-red-600">{t('member_not_found')}</p>;
 
   const isOwnProfile = loggedInUser?._id === member?._id;
 
@@ -64,18 +67,18 @@ const MemberProfile = () => {
 
           {/* Message Button (MOBILE BELOW BIO) */}
           <div className="mt-4 md:hidden">
-            {!isOwnProfile && loggedInUser?.role !== "guest" ? (
+              {!isOwnProfile && loggedInUser?.role !== "guest" ? (
               <Link
                 className="w-full bg-caribbean text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-caribbean-dark"
                 to={`/messages/user/${member._id}`}
               >
                 <MessageSquare className="w-5 h-5" />
-                <span>Message</span>
+                <span>{t('message')}</span>
               </Link>
             ) : (
               !isOwnProfile && (
                 <p className="text-sm text-gray-500 italic">
-                  Login to message this member
+                  {t('login_to_message')}
                 </p>
               )
             )}
@@ -84,18 +87,18 @@ const MemberProfile = () => {
 
         {/* Message Button (DESKTOP RIGHT SIDE) */}
         <div className="hidden md:block">
-          {!isOwnProfile && loggedInUser?.role !== "guest" ? (
+              {!isOwnProfile && loggedInUser?.role !== "guest" ? (
             <Link
               className="bg-caribbean text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-caribbean-dark"
               to={`/messages/user/${member._id}`}
             >
               <MessageSquare className="w-5 h-5" />
-              <span>Message</span>
+              <span>{t('message')}</span>
             </Link>
           ) : (
             !isOwnProfile && (
               <p className="text-sm text-gray-500 italic">
-                Login to message this member
+                {t('login_to_message')}
               </p>
             )
           )}
@@ -105,14 +108,14 @@ const MemberProfile = () => {
 
       {/* Basic Info */}
       <section className="bg-white p-5 rounded-2xl shadow">
-        <h2 className="text-xl font-bold text-caribbean mb-3">About</h2>
+        <h2 className="text-xl font-bold text-caribbean mb-3">{t('about')}</h2>
 
         <div className="space-y-2 text-gray-700">
           {member.location && (
-            <p><strong>Location:</strong> {member.location.region},  {member.location.district}</p>
+            <p><strong>{t('location_label')}</strong> {member.location.region},  {member.location.district}</p>
           )}
-          <p><strong>Joined:</strong> {new Date(member.createdAt).toDateString()}</p>
-          <p><strong>Last seen:</strong> {new Date(member.lastLogin).toDateString()}</p>
+          <p><strong>{t('joined_label')}</strong> {new Date(member.createdAt).toDateString()}</p>
+          <p><strong>{t('last_seen_label')}</strong> {new Date(member.lastLogin).toDateString()}</p>
           
         </div>
       </section>

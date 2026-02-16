@@ -4,6 +4,7 @@ import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
 
 export default function AdminPromotionDetail() {
@@ -15,6 +16,7 @@ export default function AdminPromotionDetail() {
   const [status, setStatus] = useState("");
   const [endAt, setEndAt] = useState("");
   const [saving, setSaving] = useState(false);
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadPromotion();
@@ -30,7 +32,7 @@ export default function AdminPromotionDetail() {
       // Convert to yyyy-mm-dd for HTML date input
       setEndAt(dayjs(res.data.promotion.endAt).format("YYYY-MM-DD"));
     } catch (err) {
-      toast.error("Failed to load promotion");
+      toast.error(t('failed_load_promotion'));
     } finally {
       setLoading(false);
     }
@@ -44,10 +46,10 @@ export default function AdminPromotionDetail() {
         endAt,
       });
 
-      toast.success("Promotion updated");
+      toast.success(t('promotion_updated'));
       loadPromotion();
     } catch (err) {
-      toast.error("Update failed");
+      toast.error(t('update_failed'));
     } finally {
       setSaving(false);
     }
@@ -64,18 +66,18 @@ export default function AdminPromotionDetail() {
 
     // Show toast with Undo button
     toast(
-      (t) => (
+      (toastInstance) => (
         <div className="flex items-center gap-3">
-          <span>Promotion deleted</span>
+          <span>{t('promotion_deleted')}</span>
           <button
             onClick={() => {
               undoClicked = true;
               setPromo(backupPromo);
-              toast.dismiss(t.id);
+              toast.dismiss(toastInstance.id);
             }}
             className="text-blue-500 underline"
           >
-            Undo
+            {t('undo')}
           </button>
         </div>
       ),
@@ -85,15 +87,15 @@ export default function AdminPromotionDetail() {
     // Wait 5 seconds, then call backend if not undone
     setTimeout(async () => {
       if (undoClicked) return;
-      try {
-        await API.delete(`${API_URL}/admin/promotions/${id}`);
-        toast.success("Promotion permanently deleted");
-        navigate("/dashboard/admin"); // redirect after deletion
-      } catch (err) {
-        console.error(err);
-        setPromo(backupPromo);
-        toast.error("Failed to delete promotion");
-      }
+        try {
+          await API.delete(`${API_URL}/admin/promotions/${id}`);
+          toast.success(t('promotion_permanently_deleted'));
+          navigate("/dashboard/admin"); // redirect after deletion
+        } catch (err) {
+          console.error(err);
+          setPromo(backupPromo);
+          toast.error(t('failed_delete_promotion'));
+        }
     }, 5000);
   };
 
@@ -102,7 +104,7 @@ export default function AdminPromotionDetail() {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Promotion...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">{t('loading_promotion')}</p>
       </div>
     );
   }
@@ -113,7 +115,7 @@ export default function AdminPromotionDetail() {
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       <div className="flex justify-between mb-3">
-        <h3 className="font-semibold text-caribbean">Manage Promotion</h3>
+        <h3 className="font-semibold text-caribbean">{t('manage_promotion')}</h3>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-400 hover:text-red-800" />
         </button>
@@ -131,39 +133,39 @@ export default function AdminPromotionDetail() {
       <div className="space-y-4 text-sm text-tufts">
         {/* PT INFO */}
         <div className="bg-gray-100 p-3 rounded">
-          <h3 className="font-semibold mb-1 text-caribbean">PT Information</h3>
+          <h3 className="font-semibold mb-1 text-caribbean">{t('pt_information')}</h3>
           <p><b>Name:</b> {promo.pt?.fullName}</p>
           <p><b>Email:</b> {promo.pt?.email}</p>
         </div>
 
         {/* PROMOTION INFO */}
         <div className="bg-gray-100 p-3 rounded">
-          <h3 className="font-semibold mb-1 text-caribbean">Promotion Details</h3>
-          <p><b>Status:</b> {promo.status}</p>
-          <p><b>Start:</b> {dayjs(promo.startAt).format("ddd, DD/MM/YYYY")}</p>
-          <p><b>End:</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>
-          <p><b>Created:</b> {dayjs(promo.createdAt).format("ddd, DD/MM/YYYY")}</p>
+          <h3 className="font-semibold mb-1 text-caribbean">{t('promotion_details')}</h3>
+          <p><b>{t('status_label')}</b> {promo.status}</p>
+          <p><b>{t('start_label')}</b> {dayjs(promo.startAt).format("ddd, DD/MM/YYYY")}</p>
+          <p><b>{t('end_label')}</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>
+          <p><b>{t('created_label')}</b> {dayjs(promo.createdAt).format("ddd, DD/MM/YYYY")}</p>
         </div>
 
         {/* EDIT PROMOTION */}
         <div className="bg-gray-100 p-3 rounded">
-          <h3 className="font-semibold mb-2 text-caribbean">Edit Promotion</h3>
+          <h3 className="font-semibold mb-2 text-caribbean">{t('edit_promotion')}</h3>
 
           {/* STATUS SELECT */}
-          <label className="font-medium">Status</label>
+          <label className="font-medium">{t('status_label')}</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="border p-2 rounded w-full mb-4"
           >
-            <option value="">Select Status</option>
-            <option value="active">Active</option>
-            <option value="expired">Expired</option>
-            <option value="suspended">Suspended</option>
+            <option value="">{t('select_status')}</option>
+            <option value="active">{t('status_active')}</option>
+            <option value="expired">{t('status_expired')}</option>
+            <option value="suspended">{t('status_suspended')}</option>
           </select>
 
           {/* EDIT END DATE */}
-          <label className="font-medium">End Date</label>
+          <label className="font-medium">{t('end_label')}</label>
           <input
             type="date"
             value={endAt}
@@ -176,7 +178,7 @@ export default function AdminPromotionDetail() {
             onClick={updatePromotion}
             className="mt-4 px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark w-full"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t('saving') : t('save_changes')}
           </button>
         </div>
 
@@ -185,7 +187,7 @@ export default function AdminPromotionDetail() {
           onClick={deletePromotion}
           className="w-full mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
-          Delete Promotion
+          {t('delete_promotion')}
         </button>
       </div>
     </div>

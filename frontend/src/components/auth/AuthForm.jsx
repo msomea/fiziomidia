@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-export default function AuthForm({ onSubmit, title, fields, buttonLabel }) {
+export default function AuthForm({ onSubmit, titleKey, fields, buttonLabelKey }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({});
 
   const handleChange = (e) => {
@@ -13,28 +15,35 @@ export default function AuthForm({ onSubmit, title, fields, buttonLabel }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-white">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl text-caribbean font-bold mb-6 text-center">{title}</h2>
+        <h2 className="text-2xl text-caribbean font-bold mb-6 text-center">
+          {t(titleKey)}
+        </h2>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map(({ name, label, type, placeholder }) => (
+          {fields.map(({ name, labelKey, type, placeholderKey }) => (
             <div key={name}>
-              <label className="text-gray-700 block mb-1">{label}</label>
+              <label className="text-gray-700 block mb-1">
+                {t(labelKey)}
+              </label>
+
               <input
                 type={type}
                 name={name}
-                placeholder={placeholder || ""}
+                placeholder={placeholderKey ? t(placeholderKey) : ""}
                 required
                 onChange={handleChange}
-                className="w-full p-2 rounded bg-gray-300 border border-gray-600 focus:outline-none focus:border-caribbean"
+                className="w-full p-2 rounded bg-gray-100 border border-gray-300 focus:outline-none focus:border-caribbean text-gray-900"
               />
             </div>
           ))}
+
           <button
             type="submit"
-            className="w-full py-2 bg-caribbean hover:bg-tufts rounded font-semibold"
+            className="w-full py-2 bg-caribbean hover:bg-tufts rounded font-semibold text-white"
           >
-            {buttonLabel}
+            {t(buttonLabelKey)}
           </button>
         </form>
       </div>

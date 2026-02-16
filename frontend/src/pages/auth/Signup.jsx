@@ -4,9 +4,11 @@ import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
-import { useAuth } from "../../context/AuthContext"; // optional for auto-login
+import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 export default function Signup() {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,26 +16,25 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // optional — for auto login after signup
+  const { login } = useAuth(); // optional
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // ✅ Send registration data
-      const res = await API.post(`${API_URL}/auth/register`, {
+      await API.post(`${API_URL}/auth/register`, {
         fullName: name,
         email,
         password,
       });
 
-      toast.success("Registration successfu! Please verify your email before logging in.");
+      toast.success(t("registration_success_verify"));
       navigate("/login");
-      
+
     } catch (err) {
       console.error("Signup error:", err);
-      toast.error(err.response?.data?.error || "Registration failed");
+      toast.error(err.response?.data?.error || t("registration_failed"));
     } finally {
       setLoading(false);
     }
@@ -46,13 +47,13 @@ export default function Signup() {
         className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md"
       >
         <h2 className="text-2xl text-black font-bold mb-6 text-center">
-          Sign Up
+          {t("sign_up")}
         </h2>
 
-        {/* ✅ Full Name */}
+        {/* Full Name */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Full Name
+            {t("full_name")}
           </label>
           <input
             type="text"
@@ -63,10 +64,10 @@ export default function Signup() {
           />
         </div>
 
-        {/* ✅ Email */}
+        {/* Email */}
         <div className="mb-4">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Email
+            {t("email_label")}
           </label>
           <input
             type="email"
@@ -77,10 +78,10 @@ export default function Signup() {
           />
         </div>
 
-        {/* ✅ Password */}
+        {/* Password */}
         <div className="mb-4 relative">
           <label className="block text-gray-700 text-sm font-bold mb-2">
-            Password
+            {t("password")}
           </label>
           <input
             type={showPassword ? "text" : "password"}
@@ -98,19 +99,18 @@ export default function Signup() {
           </button>
         </div>
 
-        {/* ✅ Submit */}
         <button
           type="submit"
-          className="w-full bg-caribbean text-white font-bold py-2 px-4 rounded hover:bg-tufts"
           disabled={loading}
+          className="w-full bg-caribbean text-white font-bold py-2 px-4 rounded hover:bg-tufts"
         >
-          {loading ? "Signing up..." : "Sign Up"}
+          {loading ? t("signing_up") : t("sign_up")}
         </button>
 
         <p className="mt-4 text-black text-center text-sm">
-          Already have an account?{" "}
+          {t("already_have_account")}{" "}
           <a href="/login" className="text-caribbean hover:text-tufts">
-            Login
+            {t("login")}
           </a>
         </p>
       </form>

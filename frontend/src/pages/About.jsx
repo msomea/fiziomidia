@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import API from "../api/axios";
 import { API_URL } from "../config/constants";
 
-const servicesList = [
-  { title: "Physiotherapy Consultation", description: "Expert advice and treatment plans for your condition." },
-  { title: "Rehabilitation Programs", description: "Structured rehabilitation to regain mobility and strength." },
-  { title: "Home Visits", description: "Professional physiotherapy services at the comfort of your home." },
-  { title: "Wellness Workshops", description: "Educational sessions to improve posture, strength, and flexibility." },
-];
-
 const About = () => {
+  const { t } = useTranslation();
+  
+  const servicesList = [
+    { title: t("physiotherapy_consultation"), description: t("consultation_desc") },
+    { title: t("rehabilitation_programs"), description: t("rehab_desc") },
+    { title: t("home_visits"), description: t("home_visits_desc") },
+    { title: t("wellness_workshops"), description: t("workshops_desc") },
+  ];
+
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +25,7 @@ const About = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
-      toast.error("Please fill in all fields!");
+      toast.error(t("fill_all_fields"));
       return;
     }
     
@@ -30,11 +33,11 @@ const About = () => {
     try {
       // Send form data to backend - adjust endpoint as needed
       await API.post(`${API_URL}/contact`, formData);
-      toast.success("Message sent successfully!");
+      toast.success(t("message_sent_success"));
       setFormData({ name: "", email: "", message: "" });
     } catch (err) {
       console.error("Error sending message:", err);
-      toast.error(err.response?.data?.error || "Failed to send message. Please try again.");
+      toast.error(err.response?.data?.error || t("message_failed"));
     } finally {
       setLoading(false);
     }
@@ -46,22 +49,18 @@ const About = () => {
 
         {/* About Us Section */}
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
-          <h1 className="text-3xl font-bold text-caribbean mb-4">About Fiziomidia</h1>
+          <h1 className="text-3xl font-bold text-caribbean mb-4">{t("about_fiziomidia")}</h1>
           <p className="text-gray-700 mb-4">
-            Fiziomidia is Tanzania’s leading platform connecting physiotherapists (PTs) with community members
-            seeking quality care, education and wellness resources. Our mission is to improve access
-            to professional Physiotherapy services while supporting PTs to grow their practice.
+            {t("about_desc_1")}
           </p>
           <p className="text-gray-700">
-            Through our platform, members can discover PTs, book appointments, join educational forums,
-            and stay up-to-date with wellness tips. PTs can manage their profiles, appointments, promotions,
-            and share knowledge with the community.
+            {t("about_desc_2")}
           </p>
         </section>
 
         {/* Services Section */}
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
-          <h2 className="text-3xl font-bold text-caribbean mb-6">Our Services</h2>
+          <h2 className="text-3xl font-bold text-caribbean mb-6">{t("our_services")}</h2>
           <div className="grid gap-6 md:grid-cols-2">
             {servicesList.map((service, idx) => (
               <div
@@ -77,14 +76,14 @@ const About = () => {
 
         {/* Contact Section */}
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
-          <h2 className="text-3xl font-bold text-caribbean mb-6">Contact Us</h2>
+          <h2 className="text-3xl font-bold text-caribbean mb-6">{t("contact_us")}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Your Name"
+              placeholder={t("your_name")}
               className="input input-bordered w-full"
               required
             />
@@ -93,7 +92,7 @@ const About = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Your Email"
+              placeholder={t("your_email")}
               className="input input-bordered w-full"
               required
             />
@@ -101,14 +100,14 @@ const About = () => {
               name="message"
               value={formData.message}
               onChange={handleChange}
-              placeholder="Your Message"
+              placeholder={t("your_message")}
               className="textarea textarea-bordered w-full"
               rows={6}
               required
             />
             <div className="flex justify-end">
               <button type="submit" className="btn bg-caribbean text-white p-1 hover:bg-tufts" disabled={loading}>
-                {loading ? "Sending..." : "Send Message"}
+                {loading ? t("sending") : t("send_message")}
               </button>
             </div>
           </form>

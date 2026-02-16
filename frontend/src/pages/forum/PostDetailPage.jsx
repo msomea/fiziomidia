@@ -10,8 +10,9 @@ import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
 import CommentsSection from "../../components/forum/CommentsSection";
 import { getSocket } from "../../socket";
+import { t } from "i18next";
 
-/* 🔧 Build nested comment tree */
+// 🔧 Build nested comment tree
 const buildCommentTree = (comments = []) => {
   const map = {};
   const roots = [];
@@ -44,21 +45,16 @@ const PostDetailPage = () => {
 
   const socket = getSocket();
 
-  const canEdit =
-    user &&
-    (user.role === "admin" || user._id === post?.author?._id);
+  const canEdit = user && (user.role === "admin" || user._id === post?.author?._id);
 
   const fetchPost = async () => {
+    setLoading(true);
     try {
       const res = await API.get(`${API_URL}/forum/posts/${id}`);
       const p = res.data;
 
       const nestedComments = buildCommentTree(p.comments || []);
-
-      const normalizedPost = {
-        ...p,
-        comments: nestedComments,
-      };
+      const normalizedPost = { ...p, comments: nestedComments };
 
       setPost(normalizedPost);
       updatePost(normalizedPost);
@@ -74,13 +70,12 @@ const PostDetailPage = () => {
     if (!id) return;
 
     fetchPost();
-
     socket.emit("joinPostRoom", id);
 
     return () => {
       socket.emit("leavePostRoom", id);
     };
-  }, [id]);
+  }, [id, socket]);
 
   const handleEditStart = () => {
     setEditTitle(post.title);
@@ -115,7 +110,7 @@ const PostDetailPage = () => {
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
-          Loading Post...
+          {t("loading_posts")}
         </p>
       </div>
     );
@@ -129,7 +124,6 @@ const PostDetailPage = () => {
     <div className="max-w-3xl mt-20 mx-auto p-6 bg-white text-black rounded-xl shadow-md">
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1">
-
           {/* Title */}
           {isEditing ? (
             <input
@@ -138,9 +132,7 @@ const PostDetailPage = () => {
               className="w-full text-2xl font-bold border p-2 rounded mb-3"
             />
           ) : (
-            <h1 className="text-2xl font-bold text-caribbean mb-3">
-              {post.title}
-            </h1>
+            <h1 className="text-2xl font-bold text-caribbean mb-3">{post.title}</h1>
           )}
 
           {/* Body */}
@@ -151,9 +143,7 @@ const PostDetailPage = () => {
               className="w-full border p-3 rounded mb-6 min-h-[150px]"
             />
           ) : (
-            <p className="mt-2 mb-6 whitespace-pre-wrap break-words">
-              {post.body}
-            </p>
+            <p className="mt-2 mb-6 whitespace-pre-wrap break-words">{post.body}</p>
           )}
 
           {/* Edit Buttons */}
@@ -162,7 +152,7 @@ const PostDetailPage = () => {
               onClick={handleEditStart}
               className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
             >
-              Edit
+              {t("edit_post")}
             </button>
           )}
 
@@ -172,13 +162,13 @@ const PostDetailPage = () => {
                 onClick={handleEditSave}
                 className="text-sm px-3 py-1 bg-caribbean text-white rounded"
               >
-                Save
+                {t("save_changes")}
               </button>
               <button
                 onClick={() => setIsEditing(false)}
                 className="text-sm px-3 py-1 bg-gray-300 rounded"
               >
-                Cancel
+                {t("cancel")}
               </button>
             </div>
           )}
@@ -188,12 +178,7 @@ const PostDetailPage = () => {
       </div>
 
       {/* Comments */}
-      <CommentsSection
-        post={post}
-        user={user}
-        fetchPost={fetchPost}
-        socket={socket}
-      />
+      <CommentsSection post={post} user={user} fetchPost={fetchPost} socket={socket} />
     </div>
   );
 };

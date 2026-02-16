@@ -6,10 +6,11 @@ import { updateProfile } from "../../api/profile";
 import LocationSelector from "../../components/membersetting/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
-import { ASSET_URL } from "../../config/constants";
 import AvatarUpload from "../../components/form/AvatarUpload";
+import { useTranslation } from "react-i18next";
 
 export default function MemberProfileSettings() {
+  const { t } = useTranslation();
   const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -29,7 +30,6 @@ export default function MemberProfileSettings() {
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Prefill form with user data
   useEffect(() => {
     if (user) {
       setFormData({
@@ -63,59 +63,54 @@ export default function MemberProfileSettings() {
     e.preventDefault();
     setLoading(true);
 
-    // Validate passwords if attempting to change password
+    // Validate passwords
     if (formData.password || formData.confirmPassword) {
       if (!formData.currentPassword) {
-        toast.error("Please enter your current password to change password");
+        toast.error(t("enter_current_password"));
         setLoading(false);
         return;
       }
       if (!formData.password) {
-        toast.error("Please enter a new password");
+        toast.error(t("enter_new_password"));
         setLoading(false);
         return;
       }
       if (!formData.confirmPassword) {
-        toast.error("Please confirm your new password");
+        toast.error(t("confirm_new_password"));
         setLoading(false);
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        toast.error("New passwords do not match");
+        toast.error(t("passwords_mismatch"));
         setLoading(false);
         return;
       }
       if (formData.currentPassword === formData.password) {
-        toast.error("New password must be different from current password");
+        toast.error(t("new_password_different"));
         setLoading(false);
         return;
       }
       if (formData.password.length < 6) {
-        toast.error("New password must be at least 6 characters long");
+        toast.error(t("password_min_length"));
         setLoading(false);
         return;
       }
     }
 
-
     try {
       const dataToSend = new FormData();
 
-      // Append normal fields
       Object.entries(formData).forEach(([key, value]) => {
         if (value && key !== "confirmPassword" && key !== "profileImageUrl" && key !== "currentPassword") {
           dataToSend.append(key, value);
         }
-        // Only append password-related fields if password is being changed
         if (formData.password && key === "currentPassword" && value) {
           dataToSend.append(key, value);
         }
       });
 
-      // Append avatar if selected
       if (imageFile) dataToSend.append("avatar", imageFile);
 
-      // Append location
       if (selectedLocation) {
         const geoJsonLocation = {
           type: "Point",
@@ -128,12 +123,10 @@ export default function MemberProfileSettings() {
         dataToSend.append("location", JSON.stringify(geoJsonLocation));
       }
 
-      // Send update request
       const updatedUser = await updateProfile(dataToSend);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      // Update form state with fresh data
       setFormData({
         fullName: updatedUser.fullName,
         email: updatedUser.email,
@@ -145,7 +138,6 @@ export default function MemberProfileSettings() {
         profileImageUrl: updatedUser.profileImageUrl,
       });
 
-      // Update location
       if (updatedUser.location) {
         setSelectedLocation({
           region: updatedUser.location.region || "",
@@ -156,11 +148,11 @@ export default function MemberProfileSettings() {
       }
 
       setImageFile(null);
-      toast.success("Profile updated successfully!");
+      toast.success(t("profile_update_success"));
       window.dispatchEvent(new Event("profileUpdated"));
     } catch (err) {
       console.error("Profile update failed:", err);
-      toast.error(err.response?.data?.error || "Profile update failed");
+      toast.error(err.response?.data?.error || t("profile_update_failed"));
     } finally {
       setLoading(false);
     }
@@ -170,29 +162,26 @@ export default function MemberProfileSettings() {
     <div className="min-h-screen bg-alice mt-20 flex justify-center items-center px-4 py-8">
       <div className="bg-white w-full max-w-3xl rounded-2xl shadow-lg p-6 md:p-10">
         <h2 className="text-2xl font-semibold text-tufts mb-6 text-center">
-          Update Profile Information
+          {t("update_profile_title")}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Avatar Upload */}
           <AvatarUpload
             profileImageUrl={formData.profileImageUrl}
             selectedFile={imageFile} 
             setImageFile={setImageFile}
           />
 
-          {/* Full Name - Full Width */}
           <InputField
-            label="Full Name"
+            label={t("full_name")}
             name="fullName"
             value={formData.fullName}
             onChange={handleChange}
           />
 
-          {/* Email & Phone */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
-              label="Email"
+              label={t("email")}
               name="email"
               type="email"
               disabled
@@ -200,47 +189,39 @@ export default function MemberProfileSettings() {
               onChange={handleChange}
             />
             <InputField
-              label="Phone"
+              label={t("phone")}
               name="phone"
               value={formData.phone}
               onChange={handleChange}
             />
 
-            {/* Location Selector */}
             <div className="col-span-1 md:col-span-2">
-              <label className="font-semibold text-black mb-1 block">
-                Location
-              </label>
+              <label className="font-semibold text-black mb-1 block">{t("location")}</label>
               <LocationSelector
                 onLocationSelect={setSelectedLocation}
                 initialLocation={selectedLocation}
               />
               {selectedLocation && (
                 <p className="text-sm text-gray-500 mt-1">
-                  Selected: {selectedLocation.region},{" "}
-                  {selectedLocation.district}, {selectedLocation.ward},{" "}
-                  {selectedLocation.street}
+                  {t("selected_location")}: {selectedLocation.region}, {selectedLocation.district}, {selectedLocation.ward}, {selectedLocation.street}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Bio */}
           <TextAreaField
-            label="Bio"
+            label={t("bio")}
             name="bio"
             value={formData.bio}
             onChange={handleChange}
           />
 
-          {/* Password Section */}
           <div className="border-t pt-6 mt-6">
-            <h3 className="text-lg font-semibold text-tufts mb-4">Change Password (Optional)</h3>
-            
-            {/* Current Password */}
+            <h3 className="text-lg font-semibold text-tufts mb-4">{t("change_password_optional")}</h3>
+
             <div className="mb-4">
               <label className="block text-gray-700 text-sm font-bold mb-2">
-                Current Password
+                {t("current_password")}
               </label>
               <div className="relative">
                 <input
@@ -248,7 +229,7 @@ export default function MemberProfileSettings() {
                   name="currentPassword"
                   value={formData.currentPassword}
                   onChange={handleChange}
-                  placeholder="Enter your current password"
+                  placeholder={t("enter_current_password")}
                   className="input input-bordered w-full pr-10"
                 />
                 <button
@@ -256,28 +237,21 @@ export default function MemberProfileSettings() {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showCurrentPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
 
-            {/* New Password */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  New Password
-                </label>
+                <label className="block text-gray-700 text-sm font-bold mb-2">{t("new_password")}</label>
                 <div className="relative">
                   <input
                     type={showNewPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="Enter new password"
+                    placeholder={t("enter_new_password")}
                     className="input input-bordered w-full pr-10"
                   />
                   <button
@@ -285,28 +259,21 @@ export default function MemberProfileSettings() {
                     onClick={() => setShowNewPassword(!showNewPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showNewPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                    {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">At least 6 characters required</p>
+                <p className="text-xs text-gray-500 mt-1">{t("password_min_length_hint")}</p>
               </div>
 
-              {/* Confirm Password */}
               <div>
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Confirm New Password
-                </label>
+                <label className="block text-gray-700 text-sm font-bold mb-2">{t("confirm_new_password")}</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    placeholder="Confirm new password"
+                    placeholder={t("confirm_new_password")}
                     className="input input-bordered w-full pr-10"
                   />
                   <button
@@ -314,11 +281,7 @@ export default function MemberProfileSettings() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
@@ -332,7 +295,7 @@ export default function MemberProfileSettings() {
             }`}
             disabled={loading}
           >
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? t("saving") : t("save_changes")}
           </button>
         </form>
       </div>

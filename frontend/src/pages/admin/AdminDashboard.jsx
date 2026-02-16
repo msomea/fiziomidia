@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { fetchCurrentUser } from "../../api/auth";
 import { Settings } from "lucide-react";
+import { useTranslation } from 'react-i18next'
 import UsersSection from "../../components/admin/UsersSection"
 import AppointmentsSection from "../../components/admin/AppointmentsSection";
 import PromotionsSection from "../../components/admin/PromotionsSection";
@@ -13,6 +14,7 @@ import ForumModRequestsSection from "../../components/admin/ForumModRequestsSect
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { t } = useTranslation()
 
   useEffect(() => {
     const load = async () => {
@@ -29,7 +31,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 mt-16">
-      <h1 className="text-3xl text-caribbean font-bold mb-4">Admin Dashboard</h1>
+      <h1 className="text-3xl text-caribbean font-bold mb-4">{t('admin_dashboard')}</h1>
 
       {user && (
         <div className="bg-white shadow-md rounded-2xl p-4 mb-6 flex items-center justify-between">
@@ -46,9 +48,7 @@ export default function AdminDashboard() {
                 {user.fullName}
               </p>
               <p className="text-sm text-gray-500">{user.email}</p>
-              <p className="text-xs text-gray-400 mt-1">
-                For administrative work please use Laptop or Desktop
-              </p>
+              <p className="text-xs text-gray-400 mt-1">{t('admin_device_notice')}</p>
             </div>
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                     transition-all duration-200"
         >
           <Settings size={18} />
-          Settings
+          {t('admin_settings')}
         </button>
       </div>
 

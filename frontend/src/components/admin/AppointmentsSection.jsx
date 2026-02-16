@@ -6,15 +6,17 @@ import { Link } from "react-router";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../../config/constants";
 import CollapsibleSection from "./CollapsibleSection";
+import { useTranslation } from "react-i18next";
 
 export default function AdminAppointments() {
+  const { t } = useTranslation();
+
   const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [clinic, setClinic] = useState("");
   const [pt, setPt] = useState("");
   const [requester, setRequester] = useState("");
   const [status, setStatus] = useState("");
-
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,20 +26,12 @@ export default function AdminAppointments() {
   const loadAppointments = async () => {
     try {
       setLoading(true);
-
       const res = await API.get(`${API_URL}/admin/appointments`, {
-        params: {
-          search,
-          clinic,
-          pt,
-          requester,
-          status,
-        },
+        params: { search, clinic, pt, requester, status },
       });
-
       setAppointments(res.data.appts || []);
     } catch (error) {
-      toast.error("Failed to fetch appointments");
+      toast.error(t("failed_fetch_appointments"));
     } finally {
       setLoading(false);
     }
@@ -46,70 +40,63 @@ export default function AdminAppointments() {
   const updateStatus = async (id, newStatus) => {
     try {
       await API.put(`${API_URL}/admin/appointments/${id}`, { status: newStatus });
-      toast.success("Status updated");
+      toast.success(t("status_updated"));
       loadAppointments();
     } catch {
-      toast.error("Update failed");
+      toast.error(t("update_failed"));
     }
   };
 
-  // ✅ DELETE APPOINTMENT
   const deleteAppointment = async (id) => {
-    const confirm = window.confirm(
-      "Are you sure you want to delete this appointment?"
-    );
-
-    if (!confirm) return;
+    const confirmDelete = window.confirm(t("confirm_delete_appointment"));
+    if (!confirmDelete) return;
 
     try {
       await API.delete(`${API_URL}/admin/appointments/${id}`);
-      toast.success("Appointment deleted");
+      toast.success(t("appointment_deleted"));
       loadAppointments();
-    } catch (err) {
-      toast.error("Delete failed");
+    } catch {
+      toast.error(t("delete_failed"));
     }
   };
 
   return (
-    <CollapsibleSection title="Appointments Management">
+    <CollapsibleSection title={t("appointments_management")}>
       <div className="space-y-4">
         {/* FILTERS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input
             type="text"
-            placeholder="Clinic Name"
+            placeholder={t("clinic_name")}
             value={clinic}
             onChange={(e) => setClinic(e.target.value)}
             className="border p-2 rounded"
           />
-
           <input
             type="text"
-            placeholder="PT Name"
+            placeholder={t("pt_name")}
             value={pt}
             onChange={(e) => setPt(e.target.value)}
             className="border p-2 rounded"
           />
-
           <input
             type="text"
-            placeholder="Requester Name"
+            placeholder={t("requester_name")}
             value={requester}
             onChange={(e) => setRequester(e.target.value)}
             className="border p-2 rounded"
           />
-
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="border p-2 rounded"
           >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="declined">Declined</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
+            <option value="">{t("all_statuses")}</option>
+            <option value="pending">{t("status_pending")}</option>
+            <option value="accepted">{t("status_accepted")}</option>
+            <option value="declined">{t("status_declined")}</option>
+            <option value="cancelled">{t("status_cancelled")}</option>
+            <option value="completed">{t("status_completed")}</option>
           </select>
         </div>
 
@@ -118,64 +105,63 @@ export default function AdminAppointments() {
           {loading ? (
             <div className="h-screen flex flex-col items-center justify-center">
               <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-              <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Appointments...</p>
+              <p className="mt-4 text-caribbean font-medium animate-pulse">
+                {t("loading_appointments")}
+              </p>
             </div>
           ) : appointments.length === 0 ? (
-            <p className="text-gray-500 text-sm mt-20">No appointments found</p>
+            <p className="text-gray-500 text-sm mt-20">{t("no_appointments_found")}</p>
           ) : (
             appointments.map((a) => (
               <div key={a._id} className="border rounded p-3 bg-gray-50 mb-3">
                 <Link to={`/admin/appointments/${a._id}`}>
                   <h3 className="font-bold text-caribbean">
-                    Appointment #{a._id}
+                    {t("appointment_number", { id: a._id })}
                   </h3>
                 </Link>
 
                 <div className="text-sm mt-2 text-tufts">
                   <p>
-                    <span className="font-semibold">Clinic:</span>{" "}
+                    <span className="font-semibold">{t("clinic")}:</span>{" "}
                     {a.clinic?.name || "N/A"}
                   </p>
                   <p>
-                    <span className="font-semibold">PT:</span>{" "}
-                    {a.pt?.fullName}
+                    <span className="font-semibold">{t("pt")}:</span>{" "}
+                    {a.pt?.fullName || "N/A"}
                   </p>
                   <p>
-                    <span className="font-semibold">Requester:</span>{" "}
-                    {a.requester?.fullName}
+                    <span className="font-semibold">{t("requester")}:</span>{" "}
+                    {a.requester?.fullName || "N/A"}
                   </p>
                   <p>
-                    <span className="font-semibold">Status:</span> {a.status}
+                    <span className="font-semibold">{t("status")}:</span> {t(`status_${a.status}`)}
                   </p>
                   <p>
-                    <span className="font-semibold">Requested Date:</span>{" "}
+                    <span className="font-semibold">{t("requested_date")}:</span>{" "}
                     {dayjs(a.scheduledDate).format("ddd, DD/MM/YYYY")}
                   </p>
                   <p>
-                    <span className="font-semibold">Requested Time:</span>{" "}
+                    <span className="font-semibold">{t("requested_time")}:</span>{" "}
                     {a.scheduledTime}
                   </p>
                 </div>
 
-                {/* STATUS BUTTONS */}
                 <div className="flex gap-2 mt-3">
-                  {["accepted", "declined", "cancelled", "completed"].map(
-                    (s) => (
-                      <button
-                        key={s}
-                        className="px-3 py-1 text-xs text-white bg-tufts hover:bg-gray-300 rounded"
-                        onClick={() => updateStatus(a._id, s)}
-                      >
-                        Mark {s}
-                      </button>
-                    )
-                  )}
-                  {/* DELETE BUTTON */}
+                  {["accepted", "declined", "cancelled", "completed"].map((s) => (
+                    <button
+                      key={s}
+                      className="px-3 py-1 text-xs text-white bg-tufts hover:bg-gray-300 rounded"
+                      onClick={() => updateStatus(a._id, s)}
+                    >
+                      {t("mark_status", { status: t(`status_${s}`) })}
+                    </button>
+                  ))}
+
                   <button
                     onClick={() => deleteAppointment(a._id)}
                     className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-800"
                   >
-                    Delete Appointment
+                    {t("delete_appointment")}
                   </button>
                 </div>
               </div>

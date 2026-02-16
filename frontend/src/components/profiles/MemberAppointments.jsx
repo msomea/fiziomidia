@@ -1,10 +1,11 @@
-// src/components/member/MemberAppointments.jsx
 import React, { useEffect, useState } from "react";
 import { getAppointmentsByMember } from "../../api/appointments";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const MemberAppointments = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,14 +20,14 @@ const MemberAppointments = () => {
         setAppointments(data);
       } catch (err) {
         console.error("Failed to fetch appointments:", err);
-        setError("Failed to load appointments. Please try again later.");
+        setError(t("appointments_load_error"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchAppointments();
-  }, [user]);
+  }, [user, t]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -55,7 +56,7 @@ const MemberAppointments = () => {
   return (
     <section className="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto mt-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-5">
-        Upcoming Appointments
+        {t("upcoming_appointments")}
       </h2>
 
       {error && <p className="text-red-500 mb-3">{error}</p>}
@@ -69,7 +70,7 @@ const MemberAppointments = () => {
             >
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <span className="font-medium text-gray-800">
-                  {a.pt?.fullName || "Physiotherapist"}
+                  {a.pt?.fullName || t("physiotherapist")}
                 </span>
                 {a.pt?.specialization && (
                   <span className="text-gray-500 text-sm">
@@ -80,24 +81,23 @@ const MemberAppointments = () => {
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-1 sm:mt-0">
                 <span className="text-gray-600 text-sm">
-                  {new Date(a.scheduledDate).toLocaleDateString()}{" "}
-                  {a.scheduledTime}
+                  {new Date(a.scheduledDate).toLocaleDateString()} {a.scheduledTime}
                 </span>
                 <span className={`font-medium ${getStatusColor(a.status)}`}>
-                  {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
+                  {t(`appointment_status.${a.status}`)}
                 </span>
               </div>
 
               {a.notes && (
                 <p className="text-gray-500 text-sm mt-1 sm:mt-0 italic">
-                  Notes: {a.notes}
+                  {t("notes")}: {a.notes}
                 </p>
               )}
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500">No upcoming appointments.</p>
+        <p className="text-gray-500">{t("no_upcoming_appointments")}</p>
       )}
     </section>
   );

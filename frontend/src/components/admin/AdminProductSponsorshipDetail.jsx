@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
 import { X, Loader2 } from "lucide-react";
+import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
 import { API_URL, ASSET_URL } from "../../config/constants";
 import { getSponsoredProductById } from "../../api/admin";
@@ -30,6 +31,7 @@ export default function AdminProductSponsorshipDetail() {
   });
 
   const [newImage, setNewImage] = useState(null);
+  const { t } = useTranslation()
 
   useEffect(() => {
     loadProduct();
@@ -53,7 +55,7 @@ export default function AdminProductSponsorshipDetail() {
       });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load product");
+      toast.error(t('failed_load_product'));
     } finally {
       setLoading(false);
     }
@@ -83,25 +85,25 @@ export default function AdminProductSponsorshipDetail() {
 
       await API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
 
-      toast.success("Product updated");
+      toast.success(t('product_updated'));
       loadProduct();
     } catch (err) {
-      toast.error(err.response?.data?.error || "Update failed");
+      toast.error(err.response?.data?.error || t('update_failed'));
     } finally {
       setSaving(false);
     }
   };
 
   const deleteProduct = async () => {
-    if (!confirm("Delete this sponsored product permanently?")) return;
+    if (!confirm(t('confirm_delete_product'))) return;
 
     try {
       setDeleting(true);
       await API.delete(`${API_URL}/admin/sponsored-products/${id}`);
-      toast.success("Product deleted");
+      toast.success(t('product_deleted'));
       navigate(-1);
     } catch (err) {
-      toast.error("Delete failed");
+      toast.error(t('delete_failed'));
     } finally {
       setDeleting(false);
     }
@@ -112,7 +114,7 @@ export default function AdminProductSponsorshipDetail() {
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
-          Loading Sponsored products…
+          {t('loading_sponsored_products')}
         </p>
       </div>
     );
@@ -154,7 +156,7 @@ export default function AdminProductSponsorshipDetail() {
       {/* HEADER */}
       <div className="flex justify-between mb-4">
         <h2 className="font-semibold text-lg text-caribbean">
-          Manage Sponsored Product — {product.name}
+          {t('manage_sponsored_product')} — {product.name}
         </h2>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-500 hover:text-red-800" />
@@ -165,27 +167,27 @@ export default function AdminProductSponsorshipDetail() {
         {/* PRODUCT INFO */}
         <div className="bg-gray-100 p-3 rounded text-tufts">
           <h3 className="font-semibold mb-2 flex items-center gap-2">
-            Product Information
+            {t('product_information')}
             <StatusBadge status={product.status} expired={isExpired} />
           </h3>
 
-          <p><b>Owner:</b> {product.owner?.fullName}</p>
-          <p><b>Category:</b> {product.category}</p>
-          <p><b>Active:</b> {product.isActive ? "Yes" : "No"}</p>
+          <p><b>{t('owner_label')}</b> {product.owner?.fullName}</p>
+          <p><b>{t('category_label')}</b> {product.category}</p>
+          <p><b>{t('active_label')}</b> {product.isActive ? t('yes') : t('no')}</p>
 
           <p>
-            <b>Start Date:</b>{" "}
+            <b>{t('start_date')}</b>{" "}
             {product.startDate ? product.startDate.substring(0, 10) : "—"}
           </p>
 
           <p>
-            <b>End Date:</b>{" "}
+            <b>{t('end_date')}</b>{" "}
             {product.endDate ? product.endDate.substring(0, 10) : "—"}
           </p>
 
           {isExpired && (
             <p className="text-red-600 font-medium mt-2">
-              ⚠ This sponsorship has expired
+              ⚠ {t('sponsorship_expired')}
             </p>
           )}
         </div>
@@ -199,28 +201,28 @@ export default function AdminProductSponsorshipDetail() {
               onClick={() => updateStatus("approved")}
               className="flex-1 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              {savingStatus ? "Approving..." : "Approve Sponsorship"}
+              {savingStatus ? t('approving') : t('approve_sponsorship')}
             </button>
 
             <button
               onClick={() => updateStatus("rejected")}
               className="flex-1 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
-              Reject Sponsorship
+              {t('reject_sponsorship')}
             </button>
           </div>
         )}
 
         <div className="bg-gray-100 p-4 rounded space-y-3 text-tufts">
           <h3 className="font-semibold mb-2 text-caribbean">
-            Edit Product Details
+            {t('edit_product_details')}
           </h3>
 
           <input
             name="name"
             value={form.name}
             onChange={handleChange}
-            placeholder="Product Name"
+            placeholder={t('product_name_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -229,7 +231,7 @@ export default function AdminProductSponsorshipDetail() {
             type="number"
             value={form.price}
             onChange={handleChange}
-            placeholder="Price"
+            placeholder={t('price_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -251,7 +253,7 @@ export default function AdminProductSponsorshipDetail() {
             name="link"
             value={form.link}
             onChange={handleChange}
-            placeholder="Link (optional)"
+            placeholder={t('link_placeholder')}
             className="w-full border p-2 rounded"
           />
 
@@ -259,7 +261,7 @@ export default function AdminProductSponsorshipDetail() {
             name="description"
             value={form.description}
             onChange={handleChange}
-            placeholder="Description"
+            placeholder={t('description_placeholder')}
             className="w-full border p-2 rounded min-h-[80px]"
           />
 
@@ -274,14 +276,14 @@ export default function AdminProductSponsorshipDetail() {
               }
             />
             <span className={product.status !== "approved" ? "text-gray-400" : ""}>
-              Mark as Active (Approved only)
+              {t('mark_as_active')}
             </span>
           </label>
 
 
           {/* IMAGE */}
           <div>
-            <p className="font-medium mb-1">Product Image</p>
+            <p className="font-medium mb-1">{t('product_image_label')}</p>
 
             {form.image && (
               <img
@@ -306,7 +308,7 @@ export default function AdminProductSponsorshipDetail() {
             onClick={updateProduct}
             className="w-full py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark"
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t('saving') : t('save_changes')}
           </button>
 
           <button
@@ -314,7 +316,7 @@ export default function AdminProductSponsorshipDetail() {
             onClick={deleteProduct}
             className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
-            {deleting ? "Deleting..." : "Delete Product"}
+            {deleting ? t('deleting') : t('delete_product')}
           </button>
         </div>
       </div>

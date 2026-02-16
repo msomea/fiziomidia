@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
@@ -8,6 +9,7 @@ import CollapsibleSection from "./CollapsibleSection";
 
 export default function ForumModRequestsSection() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [requests, setRequests] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ export default function ForumModRequestsSection() {
       });
       setRequests(res.data.requests || []);
     } catch (err) {
-      toast.error("Failed to fetch moderator requests");
+      toast.error(t("failed_load_mod_requests"));
     } finally {
       setLoading(false);
     }
@@ -38,7 +40,7 @@ export default function ForumModRequestsSection() {
   };
 
   return (
-    <CollapsibleSection title="Forum Moderator Requests">
+    <CollapsibleSection title={t("forum_mod_requests_title")}>
       <div className="space-y-4">
         {/* FILTER */}
         <select
@@ -46,10 +48,10 @@ export default function ForumModRequestsSection() {
           onChange={(e) => setStatus(e.target.value)}
           className="border p-2 rounded w-full md:w-64"
         >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
+          <option value="">{t("filter_all_statuses")}</option>
+          <option value="pending">{t("status_pending")}</option>
+          <option value="approved">{t("status_approved")}</option>
+          <option value="rejected">{t("status_rejected")}</option>
         </select>
 
         {/* RESULTS */}
@@ -57,12 +59,12 @@ export default function ForumModRequestsSection() {
           <div className="h-64 flex flex-col items-center justify-center">
             <Loader2 className="w-10 h-10 text-caribbean animate-spin" />
             <p className="mt-3 text-caribbean font-medium animate-pulse">
-              Loading moderator requests...
+              {t("loading_mod_requests")}
             </p>
           </div>
         ) : requests.length === 0 ? (
           <p className="text-gray-500 text-sm mt-10">
-            No moderator requests found
+            {t("no_mod_requests")}
           </p>
         ) : (
           requests.map((req) => (
@@ -81,12 +83,13 @@ export default function ForumModRequestsSection() {
                   <p className="text-xs text-gray-600">{req.user?.email}</p>
 
                   <p>
-                    <span className="font-semibold">Sub:</span> {req.sub?.title}{" "}
+                    <span className="font-semibold">{t("sub_label")}:</span>{" "}
+                    {req.sub?.title}{" "}
                     <span className="text-gray-400">(/ {req.sub?.slug})</span>
                   </p>
 
                   <span className={statusBadge(req.status)}>
-                    {req.status.toUpperCase()}
+                    {t(`status_${req.status}`)}
                   </span>
                 </div>
               </div>

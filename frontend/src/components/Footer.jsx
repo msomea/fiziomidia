@@ -1,7 +1,9 @@
 import { Facebook, Instagram, Linkedin } from "lucide-react";
 import { Link } from "react-router";
+import { useTranslation } from 'react-i18next'
 
 export default function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="bg-black text-white py-10 mt-16">
       <div className="container mx-auto px-4 text-center">
@@ -12,12 +14,11 @@ export default function Footer() {
 
         {/* Links */}
         <div className="flex flex-wrap justify-center gap-6 text-sm mb-4">
-          <a href="/" className="hover:text-caribbean">Home</a>
-          <a href="/about" className="hover:text-caribbean">About</a>
-          <a href="/services" className="hover:text-caribbean">Services</a>
-          <a href="/forum" className="hover:text-caribbean">Forum</a>
-          <a href="/education" className="hover:text-caribbean">Education</a>
-          <a href="/contact" className="hover:text-caribbean">Contact</a>
+          <a href="/" className="hover:text-caribbean">{t("home")}</a>
+          <a href="/about" className="hover:text-caribbean">{t("about")}</a>
+          <a href="/services" className="hover:text-caribbean">{t("services")}</a>
+          <a href="/forum" className="hover:text-caribbean">{t("forum")}</a>
+          <a href="/education" className="hover:text-caribbean">{t("education")}</a>
         </div>
 
         {/* Social Media */}
@@ -44,7 +45,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <p className="text-xs text-gray-400">
-          © {new Date().getFullYear()} FizioMidia. All rights reserved.
+          © {new Date().getFullYear()} {t("right_reserved")}.
         </p>
       </div>
     </footer>

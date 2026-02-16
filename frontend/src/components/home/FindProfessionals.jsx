@@ -5,12 +5,14 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import SkeletonProfessionalCard from "./SkeletonProfessionalCard";
 
 export default function FindProfessionals() {
+  const { t } = useTranslation();
   const [pts, setPts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -27,13 +29,13 @@ export default function FindProfessionals() {
         const res = await API.get(`${API_URL}/pts/promotions`);
         setPts(res.data || []);
       } catch (err) {
-        toast.error("Failed to load professionals");
+        toast.error(t("failed_load_professionals"));
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [t]);
 
   /* ---------- Responsive items per page ---------- */
   useEffect(() => {
@@ -99,7 +101,7 @@ export default function FindProfessionals() {
     <section className="bg-white py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
         <h2 className="text-3xl font-bold text-caribbean mb-8 text-center">
-          Find Professionals
+          {t("find_professionals")}
         </h2>
 
         <div
@@ -151,24 +153,24 @@ export default function FindProfessionals() {
                   </div>
 
                   <h3 className="font-semibold text-caribbean text-lg">
-                    {pt.fullName || "Unnamed PT"}
+                    {pt.fullName || t("unnamed_pt")}
                   </h3>
 
                   <p className="text-sm text-gray-600 line-clamp-2">
                     {pt.ptProfile?.speciality?.length
                       ? pt.ptProfile.speciality.join(", ")
-                      : "No speciality listed"}
+                      : t("no_speciality_listed")}
                   </p>
 
                   <p className="text-sm text-gray-500 mt-1">
-                    {pt.ptProfile?.institution || "No institution"}
+                    {pt.ptProfile?.institution || t("no_institution")}
                   </p>
 
                   <Link
                     to={`/profile/pt/${pt._id}`}
                     className="btn btn-sm bg-caribbean text-white mt-3 w-full hover:bg-tufts"
                   >
-                    View Profile
+                    {t("view_profile")}
                   </Link>
                 </div>
               ))

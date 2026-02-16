@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import { useNavigate } from "react-router";
@@ -24,6 +25,8 @@ const PTProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams(); // PT ID
   const { user: loggedInUser } = useAuth();
+  const { t } = useTranslation();
+
   const [pt, setPt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -33,7 +36,6 @@ const PTProfile = () => {
       try {
         const res = await API.get(`${API_URL}/pts/${id}`);
         setPt(res.data); 
-        // Determine if this PT is already saved by the logged-in member
         const saved = loggedInUser?.savedPTs?.some((savedPT) => savedPT._id === id);
         setIsSaved(!!saved);
       } catch (err) {
@@ -48,37 +50,34 @@ const PTProfile = () => {
   const handleSave = async () => {
     if (!pt) return;
 
-    // Optimistic toggle
     const prevState = isSaved;
     setIsSaved(!prevState);
 
-    // Toast with undo
     const toastId = toast(
-      (t) => (
+      (tObj) => (
         <div className="flex items-center justify-between gap-4">
-          <span>{!prevState ? "Saved PT" : "Removed from saved"}</span>
+          <span>{!prevState ? t("saved_pt") : t("removed_saved_pt")}</span>
           <button
             onClick={() => {
-              setIsSaved(prevState); // undo
-              toast.dismiss(t.id);
+              setIsSaved(prevState);
+              toast.dismiss(tObj.id);
             }}
             className="text-caribbean font-semibold hover:underline"
           >
-            Undo
+            {t("undo")}
           </button>
         </div>
       ),
       { duration: 5000 }
     );
 
-    // Backend update after 5s
     setTimeout(async () => {
       try {
         await toggleSavePT(pt._id);
       } catch (err) {
         console.error("Failed to update saved PT:", err);
-        setIsSaved(prevState); // revert if failed
-        toast.error("Failed to update saved PT");
+        setIsSaved(prevState);
+        toast.error(t("failed_save_pt"));
       }
     }, 5000);
   };
@@ -87,7 +86,9 @@ const PTProfile = () => {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading PT Profile...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          {t("loading_pt_profile")}
+        </p>
       </div>
     );
   }
@@ -95,7 +96,7 @@ const PTProfile = () => {
   if (!pt || !pt.ptProfile) {
     return (
       <div className="min-h-screen mt-20 flex items-center justify-center text-red-500">
-        Physiotherapist not found.
+        {t("pt_not_found")}
       </div>
     );
   }
@@ -105,7 +106,6 @@ const PTProfile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
-      {/* Header */}
       <div className="relative bg-white shadow-md rounded-b-3xl">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-6 p-6">
           <img
@@ -117,32 +117,32 @@ const PTProfile = () => {
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-black">{pt.fullName}</h1>
             <p className="text-sm md:text-base text-gray-600">
-              {ptProfile.title || "Physiotherapist"}
-              {ptProfile.yearsOfExperience ? ` | ${ptProfile.yearsOfExperience}+ Years Experience` : ""}
+              {ptProfile.title || t("physiotherapist")}
+              {ptProfile.yearsOfExperience
+                ? ` | ${ptProfile.yearsOfExperience}+ ${t("years_experience")}`
+                : ""}
             </p>
             <p className="mt-2 text-sm text-gray-500">
               {pt.location?.region}, {pt.location?.district}
             </p>
 
-            {/* Actions */}
             <div className="mt-4 flex flex-wrap gap-3 items-center">
               {loggedInUser.role !== "guest" && id !== loggedInUser._id ? (
                 <>
                   <button 
                     onClick={() => navigate(`/appointments/book/${pt._id}`)}
-                    className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition">
-                    Book Appointment
+                    className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition"
+                  >
+                    {t("book_appointment")}
                   </button>
 
                   <Link
                     to={`/messages/user/${pt._id}`}
-                    className="border border-caribbean text-caribbean px-4 py-2 rounded-lg 
-                              hover:bg-caribbean hover:text-white transition"
+                    className="border border-caribbean text-caribbean px-4 py-2 rounded-lg hover:bg-caribbean hover:text-white transition"
                   >
-                    Message
+                    {t("message")}
                   </Link>
 
-                  {/* Heart Toggle */}
                   <button
                     onClick={handleSave}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
@@ -152,12 +152,12 @@ const PTProfile = () => {
                     }`}
                   >
                     <Heart size={18} className={isSaved ? "text-red-600" : "text-white"} />
-                    {isSaved ? "Saved" : "Save PT"}
+                    {isSaved ? t("saved") : t("save_pt")}
                   </button>
                 </>
               ) : loggedInUser.role === "guest" ? (
                 <p className="text-sm text-gray-500 italic">
-                  Login to message or book appointment
+                  {t("login_to_message_or_book")}
                 </p>
               ) : null}
             </div>
@@ -165,7 +165,6 @@ const PTProfile = () => {
         </div>
       </div>
 
-      {/* Profile Content */}
       <div className="max-w-6xl mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <PTOverview overview={pt.bio} />

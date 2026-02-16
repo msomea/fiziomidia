@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 export default function LocationSelector({ onLocationSelect, initialLocation }) {
+  const { t } = useTranslation();
+
   const [regions, setRegions] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -16,100 +19,91 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
   const [loading, setLoading] = useState(false);
 
-  /* ==========================================
-     1. FETCH REGIONS
-     ========================================== */
+  // ==========================================
+  // 1. FETCH REGIONS
+  // ==========================================
   useEffect(() => {
     const fetchRegions = async () => {
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/locations/regions`);
-
         if (!Array.isArray(res.data)) {
-          toast.error("Invalid region response");
+          toast.error(t("invalid_region_response"));
           return;
         }
-
-        setRegions(res.data); // [{_id, name}]
+        setRegions(res.data);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load regions");
+        toast.error(t("failed_load_regions"));
       } finally {
         setLoading(false);
       }
     };
-
     fetchRegions();
-  }, []);
+  }, [t]);
 
-  /* ==========================================
-     2. FETCH DISTRICTS WHEN REGION CHANGES
-     ========================================== */
+  // ==========================================
+  // 2. FETCH DISTRICTS
+  // ==========================================
   useEffect(() => {
     const fetchDistricts = async () => {
       if (!selectedRegion) return setDistricts([]);
-
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/locations/districts/${selectedRegion}`);
         setDistricts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load districts");
+        toast.error(t("failed_load_districts"));
         setDistricts([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchDistricts();
-  }, [selectedRegion]);
+  }, [selectedRegion, t]);
 
-  /* ==========================================
-     3. FETCH WARDS WHEN DISTRICT CHANGES
-     ========================================== */
+  // ==========================================
+  // 3. FETCH WARDS
+  // ==========================================
   useEffect(() => {
     const fetchWards = async () => {
       if (!selectedDistrict) return setWards([]);
-
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/locations/wards/${selectedDistrict}`);
         setWards(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load wards");
+        toast.error(t("failed_load_wards"));
         setWards([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchWards();
-  }, [selectedDistrict]);
+  }, [selectedDistrict, t]);
 
-  /* ==========================================
-     4. FETCH STREETS WHEN WARD CHANGES
-     ========================================== */
+  // ==========================================
+  // 4. FETCH STREETS
+  // ==========================================
   useEffect(() => {
     const fetchStreets = async () => {
       if (!selectedWard) return setStreets([]);
-
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/locations/streets/${selectedWard}`);
         setStreets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load streets");
+        toast.error(t("failed_load_streets"));
         setStreets([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchStreets();
-  }, [selectedWard]);
+  }, [selectedWard, t]);
 
   // Notify parent
   useEffect(() => {
@@ -120,7 +114,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       street: selectedStreet,
     };
     onLocationSelect(geoJson);
-  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet]);
+  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet, onLocationSelect]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">
@@ -135,11 +129,9 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         }}
         className="select select-bordered w-full"
       >
-        <option value="">Select Region</option>
+        <option value="">{t("select_region")}</option>
         {regions.map((r) => (
-          <option key={r._id} value={r.name}>
-            {r.name}
-          </option>
+          <option key={r._id} value={r.name}>{r.name}</option>
         ))}
       </select>
 
@@ -154,11 +146,9 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         className="select select-bordered w-full"
         disabled={!selectedRegion}
       >
-        <option value="">Select District</option>
+        <option value="">{t("select_district")}</option>
         {districts.map((d) => (
-          <option key={d._id} value={d.name || d.district}>
-            {d.name || d.district}
-          </option>
+          <option key={d._id} value={d.name || d.district}>{d.name || d.district}</option>
         ))}
       </select>
 
@@ -169,14 +159,12 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
           setSelectedWard(e.target.value);
           setSelectedStreet("");
         }}
-        className="select  select-bordered w-full"
+        className="select select-bordered w-full"
         disabled={!selectedDistrict}
       >
-        <option value="">Select Ward</option>
+        <option value="">{t("select_ward")}</option>
         {wards.map((w) => (
-          <option key={w._id} value={w.name || w.ward}>
-            {w.name || w.ward}
-          </option>
+          <option key={w._id} value={w.name || w.ward}>{w.name || w.ward}</option>
         ))}
       </select>
 
@@ -187,17 +175,13 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         className="select select-bordered w-full"
         disabled={!selectedWard}
       >
-        <option value="">Select Street</option>
+        <option value="">{t("select_street")}</option>
         {streets.map((s) => (
-          <option key={s._id} value={s.name || s.street}>
-            {s.name || s.street}
-          </option>
+          <option key={s._id} value={s.name || s.street}>{s.name || s.street}</option>
         ))}
       </select>
 
-      {loading && (
-        <p className="text-gray-400 italic animate-pulse">Loading...</p>
-      )}
+      {loading && <p className="text-gray-400 italic animate-pulse">{t("loading")}</p>}
     </div>
   );
 }

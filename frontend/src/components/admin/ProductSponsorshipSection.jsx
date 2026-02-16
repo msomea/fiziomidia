@@ -3,16 +3,17 @@ import { getSponsoredProducts } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { useTranslation } from "react-i18next";
 
 export default function ProductSponsorshipSection() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   // Filters
-  const [search, setSearch] = useState("");   // search by product name
-  const [status, setStatus] = useState("");   // active/inactive
+  const [search, setSearch] = useState(""); // search by product name
+  const [status, setStatus] = useState(""); // active/inactive
 
   useEffect(() => {
     loadSponsoredProducts();
@@ -25,18 +26,17 @@ export default function ProductSponsorshipSection() {
       setTotalPages(res.totalPages || 1);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load sponsored products");
+      toast.error(t("failed_load_sponsored"));
     }
   };
 
   return (
-    <CollapsibleSection title="Sponsored Products">
-      
+    <CollapsibleSection title={t("sponsored_products")}>
       {/* FILTERS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <input
           type="text"
-          placeholder="Search product name..."
+          placeholder={t("search_placeholder_products")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="border p-2 rounded"
@@ -47,21 +47,12 @@ export default function ProductSponsorshipSection() {
           onChange={(e) => setStatus(e.target.value)}
           className="border p-2 rounded"
         >
-          <option value="">All</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 rounded"
-        >
-          <option value="">Status</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-          <option value="rejected">Rejected</option>
+          <option value="">{t("filter_all")}</option>
+          <option value="active">{t("status_active")}</option>
+          <option value="inactive">{t("status_inactive")}</option>
         </select>
       </div>
+
       {/* PRODUCT LIST */}
       {products.map((product) => (
         <div
@@ -75,25 +66,34 @@ export default function ProductSponsorshipSection() {
           />
           <div className="text-sm flex-1">
             <Link to={`/admin/sponsored-products/${product._id}`}>
-              <h3 className="font-bold text-caribbean text-lg">
-                {product.name}
-              </h3>
+              <h3 className="font-bold text-caribbean text-lg">{product.name}</h3>
             </Link>
-            <p><b>Owner:</b> {product.owner?.fullName}</p>
-            <p><b>Price:</b> {product.price}</p>
-            <p><b>Descriptiom:</b> {product.description}</p>
-            <p><b>Due Date:</b> {product.endDate}</p>
-            <p><b>Status:</b> {product.isActive ? "Active" : "Inactive"}</p>
+            <p>
+              <b>{t("owner_label")}</b> {product.owner?.fullName}
+            </p>
+            <p>
+              <b>{t("price_label")}</b> {product.price}
+            </p>
+            <p>
+              <b>{t("description_label")}</b> {product.description}
+            </p>
+            <p>
+              <b>{t("end_date")}</b> {product.endDate}
+            </p>
+            <p>
+              <b>{t("status_label")}</b>{" "}
+              {product.isActive ? t("status_active") : t("status_inactive")}
+            </p>
             {product.link && (
               <p>
-                <b>Link:</b>{" "}
+                <b>{t("link_label")}</b>{" "}
                 <a
                   href={`https://${product.link}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 underline"
                 >
-                  Visit
+                  {t("visit_link")}
                 </a>
               </p>
             )}
@@ -108,7 +108,7 @@ export default function ProductSponsorshipSection() {
           disabled={page === 1}
           className="btn btn-sm bg-gray-200 text-accent disabled:opacity-50"
         >
-          Prev
+          {t("prev")}
         </button>
 
         <span className="font-bold text-caribbean">
@@ -120,12 +120,12 @@ export default function ProductSponsorshipSection() {
           disabled={page === totalPages}
           className="btn btn-sm bg-caribbean text-white hover:bg-tufts"
         >
-          Next
+          {t("next")}
         </button>
       </div>
 
       <p className="text-xs text-gray-400 mt-2">
-        Showing {products.length} sponsored products
+        {t("showing_sponsored_products", { count: products.length })}
       </p>
     </CollapsibleSection>
   );
