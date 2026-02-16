@@ -25,6 +25,9 @@ const fileFilter = (req, file, cb) => {
     "image/jpeg",
     "image/png",
     "image/jpg",
+    "image/webp",
+    "image/gif",
+    "image/svg+xml",
     "application/pdf",
   ];
 
@@ -79,22 +82,25 @@ const uploadToCloudinary = (file) => {
     if (!file) return reject(new Error("No file provided"));
 
     const folder = getCloudinaryFolder(file.fieldname);
-    const resourceType =
-      file.mimetype === "application/pdf" ? "raw" : "image";
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        resource_type: resourceType,
+        resource_type: "auto",
         use_filename: true,
         unique_filename: true,
       },
+
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
       }
     );
 
+    console.log("Uploading file:");
+    console.log("MIME:", file.mimetype);
+    console.log("Size:", file.size);
+    console.log("Field:", file.fieldname);
     uploadStream.end(file.buffer);
   });
 };
