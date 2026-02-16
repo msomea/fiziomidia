@@ -12,7 +12,8 @@ export default function AdminSponsorshipDetail() {
 
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [savingBasic, setSavingBasic] = useState(false);
+  const [savingSponsor, setSavingSponsor] = useState(false);
   // Sponsorship form
   const [form, setForm] = useState({
     isSponsored: false,
@@ -77,6 +78,8 @@ export default function AdminSponsorshipDetail() {
   // ✅ Update basic sub info
   const updateSubInfo = async () => {
     try {
+      setSavingBasic(true);
+
       const res = await API.put(`${API_URL}/forum/subs/${id}`, basicForm);
 
       if (!res.data?.success) throw new Error();
@@ -85,12 +88,17 @@ export default function AdminSponsorshipDetail() {
       loadSub();
     } catch (err) {
       toast.error("Failed to update sub information");
+    } finally {
+      setSavingBasic(false);
     }
   };
+
 
   // Sponsorship update (unchanged)
   const updateSponsorship = async () => {
     try {
+      setSavingSponsor(true);
+
       const data = new FormData();
       data.append("isSponsored", form.isSponsored);
       data.append("sponsorName", form.sponsorName);
@@ -107,8 +115,11 @@ export default function AdminSponsorshipDetail() {
       loadSub();
     } catch (err) {
       toast.error("Update failed");
+    } finally {
+      setSavingSponsor(false);
     }
   };
+
 
   const removeSponsorship = async () => {
     if (!confirm("Remove sponsorship completely?")) return;
@@ -177,10 +188,12 @@ export default function AdminSponsorshipDetail() {
 
           <button
             onClick={updateSubInfo}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            disabled={savingBasic}
+            className="bg-tufts text-white px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-50"
           >
-            Save Sub Info
+            {savingBasic ? "Saving..." : "Save Sub Info"}
           </button>
+
         </div>
 
         {/* SPONSORSHIP */}
@@ -261,10 +274,12 @@ export default function AdminSponsorshipDetail() {
         <div className="flex flex-col gap-3">
           <button
             onClick={updateSponsorship}
-            className="bg-caribbean text-white py-2 rounded"
+            disabled={savingSponsor}
+            className="bg-caribbean text-white py-2 rounded hover:bg-tufts disabled:opacity-50"
           >
-            Save Sponsorship
+            {savingSponsor ? "Saving..." : "Save Sponsorship"}
           </button>
+
 
           {sub.isSponsored && (
             <button

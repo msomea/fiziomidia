@@ -10,6 +10,7 @@ export default function AdminAppointmentDetails() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [appointment, setAppointment] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     status: "",
@@ -50,6 +51,7 @@ export default function AdminAppointmentDetails() {
 
   const handleSave = async () => {
     try {
+      setSaving(true);
       const res = await API.put(`${API_URL}/admin/appointments/${id}`, {
         status: form.status,
         date: form.date,
@@ -64,6 +66,8 @@ export default function AdminAppointmentDetails() {
     } catch (err) {
       console.error("Error updating appointment:", err);
       toast.error("Failed to update appointment");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -136,9 +140,10 @@ export default function AdminAppointmentDetails() {
 
       <button
         onClick={handleSave}
-        className="mt-4 bg-caribbean text-white px-4 py-2 rounded shadow"
+        disabled={saving}
+        className="mt-4 bg-caribbean text-white px-4 py-2 rounded shadow hover:bg-tufts"
       >
-        Save
+        {saving ? "Saving..." : "Save"}
       </button>
     </div>
   );

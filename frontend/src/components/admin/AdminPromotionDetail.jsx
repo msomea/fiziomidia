@@ -14,6 +14,7 @@ export default function AdminPromotionDetail() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [endAt, setEndAt] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadPromotion();
@@ -37,6 +38,7 @@ export default function AdminPromotionDetail() {
 
   const updatePromotion = async () => {
     try {
+      setSaving(true);
       await API.put(`${API_URL}/admin/promotions/${id}`, {
         status,
         endAt,
@@ -46,11 +48,13 @@ export default function AdminPromotionDetail() {
       loadPromotion();
     } catch (err) {
       toast.error("Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
   const deletePromotion = async () => {
-  // Backup current promo
+    // Backup current promo
     const backupPromo = { ...promo };
 
     // Remove from UI immediately
@@ -168,10 +172,11 @@ export default function AdminPromotionDetail() {
           />
 
           <button
+            disabled={saving}
             onClick={updatePromotion}
             className="mt-4 px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark w-full"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
 

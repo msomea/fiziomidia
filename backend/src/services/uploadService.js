@@ -89,6 +89,13 @@ const uploadToCloudinary = (file) => {
         resource_type: "auto",
         use_filename: true,
         unique_filename: true,
+        // ✅ Automatic optimization
+        transformation: [
+          {
+            quality: "auto",   // automatic compression
+            fetch_format: "auto", // auto convert to best format
+          },
+        ],
       },
 
       (error, result) => {
@@ -97,10 +104,6 @@ const uploadToCloudinary = (file) => {
       }
     );
 
-    console.log("Uploading file:");
-    console.log("MIME:", file.mimetype);
-    console.log("Size:", file.size);
-    console.log("Field:", file.fieldname);
     uploadStream.end(file.buffer);
   });
 };

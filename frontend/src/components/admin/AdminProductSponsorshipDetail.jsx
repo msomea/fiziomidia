@@ -15,6 +15,9 @@ export default function AdminProductSponsorshipDetail() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -63,6 +66,7 @@ export default function AdminProductSponsorshipDetail() {
 
   const updateProduct = async () => {
     try {
+      setSaving(true);
       const data = new FormData();
       data.append("name", form.name);
       data.append("price", form.price);
@@ -83,6 +87,8 @@ export default function AdminProductSponsorshipDetail() {
       loadProduct();
     } catch (err) {
       toast.error(err.response?.data?.error || "Update failed");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -90,11 +96,14 @@ export default function AdminProductSponsorshipDetail() {
     if (!confirm("Delete this sponsored product permanently?")) return;
 
     try {
+      setDeleting(true);
       await API.delete(`${API_URL}/admin/sponsored-products/${id}`);
       toast.success("Product deleted");
       navigate(-1);
     } catch (err) {
       toast.error("Delete failed");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -128,11 +137,14 @@ export default function AdminProductSponsorshipDetail() {
 
   const updateStatus = async (status) => {
     try {
+      setSavingStatus(true);
       await API.put(`/admin/sponsored-products/${id}`, { status });
       toast.success(`Product ${status}`);
       loadProduct();
     } catch (err) {
       toast.error(err.response?.data?.error || "Status update failed");
+    } finally {
+      setSavingStatus(false);
     }
   };
 
@@ -183,10 +195,11 @@ export default function AdminProductSponsorshipDetail() {
         {product.status === "pending" && (
           <div className="flex gap-3 mb-4">
             <button
+              disabled={savingStatus}
               onClick={() => updateStatus("approved")}
               className="flex-1 py-2 bg-green-600 text-white rounded hover:bg-green-700"
             >
-              Approve Sponsorship
+              {savingStatus ? "Approving..." : "Approve Sponsorship"}
             </button>
 
             <button
@@ -289,17 +302,19 @@ export default function AdminProductSponsorshipDetail() {
         {/* ACTIONS */}
         <div className="flex flex-col gap-3 mt-4">
           <button
+            disabled={saving}
             onClick={updateProduct}
             className="w-full py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </button>
 
           <button
+            disabled={deleting}
             onClick={deleteProduct}
             className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700"
           >
-            Delete Product
+            {deleting ? "Deleting..." : "Delete Product"}
           </button>
         </div>
       </div>

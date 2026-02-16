@@ -208,10 +208,11 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         return (
           <div
             key={post._id}
-            className={`bg-white shadow-sm rounded-xl p-4 flex flex-col md:flex-row gap-4 ${
+            className={`w-full max-w-full overflow-hidden bg-white shadow-sm rounded-xl p-4 flex flex-col md:flex-row gap-4 ${
               isSponsorPost ? "border-2 border-yellow-400" : ""
             }`}
           >
+
             <img
               src={getAvatar(author)}
               alt={author.fullName || "Guest"}
@@ -220,7 +221,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
               }}
               className="w-12 h-12 rounded-full object-cover"
             />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center mb-1">
                 <span className="font-semibold text-black">
                   {isSponsorPost ? (
@@ -248,22 +249,22 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                   href={`https:\\${post.title}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-lg font-bold text-caribbean mb-2 block"
+                  className="text-lg font-bold text-caribbean mb-2 block break-words"
                 >
                   {post.title}
                 </a>
               ) : (
                 <Link
                   to={`/forum/post/${post._id}`}
-                  className="text-lg font-bold text-caribbean mb-2 block"
+                  className="text-lg font-bold text-caribbean mb-2 block break-words"
                 >
                   {post.title}
                 </Link>
               )}
 
-              <p className="text-gray-700 text-sm line-clamp-3">{post.body}</p>
+              <p className="text-gray-700 text-sm line-clamp-3 break-words whitespace-pre-wrap break-all">{post.body}</p>
 
-              <div className="flex items-center gap-4 mt-3 text-gray-500">
+              <div className="flex flex-wrap items-center gap-4 mt-3 text-gray-500">
                 <button
                   onClick={() => handleVote(post._id, 1)}
                   className={`flex items-center gap-1 ${

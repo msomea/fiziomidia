@@ -21,7 +21,7 @@ function AppContent() {
   }, [logout, navigate]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-alice">
+    <div className="min-h-screen overflow-x-hidden flex flex-col bg-alice">
       <Navbar />
       <main className="flex-grow">
         <AppRoutes />
