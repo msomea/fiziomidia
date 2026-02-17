@@ -1,5 +1,6 @@
 import React from "react";
 import { Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function ConversationMessages({
   messages,
@@ -7,11 +8,12 @@ export default function ConversationMessages({
   handleDeleteMessage,
   messagesEndRef,
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-3">
       {messages.length === 0 && (
         <p className="text-gray-500 text-sm text-center mt-4">
-          Start the conversation by sending a message.
+          {t("start_conversation_by_sending_message")}
         </p>
       )}
 

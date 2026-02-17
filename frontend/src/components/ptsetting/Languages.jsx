@@ -1,29 +1,31 @@
 import React, { useState } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const Languages = ({ formData, setFormData }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(true);
   const [newLanguage, setNewLanguage] = useState({ name: "", proficiency: "" });
   const [languages, setLanguages] = useState(formData.languages || []);
 
   const addLanguage = () => {
     if (!newLanguage.name || !newLanguage.proficiency) {
-      toast.error("Please fill in both language and proficiency");
+      toast.error(t("fill_language_proficiency"));
       return;
     }
     const updated = [...languages, newLanguage];
     setLanguages(updated);
     setFormData(prev => ({ ...prev, languages: updated }));
     setNewLanguage({ name: "", proficiency: "" });
-    toast.success("Language added");
+    toast.success(t("language_added"));
   };
 
   const removeLanguage = (index) => {
     const updated = languages.filter((_, i) => i !== index);
     setLanguages(updated);
     setFormData(prev => ({ ...prev, languages: updated }));
-    toast.success("Language removed");
+    toast.success(t("language_removed"));
   };
 
   return (
@@ -33,7 +35,7 @@ const Languages = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Languages</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("languages")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -46,8 +48,11 @@ const Languages = ({ formData, setFormData }) => {
           {languages.map((lang, i) => (
             <div key={i} className="flex justify-between items-center p-2 bg-alice rounded-lg">
               <span>{lang.name} ({lang.proficiency})</span>
-              <button onClick={() => removeLanguage(i)} className="text-red-500 hover:text-red-700">
-                <X size={16} />
+              <button
+                onClick={() => removeLanguage(i)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <X size={16} /> {t("remove")}
               </button>
             </div>
           ))}
@@ -55,7 +60,7 @@ const Languages = ({ formData, setFormData }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
-              placeholder="Language"
+              placeholder={t("language")}
               name="name"
               value={newLanguage.name}
               onChange={(e) => setNewLanguage(prev => ({ ...prev, name: e.target.value }))}
@@ -63,7 +68,7 @@ const Languages = ({ formData, setFormData }) => {
             />
             <input
               type="text"
-              placeholder="Proficiency (e.g., Basic, Fluent)"
+              placeholder={t("proficiency_example")}
               name="proficiency"
               value={newLanguage.proficiency}
               onChange={(e) => setNewLanguage(prev => ({ ...prev, proficiency: e.target.value }))}
@@ -76,7 +81,7 @@ const Languages = ({ formData, setFormData }) => {
             onClick={addLanguage}
             className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
           >
-            <Plus size={18} /> Add Language
+            <Plus size={18} /> {t("add_language")}
           </button>
         </div>
       )}

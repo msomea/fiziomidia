@@ -6,16 +6,18 @@ import { API_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { getSocket } from "../../socket";
+import { useTranslation } from "react-i18next";
 
 import ConversationHeader from "../../components/message/ConversationHeader";
 import ConversationMessages from "../../components/message/ConversationMessages";
 import ConversationInput from "../../components/message/ConversationInput";
 
 export default function ConversationPage() {
+  const { t } = useTranslation();
   const { id: otherUserId } = useParams();
   const { user: loggedInUser } = useAuth();
   const navigate = useNavigate();
-  const socket = getSocket(); // Use shared socket instance
+  const socket = getSocket();
 
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -42,7 +44,6 @@ export default function ConversationPage() {
         const res = await API.get(`${API_URL}/conversations/user/${otherUserId}`);
         setConversation(res.data);
 
-        // Mark incoming messages as read locally so sender UI updates immediately
         const normalizedMessages = (res.data.messages || []).map((m) => {
           const receiverId = m.receiver?._id || m.receiver;
           if (String(receiverId) === String(loggedInUser._id)) {
@@ -58,32 +59,25 @@ export default function ConversationPage() {
         );
         setIsOtherUserOnline(otherUser?.isLoggedIn || false);
 
-        // Reset unread (server will also mark messages as read)
         socket.emit("conversation:open", {
           conversationId: res.data._id,
           userId: loggedInUser._id,
         });
 
-        // Acknowledge and mark as read any messages we fetched that were sent to this user
-        try {
-          const receivedMessages = (res.data.messages || []).filter(
-            (m) => String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
-          );
+        // Acknowledge messages
+        const receivedMessages = (res.data.messages || []).filter(
+          (m) => String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
+        );
 
-          receivedMessages.forEach((m) => {
-            // Mark as delivered if still in 'sent' state
-            if (m.status === "sent" || !m.status) {
-              socket.emit("message:delivered", { messageId: m._id, userId: loggedInUser._id });
-            }
-            // Mark as read (this will trigger server to update DB and notify sender)
-            socket.emit("message:read", { messageId: m._id, userId: loggedInUser._id });
-          });
-        } catch (e) {
-          // ignore acknowledgement errors
-          console.error("Error acknowledging messages:", e);
-        }
+        receivedMessages.forEach((m) => {
+          if (m.status === "sent" || !m.status) {
+            socket.emit("message:delivered", { messageId: m._id, userId: loggedInUser._id });
+          }
+          socket.emit("message:read", { messageId: m._id, userId: loggedInUser._id });
+        });
       } catch (err) {
         console.error(err);
+        toast.error(t("failed_load_conversation"));
       } finally {
         setLoading(false);
         scrollToBottom();
@@ -91,9 +85,9 @@ export default function ConversationPage() {
     };
 
     load();
-  }, [otherUserId, loggedInUser]);
+  }, [otherUserId, loggedInUser, t, socket]);
 
-  // Listen for new messages and acknowledge delivery when appropriate
+  // Listen for new messages
   useEffect(() => {
     const handler = (payload) => {
       if (payload.conversationId !== conversation?._id) return;
@@ -111,43 +105,30 @@ export default function ConversationPage() {
       setMessages((prev) => [...prev, msgObj]);
       scrollToBottom();
 
-      // If current user is the receiver of this incoming message, acknowledge delivery and mark as read immediately
       if (String(payload.receiver) === String(loggedInUser?._id)) {
-        socket.emit("message:delivered", {
-          messageId: msgObj._id,
-          userId: loggedInUser._id,
-        });
-
-        // Since conversation is already open, immediately mark as read
-        socket.emit("message:read", {
-          messageId: msgObj._id,
-          userId: loggedInUser._id,
-        });
+        socket.emit("message:delivered", { messageId: msgObj._id, userId: loggedInUser._id });
+        socket.emit("message:read", { messageId: msgObj._id, userId: loggedInUser._id });
       }
     };
 
     socket.on("message:new", handler);
     return () => socket.off("message:new", handler);
-  }, [conversation, loggedInUser]);
+  }, [conversation, loggedInUser, socket]);
 
-  // Listen for message status updates (delivered/read)
+  // Message status updates
   useEffect(() => {
-    const statusHandler = (payload) => {
-      const { messageId, status } = payload;
-      if (!messageId) return;
-
+    const statusHandler = ({ messageId, status }) => {
       setMessages((prev) =>
         prev.map((m) => (String(m._id) === String(messageId) ? { ...m, status } : m))
       );
     };
-
     socket.on("message:status", statusHandler);
     return () => socket.off("message:status", statusHandler);
-  }, []);
+  }, [socket]);
 
-  // When server notifies that the conversation was read, mark local incoming messages as read
+  // Conversation read notifications
   useEffect(() => {
-    const convReadHandler = ({ conversationId, unread }) => {
+    const convReadHandler = ({ conversationId }) => {
       if (conversationId !== conversation?._id) return;
 
       setMessages((prev) =>
@@ -163,14 +144,13 @@ export default function ConversationPage() {
 
     socket.on("conversation:read", convReadHandler);
     return () => socket.off("conversation:read", convReadHandler);
-  }, [conversation, loggedInUser]);
+  }, [conversation, loggedInUser, socket]);
 
-  // Track online/offline
+  // Online/offline tracking
   useEffect(() => {
     socket.on("userWentOnline", ({ userId }) => {
       if (userId === otherUserId) setIsOtherUserOnline(true);
     });
-
     socket.on("userWentOffline", ({ userId }) => {
       if (userId === otherUserId) setIsOtherUserOnline(false);
     });
@@ -179,7 +159,7 @@ export default function ConversationPage() {
       socket.off("userWentOnline");
       socket.off("userWentOffline");
     };
-  }, [otherUserId]);
+  }, [otherUserId, socket]);
 
   // Send message
   const handleSend = () => {
@@ -201,17 +181,17 @@ export default function ConversationPage() {
     const backup = [...messages];
     setMessages((prev) => prev.filter((m) => m._id !== messageId));
 
-    const toastUndo = toast((t) => (
+    toast((tObj) => (
       <div className="flex items-center gap-3">
-        <span>Message deleted</span>
+        <span>{t("message_deleted")}</span>
         <button
           onClick={() => {
             setMessages(backup);
-            toast.dismiss(t.id);
+            toast.dismiss(tObj.id);
           }}
           className="text-blue-500 underline"
         >
-          Undo
+          {t("undo")}
         </button>
       </div>
     ));
@@ -221,7 +201,7 @@ export default function ConversationPage() {
         await API.delete(`${API_URL}/messages/${messageId}`);
       } catch (error) {
         setMessages(backup);
-        toast.error("Could not delete message");
+        toast.error(t("failed_delete_message"));
       }
     }, 5000);
   };
@@ -230,7 +210,9 @@ export default function ConversationPage() {
     return (
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Conversations...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">
+          {t("loading_conversations")}
+        </p>
       </div>
     );
   }

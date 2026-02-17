@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 const Experience = ({ formData, setFormData }) => {
-  const [workExperience, setExperiences] = useState(formData.workExperience || []);
+  const { t } = useTranslation();
 
+  const [workExperience, setExperiences] = useState(formData.workExperience || []);
   const [newExperience, setNewExperience] = useState({
     institution: "",
     position: "",
@@ -14,8 +16,7 @@ const Experience = ({ formData, setFormData }) => {
     current: false,
     description: "",
   });
-
-  const [isOpen, setIsOpen] = useState(false); // collapsible
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setExperiences(formData.workExperience || []);
@@ -44,12 +45,12 @@ const Experience = ({ formData, setFormData }) => {
 
   const addExperience = () => {
     if (!newExperience.position || !newExperience.institution || !newExperience.startDate) {
-      toast.error("Please fill all required fields");
+      toast.error(t("fill_required_fields"));
       return;
     }
 
     if (!validateDates(newExperience.startDate, newExperience.endDate)) {
-      toast.error("End date must be after start date");
+      toast.error(t("end_after_start"));
       return;
     }
 
@@ -72,14 +73,14 @@ const Experience = ({ formData, setFormData }) => {
       description: "",
     });
 
-    toast.success("Experience added");
+    toast.success(t("experience_added"));
   };
 
   const removeExperience = (index) => {
     const updated = workExperience.filter((_, i) => i !== index);
     setExperiences(updated);
     setFormData((prev) => ({ ...prev, workExperience: updated }));
-    toast.success("Experience removed");
+    toast.success(t("experience_removed"));
   };
 
   const formatDate = (date) => {
@@ -95,7 +96,7 @@ const Experience = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Experience</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("experience")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -104,7 +105,6 @@ const Experience = ({ formData, setFormData }) => {
       </button>
 
       {isOpen && (
-        
         <div className="mt-4 space-y-4 bg-gray-50 p-4 rounded-md">
           {/* Experience List */}
           <div className="mb-6 space-y-4">
@@ -115,7 +115,7 @@ const Experience = ({ formData, setFormData }) => {
                     <h3 className="font-semibold text-tufts">{exp.position}</h3>
                     <p className="text-sm font-medium text-gray-700">{exp.institution}</p>
                     <p className="text-sm text-gray-600">
-                      {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
+                      {formatDate(exp.startDate)} - {exp.current ? t("present") : formatDate(exp.endDate)}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">{exp.description}</p>
                   </div>
@@ -124,19 +124,20 @@ const Experience = ({ formData, setFormData }) => {
                     onClick={() => removeExperience(index)}
                     className="text-red-500 hover:text-red-700"
                   >
-                    <X size={18} />
+                    <X size={18} /> {t("remove")}
                   </button>
                 </div>
               </div>
             ))}
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
               name="position"
               value={newExperience.position}
               onChange={handleNewExperienceChange}
-              placeholder="Position/Title *"
+              placeholder={t("position_placeholder")}
               className="input input-bordered text-sm"
             />
 
@@ -145,7 +146,7 @@ const Experience = ({ formData, setFormData }) => {
               name="institution"
               value={newExperience.institution}
               onChange={handleNewExperienceChange}
-              placeholder="Company/Clinic Name *"
+              placeholder={t("institution_placeholder")}
               className="input input-bordered text-sm"
             />
 
@@ -174,14 +175,14 @@ const Experience = ({ formData, setFormData }) => {
                 onChange={handleNewExperienceChange}
                 className="checkbox checkbox-sm"
               />
-              <label className="text-sm text-gray-600">I currently work here</label>
+              <label className="text-sm text-gray-600">{t("currently_work_here")}</label>
             </div>
 
             <textarea
               name="description"
               value={newExperience.description}
               onChange={handleNewExperienceChange}
-              placeholder="Description"
+              placeholder={t("description")}
               className="textarea textarea-bordered w-full text-sm md:col-span-2 h-24"
             />
           </div>
@@ -191,8 +192,7 @@ const Experience = ({ formData, setFormData }) => {
             onClick={addExperience}
             className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
           >
-            <Plus size={18} />
-            Add Experience
+            <Plus size={18} /> {t("add_experience")}
           </button>
         </div>
       )}

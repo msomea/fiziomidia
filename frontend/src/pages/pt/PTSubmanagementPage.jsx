@@ -4,15 +4,16 @@ import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function PTSubManagementPage() {
+  const { t } = useTranslation();
   const { subId } = useParams();
   const navigate = useNavigate();
   const [sub, setSub] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // sub edit form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [rules, setRules] = useState("");
@@ -25,7 +26,6 @@ export default function PTSubManagementPage() {
   const fetchSubData = async () => {
     try {
       setLoading(true);
-
       const subRes = await API.get(`${API_URL}/forum/subs/${subId}`);
       const subData = subRes.data.sub;
 
@@ -35,7 +35,7 @@ export default function PTSubManagementPage() {
       setRules((subData.rules || []).join("\n"));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch Sub");
+      toast.error(t("failed_fetch_sub"));
     } finally {
       setLoading(false);
     }
@@ -52,16 +52,13 @@ export default function PTSubManagementPage() {
       );
       setRequests(res.data.requests || []);
     } catch (err) {
-      toast.error("Failed to load requests");
+      toast.error(t("failed_load_requests"));
     }
   };
 
-
   /* ---------------- SUB UPDATE ---------------- */
-
   const handleUpdateSub = async (e) => {
     e.preventDefault();
-
     try {
       const payload = {
         title,
@@ -77,15 +74,14 @@ export default function PTSubManagementPage() {
       if (!res.data.success) throw new Error();
 
       setSub(res.data.sub);
-      toast.success("Sub updated successfully");
+      toast.success(t("sub_updated_success"));
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update sub");
+      toast.error(t("failed_update_sub"));
     }
   };
 
   /* ---------------- MOD REQUEST UPDATE ---------------- */
-
   const handleUpdateRequest = async (requestId, role) => {
     try {
       await API.patch(
@@ -93,21 +89,25 @@ export default function PTSubManagementPage() {
         { role }
       );
 
-      toast.success("Role updated");
+      toast.success(t("role_updated"));
       await Promise.all([fetchRequests(), fetchSubData()]);
     } catch (err) {
-      toast.error("Failed to update role");
+      toast.error(t("failed_update_role"));
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (!sub) return <p>Sub not found.</p>;
+  if (loading) return <p>{t("loading")}...</p>;
+  if (!sub) return <p>{t("sub_not_found")}</p>;
 
   return (
     <div className="p-4 space-y-8 mt-20">
       <div className="flex justify-between mb-3">
-        <h1 className="text-2xl text-caribbean font-bold">Manage Sub: {sub.title}</h1>
-        <button onClick={() => navigate(-1)}><X className="text-red-400 hover:text-red-800"/></button>
+        <h1 className="text-2xl text-caribbean font-bold">
+          {t("manage_sub")}: {sub.title}
+        </h1>
+        <button onClick={() => navigate(-1)}>
+          <X className="text-red-400 hover:text-red-800" />
+        </button>
       </div>
 
       {/* ---------- SUB INFO FORM ---------- */}
@@ -115,18 +115,20 @@ export default function PTSubManagementPage() {
         onSubmit={handleUpdateSub}
         className="bg-white p-4 rounded shadow space-y-4"
       >
-        <h2 className="font-semibold text-caribbean text-lg">Edit Sub Info</h2>
+        <h2 className="font-semibold text-caribbean text-lg">
+          {t("edit_sub_info")}
+        </h2>
 
         <input
           className="w-full border p-2 rounded"
-          placeholder="Title"
+          placeholder={t("title")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <textarea
           className="w-full border p-2 rounded"
-          placeholder="Description"
+          placeholder={t("description")}
           rows={3}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -134,20 +136,22 @@ export default function PTSubManagementPage() {
 
         <textarea
           className="w-full border p-2 rounded"
-          placeholder="Rules (one per line)"
+          placeholder={t("rules_one_per_line")}
           rows={4}
           value={rules}
           onChange={(e) => setRules(e.target.value)}
         />
 
         <button className="bg-tufts text-white px-4 py-2 rounded">
-          Save Changes
+          {t("save_changes")}
         </button>
       </form>
 
       {/* ---------- MODERATOR REQUESTS ---------- */}
       <div className="bg-white p-4 text-caribbean rounded shadow">
-        <h2 className="font-semibold text-lg mb-3">Moderator Requests</h2>
+        <h2 className="font-semibold text-lg mb-3">
+          {t("moderator_requests")}
+        </h2>
 
         {/* STATUS TABS*/}
         <div className="flex gap-2 mb-4">
@@ -159,7 +163,7 @@ export default function PTSubManagementPage() {
                 activeTab === s ? "bg-tufts text-white" : "bg-gray-200"
               }`}
             >
-              {s.toUpperCase()}
+              {t(`status_${s}`)}
             </button>
           ))}
         </div>
@@ -175,7 +179,7 @@ export default function PTSubManagementPage() {
                 <div>
                   <p className="font-medium">{r.user.fullName}</p>
                   <p className="text-sm text-gray-500">
-                    Current role: {r.role}
+                    {t("current_role")}: {t(`role_${r.role}`)}
                   </p>
                 </div>
 
@@ -185,35 +189,36 @@ export default function PTSubManagementPage() {
                   defaultValue=""
                   onChange={(e) => handleUpdateRequest(r._id, e.target.value)}
                 >
-                  <option value="" disabled>Change role</option>
+                  <option value="" disabled>
+                    {t("change_role")}
+                  </option>
 
                   {r.status !== "approved" && (
                     <>
-                      <option value="sub_mod">Approve as Sub Mod</option>
-                      <option value="mod">Approve as Mod</option>
+                      <option value="sub_mod">{t("approve_as_sub_mod")}</option>
+                      <option value="mod">{t("approve_as_mod")}</option>
                     </>
                   )}
 
                   {r.status === "approved" && r.role === "sub_mod" && (
                     <>
-                      <option value="mod">Upgrade to Mod</option>
-                      <option value="member">Remove Mod</option>
+                      <option value="mod">{t("upgrade_to_mod")}</option>
+                      <option value="member">{t("remove_mod")}</option>
                     </>
                   )}
 
                   {r.status === "approved" && r.role === "mod" && (
                     <>
-                      <option value="sub_mod">Downgrade to Sub Mod</option>
-                      <option value="member">Remove Mod</option>
+                      <option value="sub_mod">{t("downgrade_to_sub_mod")}</option>
+                      <option value="member">{t("remove_mod")}</option>
                     </>
                   )}
                 </select>
-
               </li>
             ))}
           </ul>
         ) : (
-          <p>No {activeTab} requests</p>
+          <p>{t("no_requests", { status: t(`status_${activeTab}`) })}</p>
         )}
       </div>
     </div>

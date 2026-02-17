@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, X, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const WorkingHours = ({ formData, setFormData }) => {
+  const { t } = useTranslation();
+
   const [workingDay, setWorkingDay] = useState('Monday');
   const [workingFrom, setWorkingFrom] = useState('09:00');
   const [workingTo, setWorkingTo] = useState('17:00');
@@ -23,17 +26,17 @@ const WorkingHours = ({ formData, setFormData }) => {
     );
 
     if (existingDay) {
-      toast.error('Working hours for this day already exist');
+      toast.error(t('working_hours_exists'));
       return;
     }
 
     if (!validateTime(workingFrom) || !validateTime(workingTo)) {
-      toast.error("Invalid time format (HH:MM)");
+      toast.error(t('invalid_time_format'));
       return;
     }
 
     if (workingFrom >= workingTo) {
-      toast.error('End time must be after start time');
+      toast.error(t('end_after_start'));
       return;
     }
 
@@ -53,7 +56,7 @@ const WorkingHours = ({ formData, setFormData }) => {
     );
 
     setFormData(prev => ({ ...prev, workingHours: newWorkingHours }));
-    toast.success('Working hours added');
+    toast.success(t('working_hours_added'));
   };
 
   const removeWorkingHours = (day) => {
@@ -62,7 +65,7 @@ const WorkingHours = ({ formData, setFormData }) => {
     ) || [];
 
     setFormData(prev => ({ ...prev, workingHours: newWorkingHours }));
-    toast.success('Working hours removed');
+    toast.success(t('working_hours_removed'));
   };
 
   return (
@@ -74,7 +77,7 @@ const WorkingHours = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Working Hours</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t('working_hours')}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -95,7 +98,7 @@ const WorkingHours = ({ formData, setFormData }) => {
               >
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-tufts">{wh.dayOfWeek}</h3>
+                    <h3 className="font-semibold text-tufts">{t(wh.dayOfWeek)}</h3>
                     <button
                       type="button"
                       onClick={() => removeWorkingHours(wh.dayOfWeek)}
@@ -120,7 +123,7 @@ const WorkingHours = ({ formData, setFormData }) => {
               className="select select-bordered w-full text-sm"
             >
               {weekDays.map((day) => (
-                <option key={day} value={day}>{day}</option>
+                <option key={day} value={day}>{t(day)}</option>
               ))}
             </select>
 
@@ -145,7 +148,7 @@ const WorkingHours = ({ formData, setFormData }) => {
             className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2 mt-4"
           >
             <Plus size={18} />
-            Add Working Hours
+            {t('add_working_hours')}
           </button>
         </div>
       )}

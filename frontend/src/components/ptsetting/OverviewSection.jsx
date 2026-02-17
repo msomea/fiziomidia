@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function OverviewSection({ formData, handleChange }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="card bg-white shadow-md p-6">
@@ -13,7 +15,7 @@ export default function OverviewSection({ formData, handleChange }) {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Overview</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("overview")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

@@ -66,14 +66,14 @@ export default function AdminPromotionDetail() {
 
     // Show toast with Undo button
     toast(
-      (toastInstance) => (
+      (tToast) => (
         <div className="flex items-center gap-3">
           <span>{t('promotion_deleted')}</span>
           <button
             onClick={() => {
               undoClicked = true;
               setPromo(backupPromo);
-              toast.dismiss(toastInstance.id);
+              toast.dismiss(tToast.id);
             }}
             className="text-blue-500 underline"
           >

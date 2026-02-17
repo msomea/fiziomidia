@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
 import API from "../../api/axios";
-import {toast} from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { API_URL } from "../../config/constants";
+import { useTranslation } from "react-i18next";
 
 const AdminSponsorships = () => {
+  const { t } = useTranslation();
+
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -17,14 +20,13 @@ const AdminSponsorships = () => {
     endDate: "",
   });
 
-  // Fetch all forum subs
   const fetchSubs = async () => {
     try {
-      const res = await API.get(`${API_URL}/forum/subs`); // authenticated admin route
+      const res = await API.get(`${API_URL}/forum/subs`);
       setSubs(res.data.subs || []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch forum subs.");
+      toast.error(t("failed_fetch_forum_subs"));
     } finally {
       setLoading(false);
     }
@@ -34,17 +36,14 @@ const AdminSponsorships = () => {
     fetchSubs();
   }, []);
 
-  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Handle select sub
   const handleSubSelect = (e) => {
     const subId = e.target.value;
     setForm({ ...form, subId });
 
-    // Preload sponsorship info if any
     const sub = subs.find((s) => s._id === subId);
     if (sub) {
       setForm({
@@ -60,56 +59,58 @@ const AdminSponsorships = () => {
     }
   };
 
-  // Add or update sponsorship
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.subId) return toast.error("Select a forum sub first.");
+    if (!form.subId) return toast.error(t("select_forum_sub"));
 
     try {
-      const res = await API.put(`${API_URL}/admin/subs/${form.subId}/sponsorship`, form);
-      toast.success("Sponsorship updated successfully.");
+      await API.put(`${API_URL}/admin/subs/${form.subId}/sponsorship`, form);
+      toast.success(t("sponsorship_updated_success"));
       fetchSubs();
     } catch (err) {
-      console.error("Error updating sponsorship:", err);
-      toast.error("Failed to update sponsorship.");
+      console.error(err);
+      toast.error(t("failed_update_sponsorship"));
     }
   };
 
-  // Remove sponsorship
   const handleRemove = async (subId) => {
-    if (!window.confirm("Remove sponsorship?")) return;
+    if (!window.confirm(t("confirm_remove_sponsorship"))) return;
     try {
       await API.put(`${API_URL}/admin/subs/${subId}/sponsorship/remove`);
-      toast.success("Sponsorship removed.");
+      toast.success(t("sponsorship_removed"));
       fetchSubs();
     } catch (err) {
-      console.error("Error removing sponsorship:", err);
-      toast.error("Failed to remove sponsorship.");
+      console.error(err);
+      toast.error(t("failed_remove_sponsorship"));
     }
   };
 
   return (
     <div className="min-h-screen p-6 bg-alice mt-20">
-      <h1 className="text-3xl font-bold text-caribbean mb-6">Manage Sponsorships</h1>
+      <h1 className="text-3xl font-bold text-caribbean mb-6">
+        {t("manage_sponsorships")}
+      </h1>
 
       {loading ? (
         <div className="h-screen flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading Sponsorship...</p>
-      </div>
+          <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
+          <p className="mt-4 text-caribbean font-medium animate-pulse">
+            {t("loading_sponsorships")}
+          </p>
+        </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
           {/* Sub List */}
           <div>
-            <h2 className="text-xl font-semibold mb-2">Forum Subs</h2>
+            <h2 className="text-xl font-semibold mb-2">{t("forum_subs")}</h2>
             <ul className="space-y-2">
               {subs.map((sub) => {
                 const now = new Date();
-                let status = sub.isSponsored ? "Active" : "None";
+                let status = sub.isSponsored ? t("status_active") : t("status_none");
                 if (sub.isSponsored && sub.endDate && new Date(sub.endDate) < now)
-                  status = "Expired";
+                  status = t("status_expired");
                 else if (sub.isSponsored && sub.endDate && new Date(sub.endDate) - now < 3 * 24 * 60 * 60 * 1000)
-                  status = "Expiring Soon";
+                  status = t("status_expiring_soon");
 
                 return (
                   <li
@@ -129,7 +130,7 @@ const AdminSponsorships = () => {
                         onClick={() => handleRemove(sub._id)}
                         className="btn btn-sm bg-red-500 text-white hover:bg-red-600"
                       >
-                        Remove
+                        {t("remove")}
                       </button>
                     )}
                   </li>
@@ -140,7 +141,9 @@ const AdminSponsorships = () => {
 
           {/* Sponsorship Form */}
           <div>
-            <h2 className="text-xl font-semibold mb-2">Add / Edit Sponsorship</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {t("add_edit_sponsorship")}
+            </h2>
             <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-md space-y-3">
               <select
                 name="subId"
@@ -148,7 +151,7 @@ const AdminSponsorships = () => {
                 onChange={handleSubSelect}
                 className="select w-full"
               >
-                <option value="">Select Forum Sub</option>
+                <option value="">{t("select_forum_sub")}</option>
                 {subs.map((sub) => (
                   <option key={sub._id} value={sub._id}>
                     {sub.title}
@@ -161,7 +164,7 @@ const AdminSponsorships = () => {
                 name="sponsorName"
                 value={form.sponsorName}
                 onChange={handleChange}
-                placeholder="Sponsor Name"
+                placeholder={t("sponsor_name")}
                 className="input w-full"
               />
               <input
@@ -169,7 +172,7 @@ const AdminSponsorships = () => {
                 name="sponsorLogo"
                 value={form.sponsorLogo}
                 onChange={handleChange}
-                placeholder="Sponsor Logo URL"
+                placeholder={t("sponsor_logo")}
                 className="input w-full"
               />
               <input
@@ -177,7 +180,7 @@ const AdminSponsorships = () => {
                 name="sponsorMessage"
                 value={form.sponsorMessage}
                 onChange={handleChange}
-                placeholder="Sponsor Message"
+                placeholder={t("sponsor_message")}
                 className="input w-full"
               />
               <input
@@ -185,7 +188,7 @@ const AdminSponsorships = () => {
                 name="sponsorWebsite"
                 value={form.sponsorWebsite}
                 onChange={handleChange}
-                placeholder="Sponsor Website"
+                placeholder={t("sponsor_website")}
                 className="input w-full"
               />
               <div className="flex gap-2">
@@ -206,7 +209,7 @@ const AdminSponsorships = () => {
               </div>
 
               <button type="submit" className="btn bg-caribbean text-white w-full hover:bg-tufts">
-                Save Sponsorship
+                {t("save_sponsorship")}
               </button>
             </form>
           </div>

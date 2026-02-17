@@ -1,6 +1,9 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
-const SaveButton = ({ loading }) => (
+const SaveButton = ({ loading }) => {
+  const { t } = useTranslation();
+
   <div className="card bg-white shadow-md p-6">
     <button
       type="submit"
@@ -15,10 +18,10 @@ const SaveButton = ({ loading }) => (
           Saving...
         </>
       ) : (
-        'Save Changes'
+        t("saving")
       )}
     </button>
   </div>
-);
+};
 
 export default SaveButton;

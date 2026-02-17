@@ -6,6 +6,7 @@ import { useForum } from "../../context/ForumContext";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import CommentItem from "./CommentItem";
+import { useTranslation } from "react-i18next";
 
 const COMMENTS_PER_PAGE = 5;
 
@@ -17,7 +18,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
   const [editingContent, setEditingContent] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [displayedCount, setDisplayedCount] = useState(COMMENTS_PER_PAGE);
-
+  const { t } = useTranslation();
   const { updatePostComments } = useForum();
 
   useEffect(() => {
@@ -43,7 +44,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    if (!user?._id) return toast.error("Login to comment");
+    if (!user?._id) return toast.error(t("login_to_comment"));
 
     try {
       setAdding(true);
@@ -51,21 +52,22 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
         content: newComment.trim(),
       });
 
-      toast.success("Comment added");
+      toast.success(t("comment_added"));
       setNewComment("");
       setDisplayedCount(COMMENTS_PER_PAGE);
       updatePostComments(post.postId, res.data.comments);
       fetchPost();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to add comment");
+      toast.error(t("failed_add_comment"));
     } finally {
       setAdding(false);
     }
   };
   /* ----------------------- Reply Comment ----------------------- */
   const handleReply = async (parentId, content) => {
-  if (!user?._id) return toast.error("Login to reply");
+  if (!user?._id) return toast.error(t("login_to_reply"));
+
 
   try {
     const res = await API.post(
@@ -77,7 +79,8 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
     fetchPost();
   } catch (err) {
     console.error(err);
-    toast.error("Failed to post reply");
+    toast.error(t("failed_post_reply"));
+
   }
 };
 
@@ -89,18 +92,18 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
     let undoClicked = false;
 
-    const toastUndo = toast((t) => (
+    const toastUndo = toast((tToast) => (
       <div className="flex items-center gap-3">
-        <span>Comment deleted</span>
+        <span>{t("comment_deleted")}</span>
         <button
           onClick={() => {
             undoClicked = true;
             setComments(backup);
-            toast.dismiss(t.id);
+            toast.dismiss(tToast.id);
           }}
           className="text-blue-500 underline"
         >
-          Undo
+          {t("undo")}
         </button>
       </div>
     ));
@@ -120,7 +123,8 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
       } catch (err) {
         console.error(err);
         setComments(backup);
-        toast.error("Failed to delete comment");
+        toast.error(t("failed_delete_comment"));
+
       }
     }, 5000);
   };
@@ -138,7 +142,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
   const saveEdit = async (commentId) => {
     if (!editingContent.trim()) {
-      toast.error("Comment cannot be empty");
+      toast.error(t("comment_empty"));
       return;
     }
 
@@ -148,13 +152,13 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
         { content: editingContent.trim() }
       );
 
-      toast.success("Comment updated");
+      toast.success(t("comment_updated"));
       cancelEdit();
       updatePostComments(post.postId, res.data.comments);
       fetchPost();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update comment");
+      toast.error(t("failed_update_comment"));
     }
   };
 
@@ -185,7 +189,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
     <div className="mt-6 bg-white shadow-sm rounded-xl p-4">
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-lg font-bold">
-          Comments ({totalCommentCount})
+          {t("comments")} ({totalCommentCount})
         </h3>
 
         {post.comments?.length > 0 && (
@@ -197,8 +201,9 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
             }}
             className="text-sm border rounded px-2 py-1"
           >
-            <option value="newest">Newest First</option>
-            <option value="oldest">Oldest First</option>
+            <option value="newest">{t("newest_first")}</option>
+            <option value="oldest">{t("oldest_first")}</option>
+
           </select>
         )}
       </div>
@@ -222,7 +227,9 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
           />
         ))
       ) : (
-        <p className="text-gray-500 text-sm">No comments yet. Be the first to add</p>
+        <p className="text-gray-500 text-sm">
+          {t("no_comments_yet")}
+        </p>
       )}
 
 
@@ -233,14 +240,17 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
           }
           className="w-full mt-3 py-2 font-medium hover:bg-gray-100 rounded-lg"
         >
-          Load more ({displayedCount}/{sortedComments.length})
+          {t("load_more")} ({displayedCount}/{sortedComments.length})
         </button>
       )}
 
       <form onSubmit={handleAddComment} className="flex gap-2 mt-4">
         <input
           type="text"
-          placeholder={user?._id ? "Add a comment…" : "Login to comment"}
+          placeholder={user?._id
+            ? t("add_comment_placeholder")
+            : t("login_to_comment")
+          }
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           className="flex-1 border rounded-lg p-2"
@@ -251,7 +261,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
           disabled={adding || !user?._id}
           className="bg-caribbean text-white px-4 py-2 rounded-lg"
         >
-          {adding ? "Posting…" : "Post"}
+          {adding ? t("posting") : t("post")}
         </button>
       </form>
     </div>

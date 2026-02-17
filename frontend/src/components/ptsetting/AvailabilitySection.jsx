@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const AvailabilitySection = ({ formData, handleChange }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   const availability = formData.availability || {
     isAcceptingNewPatients: true,
@@ -32,7 +34,7 @@ const AvailabilitySection = ({ formData, handleChange }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Availability</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("availability")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -53,13 +55,13 @@ const AvailabilitySection = ({ formData, handleChange }) => {
               }
               className="checkbox checkbox-primary"
             />
-            <span className="text-gray-700">Accepting New Patients</span>
+            <span className="text-gray-700">{t("pt_accepting_new_patients")}</span>
           </label>
 
           {/* Next Available Date */}
           <div>
             <label className="text-gray-700 font-medium">
-              Next Available Date
+              {t("pt_next_available_date")}
             </label>
             <input
               type="date"
@@ -78,7 +80,7 @@ const AvailabilitySection = ({ formData, handleChange }) => {
             />
             {availability.isAcceptingNewPatients && (
               <p className="text-sm text-gray-500 mt-1">
-                Since you are accepting new patients, next available date is not required.
+                {t("next_available_date_required")}
               </p>
             )}
           </div>

@@ -1,12 +1,15 @@
 import { ArrowLeft, PhoneIcon } from "lucide-react";
 import { ASSET_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
+import { useTranslation } from "react-i18next";
+
 
 export default function ConversationHeader({
   otherUser,
   isOtherUserOnline,
   navigateBack,
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-between p-4 bg-base-300 border-b border-base-300">
       <div className="flex items-center gap-3">
@@ -22,20 +25,20 @@ export default function ConversationHeader({
                   ? otherUser?.profileImageUrl
                   : avatar
               }
-              alt="User"
+              alt={t("user")}
             />
           </div>
         </div>
 
         <div className="flex flex-col">
           <span className="font-semibold text-lg">
-            {otherUser?.fullName || "User"}
+            {otherUser?.fullName || t("user")}
           </span>
           <span className="text-xs text-gray-500">
             {isOtherUserOnline ? (
-              <span className="text-caribbean">Online</span>
+              <span className="text-caribbean">{t("online")}</span>
             ) : (
-              <span className="text-gray-400">Offline</span>
+              <span className="text-gray-400">{t("offline")}</span>
             )}
           </span>
         </div>

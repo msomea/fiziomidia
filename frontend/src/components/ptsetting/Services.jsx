@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, X, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const Services = ({ formData, setFormData }) => {
+  const { t } = useTranslation();
   const [services, setServices] = useState(formData.services || []);
   const [newService, setNewService] = useState({
     name: '',
@@ -23,31 +25,30 @@ const Services = ({ formData, setFormData }) => {
 
   const addService = () => {
     if (!newService.name || !newService.description || !newService.duration || !newService.price) {
-      toast.error('Please fill in all service details');
+      toast.error(t('fill_all_service_fields'));
       return;
     }
     if (isNaN(newService.duration)) {
-      toast.error('Duration must be a number');
+      toast.error(t('duration_must_be_number'));
       return;
     }
     if (isNaN(newService.price)) {
-      toast.error('Price must be a number');
+      toast.error(t('price_must_be_number'));
       return;
     }
 
     const updatedServices = [...services, newService];
     setServices(updatedServices);
     setFormData(prev => ({ ...prev, services: updatedServices }));
-
     setNewService({ name: '', description: '', duration: '', price: '' });
-    toast.success('Service added successfully');
+    toast.success(t('service_added'));
   };
 
   const removeService = (index) => {
     const updatedServices = services.filter((_, i) => i !== index);
     setServices(updatedServices);
     setFormData(prev => ({ ...prev, services: updatedServices }));
-    toast.success('Service removed');
+    toast.success(t('service_removed'));
   };
 
   return (
@@ -59,7 +60,7 @@ const Services = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Services</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t('services')}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -88,8 +89,8 @@ const Services = ({ formData, setFormData }) => {
                   </div>
                   <p className="text-sm text-gray-600 mt-1">{service.description}</p>
                   <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                    <span>{service.duration} minutes</span>
-                    <span>Tsh {service.price}</span>
+                    <span>{service.duration} {t('minutes')}</span>
+                    <span>{t('currency')} {service.price}</span>
                   </div>
                 </div>
               </div>
@@ -104,7 +105,7 @@ const Services = ({ formData, setFormData }) => {
                 name="name"
                 value={newService.name}
                 onChange={handleNewServiceChange}
-                placeholder="Service Name"
+                placeholder={t('service_name')}
                 className="input input-bordered w-full text-sm"
               />
               <input
@@ -112,7 +113,7 @@ const Services = ({ formData, setFormData }) => {
                 name="duration"
                 value={newService.duration}
                 onChange={handleNewServiceChange}
-                placeholder="Duration (minutes)"
+                placeholder={t('duration_placeholder')}
                 className="input input-bordered w-full text-sm"
               />
               <input
@@ -120,14 +121,14 @@ const Services = ({ formData, setFormData }) => {
                 name="price"
                 value={newService.price}
                 onChange={handleNewServiceChange}
-                placeholder="Price (Tsh)"
+                placeholder={t('price_placeholder')}
                 className="input input-bordered w-full text-sm"
               />
               <textarea
                 name="description"
                 value={newService.description}
                 onChange={handleNewServiceChange}
-                placeholder="Service Description"
+                placeholder={t('service_description')}
                 className="input input-bordered w-full text-sm md:col-span-2"
               />
             </div>
@@ -138,7 +139,7 @@ const Services = ({ formData, setFormData }) => {
               className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
             >
               <Plus size={18} />
-              Add Service
+              {t('add_service')}
             </button>
           </div>
 

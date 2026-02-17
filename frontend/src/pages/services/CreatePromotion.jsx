@@ -4,25 +4,29 @@ import { useAuth } from "../../context/AuthContext";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import { toast } from "react-hot-toast";
-import { ImagePlus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function CreatePromotion() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   if (user.role !== "physiotherapist") {
     return (
       <div className="pt-24 pb-16 text-center">
-        <h2 className="text-2xl font-bold">Access Denied</h2>
-        <p className="text-gray-600">Only physiotherapists can create promotions.</p>
+        <h2 className="text-2xl font-bold">{t("access_denied")}</h2>
+        <p className="text-gray-600">
+          {t("only_physio_create_promotion")}
+        </p>
       </div>
     );
   }
 
   const promotionOptions = {
-    Silver: { duration: "7 days", price: 20000 },
-    Gold: { duration: "2 weeks", price: 50000 },
-    Platinum: { duration: "1 month", price: 100000 },
+    silver: { duration: "7_days", price: 20000 },
+    gold: { duration: "14_days", price: 50000 },
+    platinum: { duration: "30_days", price: 100000 },
   };
 
   const [form, setForm] = useState({
@@ -36,13 +40,16 @@ export default function CreatePromotion() {
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Update price/duration when title changes
   useEffect(() => {
     if (form.title && promotionOptions[form.title]) {
       const { duration, price } = promotionOptions[form.title];
-      setForm((prev) => ({ ...prev, duration, price }));
+      setForm((prev) => ({
+        ...prev,
+        duration: t(duration),
+        price,
+      }));
     }
-  }, [form.title]);
+  }, [form.title, t]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -58,7 +65,7 @@ export default function CreatePromotion() {
     e.preventDefault();
 
     if (!form.title || !form.description) {
-      return toast.error("Please fill all required fields");
+      return toast.error(t("fill_required_fields"));
     }
 
     try {
@@ -70,18 +77,17 @@ export default function CreatePromotion() {
       fd.append("price", form.price);
       fd.append("duration", form.duration);
 
-      // Only append image if user uploaded one
       if (image) fd.append("image", image);
 
       await API.post(`${API_URL}/promotions/create`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      toast.success("Promotion created successfully!");
+      toast.success(t("promotion_created_success"));
       navigate("/services");
     } catch (err) {
       console.error(err);
-      toast.error("Failed to create promotion");
+      toast.error(t("promotion_create_failed"));
     } finally {
       setLoading(false);
     }
@@ -90,7 +96,7 @@ export default function CreatePromotion() {
   return (
     <div className="pt-24 pb-16 text-tufts px-4 max-w-3xl mx-auto">
       <h1 className="text-3xl font-bold mb-8 text-caribbean text-center">
-        Create Promotion
+        {t("create_promotion")}
       </h1>
 
       <form
@@ -99,7 +105,7 @@ export default function CreatePromotion() {
       >
         {/* Title */}
         <div>
-          <label className="font-semibold">Title</label>
+          <label className="font-semibold">{t("title")}</label>
           <select
             name="title"
             value={form.title}
@@ -108,11 +114,11 @@ export default function CreatePromotion() {
             required
           >
             <option value="" disabled>
-              Select Promotion Level
+              {t("select_promotion_level")}
             </option>
             {Object.keys(promotionOptions).map((level) => (
               <option key={level} value={level}>
-                {level}
+                {t(level)}
               </option>
             ))}
           </select>
@@ -120,11 +126,10 @@ export default function CreatePromotion() {
 
         {/* Price */}
         <div>
-          <label className="font-semibold">Price (TZS)</label>
+          <label className="font-semibold">{t("price")} (TZS)</label>
           <input
             type="number"
             name="price"
-            placeholder="Enter price"
             value={form.price}
             readOnly
             className="input input-bordered w-full mt-1 bg-gray-100 text-caribbean"
@@ -133,11 +138,10 @@ export default function CreatePromotion() {
 
         {/* Duration */}
         <div>
-          <label className="font-semibold">Duration</label>
+          <label className="font-semibold">{t("duration")}</label>
           <input
             type="text"
             name="duration"
-            placeholder="Duration"
             value={form.duration}
             readOnly
             className="input input-bordered w-full mt-1 bg-gray-100 text-caribbean"
@@ -146,11 +150,11 @@ export default function CreatePromotion() {
 
         {/* Description */}
         <div>
-          <label className="font-semibold">Description</label>
+          <label className="font-semibold">{t("description")}</label>
           <textarea
             name="description"
             rows="4"
-            placeholder="Describe the promotion details"
+            placeholder={t("promotion_description_placeholder")}
             value={form.description}
             onChange={handleChange}
             className="textarea textarea-bordered w-full mt-1"
@@ -160,21 +164,14 @@ export default function CreatePromotion() {
 
         {/* Image Upload */}
         <div>
-          <label className="font-semibold">Promotion Image</label>
+          <label className="font-semibold">{t("promotion_image")}</label>
+
           <div className="mt-2">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-full h-48 object-cover rounded-lg border"
-              />
-            ) : (
-              <img
-                src={user.profileImageUrl} // fallback to user profile
-                alt="Profile Fallback"
-                className="w-full h-48 object-cover rounded-lg border"
-              />
-            )}
+            <img
+              src={imagePreview || user.profileImageUrl}
+              alt="Preview"
+              className="w-full h-48 object-cover rounded-lg border"
+            />
           </div>
 
           <input
@@ -185,7 +182,7 @@ export default function CreatePromotion() {
           />
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
@@ -193,10 +190,11 @@ export default function CreatePromotion() {
         >
           {loading ? (
             <span className="flex items-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" /> Creating...
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {t("creating")}
             </span>
           ) : (
-            "Create Promotion"
+            t("create_promotion")
           )}
         </button>
       </form>

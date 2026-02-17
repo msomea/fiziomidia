@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PTServices = ({ services }) => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const { t } = useTranslation();
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <button
@@ -11,7 +12,7 @@ const PTServices = ({ services }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center mb-3"
       >
-        <h2 className="text-xl font-bold text-caribbean">Services</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("services")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -22,7 +23,7 @@ const PTServices = ({ services }) => {
       {isOpen && (
         <>
           {!services || services.length === 0 ? (
-            <p className="text-gray-700 text-sm md:text-base">No services available.</p>
+            <p className="text-gray-700 text-sm md:text-base">{t("no_services_available")}</p>
           ) : (
             <div className="space-y-4">
               {services.map((service, index) => (

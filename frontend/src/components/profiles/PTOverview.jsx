@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PTOverview = ({ overview }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
+
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
       <button
@@ -10,7 +13,7 @@ const PTOverview = ({ overview }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center mb-3"
       >
-        <h2 className="text-xl font-bold text-caribbean">About</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("about")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -19,7 +22,7 @@ const PTOverview = ({ overview }) => {
       </button>
 
       {isOpen && (
-        <p className="text-gray-700 leading-relaxed text-sm md:text-base">{overview || "No overview available."}</p>
+        <p className="text-gray-700 leading-relaxed text-sm md:text-base">{overview || t("no_overview_available")}</p>
       )}
     </section>
   );

@@ -133,7 +133,7 @@ const CreatePost = () => {
               <ArrowBigLeftIcon />
             </button>
             <span className="text-sm text-gray-600">
-              {t("page")} {page} {t("of")} {totalPages}
+              {t("page")} {page} {t("ofto")} {totalPages}
             </span>
             <button
               className="btn btn-sm text-accent border border-caribbean"

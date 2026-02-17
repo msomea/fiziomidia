@@ -1,31 +1,31 @@
 import React, { useState, useEffect, useRef } from "react";
 import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL, ASSET_URL } from "../../config/constants";
-import { Link } from "react-router";
+import { API_URL } from "../../config/constants";
+import { useTranslation } from "react-i18next";
 
 const ITEMS_PER_PAGE = 4;
 const AUTO_PLAY_INTERVAL = 6000;
 
 export default function SponsoredProductList() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const intervalRef = useRef(null);
   const [containerHeight, setContainerHeight] = useState(0);
   const itemsRef = useRef(null);
 
-  // Fetch sponsored products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const res = await API.get(`${API_URL}/sponsored-products`);
         setProducts(res.data.products || []);
       } catch (err) {
-        console.error("Failed to load sponsored products:", err);
+        console.error(t("failed_load_sponsored"), err);
       }
     };
     fetchProducts();
-  }, []);
+  }, [t]);
 
   const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
 
@@ -36,7 +36,7 @@ export default function SponsoredProductList() {
       if (height > containerHeight) setContainerHeight(height);
     }
     return () => stopAutoPlay();
-  }, [page, products]);
+  }, [page, products, containerHeight]);
 
   const startAutoPlay = () => {
     stopAutoPlay();
@@ -69,7 +69,7 @@ export default function SponsoredProductList() {
   return (
     <section className="max-w-7xl mt-4 mx-auto px-4 py-14">
       <h2 className="text-3xl font-bold text-caribbean mb-10 text-center">
-        Sponsored Products
+        {t("sponsored_products")}
       </h2>
 
       <div
@@ -85,13 +85,12 @@ export default function SponsoredProductList() {
                   key={item._id || idx}
                   className="bg-white rounded-2xl shadow p-5 hover:shadow-lg transition flex flex-col items-center text-center"
                 >
-                  {/* Product Image */}
                   <div className="w-56 h-56 rounded-xl overflow-hidden ring ring-caribbean ring-offset-base-100 ring-offset-2 mb-4">
                     <img
                       src={item.image}
                       alt={item.name}
                       className="w-full h-full object-cover"
-                      onError={(e) => (e.target.src = avatar)}
+                      onError={(e) => (e.target.src = "/assets/avatar.jpg")}
                     />
                   </div>
 
@@ -104,10 +103,9 @@ export default function SponsoredProductList() {
                   </p>
 
                   <p className="text-sm text-gray-600 mt-2 line-clamp-3">
-                    {item.description || "No description provided."}
+                    {item.description || t("no_description")}
                   </p>
 
-                  {/* CTA */}
                   {item.link && (
                     <a
                       href={`https://${item.link}`}
@@ -115,20 +113,19 @@ export default function SponsoredProductList() {
                       rel="noopener noreferrer"
                       className="btn btn-sm bg-caribbean text-white w-full mt-4 hover:bg-tufts"
                     >
-                      View Product
+                      {t("view_product")}
                     </a>
                   )}
                 </div>
               ))
             ) : (
               <p className="col-span-full text-center text-gray-500">
-                No sponsored products available.
+                {t("no_sponsored_products")}
               </p>
             )}
           </div>
         </div>
 
-        {/* Buttons */}
         {totalPages > 1 && (
           <>
             <button
@@ -148,7 +145,6 @@ export default function SponsoredProductList() {
         )}
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-center mt-6 space-x-2">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button

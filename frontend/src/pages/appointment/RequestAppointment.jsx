@@ -5,9 +5,10 @@ import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
-import { requestAppointment } from "../../api/appointments";
+import { useTranslation } from "react-i18next";
 
 export default function BookAppointment() {
+  const { t } = useTranslation();
   const { ptId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -18,7 +19,6 @@ export default function BookAppointment() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch PT details
   useEffect(() => {
     const fetchPt = async () => {
       try {
@@ -26,16 +26,17 @@ export default function BookAppointment() {
         setPt(res.data);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load physiotherapist details");
+        toast.error(t("failed_load_pt"));
       }
     };
     fetchPt();
-  }, [ptId]);
+  }, [ptId, t]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!date || !time) {
-      return toast.error("Please select both date and time");
+      return toast.error(t("select_date_time"));
     }
 
     setLoading(true);
@@ -47,12 +48,13 @@ export default function BookAppointment() {
         time,
         notes,
       });
-      toast.success("Appointment booked successfully");
+
+      toast.success(t("appointment_booked_success"));
       navigate(`/dashboard/member/${user._id}`);
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.response?.data?.message || "Failed to book appointment"
+        error?.response?.data?.message || t("failed_book_appointment")
       );
     } finally {
       setLoading(false);
@@ -70,25 +72,31 @@ export default function BookAppointment() {
   return (
     <div className="max-w-lg mx-auto p-6 bg-white text-tufts rounded-lg shadow-md mt-20">
       <h2 className="text-2xl text-caribbean font-semibold mb-4">
-        Book Appointment with {pt.fullName}
+        {t("book_appointment_with", { name: pt.fullName })}
       </h2>
+
       <p className="mb-6 text-gray-600">{pt.specialization}</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
         <div>
-          <label className="block mb-1 font-medium">Select Date</label>
+          <label className="block mb-1 font-medium">
+            {t("select_date")}
+          </label>
           <input
             type="date"
             className="w-full border p-2 rounded"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]} // can't book past
+            min={new Date().toISOString().split("T")[0]}
             required
           />
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Select Time</label>
+          <label className="block mb-1 font-medium">
+            {t("select_time")}
+          </label>
           <input
             type="time"
             className="w-full border p-2 rounded"
@@ -99,12 +107,14 @@ export default function BookAppointment() {
         </div>
 
         <div>
-          <label className="block mb-1 font-medium">Notes (Optional)</label>
+          <label className="block mb-1 font-medium">
+            {t("notes_optional")}
+          </label>
           <textarea
             className="w-full border p-2 rounded"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Any additional info..."
+            placeholder={t("additional_info_placeholder")}
           />
         </div>
 
@@ -116,7 +126,7 @@ export default function BookAppointment() {
           disabled={loading}
         >
           {loading ? <Loader2 className="animate-spin mr-2" /> : null}
-          Book Appointment
+          {t("book_appointment")}
         </button>
       </form>
     </div>

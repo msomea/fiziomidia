@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { useTranslation } from "react-i18next";
 import ProfileBadge from "../Badge";
 
 const CommentItem = ({
@@ -20,6 +20,7 @@ const CommentItem = ({
   saveEdit,
   depth = 1
 }) => {
+  const { t } = useTranslation();
   const [replying, setReplying] = useState(false);
   const [replyContent, setReplyContent] = useState("");
   
@@ -94,13 +95,13 @@ const CommentItem = ({
                     onClick={() => saveEdit(comment._id)}
                     className="text-sm text-caribbean font-medium"
                   >
-                    Save
+                    {t("save")}
                   </button>
                   <button
                     onClick={cancelEdit}
                     className="text-sm text-gray-500"
                   >
-                    Cancel
+                    {t("cancel")}
                   </button>
                 </div>
               </>
@@ -112,17 +113,17 @@ const CommentItem = ({
           {/* ---------------- Actions ---------------- */}
           <div className="flex gap-3 mt-1 text-xs text-gray-500">
             {user?._id && !isLevel3 && (
-              <button onClick={() => setReplying(!replying)}>Reply</button>
+              <button onClick={() => setReplying(!replying)}>{t("reply")}</button>
             )}
 
             {canDelete && !isEditing && (
               <>
-                {isAuthor && <button onClick={() => onEdit(comment)}>Edit</button>}
+                {isAuthor && <button onClick={() => onEdit(comment)}>{t("edit")}</button>}
                 <button
                   onClick={() => onDelete(comment._id)}
                   className="text-red-500"
                 >
-                  Delete
+                  {t("delete")}
                 </button>
               </>
             )}
@@ -142,13 +143,13 @@ const CommentItem = ({
                   onClick={submitReply}
                   className="text-sm text-caribbean font-medium"
                 >
-                  Reply
+                  {t("reply")}
                 </button>
                 <button
                   onClick={() => setReplying(false)}
                   className="text-sm text-gray-500"
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
               </div>
             </div>

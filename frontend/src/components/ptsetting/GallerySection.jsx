@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ASSET_URL } from "../../config/constants";
 
 const GallerySection = ({ formData, setFormData }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   // Generate previews from formData.gallery
@@ -20,19 +22,17 @@ const GallerySection = ({ formData, setFormData }) => {
       file: null,
     };
   });
+
   const handleGalleryChange = (e) => {
     const files = Array.from(e.target.files || []).map((file) => ({
       file,
       caption: "",
     }));
 
-    // Update gallery in formData
     setFormData((prev) => ({
       ...prev,
       gallery: [...(prev.gallery || []), ...files],
     }));
-
-  // files are tracked inside formData.gallery; no parent sync needed
   };
 
   const handleCaptionChange = (index, value) => {
@@ -41,8 +41,6 @@ const GallerySection = ({ formData, setFormData }) => {
       updatedGallery[index] = { ...updatedGallery[index], caption: value };
       return { ...prev, gallery: updatedGallery };
     });
-
-    // captions are stored in formData.gallery so no extra sync required
   };
 
   const removeImage = (index) => {
@@ -51,8 +49,6 @@ const GallerySection = ({ formData, setFormData }) => {
       updatedGallery.splice(index, 1);
       return { ...prev, gallery: updatedGallery };
     });
-
-    // removed from formData.gallery above; nothing else to do
   };
 
   return (
@@ -62,7 +58,7 @@ const GallerySection = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Gallery</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("gallery")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -93,12 +89,12 @@ const GallerySection = ({ formData, setFormData }) => {
                   </button>
                   <img
                     src={p.src}
-                    alt={`Gallery ${index}`}
+                    alt={`${t("gallery_image_alt")} ${index + 1}`}
                     className="w-full h-24 object-cover rounded"
                   />
                   <input
                     type="text"
-                    placeholder="Caption"
+                    placeholder={t("caption")}
                     value={formData.gallery[index]?.caption || ""}
                     onChange={(e) =>
                       handleCaptionChange(index, e.target.value)

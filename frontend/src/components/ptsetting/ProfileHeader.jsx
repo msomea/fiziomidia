@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { ASSET_URL} from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
+import { useTranslation } from "react-i18next";
 
 const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) => {
   const [isOpen, setIsOpen] = useState(false);
-
+  const { t } = useTranslation();
   const { region, district, ward, street } = location || {};
   const formattedLocation = [region, district, ward, street].filter(Boolean).join(" > ");
 
@@ -38,7 +39,7 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
               accept="image/*"
               onChange={handleImageChange}
             />
-            <span className="text-xs">Edit</span>
+            <span className="text-xs">{t("edit")}</span>
           </label>
         </div>
 
@@ -59,7 +60,7 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
             onClick={() => setIsOpen(!isOpen)}
             className="w-full flex justify-between items-center mb-4"
           >
-            <h2 className="text-xl font-bold text-caribbean">Profile Details</h2>
+            <h2 className="text-xl font-bold text-caribbean">{t("profile_details")}</h2>
             <ChevronDown
               className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
                 isOpen ? "rotate-180" : ""

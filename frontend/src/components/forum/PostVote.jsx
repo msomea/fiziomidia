@@ -3,13 +3,14 @@ import { ThumbsUp, ThumbsDown } from "lucide-react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const PostVote = ({ post, user, refreshPost }) => {
   const [loading, setLoading] = useState(false);
-
+  const { t } = useTranslation();
   const handleVote = async (voteValue) => {
     if (!user?._id) {
-      toast.error("You must be logged in to vote");
+      toast.error(t("must_be_logged_in_to_vote"));
       return;
     }
 
@@ -21,7 +22,7 @@ const PostVote = ({ post, user, refreshPost }) => {
       refreshPost();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to vote");
+      toast.error(t("failed_to_vote"));
     } finally {
       setLoading(false);
     }

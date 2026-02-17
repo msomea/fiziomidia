@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const Education = ({ formData, setFormData }) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-
   const [educationList, setEducationList] = useState(formData.education || []);
   const [newEducation, setNewEducation] = useState({
     institution: "",
@@ -32,12 +33,12 @@ const Education = ({ formData, setFormData }) => {
 
   const addEducation = () => {
     if (!newEducation.institution || !newEducation.degree || !newEducation.startYear) {
-      toast.error("Please fill in all required fields");
+      toast.error(t("please_fill_required"));
       return;
     }
 
     if (newEducation.endYear && !validateYears(newEducation.startYear, newEducation.endYear)) {
-      toast.error("End year must be after start year");
+      toast.error(t("end_after_start"));
       return;
     }
 
@@ -54,14 +55,14 @@ const Education = ({ formData, setFormData }) => {
       certificateUrl: "",
     });
 
-    toast.success("Education added");
+    toast.success(t("education_added"));
   };
 
   const removeEducation = (index) => {
     const updated = educationList.filter((_, i) => i !== index);
     setEducationList(updated);
     setFormData((prev) => ({ ...prev, education: updated }));
-    toast.success("Education removed");
+    toast.success(t("education_removed"));
   };
 
   const currentYear = new Date().getFullYear();
@@ -76,7 +77,7 @@ const Education = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Education</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("education")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -102,7 +103,7 @@ const Education = ({ formData, setFormData }) => {
                     onClick={() => removeEducation(index)}
                     className="text-red-500 hover:text-red-700"
                   >
-                    <X size={18} />
+                    <X size={18} /> {t("remove")}
                   </button>
                 </div>
 
@@ -113,7 +114,7 @@ const Education = ({ formData, setFormData }) => {
                 </p>
 
                 {edu.field && (
-                  <p className="text-sm text-gray-600">Field: {edu.field}</p>
+                  <p className="text-sm text-gray-600">{t("field_of_study")}: {edu.field}</p>
                 )}
 
                 {edu.certificateUrl && (
@@ -123,7 +124,7 @@ const Education = ({ formData, setFormData }) => {
                     rel="noopener noreferrer"
                     className="text-sm text-caribbean hover:text-tufts mt-2 inline-block"
                   >
-                    View Certificate
+                    {t("view_certificate")}
                   </a>
                 )}
               </div>
@@ -139,7 +140,7 @@ const Education = ({ formData, setFormData }) => {
               name="institution"
               value={newEducation.institution}
               onChange={handleNewEducationChange}
-              placeholder="Institution Name *"
+              placeholder={t("institution_name")}
               className="input input-bordered w-full text-sm"
             />
 
@@ -148,7 +149,7 @@ const Education = ({ formData, setFormData }) => {
               name="degree"
               value={newEducation.degree}
               onChange={handleNewEducationChange}
-              placeholder="Degree/Certificate Title *"
+              placeholder={t("degree_title")}
               className="input input-bordered w-full text-sm"
             />
 
@@ -157,7 +158,7 @@ const Education = ({ formData, setFormData }) => {
               name="field"
               value={newEducation.field}
               onChange={handleNewEducationChange}
-              placeholder="Field of Study"
+              placeholder={t("field_of_study")}
               className="input input-bordered w-full text-sm"
             />
 
@@ -168,7 +169,7 @@ const Education = ({ formData, setFormData }) => {
                 onChange={handleNewEducationChange}
                 className="select select-bordered w-full text-sm"
               >
-                <option value="">Start Year *</option>
+                <option value="">{t("start_year")}</option>
                 {yearOptions.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -182,7 +183,7 @@ const Education = ({ formData, setFormData }) => {
                 onChange={handleNewEducationChange}
                 className="select select-bordered w-full text-sm"
               >
-                <option value="">End Year</option>
+                <option value="">{t("end_year")}</option>
                 {yearOptions.map((year) => (
                   <option key={year} value={year}>
                     {year}
@@ -196,7 +197,7 @@ const Education = ({ formData, setFormData }) => {
               name="certificateUrl"
               value={newEducation.certificateUrl}
               onChange={handleNewEducationChange}
-              placeholder="Certificate URL"
+              placeholder={t("certificate_url")}
               className="input input-bordered w-full text-sm md:col-span-2"
             />
           </div>
@@ -206,8 +207,7 @@ const Education = ({ formData, setFormData }) => {
             onClick={addEducation}
             className="btn bg-caribbean text-white w-full hover:bg-tufts flex items-center justify-center gap-2"
           >
-            <Plus size={18} />
-            Add Education
+            <Plus size={18} /> {t("add_education")}
           </button>
         </div>
       </div>

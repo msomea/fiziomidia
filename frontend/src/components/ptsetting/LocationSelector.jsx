@@ -3,8 +3,11 @@ import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function LocationSelector({ onLocationSelect, initialLocation }) {
+  const { t } = useTranslation();
+
   const [regions, setRegions] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -16,7 +19,6 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
   const [selectedStreet, setSelectedStreet] = useState("");
 
   const [loading, setLoading] = useState(false);
-
   const [isOpen, setIsOpen] = useState(false);
 
   /* Fetch Regions */
@@ -25,10 +27,10 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       try {
         setLoading(true);
         const res = await API.get(`${API_URL}/locations/regions`);
-        if (!Array.isArray(res.data)) return toast.error("Invalid region response");
+        if (!Array.isArray(res.data)) return toast.error(t("invalid_region_response"));
         setRegions(res.data);
       } catch (err) {
-        toast.error("Failed to load regions");
+        toast.error(t("failed_load_regions"));
       } finally {
         setLoading(false);
       }
@@ -45,7 +47,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         const res = await API.get(`${API_URL}/locations/districts/${selectedRegion}`);
         setDistricts(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        toast.error("Failed to load districts");
+        toast.error(t("failed_load_districts"));
       } finally {
         setLoading(false);
       }
@@ -62,7 +64,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         const res = await API.get(`${API_URL}/locations/wards/${selectedDistrict}`);
         setWards(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        toast.error("Failed to load wards");
+        toast.error(t("failed_load_wards"));
       } finally {
         setLoading(false);
       }
@@ -79,7 +81,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         const res = await API.get(`${API_URL}/locations/streets/${selectedWard}`);
         setStreets(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        toast.error("Failed to load streets");
+        toast.error(t("failed_load_streets"));
       } finally {
         setLoading(false);
       }
@@ -105,7 +107,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Location</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("location")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -127,7 +129,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
             }}
             className="select text-white bg-caribbean select-bordered w-full"
           >
-            <option value="">Select Region</option>
+            <option value="">{t("select_region")}</option>
             {regions.map((r) => (
               <option key={r._id} value={r.name}>
                 {r.name}
@@ -146,7 +148,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
             disabled={!selectedRegion}
             className="select text-white bg-caribbean select-bordered w-full"
           >
-            <option value="">Select District</option>
+            <option value="">{t("select_district")}</option>
             {districts.map((d) => (
               <option key={d._id} value={d.name || d.district}>
                 {d.name || d.district}
@@ -164,7 +166,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
             disabled={!selectedDistrict}
             className="select text-white bg-caribbean select-bordered w-full"
           >
-            <option value="">Select Ward</option>
+            <option value="">{t("select_ward")}</option>
             {wards.map((w) => (
               <option key={w._id} value={w.name || w.ward}>
                 {w.name || w.ward}
@@ -179,7 +181,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
             disabled={!selectedWard}
             className="select text-white bg-caribbean select-bordered w-full"
           >
-            <option value="">Select Street</option>
+            <option value="">{t("select_street")}</option>
             {streets.map((s) => (
               <option key={s._id} value={s.name || s.street}>
                 {s.name || s.street}
@@ -188,7 +190,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
           </select>
 
           {loading && (
-            <p className="text-gray-400 italic animate-pulse">Loading...</p>
+            <p className="text-gray-400 italic animate-pulse">{t("loading")}</p>
           )}
         </div>
       )}

@@ -3,10 +3,12 @@ import { useNavigate, useParams } from "react-router";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function MessageRouterPage() {
   const { receiverId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const loadConversation = async () => {
@@ -42,6 +44,6 @@ export default function MessageRouterPage() {
 
   return <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
-        <p className="mt-4 text-caribbean font-medium animate-pulse">Loading...</p>
+        <p className="mt-4 text-caribbean font-medium animate-pulse">{t("loading")}</p>
       </div>;
 }

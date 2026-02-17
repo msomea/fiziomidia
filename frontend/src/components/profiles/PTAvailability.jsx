@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 const PTAvailability = ({ availability }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   if (!availability) return null;
 
@@ -14,7 +16,7 @@ const PTAvailability = ({ availability }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center mb-3"
       >
-        <h2 className="text-xl font-bold text-caribbean">Availability</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("availability")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -25,11 +27,11 @@ const PTAvailability = ({ availability }) => {
       {isOpen && (
         <div className="space-y-2">
           <p className="text-gray-700 text-sm">
-           {availability.isAcceptingNewPatients ? "Accepting New Patient" : "Not Accepting New Patient"}
+           {availability.isAcceptingNewPatients ? t("accepting_new_patients") : t("not_accepting_new_patients")}
           </p>
           {!availability.isAcceptingNewPatients && availability.nextAvailableDate && (
             <p className="text-gray-700 text-sm">
-              Next Available: {dayjs(availability.nextAvailableDate).format("DD MMM YYYY")}
+              {t("next_available_date")}: {dayjs(availability.nextAvailableDate).format("DD MMM YYYY")}
             </p>
           )}
         </div>

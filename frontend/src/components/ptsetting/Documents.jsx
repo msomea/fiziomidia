@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Plus, X, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Documents = ({ formData, setFormData }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const { t } = useTranslation();
 
   const handleDocumentUpload = (e) => {
     const files = Array.from(e.target.files || []);
@@ -24,7 +26,7 @@ const Documents = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">Documents</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("documents")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

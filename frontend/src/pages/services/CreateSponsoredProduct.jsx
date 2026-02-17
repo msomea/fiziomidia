@@ -4,8 +4,10 @@ import { toast } from "react-hot-toast";
 import { API_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 const CreateSponsoredProduct = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -32,7 +34,7 @@ const CreateSponsoredProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!image) return toast.error("Please upload a product image");
+    if (!image) return toast.error(t("upload_product_image_error"));
 
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
@@ -45,7 +47,7 @@ const CreateSponsoredProduct = () => {
       });
 
       if (res.data.success) {
-        toast.success("Sponsored product created successfully!. Wait for Admin approval.");
+        toast.success(t("sponsored_product_created_success"));
         setFormData({
           name: "",
           category: "",
@@ -56,10 +58,10 @@ const CreateSponsoredProduct = () => {
         });
         setImage(null);
         setPreview(null);
-        navigate(-1); // go back to previous page
+        navigate(-1);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      toast.error(err.response?.data?.message || t("something_went_wrong"));
     } finally {
       setLoading(false);
     }
@@ -67,82 +69,84 @@ const CreateSponsoredProduct = () => {
 
   return (
     <div className="max-w-3xl text-tufts mx-auto mt-20 bg-white p-6 shadow rounded-xl">
-      <h1 className="text-2xl text-caribbean font-bold mb-4">Create Sponsored Product</h1>
+      <h1 className="text-2xl text-caribbean font-bold mb-4">
+        {t("create_sponsored_product")}
+      </h1>
 
       <form onSubmit={handleSubmit}>
 
         {/* Title */}
-        <label className="block mb-2 font-medium">Product Name</label>
+        <label className="block mb-2 font-medium">{t("product_name")}</label>
         <input
           type="text"
           name="name"
           value={formData.name}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
-          placeholder="Enter product name"
+          placeholder={t("enter_product_name")}
         />
 
         {/* Category */}
-        <label className="block mb-2 font-medium">Category</label>
+        <label className="block mb-2 font-medium">{t("category")}</label>
         <select
           name="category"
           value={formData.category}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
         >
-          <option value="">Select category</option>
-          <option value="equipment">Physio Equipment</option>
-          <option value="digital">Digital Products</option>
-          <option value="services">Health Services</option>
-          <option value="others">Others</option>
+          <option value="">{t("select_category")}</option>
+          <option value="equipment">{t("physio_equipment")}</option>
+          <option value="digital">{t("digital_products")}</option>
+          <option value="services">{t("health_services")}</option>
+          <option value="others">{t("others")}</option>
         </select>
 
         {/* Price */}
-        <label className="block mb-2 font-medium">Price (TZS)</label>
+        <label className="block mb-2 font-medium">{t("price_tzs")}</label>
         <input
           type="number"
           name="price"
           value={formData.price}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
-          placeholder="Enter product price"
+          placeholder={t("enter_product_price")}
         />
 
         {/* Duration */}
-        <label className="block mb-2 font-medium">Promotion Duration (Days)</label>
+        <label className="block mb-2 font-medium">{t("promotion_duration_days")}</label>
         <input
           type="number"
           name="duration"
           value={formData.duration}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
-          placeholder="e.g., 7, 14, 30"
+          placeholder={t("duration_placeholder")}
         />
 
         {/* Link */}
-        <label className="block mb-2 font-medium">Product Link (Optional)</label>
+        <label className="block mb-2 font-medium">{t("product_link_optional")}</label>
         <input
           type="text"
           name="link"
           value={formData.link}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
-          placeholder="URL where users can view or buy"
+          placeholder={t("product_link_placeholder")}
         />
 
         {/* Description */}
-        <label className="block mb-2 font-medium">Product Description</label>
+        <label className="block mb-2 font-medium">{t("product_description")}</label>
         <textarea
           name="description"
           value={formData.description}
           onChange={handleChange}
           className="w-full border p-2 rounded mb-4"
           rows="4"
-          placeholder="Enter product description"
+          placeholder={t("enter_product_description")}
         ></textarea>
 
         {/* Image Upload */}
-        <label className="block mb-2 font-medium">Upload Product Image</label>
+        <label className="block mb-2 font-medium">{t("upload_product_image")}</label>
         <input type="file" accept="image/*" onChange={handleImageChange} className="mb-4" />
 
         {/* Preview */}
@@ -161,7 +165,7 @@ const CreateSponsoredProduct = () => {
           className="bg-blue-600 text-white w-full p-3 rounded-lg flex justify-center items-center gap-2"
         >
           {loading && <Loader2 className="animate-spin" />}
-          Create Sponsored Product
+          {t("create_sponsored_product")}
         </button>
       </form>
     </div>

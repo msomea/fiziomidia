@@ -1,47 +1,38 @@
 import { ShieldCheck, User, Stethoscope } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const ROLE_CONFIG = {
-  admin: {
-    label: "Admin",
-    className: "badge badge-error text-white",
-    Icon: ShieldCheck,
-  },
-  physiotherapist: {
-    label: "Physiotherapist",
-    className: "badge badge-info text-white",
-    Icon: Stethoscope,
-  },
-  member: {
-    label: "Member",
-    className: "badge badge-success text-white",
-    Icon: User,
-  },
-};
+const ROLE_CONFIG = (t) => ({
+  admin: { label: t("role_admin"), Icon: ShieldCheck, color: "text-red-600" },
+  physiotherapist: { label: t("role_physiotherapist"), Icon: Stethoscope, color: "text-blue-600" },
+  member: { label: t("role_member"), Icon: User, color: "text-green-600" },
+});
 
-const ProfileBadge = ({ role }) => {
+const ProfileBadge = ({ role, showTooltip = true }) => {
+  const { t } = useTranslation();
+
   if (!role) return null;
 
   const key = role.toLowerCase();
-  const config = ROLE_CONFIG[key];
+  const config = ROLE_CONFIG(t)[key];
 
   if (!config) return null;
 
-  const { label, className, Icon } = config;
+  const { label, Icon, color } = config;
 
   return (
-    <div className="relative group inline-flex">
-      {/* Badge */}
-      <span className={`${className} flex items-center justify-center p-2`}>
-        <Icon size={16} />
-      </span>
+    <div className="relative inline-flex">
+      {/* Only the icon */}
+      <Icon className={`${color}`} size={18} />
 
-      {/* Tooltip */}
-      <span className="absolute -top-9 left-1/2 -translate-x-1/2 
-                       whitespace-nowrap rounded bg-gray-900 px-2 py-1 
-                       text-xs text-white opacity-0 group-hover:opacity-100
-                       transition-opacity duration-200 pointer-events-none">
-        {label}
-      </span>
+      {/* Tooltip (conditionally rendered) */}
+      {showTooltip && (
+        <span className="absolute -top-8 left-1/2 -translate-x-1/2 
+                         whitespace-nowrap rounded bg-gray-900 px-2 py-1 
+                         text-xs text-white opacity-0 group-hover:opacity-100
+                         transition-opacity duration-200 pointer-events-none">
+          {label}
+        </span>
+      )}
     </div>
   );
 };

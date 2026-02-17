@@ -2,13 +2,13 @@ import React, { useState, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { ASSET_URL } from "../../config/constants";
-
+import { useTranslation } from "react-i18next";
 
 const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
+  const { t } = useTranslation();
+
   const [isOpen, setIsOpen] = useState(false);
   const [licenseList, setLicenseList] = useState(formData.licenses || []);
-  
-
 
   const [newLicense, setNewLicense] = useState({
     licenseNumber: "",
@@ -33,46 +33,42 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
 
   // File input
   const handleLicenseFileChange = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  const validTypes = [
-    "application/pdf",
-    "image/jpeg",
-    "image/png",
-    "image/jpg",
-  ];
+    const validTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ];
 
-  if (!validTypes.includes(file.type)) {
-    toast.error("Please select a PDF or image file");
-    return;
-  }
+    if (!validTypes.includes(file.type)) {
+      toast.error(t("select_pdf_image"));
+      return;
+    }
 
-  if (file.size > 2 * 1024 * 1024) {
-    toast.error("File must be under 2MB");
-    return;
-  }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error(t("file_under_2mb"));
+      return;
+    }
 
-  // Pass file to parent
-  setLicenseFile(file);
+    setLicenseFile(file);
 
-  // FIX: Save the actual file object inside newLicense
-  setNewLicense((prev) => ({
-    ...prev,
-    licenseFile: file,
-    // Do not assume backend filename; leave URL empty until server returns
-    licenseFileUrl: null,
-    licenseFileType: file.type,
-  }));
+    setNewLicense((prev) => ({
+      ...prev,
+      licenseFile: file,
+      licenseFileUrl: null,
+      licenseFileType: file.type,
+    }));
 
-  toast.success("License document selected");
-};
-
+    toast.success(t("license_selected"));
+  };
 
   // Add a license entry
   const addLicense = () => {
     if (!newLicense.licenseNumber || !newLicense.licenseFile) {
-      toast.error("Please enter license number and select a file");
+      toast.error(t("enter_license_number_file"));
       return;
     }
 
@@ -92,7 +88,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
       submittedAt: Date.now(),
     });
 
-    toast.success("License added");
+    toast.success(t("license_added"));
   };
 
   // Remove a license
@@ -100,7 +96,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
     const updated = licenseList.filter((_, i) => i !== index);
     setLicenseList(updated);
     setFormData((prev) => ({ ...prev, licenses: updated }));
-    toast.success("License removed");
+    toast.success(t("license_removed"));
   };
 
   return (
@@ -110,7 +106,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">License Information</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("license_info")}</h2>
         <ChevronDown
           className={`h-5 w-5 text-caribbean transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -138,7 +134,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                   </button>
 
                   <p className="font-semibold text-tufts">
-                    License Number: {license.licenseNumber}
+                    {t("license_number")}: {license.licenseNumber}
                   </p>
 
                   <p
@@ -154,11 +150,12 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                       }
                     `}
                   >
-                    Status: {license.verificationStatus}
+                    {t("status")}: {t(license.verificationStatus)}
                   </p>
-                  <p className="inline-block text-sm text-tufts"> {license.licenseFileType}</p>
+
+                  <p className="inline-block text-sm text-tufts">{license.licenseFileType}</p>
                   <p className="text-sm text-gray-900">{license.verificationNotes}</p>
-                 
+
                   {license.licenseFileUrl && (
                     <a
                       href={license.licenseFileUrl}
@@ -166,9 +163,8 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
                       rel="noopener noreferrer"
                       className="text-sm text-caribbean underline mt-2 block"
                     >
-                      View Document
+                      {t("view_document")}
                     </a>
-                    
                   )}
                 </div>
               ))}
@@ -178,21 +174,21 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
           {/* New License */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              License Number
+              {t("license_number")}
             </label>
             <input
               type="text"
               name="licenseNumber"
               value={newLicense.licenseNumber}
               onChange={handleNewLicenseChange}
-              placeholder="Enter your license number"
+              placeholder={t("enter_license_number")}
               className="input input-bordered w-full"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              License Document (PDF or Image)
+              {t("license_document")}
             </label>
             <input
               type="file"
@@ -207,7 +203,7 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
             onClick={addLicense}
             className="btn bg-caribbean text-white hover:bg-tufts w-full"
           >
-            Add License
+            {t("add_license")}
           </button>
         </div>
       )}

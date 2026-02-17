@@ -7,11 +7,14 @@ import avatar from "../../assets/avatar.jpg";
 import { Search } from "lucide-react";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import ProfileBadge from "../../components/Badge";
 
 export default function UsersPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const socket = getSocket(); // Use the shared socket instance
+  const socket = getSocket();
 
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -19,51 +22,34 @@ export default function UsersPage() {
   const [conversations, setConversations] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // ===============================
-  // FETCH USERS FROM BACKEND
-  // ===============================
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data } = await API.get(
-          `${API_URL}/users`,
-        );
-
+        const { data } = await API.get(`${API_URL}/users`);
         setUsers(data);
       } catch (err) {
-        toast.error("Failed to load users");
+        toast.error(t("failed_load_users"));
         console.error("Failed to fetch users:", err);
       } finally {
         setLoading(false);
       }
     };
-
     fetchUsers();
-  }, []);
+  }, [t]);
 
-  // ===============================
-  // SOCKET - Listen for online users
-  // ===============================
   useEffect(() => {
     if (!currentUser?._id) return;
 
-    const handleOnlineUsers = (userIds) => {
-      setOnlineUsers(userIds || []);
-    };
-
+    const handleOnlineUsers = (userIds) => setOnlineUsers(userIds || []);
     const handleUserOnline = (data) => {
       const userId = data?.userId || data;
-      setOnlineUsers((prev) =>
-        prev.includes(userId) ? prev : [...prev, userId]
-      );
+      setOnlineUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
     };
-
     const handleUserOffline = (data) => {
       const userId = data?.userId || data;
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     };
 
-    // Set up listeners
     socket.on("onlineUsers", handleOnlineUsers);
     socket.on("userWentOnline", handleUserOnline);
     socket.on("userWentOffline", handleUserOffline);
@@ -79,11 +65,7 @@ export default function UsersPage() {
     });
 
     socket.on("message:new", (data) => {
-      const otherUser =
-        data.sender === currentUser._id
-          ? data.receiver
-          : data.sender;
-
+      const otherUser = data.sender === currentUser._id ? data.receiver : data.sender;
       setConversations((prev) => ({
         ...prev,
         [otherUser]: {
@@ -93,18 +75,10 @@ export default function UsersPage() {
       }));
     });
 
-    // Emit joinRoom to get online users list (wait for connection)
-    const emitJoin = () => {
-      socket.emit("joinRoom", currentUser._id);
-    };
+    const emitJoin = () => socket.emit("joinRoom", currentUser._id);
+    if (socket.connected) emitJoin();
+    else socket.once("connect", emitJoin);
 
-    if (socket.connected) {
-      emitJoin();
-    } else {
-      socket.once("connect", emitJoin);
-    }
-
-    // Cleanup
     return () => {
       socket.off("onlineUsers", handleOnlineUsers);
       socket.off("userWentOnline", handleUserOnline);
@@ -112,17 +86,12 @@ export default function UsersPage() {
       socket.off("conversation:updatePreview");
       socket.off("message:new");
     };
-  }, [currentUser]);
+  }, [currentUser, socket]);
 
-  // ===============================
-  // FILTER + SORT
-  // ===============================
   const filteredUsers = useMemo(() => {
     return users
       .filter((u) => u._id !== currentUser?._id)
-      .filter((u) =>
-        u.fullName.toLowerCase().includes(search.toLowerCase())
-      )
+      .filter((u) => u.fullName.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => {
         const aTime = conversations[a._id]?.updatedAt || 0;
         const bTime = conversations[b._id]?.updatedAt || 0;
@@ -133,33 +102,26 @@ export default function UsersPage() {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        Loading users...
+        {t("loading_users")}
       </div>
     );
   }
 
-  // ===============================
-  // UX
-  // ===============================
-
   return (
-    <div className="h-screen flex flex-col  mx-auto mt-10 px-4 py-6">
+    <div className="h-screen flex flex-col mx-auto mt-10 px-4 py-6">
 
       {/* Header */}
       <div className="bg-caribbean text-white p-4 text-lg font-semibold">
-        Chats
+        {t("chats")}
       </div>
 
       {/* Search */}
       <div className="p-3 border-b">
         <div className="relative">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-white"
-          />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white" />
           <input
             type="text"
-            placeholder="Search or start new chat"
+            placeholder={t("search_or_start")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-gray-500 rounded-full outline-none text-tufts"
@@ -171,54 +133,31 @@ export default function UsersPage() {
       <div className="flex-1 overflow-y-auto bg-white">
         {filteredUsers.map((user) => {
           const isOnline = onlineUsers.includes(user._id);
-          const lastMessage =
-            conversations[user._id]?.lastMessage ||
-            "Start conversation";
+          const lastMessage = conversations[user._id]?.lastMessage || t("start_conversation");
           const time = conversations[user._id]?.updatedAt
-            ? new Date(
-                conversations[user._id].updatedAt
-              ).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
+            ? new Date(conversations[user._id].updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
             : "";
 
           return (
             <div
               key={user._id}
-              onClick={() =>
-                navigate(`/messages/user/${user._id}`)
-              }
+              onClick={() => navigate(`/messages/user/${user._id}`)}
               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 cursor-pointer border-b"
             >
               <div className="relative">
-                <img
-                  src={
-                    user.profileImageUrl || avatar
-                  }
-                  alt={user.name}
-                  className="w-12 h-12 ring ring-caribbean rounded-full object-cover"
-                />
-                {isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
-                )}
-                {!isOnline && (
-                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-gray-500 border-2 border-white rounded-full"></span>
-                )}
+                <img src={user.profileImageUrl || avatar} alt={user.fullName} className="w-12 h-12 ring ring-caribbean rounded-full object-cover" />
+                <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${isOnline ? "bg-green-500" : "bg-gray-500"}`}></span>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between items-center">
-                  <p className="font-medium truncate text-caribbean">
-                    {user.fullName}
+                  <p className="font-medium truncate text-caribbean">{user.fullName}{" "}
+                  <ProfileBadge role={user.role} showTooltip={false} />
                   </p>
-                  <span className="text-xs text-gray-400">
-                    {time}
-                  </span>
+                  
+                  <span className="text-xs text-gray-400">{time}</span>
                 </div>
-                <p className="text-sm text-gray-500 truncate">
-                  {lastMessage}
-                </p>
+                <p className="text-sm text-gray-500 truncate">{lastMessage}</p>
               </div>
             </div>
           );

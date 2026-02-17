@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const PTEducation = ({ education }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">
@@ -11,7 +13,7 @@ const PTEducation = ({ education }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center mb-3"
       >
-        <h2 className="text-xl font-bold text-caribbean">Education</h2>
+        <h2 className="text-xl font-bold text-caribbean">{t("education")}</h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -22,7 +24,7 @@ const PTEducation = ({ education }) => {
       {isOpen && (
         <>
           {!education || education.length === 0 ? (
-            <p className="text-gray-700 text-sm md:text-base">No education information available.</p>
+            <p className="text-gray-700 text-sm md:text-base">{t("no_education_info_available")}</p>
           ) : (
             <div className="space-y-4">
               {education.map((edu, index) => (
@@ -38,7 +40,7 @@ const PTEducation = ({ education }) => {
                       rel="noopener noreferrer"
                       className="text-car text-sm underline mt-1 block"
                     >
-                      View Certificate
+                      {t("view_certificate")}
                     </a>
                   )}
                 </div>

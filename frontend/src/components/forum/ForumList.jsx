@@ -13,17 +13,21 @@ import API from "../../api/axios";
 import { toast } from "react-hot-toast";
 import { API_URL, ASSET_URL } from "../../config/constants";
 import { PostSkeleton } from "../../components/forum/PostSkeleton";
-
-const DEFAULT_AUTHOR = {
-  fullName: "Guest",
-  profileImageUrl: avatar,
-  _id: null,
-};
+import { useTranslation } from "react-i18next";
+import ProfileBadge from "../Badge";
 
 const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [postList, setPostList] = useState(posts);
   const postsPerPage = 10;
+  const { t } = useTranslation();
+
+  const DEFAULT_AUTHOR = {
+    fullName: t("guest_label"),
+    profileImageUrl: avatar,
+    _id: null,
+  };
+
 
   useEffect(() => {
     setPostList(posts);
@@ -35,7 +39,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       <div className="h-screen flex flex-col items-center justify-center">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
-          Loading Posts...
+          {t("loading_posts")}
         </p>
       </div>
     );
@@ -49,7 +53,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         <PostSkeleton key={i} />
       ))}
       <p className="text-center text-gray-500 mt-2">
-        No posts yet. Be the first to post!
+        {t("no_posts_yet")}
       </p>
     </div>
   );
@@ -71,7 +75,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     author?.profileImageUrl ? author?.profileImageUrl : avatar;
 
   const handleVote = async (postId, voteValue) => {
-    if (!user?._id) return toast.error("You must be logged in to vote");
+    if (!user?._id) return toast.error(t("must_login_vote"));
 
     setPostList((prevPosts) =>
       prevPosts.map((p) => {
@@ -94,7 +98,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       await API.post(`${API_URL}/forum/posts/${postId}/vote`, { vote: voteValue });
     } catch (err) {
       console.error(err);
-      toast.error("Failed to vote");
+      toast.error(t("failed_vote"));
       setPostList(posts);
     }
   };
@@ -106,18 +110,18 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     let undoClicked = false;
 
     toast(
-      (t) => (
+      (tToast) => (
         <div className="flex items-center gap-3">
-          <span>Post deleted</span>
+          <span>{t("post_deleted")}</span>
           <button
             onClick={() => {
               undoClicked = true;
               setPostList(backupPosts);
-              toast.dismiss(t.id);
+              toast.dismiss(tToast.id);
             }}
             className="text-blue-500 underline"
           >
-            Undo
+            {t("undo")}
           </button>
         </div>
       ),
@@ -128,11 +132,11 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       if (undoClicked) return;
       try {
         await API.delete(`${API_URL}/forum/posts/${postId}`);
-        toast.success("Post permanently deleted");
+        toast.success(t("post_permanently_deleted"));
       } catch (err) {
         console.error(err);
         setPostList(backupPosts);
-        toast.error("Failed to delete post");
+        toast.error(t("failed_delete_post"));
       }
     }, 5000);
   };
@@ -149,7 +153,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
         .catch((err) => console.error("Share failed:", err));
     } else {
       navigator.clipboard.writeText(postUrl);
-      toast.success("Post link copied to clipboard");
+      toast.success(t("post_link_copied"));
     }
   };
 
@@ -180,9 +184,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
-        Showing {startIndex + 1} to {Math.min(endIndex, totalPosts)} of{" "}
-        {totalPosts} posts
+        {t("showing")} {startIndex + 1} {t("to")} {Math.min(endIndex, totalPosts)} {t("ofto")} {totalPosts} {t("posts")}
       </p>
+
 
       {displayedPosts.map((post) => {
         const author = post.author || DEFAULT_AUTHOR;
@@ -228,13 +232,14 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                     <p>
                       {author.fullName}
                       <span className="bg-yellow-400 text-black px-2 py-0.5 rounded text-xs ml-2">
-                        Sponsored
+                        {t("sponsored")}
                       </span>
                     </p>
                   ) : (
                     <Link to={`/profile/pt/${author._id}`}>
                       <span className="font-semibold text-black">
-                        {author.fullName}
+                        {author.fullName}{" "}
+                        <ProfileBadge role={author.role} showTooltip={false} />
                       </span>
                     </Link>
                   )}
@@ -294,7 +299,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                         : "bg-gray-300 text-black hover:bg-gray-400"
                     }`}
                   >
-                    {post.pinned ? "Unpin" : "Pin"}
+                    {post.pinned ? t("unpin") : t("pin")}
                   </button>
                 )}
 
@@ -307,7 +312,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                     className="flex items-center gap-1 cursor-pointer"
                     onClick={() => handleSharePost(post)}
                   >
-                    <Share2 size={16} /> Share
+                    <Share2 size={16} /> {t("share")}
                   </div>
                 )}
 
@@ -316,7 +321,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
                     onClick={() => handleDeletePost(post._id)}
                     className="text-red-500 flex items-center gap-1"
                   >
-                    <Trash2 size={16} /> Delete
+                    <Trash2 size={16} /> {t("delete")}
                   </button>
                 )}
               </div>

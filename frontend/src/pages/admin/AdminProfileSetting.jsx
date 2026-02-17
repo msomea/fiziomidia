@@ -5,8 +5,10 @@ import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const AdminProfile = () => {
+  const { t } = useTranslation();
   const { user, setUser } = useAuth();
   const navigate = useNavigate();
 
@@ -21,7 +23,6 @@ const AdminProfile = () => {
   const [avatarFile, setAvatarFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Show/hide password states
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -31,7 +32,7 @@ const AdminProfile = () => {
     setLoading(true);
 
     if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      toast.error("New password and confirm password do not match");
+      toast.error(t("passwords_mismatch"));
       setLoading(false);
       return;
     }
@@ -40,15 +41,8 @@ const AdminProfile = () => {
       const body = new FormData();
       body.append("fullName", formData.fullName);
       body.append("email", formData.email);
-
-      if (formData.newPassword) {
-        body.append("password", formData.newPassword);
-      }
-
-      // Avatar file
-      if (avatarFile) {
-        body.append("avatar", avatarFile);
-      }
+      if (formData.newPassword) body.append("password", formData.newPassword);
+      if (avatarFile) body.append("avatar", avatarFile);
 
       const response = await API.put(`${API_URL}/users/profile`, body, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -58,10 +52,10 @@ const AdminProfile = () => {
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      toast.success("Profile updated successfully");
+      toast.success(t("profile_updated"));
     } catch (err) {
       console.error("Profile update error:", err);
-      toast.error(err.response?.data?.error || "Failed to update profile");
+      toast.error(err.response?.data?.error || t("failed_update_profile"));
     } finally {
       setLoading(false);
     }
@@ -71,14 +65,14 @@ const AdminProfile = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 mt-10 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg">
         <h2 className="text-2xl text-caribbean font-semibold text-center mb-6">
-          Admin Profile
+          {t("admin_profile_title")}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
           <input
             type="text"
-            placeholder="Full Name"
+            placeholder={t("full_name")}
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             className="w-full border rounded-lg p-2"
@@ -88,7 +82,7 @@ const AdminProfile = () => {
           {/* Email */}
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t("email_label")}
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="w-full border rounded-lg p-2"
@@ -99,7 +93,7 @@ const AdminProfile = () => {
           <div className="relative">
             <input
               type={showCurrent ? "text" : "password"}
-              placeholder="Current Password"
+              placeholder={t("current_password")}
               value={formData.currentPassword}
               onChange={(e) =>
                 setFormData({ ...formData, currentPassword: e.target.value })
@@ -118,7 +112,7 @@ const AdminProfile = () => {
           <div className="relative">
             <input
               type={showNew ? "text" : "password"}
-              placeholder="New Password"
+              placeholder={t("new_password")}
               value={formData.newPassword}
               onChange={(e) =>
                 setFormData({ ...formData, newPassword: e.target.value })
@@ -137,7 +131,7 @@ const AdminProfile = () => {
           <div className="relative">
             <input
               type={showConfirm ? "text" : "password"}
-              placeholder="Confirm New Password"
+              placeholder={t("confirm_new_password")}
               value={formData.confirmPassword}
               onChange={(e) =>
                 setFormData({ ...formData, confirmPassword: e.target.value })
@@ -154,20 +148,18 @@ const AdminProfile = () => {
 
           {/* Avatar Upload */}
           <div>
-            <label className="block text-tufts font-medium mb-1">Change Profile Image</label>
+            <label className="block text-tufts font-medium mb-1">{t("change_profile_image")}</label>
             <input
               type="file"
               accept=".jpg,.jpeg,.png"
               onChange={(e) => setAvatarFile(e.target.files[0])}
               className="w-full border rounded-lg p-2"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Accepted: JPG, JPEG, PNG
-            </p>
+            <p className="text-sm text-gray-500 mt-1">{t("accepted_file_types")}</p>
             {user.profileImageUrl && (
               <img
                 src={user.profileImageUrl}
-                alt="Current Avatar"
+                alt={t("current_avatar")}
                 className="w-24 h-24 rounded-full mt-2 object-cover"
               />
             )}
@@ -181,7 +173,7 @@ const AdminProfile = () => {
               className="px-4 py-2 bg-red-400 text-white border rounded-lg hover:bg-red-700"
               disabled={loading}
             >
-              Cancel
+              {t("cancel")}
             </button>
 
             <button
@@ -193,10 +185,10 @@ const AdminProfile = () => {
             >
               {loading ? (
                 <>
-                  <Loader2 className="animate-spin w-4 h-4" /> Updating...
+                  <Loader2 className="animate-spin w-4 h-4" /> {t("updating")}
                 </>
               ) : (
-                "Update Profile"
+                t("update_profile")
               )}
             </button>
           </div>
