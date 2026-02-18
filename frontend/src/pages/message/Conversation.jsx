@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
@@ -23,57 +23,89 @@ export default function ConversationPage() {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [isOtherUserOnline, setIsOtherUserOnline] = useState(false);
 
   const messagesEndRef = useRef(null);
-  const scrollToBottom = () =>
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
 
-  // Join Room
+  // ===========================
+  // JOIN ROOM & REGISTER SOCKET
+  // ===========================
   useEffect(() => {
-    if (loggedInUser?._id) {
-      socket.emit("joinRoom", loggedInUser._id);
-    }
-  }, [loggedInUser]);
+    if (!loggedInUser?._id || !socket) return;
 
-  // Fetch Conversation
+    // Join personal room
+    const joinRoom = () => socket.emit("joinRoom", loggedInUser._id);
+    if (socket.connected) joinRoom();
+    else socket.once("connect", joinRoom);
+
+    // ===========================
+    // ONLINE USERS EVENTS
+    // ===========================
+    const handleOnlineUsers = (userIds) => setOnlineUsers(userIds || []);
+    const handleUserOnline = ({ userId }) => {
+      setOnlineUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
+    };
+    const handleUserOffline = ({ userId }) => {
+      setOnlineUsers((prev) => prev.filter((id) => id !== userId));
+    };
+
+    socket.on("onlineUsers", handleOnlineUsers);
+    socket.on("userWentOnline", handleUserOnline);
+    socket.on("userWentOffline", handleUserOffline);
+
+    return () => {
+      socket.off("onlineUsers", handleOnlineUsers);
+      socket.off("userWentOnline", handleUserOnline);
+      socket.off("userWentOffline", handleUserOffline);
+    };
+  }, [loggedInUser, socket]);
+
+  // Update other user online status whenever onlineUsers change
   useEffect(() => {
-    const load = async () => {
+    setIsOtherUserOnline(onlineUsers.includes(otherUserId));
+  }, [onlineUsers, otherUserId]);
+
+  // ===========================
+  // FETCH CONVERSATION & MESSAGES
+  // ===========================
+  useEffect(() => {
+    if (!loggedInUser?._id) return;
+
+    const loadConversation = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const res = await API.get(`${API_URL}/conversations/user/${otherUserId}`);
         setConversation(res.data);
 
-        const normalizedMessages = (res.data.messages || []).map((m) => {
-          const receiverId = m.receiver?._id || m.receiver;
-          if (String(receiverId) === String(loggedInUser._id)) {
-            return { ...m, status: "read" };
-          }
-          return m;
-        });
-
+        // Normalize messages
+        const normalizedMessages = (res.data.messages || []).map((m) => ({
+          ...m,
+          status:
+            String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
+              ? "read"
+              : m.status || "sent",
+        }));
         setMessages(normalizedMessages);
 
-        const otherUser = res.data.participants.find(
-          (p) => p._id !== loggedInUser._id
-        );
-        setIsOtherUserOnline(otherUser?.isLoggedIn || false);
-
+        // Notify server that conversation is open
         socket.emit("conversation:open", {
           conversationId: res.data._id,
           userId: loggedInUser._id,
         });
 
-        // Acknowledge messages
-        const receivedMessages = (res.data.messages || []).filter(
-          (m) => String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
-        );
-
-        receivedMessages.forEach((m) => {
-          if (m.status === "sent" || !m.status) {
-            socket.emit("message:delivered", { messageId: m._id, userId: loggedInUser._id });
+        // Acknowledge delivery & read for received messages
+        normalizedMessages.forEach((m) => {
+          const receiverId = m.receiver?._id || m.receiver;
+          if (String(receiverId) === String(loggedInUser._id)) {
+            if (!m.status || m.status === "sent") {
+              socket.emit("message:delivered", { messageId: m._id, userId: loggedInUser._id });
+              socket.emit("message:read", { messageId: m._id, userId: loggedInUser._id });
+            }
           }
-          socket.emit("message:read", { messageId: m._id, userId: loggedInUser._id });
         });
       } catch (err) {
         console.error(err);
@@ -84,12 +116,16 @@ export default function ConversationPage() {
       }
     };
 
-    load();
-  }, [otherUserId, loggedInUser, t, socket]);
+    loadConversation();
+  }, [otherUserId, loggedInUser, socket, t, scrollToBottom]);
 
-  // Listen for new messages
+  // ===========================
+  // NEW MESSAGE LISTENER
+  // ===========================
   useEffect(() => {
-    const handler = (payload) => {
+    if (!socket) return;
+
+    const handleNewMessage = (payload) => {
       if (payload.conversationId !== conversation?._id) return;
 
       const msgObj = {
@@ -111,24 +147,33 @@ export default function ConversationPage() {
       }
     };
 
-    socket.on("message:new", handler);
-    return () => socket.off("message:new", handler);
-  }, [conversation, loggedInUser, socket]);
+    socket.on("message:new", handleNewMessage);
+    return () => socket.off("message:new", handleNewMessage);
+  }, [conversation?._id, loggedInUser?._id, socket, scrollToBottom]);
 
-  // Message status updates
+  // ===========================
+  // MESSAGE STATUS UPDATES
+  // ===========================
   useEffect(() => {
-    const statusHandler = ({ messageId, status }) => {
+    if (!socket) return;
+
+    const handleStatusUpdate = ({ messageId, status }) => {
       setMessages((prev) =>
         prev.map((m) => (String(m._id) === String(messageId) ? { ...m, status } : m))
       );
     };
-    socket.on("message:status", statusHandler);
-    return () => socket.off("message:status", statusHandler);
+
+    socket.on("message:status", handleStatusUpdate);
+    return () => socket.off("message:status", handleStatusUpdate);
   }, [socket]);
 
-  // Conversation read notifications
+  // ===========================
+  // CONVERSATION READ NOTIFICATIONS
+  // ===========================
   useEffect(() => {
-    const convReadHandler = ({ conversationId }) => {
+    if (!socket) return;
+
+    const handleConversationRead = ({ conversationId }) => {
       if (conversationId !== conversation?._id) return;
 
       setMessages((prev) =>
@@ -142,26 +187,13 @@ export default function ConversationPage() {
       );
     };
 
-    socket.on("conversation:read", convReadHandler);
-    return () => socket.off("conversation:read", convReadHandler);
-  }, [conversation, loggedInUser, socket]);
+    socket.on("conversation:read", handleConversationRead);
+    return () => socket.off("conversation:read", handleConversationRead);
+  }, [conversation?._id, loggedInUser?._id, socket]);
 
-  // Online/offline tracking
-  useEffect(() => {
-    socket.on("userWentOnline", ({ userId }) => {
-      if (userId === otherUserId) setIsOtherUserOnline(true);
-    });
-    socket.on("userWentOffline", ({ userId }) => {
-      if (userId === otherUserId) setIsOtherUserOnline(false);
-    });
-
-    return () => {
-      socket.off("userWentOnline");
-      socket.off("userWentOffline");
-    };
-  }, [otherUserId, socket]);
-
-  // Send message
+  // ===========================
+  // SEND MESSAGE
+  // ===========================
   const handleSend = () => {
     if (!message.trim() || !conversation?._id) return;
 
@@ -176,7 +208,9 @@ export default function ConversationPage() {
     scrollToBottom();
   };
 
-  // Delete message
+  // ===========================
+  // DELETE MESSAGE
+  // ===========================
   const handleDeleteMessage = async (messageId) => {
     const backup = [...messages];
     setMessages((prev) => prev.filter((m) => m._id !== messageId));
@@ -217,9 +251,7 @@ export default function ConversationPage() {
     );
   }
 
-  const otherUser = conversation?.participants.find(
-    (p) => p._id !== loggedInUser._id
-  );
+  const otherUser = conversation?.participants.find((p) => p._id !== loggedInUser._id);
 
   return (
     <div className="flex mt-20 flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto bg-base-200 rounded-lg">

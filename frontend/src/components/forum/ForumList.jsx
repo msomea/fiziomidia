@@ -180,7 +180,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   const displayedPosts = pinnedSponsorPost
     ? [pinnedSponsorPost, ...currentPosts]
     : currentPosts;
-
+console.log(posts)
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
@@ -216,42 +216,62 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
               isSponsorPost ? "border-2 border-yellow-400" : ""
             }`}
           >
+            {isSponsorPost ? (
+              <img
+                src={currentTopic.sponsorLogo}
+                alt={currentTopic.sponsorName || "Sponsor"}
+                onError={(e) => {
+                  e.target.src = avatar;
+                }}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <img
+                src={getAvatar(author)}
+                alt={author?.fullName || t("guest_label")}
+                onError={(e) => {
+                  e.target.src = avatar;
+                }}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            )}
 
-            <img
-              src={getAvatar(author)}
-              alt={author.fullName || "Guest"}
-              onError={(e) => {
-                e.target.src = avatar;
-              }}
-              className="w-12 h-12 rounded-full object-cover"
-            />
+
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center mb-1">
                 <span className="font-semibold text-black">
                   {isSponsorPost ? (
-                    <p>
-                      {author.fullName}
-                      <span className="bg-yellow-400 text-black px-2 py-0.5 rounded text-xs ml-2">
-                        {t("sponsored")}
-                      </span>
-                    </p>
-                  ) : (
-                    <Link to={`/profile/pt/${author._id}`}>
-                      <span className="font-semibold text-black">
-                        {author.fullName}{" "}
-                        <ProfileBadge role={author.role} showTooltip={false} />
-                      </span>
-                    </Link>
-                  )}
+                  <p>
+                    {author.fullName}
+                    <span className="bg-yellow-400 text-black px-2 py-0.5 rounded text-xs ml-2">
+                      {t("sponsored")}
+                    </span>
+                  </p>
+                ) : (
+                  <Link
+                    to={
+                      author.role === "physiotherapist"
+                        ? `/profile/pt/${author._id}`
+                        : `/profile/member/${author._id}`
+                    }
+                  >
+                    <span className="font-semibold text-black">
+                      {author.fullName}{" "}
+                      <ProfileBadge role={author.role} showTooltip={false} />
+                    </span>
+                  </Link>
+                )}
                 </span>
-                <span className="text-gray-400 text-sm">
-                  {formatDate(post.createdAt)}
-                </span>
+                {!isSponsorPost && (
+                  <span className="text-gray-400 text-sm">
+                    {formatDate(post.createdAt)}
+                  </span>
+                )}
               </div>
 
               {isSponsorPost ? (
                 <a
-                  href={`https:\\${post.title}`}
+                  href={`https://${post.title}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-lg font-bold text-caribbean mb-2 block break-words"

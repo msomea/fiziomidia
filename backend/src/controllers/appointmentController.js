@@ -72,7 +72,7 @@ export const getAppointments = async (req, res) => {
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, scheduledAt } = req.body;
+    const { status, scheduledAt } = req.body; // <- change here
     const appt = await Appointment.findById(id);
     if (!appt) return res.status(404).json({ error: "Not found" });
 
@@ -85,16 +85,16 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    if (action === "accept") {
-      appt.status = "accepted";
-      if (scheduledAt) appt.scheduledAt = scheduledAt;
-    } else if (action === "decline") {
-      appt.status = "declined";
-    } else if (action === "cancel") {
-      appt.status = "cancelled";
-    } else if (action === "complete") {
-      appt.status = "completed";
+    // Only allow valid status updates
+    const validStatuses = ["accepted", "declined", "cancelled", "completed"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status value" });
     }
+
+    appt.status = status;
+
+    if (scheduledAt) appt.scheduledAt = scheduledAt;
+
     await appt.save();
     res.json({ appointment: appt });
   } catch (err) {
@@ -103,16 +103,20 @@ export const updateAppointmentStatus = async (req, res) => {
   }
 };
 
+
 // Get a single appointment
 export const getAppointmentById = async (req, res) => {
   try {
     const { id } = req.params;
-    const appt = await Appointment.findById(id).populate("requester pt clinic");
+    const appt = await Appointment.findById(id)
+      .populate("clinic")
+      .populate("requester", "fullName email")
+      .populate("pt", "fullName email specialization")
     if (!appt) return res.status(404).json({ error: "Appointment not found" });
 
     const userId = req.user._id.toString();
     if (
-      req.user.role !== "admin" &&
+      req.user.role === "guest" &&
       userId !== appt.pt.toString() &&
       userId !== appt.requester.toString()
     ) {

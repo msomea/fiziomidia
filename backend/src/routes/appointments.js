@@ -22,7 +22,7 @@ router.get("/:id", authenticate, getAppointmentById);
 router.get("/", authenticate, getAppointments);
 
 // PT/admin can update appointment status
-router.put("/:id/status", authenticate, requireRole("physiotherapist", "admin"), updateAppointmentStatus);
+router.patch("/:id/status", authenticate, requireRole("physiotherapist", "admin"), updateAppointmentStatus);
 
 // Requester, PT, or admin can delete an appointment
 router.delete("/:id", authenticate, deleteAppointment);

@@ -96,7 +96,7 @@ export default function FindProfessionals() {
   }, [totalPages, paused]);
 
   const showSkeletons = loading || pts.length < 1;
-
+console.log(pts)
   return (
     <section className="bg-white py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
@@ -163,7 +163,7 @@ export default function FindProfessionals() {
                   </p>
 
                   <p className="text-sm text-gray-500 mt-1">
-                    {pt.ptProfile?.institution || t("no_institution")}
+                    {pt.promotion?.description || t("no_description_available")}
                   </p>
 
                   <Link

@@ -47,6 +47,7 @@ export default function CreatePromotion() {
         ...prev,
         duration: t(duration),
         price,
+        description,
       }));
     }
   }, [form.title, t]);
@@ -72,26 +73,31 @@ export default function CreatePromotion() {
       setLoading(true);
 
       const fd = new FormData();
-      fd.append("title", form.title);
+
+      // Fix title case
+      const formattedTitle =
+        form.title.charAt(0).toUpperCase() + form.title.slice(1);
+
+      fd.append("title", formattedTitle);
       fd.append("description", form.description);
-      fd.append("price", form.price);
-      fd.append("duration", form.duration);
 
       if (image) fd.append("image", image);
 
-      await API.post(`${API_URL}/promotions/create`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await API.post(`${API_URL}/promotions/create`, fd);
 
       toast.success(t("promotion_created_success"));
       navigate("/services");
+
     } catch (err) {
-      console.error(err);
-      toast.error(t("promotion_create_failed"));
+      console.error(err.response?.data || err);
+      toast.error(
+        err.response?.data?.error || t("promotion_create_failed")
+      );
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="pt-24 pb-16 text-tufts px-4 max-w-3xl mx-auto">

@@ -7,8 +7,10 @@ import { fileURLToPath } from "url";
 
 import { ENV } from "./config/env.js";
 import ForumSub from "./models/ForumSub.js";
+import User from "./models/User.js";
 import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+
 
 // Routes
 import contactRoutes from "./routes/contact.js";

@@ -141,6 +141,8 @@ export default function AdminPromotionDetail() {
         {/* PROMOTION INFO */}
         <div className="bg-gray-100 p-3 rounded">
           <h3 className="font-semibold mb-1 text-caribbean">{t('promotion_details')}</h3>
+          <p><b>{t('title_label')}</b> {promo.title}</p>
+          <p><b>{t('description_label')}</b> {promo.description}</p>
           <p><b>{t('status_label')}</b> {promo.status}</p>
           <p><b>{t('start_label')}</b> {dayjs(promo.startAt).format("ddd, DD/MM/YYYY")}</p>
           <p><b>{t('end_label')}</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>

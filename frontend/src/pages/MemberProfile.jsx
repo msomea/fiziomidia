@@ -43,7 +43,7 @@ const MemberProfile = () => {
     return <p className="p-4 text-red-600">{t('member_not_found')}</p>;
 
   const isOwnProfile = loggedInUser?._id === member?._id;
-
+console.log(member)
   return (
     <div className="max-w-3xl mx-auto mt-20 p-4 space-y-6">
       {/* Member Header */}
@@ -51,9 +51,9 @@ const MemberProfile = () => {
 
         {/* Avatar */}
         <img
-          src={member.profileImageUrl}
+          src={member.profileImageUrl || avatar}
           alt="avatar"
-          className="w-24 h-24 rounded-full object-cover border"
+          className="w-24 h-24 ring ring-caribbean rounded-full object-cover border"
         />
 
         {/* Name + Bio */}

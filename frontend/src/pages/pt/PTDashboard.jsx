@@ -106,7 +106,7 @@ export default function PTDashboard() {
       {/* Upcoming Appointments */}
       <UpcomingAppointments
         appointments={appointments}
-        viewMore={`/appointments/${_id}`}
+        viewMore={`/pt/${user._id}/appointments`}
       />
 
       {/* Forum & Promotion */}
@@ -131,10 +131,10 @@ export default function PTDashboard() {
         {isMenuOpen && (
           <div className="absolute bottom-16 right-0 bg-white shadow-lg rounded-2xl p-4 w-56 flex flex-col gap-3">
             <PTNavLink to="/" icon={<Home size={18} />} label={t("home")} />
-            <PTNavLink to={`/appointments/${_id}`} icon={<Calendar size={18} />} label={t("appointments")} />
-            <PTNavLink to="/patients" icon={<Users size={18} />} label={t("patients")} />
-            <PTNavLink to={`/forum/pt/${_id}`} icon={<MessageSquare size={18} />} label={t("forum")} />
-            <PTNavLink to={`/promotions/pt/${_id}`} icon={<Megaphone size={18} />} label={t("promotions")} />
+            <PTNavLink to={`/pt/${user._id}/appointments`} icon={<Calendar size={18} />} label={t("appointments")} />
+            <PTNavLink to="/messages/users" icon={<Users size={18} />} label={t("patients")} />
+            <PTNavLink to={`/forum`} icon={<MessageSquare size={18} />} label={t("forum")} />
+            <PTNavLink to={"/services/promotions/create"} icon={<Megaphone size={18} />} label={t("promotions")} />
             <PTNavLink to={`/settings/pt/${_id}`} icon={<Settings size={18} />} label={t("settings")} />
             <button
               onClick={async () => {

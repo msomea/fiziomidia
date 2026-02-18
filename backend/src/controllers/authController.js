@@ -257,7 +257,7 @@ export async function loginUser(req, res) {
     if (user.refreshTokens.length > MAX_REFRESH_TOKENS) {
       user.refreshTokens = user.refreshTokens.slice(-MAX_REFRESH_TOKENS);
     }
-
+    user.lastLogin = new Date();
     user.isLoggedIn = true;
     await user.save();
 
@@ -270,6 +270,7 @@ export async function loginUser(req, res) {
         email: user.email,
         role: user.role,
         isLoggedIn: user.isLoggedIn,
+        lastLogin: user.lastLogin,
         profileImageUrl: user.profileImageUrl || "",
       },
       accessToken,

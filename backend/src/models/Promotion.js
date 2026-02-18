@@ -21,6 +21,8 @@ const PromotionSchema = new Schema(
     startAt: { type: Date, default: Date.now },
     endAt: { type: Date },
 
+    description: { type: String },
+
     status: {
       type: String,
       enum: ["pending", "active", "suspended", "expired"],

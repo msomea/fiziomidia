@@ -57,7 +57,7 @@ export const generateFiziomidiaEmail = ({
         </tr>
         <tr>
           <td style="padding: 20px; font-size: 12px; color: #6b7280; text-align: center; background-color: #f3f4f6;">
-            © 2026 Fiziomidia. All rights reserved.
+            © 2026 FizioMidia. All rights reserved.
           </td>
         </tr>
       </table>

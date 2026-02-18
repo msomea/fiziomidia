@@ -48,6 +48,7 @@
   "verification_failed_title": "Uthibitishaji Umefeli",
   "verification_link_invalid": "Kiungo chako cha uthibitisho hakifai au kimeisha.",
   "resend_verification_email": "Tuma tena barua pepe ya uthibitisho",
+  
   "loading_your_profile": "Inapakia Profaili Yako...",
   "guest_label": "Mgeni",
   "member_since": "Mwanachama tangu",
@@ -97,6 +98,7 @@
   "role_mod": "Msimamizi",
   "update_role": "Sasisha Jukumu",
   "forum_sponsorships": "Ufadhili wa Jukwaa",
+  
   "search_by_sub_name": "Tafuta kwa jina la sub...",
   "filter_all": "Zote",
   "filter_sponsored": "Iliyodhaminiwa",
@@ -146,6 +148,7 @@
   "edit_product_details": "Hariri Maelezo ya Bidhaa",
   "product_name_placeholder": "Jina la Bidhaa",
   "link_placeholder": "Kiungo (hiari)",
+  
   "description_placeholder": "Maelezo",
   "mark_as_active": "Weka Kama Inayofanya Kazi (Iliyoidhinishwa tu)",
   "product_image_label": "Picha ya Bidhaa",
@@ -192,8 +195,8 @@
   "sponsor_website_placeholder": "Tovuti ya Mdhamini",
   "save_sponsorship": "Hifadhi Ufadhili",
   "remove_sponsorship": "Ondoa Ufadhili",
-  "about_fiziomidia": "Kuhusu Fiziomidia",
-  "about_desc_1": "Fiziomidia ni jukwaa la kidijitali la Tanzania linalowaunganisha Wafiziotherapia na jamii inayohitaji huduma bora, elimu na rasilimali za afya. Lengo letu ni kuboresha upatikanaji wa huduma za Fiziotherapia huku tukiwasaidia wataalamu kukuza taaluma na biashara zao.",
+  "about_fiziomidia": "Kuhusu FizioMidia",
+  "about_desc_1": "FizioMidia ni jukwaa la kidijitali la Tanzania linalowaunganisha Wafiziotherapia na jamii inayohitaji huduma bora, elimu na rasilimali za afya. Lengo letu ni kuboresha upatikanaji wa huduma za Fiziotherapia huku tukiwasaidia wataalamu kukuza taaluma na biashara zao.",
   "about_desc_2": "Kupitia jukwaa letu, wanajamii wanaweza kutafuta Wafiziotherapia, kuweka miadi, kushiriki katika jukwaa la elimu, na kupata taarifa sahihi za afya. Wafiziotherapia wanaweza kusimamia wasifu wao, miadi, matangazo na kushiriki maarifa na jamii.",
   "our_services": "Huduma Zetu",
   "physiotherapy_consultation": "Ushauri wa Fiziotherapia",
@@ -213,10 +216,10 @@
   "message_sent_success": "Ujumbe umetumwa!",
   "fill_all_fields": "Tafadhali jaza nyanja zote!",
   "message_failed": "Imeshindikana kutuma ujumbe. Tafadhali jaribu tena.",
-  "education_title": "Jiunge na Fiziomidia Katika Jamii ya Elimu",
+  "education_title": "Jiunge na FizioMidia Katika Jamii ya Elimu",
   "education_desc": "Kuwa Msaada, Mwekezaji au Mshirika ili kusaidia Wafiziotherapia na jamii kukua kupitia maarifa, mafunzo na uzoefu.",
   "supporter": "Msaada",
-  "supporter_desc": "Jiunge na Fiziomidia katika kujenga Wafiziotherapia na jamii kupitia rasilimali za elimu na mipango.",
+  "supporter_desc": "Jiunge na FizioMidia katika kujenga Wafiziotherapia na jamii kupitia rasilimali za elimu na mipango.",
   "investor": "Mwekezaji",
   "investor_desc": "Shiriki katika ukuaji wa elimu ya Fiziotherapia na suluhisho la jamii ili kuboresha afya ya jamii.",
   "collaborator": "Mshirikiano",
@@ -244,8 +247,8 @@
   "no_institution": "Hakuna taasisi iliyotajwa",
   "view_profile": "Angalia Wasifu",
   "failed_load_professionals": "Imeshindikana kupakia Wataalamu",
-  "join_fiziomidia_community": "Jiunge na Jamii ya Fiziomidia",
-  "cta_desc": "Fiziomidia ni jukwaa la Fiziotherapia linalowaunganisha Wafiziotherapia na wagonjwa kote Tanzania. Tunalenga kuboresha upatikanaji wa huduma, elimu ya kitaalamu, na ushirikiano wa jamii. Unganisha na wataalamu, shiriki maarifa, na boresha afya yako leo.",
+  "join_fiziomidia_community": "Jiunge na Jamii ya FizioMidia",
+  "cta_desc": "FizioMidia ni jukwaa la Fiziotherapia linalowaunganisha Wafiziotherapia na wagonjwa kote Tanzania. Tunalenga kuboresha upatikanaji wa huduma, elimu ya kitaalamu, na ushirikiano wa jamii. Unganisha na wataalamu, shiriki maarifa, na boresha afya yako leo.",
   "sign_up": "Jisajili",
   "sponsored_content": "Maudhui Yaliyodhaminiwa",
   "no_sponsored_products": "Hakuna bidhaa zilizodhaminiwa kwa sasa",
@@ -733,7 +736,16 @@
   "sponsor_website": "Tovuti ya Mdhamini",
   "failed_fetch_forum_subs": "Imeshindikana kupata vipengele vya jumuiya.",
   "sponsorship_updated_success": "Udhamini umefanikiwa kusasishwa.",
-  "failed_update_sponsorship": "Imeshindikana kusasisha udhamini."
+  "failed_update_sponsorship": "Imeshindikana kusasisha udhamini.",
+  "failed_load_appointments": "Imeshindikana kupakia miadi.",
+  "appointment_details": "Maelezo ya Miadi",
+  "decline": "Kataa",
+  "back": "Rudi",
+  "scheduled_at": "Imepangwa",
+  "all_appointment": "Miadi Yote",
+  "status_all": "Hali Zote",
+  "date": "Tarehe",
+  "no_description_available": "Hakuna maelezo yanayopatikana"
 
 
 

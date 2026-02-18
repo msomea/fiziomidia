@@ -115,6 +115,7 @@ export const getPTsWithActivePromotions = async (req, res) => {
           startAt: promo.startAt,
           endAt: promo.endAt,
           duration: promo.duration,
+          description: promo.description,
         };
         return pt;
       });

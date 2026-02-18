@@ -55,7 +55,8 @@ export const getProfile = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id).select("-passwordHash"); // hide passwordHash
+    const user = await User.findById(id)
+      .select("-passwordHash  -refreshTokens "); 
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({ user });

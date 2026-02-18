@@ -42,6 +42,11 @@ export const AuthProvider = ({ children }) => {
       } catch (err) {
         if (err.response?.status === 401) {
           // expired or invalid token
+          try {
+            await logoutUser();
+          } catch (logoutErr) {
+            console.error("Backend auto-logout failed:", logoutErr);
+          }
           setUser(DEFAULT_USER);
           localStorage.clear();
         }
@@ -78,6 +83,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
 
+      // Optional: reconnect socket with token
+      const socket = getSocket();
+      if (socket.connected) socket.disconnect(); // disconnect old socket
+      socket.connect(); // reconnect with new token
+      
       return data.user;
     } catch (err) {
       // Let the calling component (Login.jsx) handle the error toast
