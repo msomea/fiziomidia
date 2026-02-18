@@ -745,7 +745,9 @@
   "all_appointment": "Miadi Yote",
   "status_all": "Hali Zote",
   "date": "Tarehe",
-  "no_description_available": "Hakuna maelezo yanayopatikana"
+  "no_description_available": "Hakuna maelezo yanayopatikana",
+  "my_appointments":"Miadi yangu",
+  "undo_success": "Umerudsha Kikamilifu"
 
 
 

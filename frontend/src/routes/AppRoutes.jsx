@@ -42,6 +42,7 @@ import AdminSendEmail from "../pages/admin/AdminSendEmail";
 import PTAppointmentsPage from "../pages/pt/PTAppointmentsPage";
 import PTAppointmentDetailsPage from "../pages/pt/PTApointmentDetailsPage";
 import BookAppointment from "../pages/appointment/RequestAppointment";
+import MemberAppointmentsPage from "../pages/member/MemberAppointmentPage";
 
 export default function AppRoutes() {
   return (
@@ -87,6 +88,7 @@ export default function AppRoutes() {
       <Route path="/appointments/book/:ptId" element={<BookAppointment />} />
       <Route path="/pt/:id/appointments" element={<PTAppointmentsPage />} />
       <Route path="/pt/appointments/:id" element={<PTAppointmentDetailsPage />} />
+      <Route path="/appointments/member/:id" element={<MemberAppointmentsPage />} />
 
 
       {/* Message Routes */ }      

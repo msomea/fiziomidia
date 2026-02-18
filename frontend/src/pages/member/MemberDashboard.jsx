@@ -198,7 +198,7 @@ const MemberDashboard = () => {
           <div className="absolute bottom-16 right-0 bg-white shadow-lg rounded-2xl p-4 w-56 flex flex-col gap-3">
             <MemberNavLink to="/" icon={<Home size={18} />} label={t('home')} />
             <MemberNavLink
-              to={`/appointments/${memberData._id}`}
+              to={`/appointments/member/${memberData._id}`}
               icon={<Calendar size={18} />}
               label={t('appointments')}
             />

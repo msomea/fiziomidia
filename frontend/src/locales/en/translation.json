@@ -743,7 +743,9 @@
   "all_appointment": "All Appointments",
   "status_all": "All Status",
   "date": "Date",
-  "no_description_available": "No description available."
+  "no_description_available": "No description available.",
+  "my_appointments":"My appointments",
+  "undo_success": "Undo Success"
 
 
 
