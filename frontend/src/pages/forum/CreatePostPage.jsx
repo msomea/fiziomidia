@@ -15,6 +15,10 @@ const CreatePost = () => {
   const [body, setBody] = useState("");
   const [selectedTopic, setSelectedTopic] = useState(null);
 
+  // 🆕 Image state (ADDED)
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+
   // Topics state
   const [topics, setTopics] = useState([]);
   const [search, setSearch] = useState("");
@@ -22,11 +26,9 @@ const CreatePost = () => {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 5;
 
-  // Loading and submitting
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch topics with pagination & search
   const fetchTopics = async (pageNum = 1, searchTerm = "") => {
     setLoading(true);
     try {
@@ -43,10 +45,26 @@ const CreatePost = () => {
     }
   };
 
-  // Load topics initially and on search/page change
   useEffect(() => {
     fetchTopics(page, search);
   }, [page, search]);
+
+  // 🆕 Handle image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      return toast.error(t("invalid_image_type"));
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return toast.error(t("image_too_large"));
+    }
+
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,11 +72,18 @@ const CreatePost = () => {
 
     setSubmitting(true);
     try {
-      await API.post(`${API_URL}/forum/posts`, {
-        title,
-        body,
-        sub: selectedTopic._id,
-      });
+      // 🆕 Use FormData instead of JSON
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("body", body);
+      formData.append("sub", selectedTopic._id);
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      await API.post(`${API_URL}/forum/posts`, formData);
+
       toast.success(t("post_created_success"));
       navigate("/forum");
     } catch (error) {
@@ -82,7 +107,7 @@ const CreatePost = () => {
           </button>
         </div>
 
-        {/* Search + Topics List */}
+        {/* Topics Section (UNCHANGED) */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <Search className="text-gray-400" />
@@ -116,14 +141,15 @@ const CreatePost = () => {
                 >
                   <div className="flex justify-between items-center text-tufts">
                     <span>{topic.title}</span>
-                    <span className="text-sm">{topic.totalPosts || 0} {t("posts")}</span>
+                    <span className="text-sm">
+                      {topic.totalPosts || 0} {t("posts")}
+                    </span>
                   </div>
                 </li>
               ))}
             </ul>
           )}
 
-          {/* Pagination */}
           <div className="flex justify-between items-center mt-4">
             <button
               className="btn btn-sm text-accent border border-caribbean"
@@ -155,6 +181,7 @@ const CreatePost = () => {
             required
             className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-caribbean"
           />
+
           <textarea
             placeholder={t("post_body")}
             value={body}
@@ -162,7 +189,31 @@ const CreatePost = () => {
             rows="6"
             required
             className="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-caribbean"
-          ></textarea>
+          />
+
+          {/* 🆕 Image Upload (Optional) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t("upload_image_optional")}
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full"
+            />
+          </div>
+
+          {/* 🆕 Preview */}
+          {preview && (
+            <div className="mt-3 rounded-xl overflow-hidden bg-gray-100">
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full object-contain max-h-[500px] rounded-xl"
+              />
+            </div>
+          )}
 
           <button
             type="submit"

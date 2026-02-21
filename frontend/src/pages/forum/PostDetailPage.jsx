@@ -12,7 +12,6 @@ import CommentsSection from "../../components/forum/CommentsSection";
 import { getSocket } from "../../socket";
 import { t } from "i18next";
 
-// 🔧 Build nested comment tree
 const buildCommentTree = (comments = []) => {
   const map = {};
   const roots = [];
@@ -45,7 +44,8 @@ const PostDetailPage = () => {
 
   const socket = getSocket();
 
-  const canEdit = user && (user.role === "admin" || user._id === post?.author?._id);
+  const canEdit =
+    user && (user.role === "admin" || user._id === post?.author?._id);
 
   const fetchPost = async () => {
     setLoading(true);
@@ -107,7 +107,7 @@ const PostDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center">
+      <div className="h-screen flex flex-col items-center justify-center bg-alice">
         <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
         <p className="mt-4 text-caribbean font-medium animate-pulse">
           {t("loading_posts")}
@@ -117,68 +117,104 @@ const PostDetailPage = () => {
   }
 
   if (!post) {
-    return <p className="text-center text-gray-500">Post not found</p>;
+    return (
+      <p className="text-center text-gray-500 mt-24">
+        Post not found
+      </p>
+    );
   }
 
   return (
-    <div className="max-w-3xl mt-20 mx-auto p-6 bg-white text-black rounded-xl shadow-md">
-      <div className="flex justify-between items-start gap-4">
-        <div className="flex-1">
-          {/* Title */}
-          {isEditing ? (
-            <input
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full text-2xl font-bold border p-2 rounded mb-3"
-            />
-          ) : (
-            <h1 className="text-2xl font-bold text-caribbean mb-3">{post.title}</h1>
-          )}
+    <div className="max-w-3xl mt-24 mx-auto px-4">
+      <div className="bg-white text-black rounded-2xl shadow-lg p-6 md:p-8 transition-all">
+        
+        <div className="flex justify-between items-start gap-6">
+          <div className="flex-1">
 
-          {/* Body */}
-          {isEditing ? (
-            <textarea
-              value={editBody}
-              onChange={(e) => setEditBody(e.target.value)}
-              className="w-full border p-3 rounded mb-6 min-h-[150px]"
-            />
-          ) : (
-            <p className="mt-2 mb-6 whitespace-pre-wrap break-words">{post.body}</p>
-          )}
+            {/* Title */}
+            {isEditing ? (
+              <input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full text-3xl font-bold border p-3 rounded-lg mb-4"
+              />
+            ) : (
+              <h1 className="text-3xl font-bold text-caribbean mb-4 leading-tight">
+                {post.title}
+              </h1>
+            )}
 
-          {/* Edit Buttons */}
-          {canEdit && !isEditing && (
-            <button
-              onClick={handleEditStart}
-              className="text-sm px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
-            >
-              {t("edit_post")}
-            </button>
-          )}
+            {/* ✅ Centered Image */}
+            {post.image?.url && (
+              <div className="flex justify-center my-6">
+                <div className="w-full max-w-2xl rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                  <img
+                    src={post.image.url}
+                    alt="Post"
+                    className="w-full object-contain max-h-[600px]"
+                  />
+                </div>
+              </div>
+            )}
 
-          {isEditing && (
-            <div className="flex gap-2">
+            {/* Body */}
+            {isEditing ? (
+              <textarea
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                className="w-full border p-4 rounded-lg mb-6 min-h-[180px]"
+              />
+            ) : (
+              <p className="mt-2 mb-8 whitespace-pre-wrap break-words text-gray-800 leading-relaxed">
+                {post.body}
+              </p>
+            )}
+
+            {/* Edit Buttons */}
+            {canEdit && !isEditing && (
               <button
-                onClick={handleEditSave}
-                className="text-sm px-3 py-1 bg-caribbean text-white rounded"
+                onClick={handleEditStart}
+                className="text-sm px-4 py-1.5 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
               >
-                {t("save_changes")}
+                {t("edit_post")}
               </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-sm px-3 py-1 bg-gray-300 rounded"
-              >
-                {t("cancel")}
-              </button>
-            </div>
-          )}
+            )}
+
+            {isEditing && (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleEditSave}
+                  className="text-sm px-4 py-1.5 bg-caribbean text-white rounded-lg hover:bg-tufts transition"
+                >
+                  {t("save_changes")}
+                </button>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-sm px-4 py-1.5 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
+                >
+                  {t("cancel")}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Vote Column */}
+          <div className="sticky top-24">
+            <PostVote post={post} user={user} refreshPost={fetchPost} />
+          </div>
         </div>
 
-        <PostVote post={post} user={user} refreshPost={fetchPost} />
-      </div>
+        {/* Divider */}
+        <div className="border-t my-8"></div>
 
-      {/* Comments */}
-      <CommentsSection post={post} user={user} fetchPost={fetchPost} socket={socket} />
+        {/* Comments */}
+        <CommentsSection
+          post={post}
+          user={user}
+          fetchPost={fetchPost}
+          socket={socket}
+        />
+      </div>
     </div>
   );
 };

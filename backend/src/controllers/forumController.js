@@ -4,6 +4,7 @@ import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../services/uploadService.js";
 
 
 // ===== SUBS =====
@@ -256,8 +257,26 @@ export const createPost = async (req, res) => {
 
     if (!sub) return res.status(400).json({ error: "Sub (topic) is required" });
 
+    // Upload image to cloudinary
+    let imageData = null
+
+    if (req.file) {
+      const result = await uploadToCloudinary(req.file.buffer);
+
+      imageData = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
+    }
+
     // 1️⃣ Create new post
-    const post = new Post({ title, body, sub, author });
+    const post = new Post({ 
+      title,
+      body,
+      sub,
+      author,
+      image: imageData });
+
     await post.save();
 
     // 2️⃣ Manually increment totalPosts to ensure it's updated immediately
@@ -379,10 +398,10 @@ export const updatePost = async (req, res) => {
 // Get single post (with vote info)
 export const getPostById = async (req, res) => {
   try {
-
     const { id } = req.params;
+
     if (!id) return res.status(400).json({ error: "Post ID is required" });
-    // Fetch post and populate
+
     const post = await Post.findById(id)
       .populate("author", "fullName role profileImageUrl")
       .populate("comments", "_id")
@@ -394,13 +413,11 @@ export const getPostById = async (req, res) => {
 
     if (!post) return res.status(404).json({ error: "Post not found" });
 
-    // Fetch comments for this post, populate author info
     const comments = await Comment.find({ post: post._id })
       .populate("author", "fullName role profileImageUrl")
-      .sort({ createdAt: -1 }) // newest first
+      .sort({ createdAt: -1 })
       .lean();
 
-    // Calculate totalScore or counts if needed
     const upvotesCount = post.upvotes?.length || 0;
     const downvotesCount = post.downvotes?.length || 0;
     const totalScore = upvotesCount - downvotesCount;
@@ -409,14 +426,16 @@ export const getPostById = async (req, res) => {
       postId: post._id,
       title: post.title,
       body: post.body,
+      image: post.image || null, // ✅ ADD THIS
       author: post.author,
       sub: post.sub,
       createdAt: post.createdAt,
-      comments, 
+      comments,
       upvotesCount,
       downvotesCount,
       totalScore,
     });
+
   } catch (err) {
     console.error("❌ Error fetching post:", err);
     res.status(500).json({ error: "Failed to fetch post" });
@@ -487,6 +506,10 @@ export const deletePost = async (req, res) => {
       return res.status(403).json({
         error: "Only the post author, admin, or moderators of this sub can delete this post",
       });
+    }
+    // Delete image from cloudinary if exists
+    if (post.image?.public_id) {
+      await deleteFromCloudinary(post.image.public_id);
     }
 
     // Delete the post

@@ -287,6 +287,16 @@ console.log(posts)
                 </Link>
               )}
 
+              {post.image?.url && (
+                <div className="mt-3 rounded-xl overflow-hidden bg-gray-100">
+                  <img
+                    src={post.image.url}
+                    alt="Post"
+                    className="w-full object-contain max-h-[600px]"
+                  />
+                </div>
+              )}
+
               <p className="text-gray-700 text-sm line-clamp-3 break-words whitespace-pre-wrap break-all">{post.body}</p>
 
               <div className="flex flex-wrap items-center gap-4 mt-3 text-gray-500">

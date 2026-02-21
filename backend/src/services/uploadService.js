@@ -69,6 +69,8 @@ const getCloudinaryFolder = (fieldname) => {
       return "sponsor_logos";
     case "product":
       return "products";
+    case "post":
+      return "posts"
     default:
       return "others";
   }
@@ -89,22 +91,26 @@ const uploadToCloudinary = (file) => {
         resource_type: "auto",
         use_filename: true,
         unique_filename: true,
-        // ✅ Automatic optimization
         transformation: [
           {
-            quality: "auto",   // automatic compression
-            fetch_format: "auto", // auto convert to best format
+            quality: "auto",
+            fetch_format: "auto",
           },
         ],
       },
-
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
       }
     );
 
-    uploadStream.end(file.buffer);
+    // 🔥 FIX HERE
+    const buffer =
+      file.buffer instanceof Buffer
+        ? file.buffer
+        : Buffer.from(file.buffer);
+
+    uploadStream.end(buffer);
   });
 };
 

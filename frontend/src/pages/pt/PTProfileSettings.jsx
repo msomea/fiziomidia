@@ -191,7 +191,7 @@ const PTProfileSettings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-white mt-20">
+    <div className="min-h-screen bg-gray-50 text-white mt-16">
       <ProfileHeader 
         formData={formData} 
         handleChange={handleChange} 

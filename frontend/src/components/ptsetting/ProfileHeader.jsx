@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { ASSET_URL} from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/AuthContext";
 
 const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) => {
+  const user = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
   const { region, district, ward, street } = location || {};
   const formattedLocation = [region, district, ward, street].filter(Boolean).join(" > ");
+
 
   return (
     <div className="relative bg-white shadow-md rounded-b-3xl">
@@ -103,7 +105,7 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
                       },
                     })
                   }
-                  placeholder="Speciality (comma separated)"
+                  placeholder="Speciality (Comma separated)"
                   className="input input-bordered w-full text-sm"
                 />
               </div>
@@ -111,8 +113,8 @@ const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) 
                 <input
                   type="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  value={user?.user?.email}
+                  disabled
                   placeholder="Email"
                   className="input input-bordered w-full text-sm"
                 />

@@ -5,6 +5,7 @@ import { requireForumPermission } from "../middlewares/forumPermissions.js";
 import * as forum from "../controllers/forumController.js";
 import * as comment from "../controllers/forumCommentController.js";
 import * as modReq from "../controllers/modReqController.js";
+import { upload } from "../services/uploadService.js";
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get("/posts/:id", forum.getPostById);
 // 🧠 Authenticated actions
 router.post("/posts/:id/vote", authenticate, forum.votePost);
 router.post("/subs", authenticate, requireRole("physiotherapist", "admin"), forum.createSub);
-router.post("/posts", authenticate, forum.createPost);
+router.post("/posts", authenticate, upload.single("image"), forum.createPost);
 router.delete("/posts/:id", authenticate, forum.deletePost);
 router.put("/posts/:id", authenticate, forum.updatePost);
 router.get("/my-subs", authenticate, forum.getMySubs);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../api/profile";
 import LocationSelector from "../../components/membersetting/LocationSelector";
@@ -15,7 +15,6 @@ export default function MemberProfileSettings() {
 
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "",
     phone: "",
     bio: "",
     currentPassword: "",
@@ -34,7 +33,6 @@ export default function MemberProfileSettings() {
     if (user) {
       setFormData({
         fullName: user.fullName || "",
-        email: user.email || "",
         phone: user.phone || "",
         bio: user.bio || "",
         currentPassword: "",
@@ -129,7 +127,6 @@ export default function MemberProfileSettings() {
 
       setFormData({
         fullName: updatedUser.fullName,
-        email: updatedUser.email,
         phone: updatedUser.phone,
         bio: updatedUser.bio,
         currentPassword: "",
@@ -164,7 +161,6 @@ export default function MemberProfileSettings() {
         <h2 className="text-2xl font-semibold text-tufts mb-6 text-center">
           {t("update_profile_title")}
         </h2>
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <AvatarUpload
             profileImageUrl={formData.profileImageUrl}
@@ -180,13 +176,13 @@ export default function MemberProfileSettings() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Read Only Email */}
             <InputField
               label={t("email")}
               name="email"
               type="email"
               disabled
-              value={formData.email}
-              onChange={handleChange}
+              value={user?.email}
             />
             <InputField
               label={t("phone")}
