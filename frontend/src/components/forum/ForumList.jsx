@@ -20,7 +20,9 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   const [currentPage, setCurrentPage] = useState(1);
   const [postList, setPostList] = useState(posts);
   const postsPerPage = 10;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
 
   const DEFAULT_AUTHOR = {
     fullName: t("guest_label"),
@@ -161,14 +163,14 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     ? {
         _id: `sponsor-${currentTopic._id}`,
         author: {
-          fullName: currentTopic.sponsorName,
+          fullName: currentTopic.sponsorName?.[currentLang] || currentTopic.sponsorName?.[fallbackLang],
           profileImageUrl: currentTopic.sponsorLogo
-            ? `${ASSET_URL}${currentTopic.sponsorLogo}`
+            ? currentTopic.sponsorLogo
             : avatar,
           _id: null,
         },
-        title: currentTopic.sponsorWebsite || currentTopic.title,
-        body: currentTopic.sponsorMessage || "",
+        title: currentTopic.sponsorTitle?.[currentLang] || currentTopic.sponsorTitle?.[fallbackLang],
+        body: currentTopic.sponsorMessage?.[currentLang] || currentTopic.sponsorMessage?.[fallbackLang],
         upvotes: [],
         downvotes: [],
         comments: [],
@@ -177,10 +179,11 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       }
     : null;
 
+
   const displayedPosts = pinnedSponsorPost
     ? [pinnedSponsorPost, ...currentPosts]
     : currentPosts;
-console.log(posts)
+console.log(currentTopic.sponsorWebsite)
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
@@ -219,7 +222,7 @@ console.log(posts)
             {isSponsorPost ? (
               <img
                 src={currentTopic.sponsorLogo}
-                alt={currentTopic.sponsorName || "Sponsor"}
+                alt={currentTopic.sponsorName[currentLang] || "Sponsor"}
                 onError={(e) => {
                   e.target.src = avatar;
                 }}
@@ -271,7 +274,7 @@ console.log(posts)
 
               {isSponsorPost ? (
                 <a
-                  href={`https://${post.title}`}
+                  href={`https://${currentTopic.sponsorWebsite}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-lg font-bold text-caribbean mb-2 block break-words"

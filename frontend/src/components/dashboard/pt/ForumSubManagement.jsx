@@ -8,7 +8,9 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
 const ForumSubManagement = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language
+  const fallbackLang = "en"
   const { user } = useAuth();
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,15 +63,17 @@ const ForumSubManagement = () => {
           className="block bg-white shadow rounded-lg p-3 hover:bg-alice transition-colors"
         >
           <div className="flex justify-between items-center">
-            <span className="font-medium text-black">{sub.title}</span>
+            <span className="font-medium text-black">{sub.title[currentLang] || sub.title[fallbackLang]}</span>
 
             <span className="text-gray-400 text-sm">
-              {t("rules_count", { count: sub.rules?.length || 0 })}
+              {t("rules_count", {
+                count: sub.rules?.filter((r) => r[currentLang] || r.en)?.length || 0,
+              })}
             </span>
           </div>
 
           <p className="text-gray-500 text-sm line-clamp-2">
-            {sub.description}
+            {sub.description[currentLang]}
           </p>
         </Link>
       ))}

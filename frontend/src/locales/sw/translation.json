@@ -296,7 +296,7 @@
   "loading_posts": "Inapakia Machapisho...",
   "post_not_found": "Chapisho halikuonekana au limefutwa",
   "new_post": "Chapisho Jipya",
-  "request_moderator": "Omba Moderator",
+  "request_moderator": "Omba kuwa Mod",
   "request_sent": "Ombi Limepelekwa",
   "moderator_request_sent": "Ombi la moderator limepelekwa",
   "request_failed": "Ombi limekosa",
@@ -748,7 +748,9 @@
   "no_description_available": "Hakuna maelezo yanayopatikana",
   "my_appointments":"Miadi yangu",
   "undo_success": "Umerudsha Kikamilifu",
-  "update_profile": "Sasisha Profaili"
+  "update_profile": "Sasisha Profaili",
+  "fill_both_languages": "Jaza lugha zote",
+  "sponsor_title_placeholder": "Ingiza kichwa cha mzamini"
 
 
 

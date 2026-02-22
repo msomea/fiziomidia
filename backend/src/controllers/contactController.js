@@ -24,7 +24,7 @@ export const sendContactEmail = async (req, res) => {
     });
 
     await sendEmail({
-      to: "admin@fiziomidia.org",
+      to: "msomearaphael@gmail.com",
       subject: "New Contact Form Message",
       html: adminHtml,
       from: EMAIL_FROM.ADMIN,

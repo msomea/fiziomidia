@@ -8,7 +8,9 @@ import toast from "react-hot-toast";
 
 const CreatePost = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
 
   // Form state
   const [title, setTitle] = useState("");
@@ -140,7 +142,7 @@ const CreatePost = () => {
                   }`}
                 >
                   <div className="flex justify-between items-center text-tufts">
-                    <span>{topic.title}</span>
+                    <span>{topic.title[currentLang] || topic.title[fallbackLang]}</span>
                     <span className="text-sm">
                       {topic.totalPosts || 0} {t("posts")}
                     </span>

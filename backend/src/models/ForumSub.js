@@ -4,10 +4,16 @@ const { Schema } = mongoose;
 const ForumSubSchema = new Schema(
   {
     title: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
+      en: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      sw: {
+        type: String,
+        required: true,
+        trim: true,
+      },
     },
     slug: {
       type: String,
@@ -16,8 +22,8 @@ const ForumSubSchema = new Schema(
       lowercase: true,
     },
     description: {
-      type: String,
-      trim: true,
+      en: { type: String, trim: true },
+      sw: { type: String, trim: true },
     },
 
     createdBy: {
@@ -25,13 +31,14 @@ const ForumSubSchema = new Schema(
       ref: "User",
       required: true,
     },
+
     totalPosts: { type: Number, default: 0 },
 
     // Array of rules
     rules: [
       {
-        type: String,
-        trim: true,
+        en: { type: String, trim: true },
+        sw: { type: String, trim: true },
       },
     ],
     moderators: [
@@ -48,10 +55,20 @@ const ForumSubSchema = new Schema(
 
     // 🔹 Sponsorship fields
     isSponsored: { type: Boolean, default: false },
-    sponsorName: { type: String, trim: true },
+    sponsorName: {
+      en: { type: String, trim: true },
+      sw: { type: String, trim: true },
+    },
+    sponsorTitle: {
+      en: { type: String, trim: true },
+      sw: { type: String, trim: true },
+    },
     sponsorLogo: { type: String, trim: true },
     sponsorLogoPublicId: { type: String, trim: true },
-    sponsorMessage: { type: String, trim: true },
+    sponsorMessage: {
+      en: { type: String, trim: true },
+      sw: { type: String, trim: true },
+    },
     sponsorWebsite: { type: String, trim: true },
     startDate: { type: Date },
     endDate: { type: Date },

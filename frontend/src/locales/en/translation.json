@@ -296,7 +296,7 @@
   "loading_posts": "Loading Posts...",
   "post_not_found": "Post not found or deleted",
   "new_post": "New Post",
-  "request_moderator": "Request Moderator",
+  "request_moderator": "Be Moderator",
   "request_sent": "Request Sent",
   "moderator_request_sent": "Moderator request sent",
   "request_failed": "Request failed",
@@ -746,7 +746,9 @@
   "no_description_available": "No description available.",
   "my_appointments":"My appointments",
   "undo_success": "Undo Success",
-  "update_profile": "Update Profile"
+  "update_profile": "Update Profile",
+  "fill_both_languages": "Fill in both languages",
+  "sponsor_title_placeholder": "Enter sponsor title"
 
 
 

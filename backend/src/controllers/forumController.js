@@ -11,6 +11,7 @@ import { uploadToCloudinary, deleteFromCloudinary } from "../services/uploadServ
 // List all forum subs with pagination and totalPosts dynamically calculated
 export const listSubs = async (req, res) => {
   try {
+    
     const search = req.query.search || "";
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit) || 20, 100); // limit max to 100
@@ -33,7 +34,7 @@ export const listSubs = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "title slug description totalPosts isSponsored sponsorName sponsorLogo startDate endDate createdAt"
+        "title slug description totalPosts isSponsored sponsorName sponsorLogo sponsorWebsite sponsorTitle startDate endDate createdAt"
       ); // only select needed fields
 
     // Total count for pagination
@@ -91,6 +92,7 @@ export const getSubById= async (req, res) => {
         moderators: sub.moderators,
         createdBy: sub.createdBy,
         isSponsored: sub.isSponsored,
+        sponsorTitle: sub.sponsorTitle,
         sponsorName: sub.sponsorName,
         sponsorLogo: sub.sponsorLogo,
         sponsorMessage: sub.sponsorMessage,
@@ -119,13 +121,27 @@ export const createSub = async (req, res) => {
 
   const { title, slug, description, rules } = req.body;
 
+  // ✅ Validation: ensure both EN and SW are provided
+  if (
+    !title?.en ||
+    !title?.sw ||
+    !description?.en ||
+    !description?.sw ||
+    !Array.isArray(rules) ||
+    rules.some((r) => !r.en || !r.sw)
+  ) {
+    return res.status(400).json({
+      error: "Title, description, and all rules must have both EN and SW versions",
+    });
+  }
+
   try {
     const sub = new ForumSub({
-      title,
+      title,        // { en, sw }
       slug,
-      description,
+      description,  // { en, sw }
       createdBy: req.user._id,
-      rules: Array.isArray(rules) ? rules : [], // ensure rules is an array
+      rules,        // [{ en, sw }]
     });
 
     await sub.save();
@@ -159,6 +175,21 @@ export const editSub = async (req, res) => {
       return res
         .status(403)
         .json({ error: "You are not allowed to edit this sub" });
+    }
+
+    // ✅ Validation: both EN and SW required
+    if (title && (!title.en || !title.sw)) {
+      return res.status(400).json({ error: "Title must have both EN and SW" });
+    }
+    if (description && (!description.en || !description.sw)) {
+      return res
+        .status(400)
+        .json({ error: "Description must have both EN and SW" });
+    }
+    if (rules && rules.some((r) => !r.en || !r.sw)) {
+      return res
+        .status(400)
+        .json({ error: "All rules must have both EN and SW" });
     }
 
     // Update allowed fields

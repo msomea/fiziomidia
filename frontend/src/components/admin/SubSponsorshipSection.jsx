@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { fetchForumSubs } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next';
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 
 export default function SponsorshipSection() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
+
   const [subs, setSubs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -26,8 +29,9 @@ export default function SponsorshipSection() {
 
   // 🔎 Filter logic (applied instantly in UI)
   const filteredSubs = subs.filter((sub) => {
+    const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
     const matchesSearch =
-      sub.title.toLowerCase().includes(searchQuery.toLowerCase());
+      titleText.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus =
       filterStatus === "all"
@@ -65,11 +69,14 @@ export default function SponsorshipSection() {
       </div>
 
       {/* Listing */}
-      {filteredSubs.slice(0, 10).map((sub) => (
-        <div
-          key={sub._id}
-          className="mt-2 border p-2 rounded text-sm text-tufts"
-        >
+      {filteredSubs.slice(0, 10).map((sub) => {
+        const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
+
+        return (
+          <div
+            key={sub._id}
+            className="mt-2 border p-2 rounded text-sm text-tufts"
+          >
             <Link to={`/admin/sponsorship/${sub._id}`}>
               <h2 className="text-caribbean">
                 <b>{t('sub_label_short')}</b> #{sub._id}
@@ -77,7 +84,7 @@ export default function SponsorshipSection() {
             </Link>
 
             <p>
-              <b>{t('name_label')}</b> {sub.title}
+              <b>{t('name_label')}</b> {titleText}
             </p>
 
             <p>
@@ -88,11 +95,12 @@ export default function SponsorshipSection() {
                 <span className="text-red-600">{t('not_sponsored')}</span>
               )}
             </p>
-        </div>
-      ))}
+          </div>
+        );
+      })}
 
       {filteredSubs.length === 0 && (
-          <p className="text-gray-500 text-sm mt-4">{t('no_subs_found')}</p>
+        <p className="text-gray-500 text-sm mt-4">{t('no_subs_found')}</p>
       )}
     </CollapsibleSection>
   );

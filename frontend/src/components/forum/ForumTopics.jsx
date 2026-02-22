@@ -7,7 +7,9 @@ import CollapsibleSection from "../admin/CollapsibleSection";
 import { useTranslation } from "react-i18next";
 
 const ForumTopics = ({ onSelectTopic, user, socket }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
 
   const [topics, setTopics] = useState([]);
   const [activeTopic, setActiveTopic] = useState(null);
@@ -22,10 +24,10 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
 
   const [showAddSub, setShowAddSub] = useState(false);
   const [newSub, setNewSub] = useState({
-    title: "",
+    title: { en: "", sw: "" },
     slug: "",
-    description: "",
-    rules: [""],
+    description: { en: "", sw: "" },
+    rules: [{ en: "", sw: "" }],
   });
   const [subSaving, setSubSaving] = useState(false);
 
@@ -76,7 +78,12 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
   }, [topics]);
 
   const sortedTopics = [...topics].sort((a, b) => {
-    if (sortType === "alphabet") return a.title.localeCompare(b.title);
+    if (sortType === "alphabet")
+      return (
+        (a.title[currentLang] || a.title[fallbackLang]).localeCompare(
+          b.title[currentLang] || b.title[fallbackLang]
+        )
+      );
     if (sortType === "posts")
       return (b.totalPosts || 0) - (a.totalPosts || 0);
     return 0;
@@ -87,24 +94,35 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
     onSelectTopic(topic);
   };
 
-  const handleRuleChange = (index, value) => {
+  // Add a new empty rule with both languages
+  const addRuleField = () => {
+    setNewSub({ ...newSub, rules: [...newSub.rules, { en: "", sw: "" }] });
+  };
+
+  // Handle rule change for a specific language
+  const handleRuleChange = (index, lang, value) => {
     const updatedRules = [...newSub.rules];
-    updatedRules[index] = value;
+    updatedRules[index] = { ...updatedRules[index], [lang]: value };
     setNewSub({ ...newSub, rules: updatedRules });
   };
 
-  const addRuleField = () => {
-    setNewSub({ ...newSub, rules: [...newSub.rules, ""] });
-  };
-
+  // Remove a rule
   const removeRuleField = (index) => {
     const updatedRules = newSub.rules.filter((_, i) => i !== index);
     setNewSub({ ...newSub, rules: updatedRules });
   };
 
   const saveNewSub = async () => {
-    if (!newSub.title || !newSub.slug) {
-      toast.error(t("title_slug_required"));
+    // enforce en + sw for title, description, and rules
+    if (
+      !newSub.title.en ||
+      !newSub.title.sw ||
+      !newSub.slug ||
+      !newSub.description.en ||
+      !newSub.description.sw ||
+      newSub.rules.some((r) => !r.en || !r.sw)
+    ) {
+      toast.error(t("fill_all_fields"));
       return;
     }
 
@@ -115,10 +133,10 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
         toast.success(t("topic_created_success"));
         setShowAddSub(false);
         setNewSub({
-          title: "",
+          title: { en: "", sw: "" },
           slug: "",
-          description: "",
-          rules: [""],
+          description: { en: "", sw: "" },
+          rules: [{ en: "", sw: "" }],
         });
         fetchSubs(page, limit);
       }
@@ -138,9 +156,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
       <div ref={containerRef} style={{ minHeight }}>
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-caribbean">
-            {t("forum_topics")}
-          </h2>
+          <h2 className="text-xl font-bold text-caribbean">{t("forum_topics")}</h2>
 
           <fieldset className="fieldset w-32 p-1 text-white">
             <select
@@ -161,27 +177,37 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
               className="btn bg-green-600 text-white hover:bg-green-800 p-2 rounded"
               onClick={() => setShowAddSub(!showAddSub)}
             >
-              {showAddSub
-                ? t("cancel")
-                : t("add_new_topic")}
+              {showAddSub ? t("cancel") : t("add_new_topic")}
             </button>
           </div>
         )}
 
         {/* Add Topic Form */}
         {showAddSub && (
-          <CollapsibleSection
-            title={t("create_new_forum_topic")}
-            isOpen
-          >
+          <CollapsibleSection title={t("create_new_forum_topic")} isOpen>
             <div className="flex flex-col gap-3">
               <input
                 type="text"
-                placeholder={t("title")}
+                placeholder={`${t("title")} (EN)`}
                 className="border p-2 rounded w-full"
-                value={newSub.title}
+                value={newSub.title.en}
                 onChange={(e) =>
-                  setNewSub({ ...newSub, title: e.target.value })
+                  setNewSub({
+                    ...newSub,
+                    title: { ...newSub.title, en: e.target.value },
+                  })
+                }
+              />
+              <input
+                type="text"
+                placeholder={`${t("title")} (SW)`}
+                className="border p-2 rounded w-full"
+                value={newSub.title.sw}
+                onChange={(e) =>
+                  setNewSub({
+                    ...newSub,
+                    title: { ...newSub.title, sw: e.target.value },
+                  })
                 }
               />
 
@@ -197,49 +223,60 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
 
               <textarea
                 rows={3}
-                placeholder={t("description")}
+                placeholder={`${t("description")} (EN)`}
                 className="border p-2 rounded w-full"
-                value={newSub.description}
+                value={newSub.description.en}
                 onChange={(e) =>
                   setNewSub({
                     ...newSub,
-                    description: e.target.value,
+                    description: { ...newSub.description, en: e.target.value },
+                  })
+                }
+              />
+              <textarea
+                rows={3}
+                placeholder={`${t("description")} (SW)`}
+                className="border p-2 rounded w-full"
+                value={newSub.description.sw}
+                onChange={(e) =>
+                  setNewSub({
+                    ...newSub,
+                    description: { ...newSub.description, sw: e.target.value },
                   })
                 }
               />
 
               {/* Rules */}
-              <CollapsibleSection
-                title={t("topic_rules")}
-                isOpen
-              >
+              <CollapsibleSection title={t("topic_rules")} isOpen>
                 {newSub.rules.map((rule, idx) => (
-                  <div
-                    key={idx}
-                    className="flex gap-2 items-center mt-2"
-                  >
-                    <input
-                      type="text"
-                      placeholder={`${t("rule")} #${idx + 1}`}
-                      className="border p-2 rounded flex-1"
-                      value={rule}
-                      onChange={(e) =>
-                        handleRuleChange(idx, e.target.value)
-                      }
-                    />
+                <div key={idx} className="flex flex-col gap-2 mt-2 w-full">
+                  {/* English rule */}
+                  <input
+                    type="text"
+                    placeholder={`${t("rule")} #${idx + 1} (EN)`}
+                    className="border p-2 rounded w-full"
+                    value={rule.en}
+                    onChange={(e) => handleRuleChange(idx, "en", e.target.value)}
+                  />
+                  {/* Swahili rule */}
+                  <input
+                    type="text"
+                    placeholder={`${t("rule")} #${idx + 1} (SW)`}
+                    className="border p-2 rounded w-full"
+                    value={rule.sw}
+                    onChange={(e) => handleRuleChange(idx, "sw", e.target.value)}
+                  />
 
-                    {newSub.rules.length > 1 && (
-                      <button
-                        className="btn bg-red-600 text-white p-1 rounded"
-                        onClick={() =>
-                          removeRuleField(idx)
-                        }
-                      >
-                        {t("remove")}
-                      </button>
-                    )}
-                  </div>
-                ))}
+                  {newSub.rules.length > 1 && (
+                    <button
+                      className="btn bg-red-600 text-white p-1 rounded w-fit mt-1"
+                      onClick={() => removeRuleField(idx)}
+                    >
+                      {t("remove")}
+                    </button>
+                  )}
+                </div>
+              ))}
 
                 <button
                   className="btn bg-blue-600 text-white p-2 rounded mt-2"
@@ -254,9 +291,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
                 onClick={saveNewSub}
                 disabled={subSaving}
               >
-                {subSaving
-                  ? t("saving")
-                  : t("save_topic")}
+                {subSaving ? t("saving") : t("save_topic")}
               </button>
             </div>
           </CollapsibleSection>
@@ -275,8 +310,10 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
               <div className="flex justify-between items-center">
                 <span className="font-medium">
                   {topic.isSponsored
-                    ? `${topic.sponsorName} - ${topic.title}`
-                    : topic.title}
+                    ? `${topic.sponsorName[currentLang]} - ${
+                        topic.title[currentLang] || topic.title[fallbackLang]
+                      }`
+                    : topic.title[currentLang] || topic.title[fallbackLang]}
                 </span>
 
                 <span

@@ -596,10 +596,11 @@ export const updateSponsorship = async (req, res) => {
       }
 
       sub.isSponsored = false;
-      sub.sponsorName = "";
+      sub.sponsorTitle = { en: "", sw: "" };
+      sub.sponsorName = { en: "", sw: "" };
       sub.sponsorLogo = "";
       sub.sponsorLogoPublicId = "";
-      sub.sponsorMessage = "";
+      sub.sponsorMessage = { en: "", sw: "" };
       sub.sponsorWebsite = "";
       sub.startDate = null;
       sub.endDate = null;
@@ -618,11 +619,29 @@ export const updateSponsorship = async (req, res) => {
     -------------------------------------------------- */
     sub.isSponsored = true;
 
-    if (req.body.sponsorName !== undefined)
-      sub.sponsorName = req.body.sponsorName;
+    /* Sponsor Title (multilingual) */
+    if (req.body.sponsorTitle !== undefined) {
+      sub.sponsorTitle =
+        typeof req.body.sponsorTitle === "string"
+          ? JSON.parse(req.body.sponsorTitle)
+          : req.body.sponsorTitle;
+    }
 
-    if (req.body.sponsorMessage !== undefined)
-      sub.sponsorMessage = req.body.sponsorMessage;
+    /* Sponsor Name (multilingual) */
+    if (req.body.sponsorName !== undefined) {
+      sub.sponsorName =
+        typeof req.body.sponsorName === "string"
+          ? JSON.parse(req.body.sponsorName)
+          : req.body.sponsorName;
+    }
+
+    /* Sponsor Message (multilingual) */
+    if (req.body.sponsorMessage !== undefined) {
+      sub.sponsorMessage =
+        typeof req.body.sponsorMessage === "string"
+          ? JSON.parse(req.body.sponsorMessage)
+          : req.body.sponsorMessage;
+    }
 
     if (req.body.sponsorWebsite !== undefined)
       sub.sponsorWebsite = req.body.sponsorWebsite;

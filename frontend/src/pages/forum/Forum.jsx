@@ -13,7 +13,9 @@ import { socket } from "../../socket";
 import { useTranslation } from "react-i18next";
 
 const Forum = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
   const navigate = useNavigate();
   const { user } = useAuth();
   const {
@@ -32,14 +34,25 @@ const Forum = () => {
   const [rulesDraft, setRulesDraft] = useState([]);
 
   useEffect(() => {
-    setRulesDraft(selectedSub?.rules || []);
+    setRulesDraft(
+      (selectedSub?.rules || []).map((r) => ({
+        en: r.en || "",
+        sw: r.sw || "",
+        _id: r._id || null,
+      }))
+    );
   }, [selectedSub]);
+
 
   /* ------------------ Permissions ------------------ */
   const isMod = selectedSub?.moderators?.some(
-    (m) => m.user?.toString() === user._id && m.role === "mod"
+    (m) => m.user?._id?.toString() === user._id || m.user?.toString() === user._id && m.role === "mod"
   );
-  const isOwner = selectedSub?.createdBy?.toString() === user._id;
+
+  const ownerId =
+    selectedSub?.createdBy?._id?.toString() || selectedSub?.createdBy?.toString();
+  const isOwner = ownerId === user._id;
+
   const canEditRules =
     user &&
     selectedSub &&
@@ -57,7 +70,12 @@ const Forum = () => {
     setRulesDraft((prev) => prev.filter((_, i) => i !== index));
 
   const handleSaveRules = async () => {
-    const cleanedRules = rulesDraft.map((r) => r.trim()).filter(Boolean);
+    const cleanedRules = rulesDraft
+      .map((r) => ({
+        en: r.en.trim(),
+        sw: r.sw.trim(),
+      }))
+      .filter((r) => r.en || r.sw); // remove empty rules
 
     try {
       const res = await API.put(`${API_URL}/forum/subs/${selectedSub._id}`, {
@@ -146,6 +164,7 @@ const Forum = () => {
     });
   };
 
+
   /* ------------------ Render ------------------ */
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">
@@ -154,8 +173,9 @@ const Forum = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-caribbean">{t("forum")}</h1>
 
+          {/* Later allow onyl PT and Admin to post */}
           <div className="flex gap-2">
-            {["physiotherapist", "admin"].includes(user.role) && (
+            {["physiotherapist","member", "pendingPhysiotherapist", "admin"].includes(user.role) && (
               <button
                 onClick={() => navigate("/forum/create")}
                 className="btn p-2 bg-caribbean text-white"
@@ -195,7 +215,9 @@ const Forum = () => {
                   <>
                     <ul className="text-tufts list-inside text-sm">
                       {selectedSub.rules?.map((rule, i) => (
-                        <li key={i}>{rule}</li>
+                        <li key={i}>
+                          {rule[currentLang] || rule[fallbackLang]}
+                        </li>
                       ))}
                     </ul>
 
@@ -210,23 +232,36 @@ const Forum = () => {
                   </>
                 ) : (
                   <>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {rulesDraft.map((rule, i) => (
-                        <div key={i} className="flex gap-2">
+                        <div key={i} className="flex flex-col gap-2">
                           <input
-                            value={rule}
+                            type="text"
+                            placeholder={`Rule #${i + 1} (EN)`}
+                            value={rule.en}
                             onChange={(e) => {
                               const updated = [...rulesDraft];
-                              updated[i] = e.target.value;
+                              updated[i].en = e.target.value;
                               setRulesDraft(updated);
                             }}
-                            className="flex-1 border rounded px-2 py-1 text-sm"
+                            className="border rounded px-2 py-1 text-sm w-full"
+                          />
+                          <input
+                            type="text"
+                            placeholder={`Rule #${i + 1} (SW)`}
+                            value={rule.sw}
+                            onChange={(e) => {
+                              const updated = [...rulesDraft];
+                              updated[i].sw = e.target.value;
+                              setRulesDraft(updated);
+                            }}
+                            className="border rounded px-2 py-1 text-sm w-full"
                           />
                           <button
                             onClick={() => handleRemoveRule(i)}
-                            className="text-red-500"
+                            className="text-red-500 text-xs self-start"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={16} /> Remove
                           </button>
                         </div>
                       ))}

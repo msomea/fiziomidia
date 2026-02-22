@@ -18,18 +18,19 @@ export default function AdminSponsorshipDetail() {
   // Sponsorship form
   const [form, setForm] = useState({
     isSponsored: false,
-    sponsorName: "",
+    sponsorTitle: { en: "", sw: "" }, 
+    sponsorName: { en: "", sw: "" },
     sponsorLogo: "",
-    sponsorMessage: "",
+    sponsorMessage: { en: "", sw: "" },
     sponsorWebsite: "",
     startDate: "",
     endDate: "",
   });
 
-  // NEW: basic sub info form
+  // NEW: basic sub info form for both EN & SW
   const [basicForm, setBasicForm] = useState({
-    title: "",
-    description: "",
+    title: { en: "", sw: "" },
+    description: { en: "", sw: "" },
     slug: "",
   });
 
@@ -47,19 +48,37 @@ export default function AdminSponsorshipDetail() {
       const s = res.data.sub;
       setSub(s);
 
+      // Load sponsorship
       setForm({
         isSponsored: s.isSponsored,
-        sponsorName: s.sponsorName || "",
+        sponsorTitle: {
+          en: s.sponsorTitle?.en || "",
+          sw: s.sponsorTitle?.sw || "",
+        },
+        sponsorName: {
+          en: s.sponsorName?.en || "",
+          sw: s.sponsorName?.sw || "",
+        },
         sponsorLogo: s.sponsorLogo || "",
-        sponsorMessage: s.sponsorMessage || "",
+        sponsorMessage: {
+          en: s.sponsorMessage?.en || "",
+          sw: s.sponsorMessage?.sw || "",
+        },
         sponsorWebsite: s.sponsorWebsite || "",
         startDate: s.startDate ? dayjs(s.startDate).format("YYYY-MM-DD") : "",
         endDate: s.endDate ? dayjs(s.endDate).format("YYYY-MM-DD") : "",
       });
 
+      // Load multilingual basic info
       setBasicForm({
-        title: s.title || "",
-        description: s.description || "",
+        title: {
+          en: s.title?.en || "",
+          sw: s.title?.sw || "",
+        },
+        description: {
+          en: s.description?.en || "",
+          sw: s.description?.sw || "",
+        },
         slug: s.slug || "",
       });
     } catch (err) {
@@ -69,16 +88,42 @@ export default function AdminSponsorshipDetail() {
     }
   };
 
-  const handleBasicChange = (e) => {
-    setBasicForm({ ...basicForm, [e.target.name]: e.target.value });
+  const handleBasicChange = (e, lang = null, field = null) => {
+    if (lang && field) {
+      // Update en/sw field
+      setBasicForm({
+        ...basicForm,
+        [field]: { ...basicForm[field], [lang]: e.target.value },
+      });
+    } else {
+      setBasicForm({ ...basicForm, [e.target.name]: e.target.value });
+    }
   };
 
-  const handleSponsorChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleSponsorChange = (e, lang = null, field = null) => {
+    if (lang && field) {
+      setForm({
+        ...form,
+        [field]: { ...form[field], [lang]: e.target.value },
+      });
+    } else {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
   };
 
   // ✅ Update basic sub info
   const updateSubInfo = async () => {
+    // Validation: require both EN & SW title and description
+    if (
+      !basicForm.title.en.trim() ||
+      !basicForm.title.sw.trim() ||
+      !basicForm.description.en.trim() ||
+      !basicForm.description.sw.trim()
+    ) {
+      toast.error(t('fill_both_languages'));
+      return;
+    }
+
     try {
       setSavingBasic(true);
 
@@ -95,16 +140,22 @@ export default function AdminSponsorshipDetail() {
     }
   };
 
-
   // Sponsorship update (unchanged)
   const updateSponsorship = async () => {
+    // Optional: validate EN + SW filled
+    if (!form.sponsorName.en || !form.sponsorName.sw || !form.sponsorMessage.en || !form.sponsorMessage.sw) {
+      toast.error(t('fill_both_languages'));
+      return;
+    }
+
     try {
       setSavingSponsor(true);
 
       const data = new FormData();
       data.append("isSponsored", form.isSponsored);
-      data.append("sponsorName", form.sponsorName);
-      data.append("sponsorMessage", form.sponsorMessage);
+      data.append("sponsorTitle", JSON.stringify(form.sponsorTitle));
+      data.append("sponsorName", JSON.stringify(form.sponsorName));
+      data.append("sponsorMessage", JSON.stringify(form.sponsorMessage)); 
       data.append("sponsorWebsite", form.sponsorWebsite);
       data.append("startDate", form.startDate);
       data.append("endDate", form.endDate);
@@ -121,7 +172,6 @@ export default function AdminSponsorshipDetail() {
       setSavingSponsor(false);
     }
   };
-
 
   const removeSponsorship = async () => {
     if (!confirm(t('confirm_remove_sponsorship'))) return;
@@ -151,7 +201,7 @@ export default function AdminSponsorshipDetail() {
       {/* HEADER */}
       <div className="flex justify-between mb-4">
         <h2 className="font-semibold text-lg text-caribbean">
-          {t('manage_sub')} — {sub.title}
+          {t('manage_sub')} — {sub.title?.en}
         </h2>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-500 hover:text-red-800" />
@@ -164,19 +214,37 @@ export default function AdminSponsorshipDetail() {
         <div className="bg-gray-100 p-4 rounded space-y-3">
           <h3 className="font-semibold text-caribbean">{t('sub_information')}</h3>
 
+          {/* EN Title */}
           <input
-            name="title"
-            value={basicForm.title}
-            onChange={handleBasicChange}
-            placeholder={t('sub_title_placeholder')}
+            name="title_en"
+            value={basicForm.title.en}
+            onChange={(e) => handleBasicChange(e, 'en', 'title')}
+            placeholder={`${t('sub_title_placeholder')} (EN)`}
+            className="w-full border p-2 rounded"
+          />
+          {/* SW Title */}
+          <input
+            name="title_sw"
+            value={basicForm.title.sw}
+            onChange={(e) => handleBasicChange(e, 'sw', 'title')}
+            placeholder={`${t('sub_title_placeholder')} (SW)`}
             className="w-full border p-2 rounded"
           />
 
+          {/* EN Description */}
           <textarea
-            name="description"
-            value={basicForm.description}
-            onChange={handleBasicChange}
-            placeholder={t('sub_description_placeholder')}
+            name="description_en"
+            value={basicForm.description.en}
+            onChange={(e) => handleBasicChange(e, 'en', 'description')}
+            placeholder={`${t('sub_description_placeholder')} (EN)`}
+            className="w-full border p-2 rounded"
+          />
+          {/* SW Description */}
+          <textarea
+            name="description_sw"
+            value={basicForm.description.sw}
+            onChange={(e) => handleBasicChange(e, 'sw', 'description')}
+            placeholder={`${t('sub_description_placeholder')} (SW)`}
             className="w-full border p-2 rounded"
           />
 
@@ -215,22 +283,48 @@ export default function AdminSponsorshipDetail() {
 
           {form.isSponsored && (
             <>
+              {/* Sponsor Title */}
               <input
-                name="sponsorName"
-                value={form.sponsorName}
-                onChange={handleSponsorChange}
-                placeholder={t('sponsor_name_placeholder')}
+                value={form.sponsorTitle.en}
+                onChange={(e) => handleSponsorChange(e, 'en', 'sponsorTitle')}
+                placeholder={`${t('sponsor_title_placeholder')} (EN)`}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                value={form.sponsorTitle.sw}
+                onChange={(e) => handleSponsorChange(e, 'sw', 'sponsorTitle')}
+                placeholder={`${t('sponsor_title_placeholder')} (SW)`}
+                className="w-full border p-2 rounded"
+              />
+              {/* Sponsor Name */}
+              <input
+                value={form.sponsorName.en}
+                onChange={(e) => handleSponsorChange(e, 'en', 'sponsorName')}
+                placeholder={`${t('sponsor_name_placeholder')} (EN)`}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                value={form.sponsorName.sw}
+                onChange={(e) => handleSponsorChange(e, 'sw', 'sponsorName')}
+                placeholder={`${t('sponsor_name_placeholder')} (SW)`}
                 className="w-full border p-2 rounded"
               />
 
+              {/* Sponsor Message */}
               <textarea
-                name="sponsorMessage"
-                value={form.sponsorMessage}
-                onChange={handleSponsorChange}
-                placeholder={t('sponsor_message_placeholder')}
+                value={form.sponsorMessage.en}
+                onChange={(e) => handleSponsorChange(e, 'en', 'sponsorMessage')}
+                placeholder={`${t('sponsor_message_placeholder')} (EN)`}
+                className="w-full border p-2 rounded"
+              />
+              <textarea
+                value={form.sponsorMessage.sw}
+                onChange={(e) => handleSponsorChange(e, 'sw', 'sponsorMessage')}
+                placeholder={`${t('sponsor_message_placeholder')} (SW)`}
                 className="w-full border p-2 rounded"
               />
 
+              {/* The rest remains unchanged */}
               <input
                 name="sponsorWebsite"
                 value={form.sponsorWebsite}
@@ -281,7 +375,6 @@ export default function AdminSponsorshipDetail() {
           >
             {savingSponsor ? t('saving') : t('save_sponsorship')}
           </button>
-
 
           {sub.isSponsored && (
             <button

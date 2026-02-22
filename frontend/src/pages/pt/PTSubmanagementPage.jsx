@@ -3,22 +3,29 @@ import { useParams, useNavigate } from "react-router";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
-import { X } from "lucide-react";
+import { X, Trash2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function PTSubManagementPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const currentLang = i18n.language || "en";
+  const fallbackLang = "en";
+
   const { subId } = useParams();
   const navigate = useNavigate();
   const [sub, setSub] = useState(null);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [rules, setRules] = useState("");
+  const [titleEn, setTitleEn] = useState("");
+  const [titleSw, setTitleSw] = useState("");
+  const [descEn, setDescEn] = useState("");
+  const [descSw, setDescSw] = useState("");
+  const [rulesDraft, setRulesDraft] = useState([]); // array of {en, sw}
+
   const [activeTab, setActiveTab] = useState("pending");
 
+  /* ---------------- FETCH SUB ---------------- */
   useEffect(() => {
     fetchSubData();
   }, [subId]);
@@ -30,9 +37,13 @@ export default function PTSubManagementPage() {
       const subData = subRes.data.sub;
 
       setSub(subData);
-      setTitle(subData.title || "");
-      setDescription(subData.description || "");
-      setRules((subData.rules || []).join("\n"));
+      setTitleEn(subData.title?.en || "");
+      setTitleSw(subData.title?.sw || "");
+      setDescEn(subData.description?.en || "");
+      setDescSw(subData.description?.sw || "");
+      setRulesDraft(
+        (subData.rules || []).map((r) => ({ en: r.en || "", sw: r.sw || "" }))
+      );
     } catch (err) {
       console.error(err);
       toast.error(t("failed_fetch_sub"));
@@ -41,6 +52,7 @@ export default function PTSubManagementPage() {
     }
   };
 
+  /* ---------------- FETCH MOD REQUESTS ---------------- */
   useEffect(() => {
     fetchRequests();
   }, [subId, activeTab]);
@@ -59,14 +71,29 @@ export default function PTSubManagementPage() {
   /* ---------------- SUB UPDATE ---------------- */
   const handleUpdateSub = async (e) => {
     e.preventDefault();
+
+    // Validate at least one lang for title/description and rules
+    if (!titleEn.trim() && !titleSw.trim()) {
+      return toast.error(t("title_required_en_sw"));
+    }
+
+    if (!descEn.trim() && !descSw.trim()) {
+      return toast.error(t("description_required_en_sw"));
+    }
+
+    const cleanedRules = rulesDraft
+      .map((r) => ({ en: r.en.trim(), sw: r.sw.trim() }))
+      .filter((r) => r.en || r.sw);
+
+    if (cleanedRules.length === 0) {
+      return toast.error(t("at_least_one_rule_required"));
+    }
+
     try {
       const payload = {
-        title,
-        description,
-        rules: rules
-          .split("\n")
-          .map((r) => r.trim())
-          .filter(Boolean),
+        title: { en: titleEn, sw: titleSw },
+        description: { en: descEn, sw: descSw },
+        rules: cleanedRules,
       };
 
       const res = await API.put(`${API_URL}/forum/subs/${subId}`, payload);
@@ -96,6 +123,17 @@ export default function PTSubManagementPage() {
     }
   };
 
+  /* ---------------- RULE HANDLERS ---------------- */
+  const handleRuleChange = (index, field, value) => {
+    const updated = [...rulesDraft];
+    updated[index][field] = value;
+    setRulesDraft(updated);
+  };
+
+  const handleAddRule = () => setRulesDraft([...rulesDraft, { en: "", sw: "" }]);
+  const handleRemoveRule = (index) =>
+    setRulesDraft(rulesDraft.filter((_, i) => i !== index));
+
   if (loading) return <p>{t("loading")}...</p>;
   if (!sub) return <p>{t("sub_not_found")}</p>;
 
@@ -103,7 +141,7 @@ export default function PTSubManagementPage() {
     <div className="p-4 space-y-8 mt-20">
       <div className="flex justify-between mb-3">
         <h1 className="text-2xl text-caribbean font-bold">
-          {t("manage_sub")}: {sub.title}
+          {t("manage_sub")}: {sub.title[currentLang] || sub.title[fallbackLang]}
         </h1>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-400 hover:text-red-800" />
@@ -119,30 +157,78 @@ export default function PTSubManagementPage() {
           {t("edit_sub_info")}
         </h2>
 
-        <input
-          className="w-full border p-2 rounded"
-          placeholder={t("title")}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        {/* Titles */}
+        <div className="flex flex-col md:flex-row gap-2">
+          <input
+            className="w-full border p-2 rounded"
+            placeholder={t("title_en")}
+            value={titleEn}
+            onChange={(e) => setTitleEn(e.target.value)}
+          />
+          <input
+            className="w-full border p-2 rounded"
+            placeholder={t("title_sw")}
+            value={titleSw}
+            onChange={(e) => setTitleSw(e.target.value)}
+          />
+        </div>
 
-        <textarea
-          className="w-full border p-2 rounded"
-          placeholder={t("description")}
-          rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+        {/* Descriptions */}
+        <div className="flex flex-col md:flex-row gap-2">
+          <textarea
+            className="w-full border p-2 rounded"
+            placeholder={t("description_en")}
+            rows={3}
+            value={descEn}
+            onChange={(e) => setDescEn(e.target.value)}
+          />
+          <textarea
+            className="w-full border p-2 rounded"
+            placeholder={t("description_sw")}
+            rows={3}
+            value={descSw}
+            onChange={(e) => setDescSw(e.target.value)}
+          />
+        </div>
 
-        <textarea
-          className="w-full border p-2 rounded"
-          placeholder={t("rules_one_per_line")}
-          rows={4}
-          value={rules}
-          onChange={(e) => setRules(e.target.value)}
-        />
+        {/* Rules */}
+        <div className="space-y-2">
+          <label className="font-medium">{t("rules")}:</label>
+          {rulesDraft.map((r, i) => (
+            <div key={i} className="flex flex-col md:flex-row gap-2">
+              <input
+                className="border p-2 rounded w-full"
+                placeholder={`${t("rule_en")} #${i + 1}`}
+                value={r.en}
+                onChange={(e) => handleRuleChange(i, "en", e.target.value)}
+              />
+              <input
+                className="border p-2 rounded w-full"
+                placeholder={`${t("rule_sw")} #${i + 1}`}
+                value={r.sw}
+                onChange={(e) => handleRuleChange(i, "sw", e.target.value)}
+              />
+              <div className="flex gap-1 mt-1 md:mt-0">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveRule(i)}
+                  className="text-red-500 p-1"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddRule}
+            className="flex items-center gap-1 text-green-600 mt-2"
+          >
+            <Plus size={14} /> {t("add_rule")}
+          </button>
+        </div>
 
-        <button className="bg-tufts text-white px-4 py-2 rounded">
+        <button className="bg-tufts text-white px-4 py-2 rounded mt-3">
           {t("save_changes")}
         </button>
       </form>
@@ -153,7 +239,7 @@ export default function PTSubManagementPage() {
           {t("moderator_requests")}
         </h2>
 
-        {/* STATUS TABS*/}
+        {/* STATUS TABS */}
         <div className="flex gap-2 mb-4">
           {["pending", "approved", "rejected"].map((s) => (
             <button

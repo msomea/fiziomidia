@@ -45,10 +45,10 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await logout(navigate);
-      toast.success("Logged out successfully!");
+      toast.success(t("logout_success"));
     } catch (err) {
       console.error("Logout failed:", err);
-      toast.error("Logout failed. Try again.");
+      toast.error(t("logout_failed"));
     }
   };
 
