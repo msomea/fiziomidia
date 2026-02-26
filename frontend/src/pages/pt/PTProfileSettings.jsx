@@ -16,6 +16,7 @@ import PasswordChangeSection from "../../components/ptsetting/PasswordChangeSect
 import GallerySection from "../../components/ptsetting/GallerySection";
 import SaveButton from "../../components/ptsetting/SaveButton";
 import LocationSelector from "../../components/ptsetting/LocationSelector";
+import DefaultLanguageSection from "../../components/ptsetting/DefaultLanguageSection";
 
 const PTProfileSettings = () => {
   const navigate = useNavigate();
@@ -223,6 +224,7 @@ const PTProfileSettings = () => {
           <PasswordChangeSection t={t} />
           <SaveButton loading={loading} t={t} />
         </div>
+        <DefaultLanguageSection t={t} />
       </form>
     </div>
   );

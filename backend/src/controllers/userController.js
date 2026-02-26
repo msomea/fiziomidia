@@ -310,4 +310,48 @@ export const toggleSavePT = async (req, res) => {
   }
 };
 
+// Update Preferred Language
+export const updateLanguage = async (req, res) => {
+  try {
+    const { language } = req.body;
+
+    if (!language) {
+      return res.status(400).json({
+        success: false,
+        error: "Language is required",
+      });
+    }
+
+    if (!["en", "sw"].includes(language)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid language selection",
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    user.language = language;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Language updated successfully",
+      language: user.language,
+    });
+  } catch (error) {
+    console.error("Update language error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
+  }
+};
 

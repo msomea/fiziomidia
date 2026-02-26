@@ -96,7 +96,6 @@ export default function FindProfessionals() {
   }, [totalPages, paused]);
 
   const showSkeletons = loading || pts.length < 1;
-console.log(pts)
   return (
     <section className="bg-white py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">

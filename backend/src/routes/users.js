@@ -37,4 +37,7 @@ router.post("/save-pt/:ptId", authenticate, requireRole("member"), userControlle
 // Get saved PTs for a member
 router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
 
+// Update preferred language
+router.put("/update-language", authenticate, userController.updateLanguage);
+
 export default router;

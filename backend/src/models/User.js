@@ -241,6 +241,11 @@ const UserSchema = new Schema({
   isVerified: { type: Boolean, default: false },
   resetToken: String,
   resetTokenExpire: Date,
+  language: {
+    type: String,
+    enum: ["en", "sw"],
+    default: "sw"
+  },
 
   refreshTokens: [
     {

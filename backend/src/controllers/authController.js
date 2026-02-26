@@ -272,6 +272,7 @@ export async function loginUser(req, res) {
         isLoggedIn: user.isLoggedIn,
         lastLogin: user.lastLogin,
         profileImageUrl: user.profileImageUrl || "",
+        language: user.language || "sw" 
       },
       accessToken,
       refreshToken,

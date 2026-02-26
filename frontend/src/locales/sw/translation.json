@@ -750,7 +750,12 @@
   "undo_success": "Umerudsha Kikamilifu",
   "update_profile": "Sasisha Profaili",
   "fill_both_languages": "Jaza lugha zote",
-  "sponsor_title_placeholder": "Ingiza kichwa cha mzamini"
+  "sponsor_title_placeholder": "Ingiza kichwa cha mzamini",
+  "default_language": "Lugha Chaguo",
+  "select_language": "Chagua Lugha",
+  "update_language": "Sasisha Lugha",
+  "language_updated_success": "Lugha imesasishwa kikamilifu",
+  "failed_update_language": "Imeshindikana kusasisha lugha"
 
 
 

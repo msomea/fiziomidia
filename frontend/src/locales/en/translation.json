@@ -748,7 +748,12 @@
   "undo_success": "Undo Success",
   "update_profile": "Update Profile",
   "fill_both_languages": "Fill in both languages",
-  "sponsor_title_placeholder": "Enter sponsor title"
+  "sponsor_title_placeholder": "Enter sponsor title",
+    "default_language": "Default Language",
+  "select_language": "Select Language",
+  "update_language": "Update Language",
+  "language_updated_success": "Language updated successfully",
+  "failed_update_language": "Failed to update language"
 
 
 

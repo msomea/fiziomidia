@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
-import { Eye, EyeOff, X } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../api/profile";
 import LocationSelector from "../../components/membersetting/LocationSelector";
@@ -8,9 +8,10 @@ import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
 import AvatarUpload from "../../components/form/AvatarUpload";
 import { useTranslation } from "react-i18next";
+import API from "../../api/axios";
 
 export default function MemberProfileSettings() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, setUser } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -28,6 +29,11 @@ export default function MemberProfileSettings() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // New state for selected language
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [languageLoading, setLanguageLoading] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -49,6 +55,8 @@ export default function MemberProfileSettings() {
           street: user.location.street || "",
         });
       }
+
+      if (user.language) setSelectedLanguage(user.language);
     }
   }, [user]);
 
@@ -155,13 +163,44 @@ export default function MemberProfileSettings() {
     }
   };
 
+  // New function to update language
+  const handleLanguageUpdate = async () => {
+    if (selectedLanguage === user.language) {
+      toast(t("no_language_change"));
+      return;
+    }
+
+    setLanguageLoading(true);
+    try {
+      const { data } = await API.put("/users/update-language", {
+        language: selectedLanguage,
+      });
+
+      if (data.success) {
+        const updatedUser = { ...user, language: data.language };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        i18n.changeLanguage(data.language);
+        toast.success(t("language_updated_success"));
+        setLanguageOpen(false);
+      }
+    } catch (err) {
+      console.error("Language update error:", err);
+      toast.error(err.response?.data?.error || t("failed_update_language"));
+    } finally {
+      setLanguageLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-alice mt-20 flex justify-center items-center px-4 py-8">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-lg p-6 md:p-10">
+    <div className="min-h-screen bg-alice mt-20 flex justify-center items-start px-4 py-8">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-lg p-6 md:p-10 space-y-6">
         <h2 className="text-2xl font-semibold text-tufts mb-6 text-center">
           {t("update_profile_title")}
         </h2>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Avatar */}
           <AvatarUpload
             profileImageUrl={formData.profileImageUrl}
             selectedFile={imageFile} 
@@ -176,7 +215,6 @@ export default function MemberProfileSettings() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Read Only Email */}
             <InputField
               label={t("email")}
               name="email"
@@ -212,6 +250,55 @@ export default function MemberProfileSettings() {
             onChange={handleChange}
           />
 
+          {/* Default Language Section */}
+          <div className="border-t mt-8 pt-6">
+            <button
+              type="button"
+              onClick={() => setLanguageOpen(!languageOpen)}
+              className="w-full flex justify-between items-center font-semibold text-tufts mb-2"
+            >
+              {t("default_language")}
+              <span className={`text-caribbean transition-transform duration-300 ${languageOpen ? "rotate-180" : ""}`}>▼</span>
+            </button>
+
+            {languageOpen && (
+              <div className="space-y-4 mt-2">
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="select select-bordered w-full"
+                >
+                  <option value="en">{t("english")}</option>
+                  <option value="sw">{t("swahili")}</option>
+                </select>
+
+                <div className="flex gap-3 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedLanguage(user.language);
+                      setLanguageOpen(false);
+                    }}
+                    className="btn bg-red-300 flex-1 hover:bg-red-400 text-white"
+                    disabled={languageLoading}
+                  >
+                    {t("cancel")}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLanguageUpdate}
+                    className="btn bg-caribbean flex-1 text-white hover:bg-tufts"
+                    disabled={languageLoading}
+                  >
+                    {languageLoading ? t("updating") : t("update_language")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Password Section */}
           <div className="border-t pt-6 mt-6">
             <h3 className="text-lg font-semibold text-tufts mb-4">{t("change_password_optional")}</h3>
 
@@ -284,6 +371,7 @@ export default function MemberProfileSettings() {
             </div>
           </div>
 
+          {/* Save Profile Button */}
           <button
             type="submit"
             className={`btn bg-caribbean hover:bg-tufts text-white w-full font-semibold ${
@@ -294,6 +382,8 @@ export default function MemberProfileSettings() {
             {loading ? t("saving") : t("save_changes")}
           </button>
         </form>
+
+        
       </div>
     </div>
   );

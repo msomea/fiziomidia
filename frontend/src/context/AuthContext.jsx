@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
-import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { getSocket } from "../socket";
 
 export const AuthContext = createContext(null);
@@ -16,6 +16,7 @@ export const DEFAULT_USER = {
 };
 
 export const AuthProvider = ({ children }) => {
+  const { i18n } = useTranslation();
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : DEFAULT_USER;
@@ -88,6 +89,9 @@ export const AuthProvider = ({ children }) => {
       if (socket.connected) socket.disconnect(); // disconnect old socket
       socket.connect(); // reconnect with new token
       
+      // 🔥 Change language based on backend preference
+      i18n.changeLanguage(user.language || "sw");
+  
       return data.user;
     } catch (err) {
       // Let the calling component (Login.jsx) handle the error toast
