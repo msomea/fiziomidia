@@ -61,7 +61,7 @@ const CreatePost = () => {
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      return toast.error(t("image_too_large"));
+      return toast.error(t("image_size_limit"));
     }
 
     setImage(file);
@@ -196,7 +196,7 @@ const CreatePost = () => {
           {/* 🆕 Image Upload (Optional) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t("upload_image_optional")}
+              {t("upload_image_optional")} - {t("accepted_image_types")}
             </label>
             <input
               type="file"

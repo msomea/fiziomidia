@@ -155,7 +155,7 @@ const AdminProfile = () => {
               onChange={(e) => setAvatarFile(e.target.files[0])}
               className="w-full border rounded-lg p-2"
             />
-            <p className="text-sm text-gray-500 mt-1">{t("accepted_file_types")}</p>
+            <p className="text-sm text-gray-500 mt-1">{t("accepted_image_types")}</p>
             {user.profileImageUrl && (
               <img
                 src={user.profileImageUrl}

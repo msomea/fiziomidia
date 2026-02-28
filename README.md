@@ -13,5 +13,11 @@
 | Manage rules                       | ✅     | ✅   | ❌      |
 
 
-
+registered for domain
+MongoDb cruster
+backend to Render
+Front end Cloudflare
+Image on Cloudinary
+GMAIL stmp to send mail
+ImproveMX to receive email
 

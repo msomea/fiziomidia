@@ -340,6 +340,7 @@
   "short_bio": "Maelezo Mafupi",
   "upload_license": "Pakia Hati ya Leseni",
   "accepted_file_types": "Inakubaliwa: PDF, JPG, JPEG, PNG",
+  "accepted_image_types": "Inakubaliwa: JPG, JPEG, PNG, WEBP",
   "upload_license_required": "Tafadhali pakia hati yako ya leseni",
   "upgrade_request_submitted": "Ombi lako limewasilishwa. Subiri idhini ya msimamizi.",
   "upgrade_request_failed": "Imeshindikana kuwasilisha ombi la kuboresha",
@@ -654,7 +655,7 @@
   "logout_failed": "Imeshindikana kutoka",
   "profile_load_failed": "Imeshindikana kupakia taarifa za wasifu",
   "select_image_file": "Tafadhali chagua faili la picha",
-  "image_size_limit": "Picha haipaswi kuzidi ukubwa wa 5MB",
+  "image_size_limit": "Picha haipaswi kuzidi ukubwa wa 2MB",
   "profile_image_selected": "Picha ya wasifu imechaguliwa",
   "profile_updated": "Wasifu umeboreshwa kwa mafanikio!",
   "failed_fetch_sub": "Imeshindwa kupata Sub",
@@ -758,8 +759,8 @@
   "failed_update_language": "Imeshindikana kusasisha lugha",
   "upload_image_optional": "Tuma Picha (Hiari)",
   "avatar_selected": "Picha imechaguliwa",
-  "image_too_large": "Picha ni kubwa kuliko ukomo 2MB",
-  "invalid_image_type": "Aina ya picha sio sahihi"
+  "invalid_image_type": "Aina ya picha sio sahihi",
+  "change_profile_image": "Badilisha Picha"
 
 
 

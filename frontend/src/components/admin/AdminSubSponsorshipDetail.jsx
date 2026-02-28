@@ -162,7 +162,7 @@ export default function AdminSponsorshipDetail() {
 
       if (newLogo) data.append("logo", newLogo);
       if (newLogo.size > 2 * 1024 * 1024) {
-        return toast.error(t("image_too_large"));
+        return toast.error(t("image_size_limit"));
       }
 
       await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, data);

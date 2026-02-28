@@ -27,7 +27,7 @@ export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFi
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error(t("image_too_large"));
+      toast.error(t("image_size_limit"));
       return;
     }
 
@@ -62,7 +62,7 @@ export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFi
             htmlFor="avatar-upload"
             className="cursor-pointer bg-caribbean text-white px-3 py-2 rounded-lg hover:bg-[#03bb74] transition-colors"
           >
-            Change Photo
+            {t("change_profile_image")}
           </label>
         </div>
       </div>

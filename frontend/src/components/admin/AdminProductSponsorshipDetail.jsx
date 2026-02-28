@@ -84,7 +84,7 @@ export default function AdminProductSponsorshipDetail() {
       if (newImage) data.append("image", newImage);
 
       if (newImage.size > 2 * 1024 * 1024) {
-        return toast.error(t("image_too_large"));
+        return toast.error(t("image_size_limit"));
       }
 
       await API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
