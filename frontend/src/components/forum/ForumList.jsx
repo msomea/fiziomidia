@@ -300,7 +300,7 @@ console.log(currentTopic.sponsorWebsite)
                 </div>
               )}
 
-              <p className="text-gray-700 text-sm line-clamp-3 break-words whitespace-pre-wrap break-all">{post.body}</p>
+              <p className="text-gray-700 mt-2 text-sm line-clamp-3 break-words whitespace-pre-wrap break-all">{post.body}</p>
 
               <div className="flex flex-wrap items-center gap-4 mt-3 text-gray-500">
                 <button

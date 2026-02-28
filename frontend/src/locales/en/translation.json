@@ -753,7 +753,8 @@
   "select_language": "Select Language",
   "update_language": "Update Language",
   "language_updated_success": "Language updated successfully",
-  "failed_update_language": "Failed to update language"
+  "failed_update_language": "Failed to update language",
+  "upload_image_optional": "Upload Image (Optional)"
 
 
 

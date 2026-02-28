@@ -755,7 +755,8 @@
   "select_language": "Chagua Lugha",
   "update_language": "Sasisha Lugha",
   "language_updated_success": "Lugha imesasishwa kikamilifu",
-  "failed_update_language": "Imeshindikana kusasisha lugha"
+  "failed_update_language": "Imeshindikana kusasisha lugha",
+  "upload_image_optional": "Tuma Picha (Hiari)"
 
 
 
