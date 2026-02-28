@@ -25,7 +25,7 @@ export default function Services() {
         {/* ------------------------------
           1. PROMOTIONS (Physio + Member + Guest View)
         ------------------------------- */}
-        <div className="flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
+        <div className="w-full max-w-md flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
           <BadgePercent className="w-10 h-10 text-caribbean mb-4" />
           <h2 className="text-xl text-tufts font-semibold mb-2">{t('promotions_title')}</h2>
           <p className="text-gray-600 mb-4">{t('promotions_desc')}</p>
@@ -50,7 +50,7 @@ export default function Services() {
         {/* ------------------------------
           2. SPONSORED PRODUCTS (Member + Physio + Admin)
         ------------------------------- */}
-        <div className="flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
+        <div className="w-full max-w-md flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
           <ShoppingBag className="w-10 h-10 text-caribbean mb-4" />
           <h2 className="text-xl text-tufts font-semibold mb-2">{t('sponsored_products')}</h2>
           <p className="text-gray-600 mb-4">{t('sponsored_products_desc')}</p>
@@ -76,7 +76,7 @@ export default function Services() {
           3. GUEST LOGIN CTA
         ------------------------------- */}
         {isGuest && (
-          <div className="p-6 bg-white shadow-md rounded-xl border border-gray-100 md:col-span-3 text-center">
+          <div className="w-full max-w-md p-6 bg-white shadow-md rounded-xl border border-gray-100 text-center">
             <LockKeyhole className="w-10 h-10 text-red-500 mx-auto mb-3" />
             <h2 className="text-2xl text-caribbean font-semibold mb-2">{t('guest_more_services')}</h2>
             <p className="text-gray-600 mb-6">{t('guest_cta_desc')}</p>
@@ -89,7 +89,7 @@ export default function Services() {
             </Link>
 
             <Link
-              to="/register"
+              to="/signup"
               className="btn bg-tufts text-white px-8 mx-2"
             >
               {t('register')}

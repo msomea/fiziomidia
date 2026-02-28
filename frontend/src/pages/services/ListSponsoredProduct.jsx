@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import { API_URL } from "../../config/constants";
 import { useTranslation } from "react-i18next";
+import SkeletonSponsoredCard from "../../components/home/SkeletonSponsoredCard";
 
 const ITEMS_PER_PAGE = 4;
 const AUTO_PLAY_INTERVAL = 6000;
@@ -10,6 +11,7 @@ const AUTO_PLAY_INTERVAL = 6000;
 export default function SponsoredProductList() {
   const { t } = useTranslation();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const intervalRef = useRef(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -22,6 +24,8 @@ export default function SponsoredProductList() {
         setProducts(res.data.products || []);
       } catch (err) {
         console.error(t("failed_load_sponsored"), err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProducts();
@@ -79,7 +83,14 @@ export default function SponsoredProductList() {
         <div ref={itemsRef}>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 transition-all duration-500">
 
-            {currentItems.length > 0 ? (
+            {/* 🔹 Show skeletons while loading */}
+            {loading &&
+              Array.from({ length: ITEMS_PER_PAGE }).map((_, idx) => (
+                <SkeletonSponsoredCard key={idx} />
+              ))}
+
+            {/* 🔹 Show real products when loaded */}
+            {!loading && currentItems.length > 0 &&
               currentItems.map((item, idx) => (
                 <div
                   key={item._id || idx}
@@ -117,15 +128,19 @@ export default function SponsoredProductList() {
                     </a>
                   )}
                 </div>
-              ))
-            ) : (
+              ))}
+
+            {/* 🔹 Show empty state if no data */}
+            {!loading && currentItems.length === 0 && (
               <p className="col-span-full text-center text-gray-500">
                 {t("no_sponsored_products")}
               </p>
             )}
+
           </div>
         </div>
 
+        {/* Navigation buttons */}
         {totalPages > 1 && (
           <>
             <button
@@ -145,6 +160,7 @@ export default function SponsoredProductList() {
         )}
       </div>
 
+      {/* Pagination dots */}
       <div className="flex justify-center mt-6 space-x-2">
         {Array.from({ length: totalPages }).map((_, i) => (
           <button

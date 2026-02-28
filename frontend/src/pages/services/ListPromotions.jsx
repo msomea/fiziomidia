@@ -5,6 +5,7 @@ import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import SkeletonProfessionalCard from "../../components/home/SkeletonProfessionalCard"; 
 
 const ITEMS_PER_PAGE = 4; // Bigger cards → fewer per page
 const AUTO_PLAY_INTERVAL = 6000;
@@ -13,6 +14,7 @@ export default function ListPromotions() {
   const { t } = useTranslation();
 
   const [pts, setPts] = useState([]);
+  const [loading, setLoading] = useState(true); 
   const [page, setPage] = useState(0);
   const intervalRef = useRef(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -25,6 +27,8 @@ export default function ListPromotions() {
         setPts(res.data || []);
       } catch (err) {
         console.error(t("failed_load_promotions"), err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPromotions();
@@ -40,7 +44,6 @@ export default function ListPromotions() {
       if (height > containerHeight) setContainerHeight(height);
     }
     return () => stopAutoPlay();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pts]);
 
   const startAutoPlay = () => {
@@ -83,7 +86,15 @@ export default function ListPromotions() {
       >
         <div ref={itemsRef}>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 transition-all duration-500">
-            {currentItems.length > 0 ? (
+
+            {/* 🔹 Loading Skeletons */}
+            {loading &&
+              Array.from({ length: ITEMS_PER_PAGE }).map((_, idx) => (
+                <SkeletonProfessionalCard key={idx} />
+              ))}
+
+            {/* 🔹 Real PT Cards */}
+            {!loading && currentItems.length > 0 &&
               currentItems.map((pt, index) => (
                 <div
                   key={pt._id || index}
@@ -117,12 +128,15 @@ export default function ListPromotions() {
                     {t("view_profile")}
                   </Link>
                 </div>
-              ))
-            ) : (
+              ))}
+
+            {/* 🔹 Empty State */}
+            {!loading && currentItems.length === 0 && (
               <p className="col-span-full text-center text-gray-500">
                 {t("no_promotions_available")}
               </p>
             )}
+
           </div>
         </div>
 
