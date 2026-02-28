@@ -754,7 +754,11 @@
   "update_language": "Update Language",
   "language_updated_success": "Language updated successfully",
   "failed_update_language": "Failed to update language",
-  "upload_image_optional": "Upload Image (Optional)"
+  "upload_image_optional": "Upload Image (Optional)",
+  "avatar_selected": "Image selected successfully",
+  "image_too_large": "Image is bigger than 2MB limit",
+  "invalid_image_type": "Invalid Image type"
+
 
 
 

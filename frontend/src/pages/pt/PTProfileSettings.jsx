@@ -106,7 +106,7 @@ const PTProfileSettings = () => {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       toast.error(t("image_size_limit"));
       return;
     }

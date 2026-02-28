@@ -756,7 +756,10 @@
   "update_language": "Sasisha Lugha",
   "language_updated_success": "Lugha imesasishwa kikamilifu",
   "failed_update_language": "Imeshindikana kusasisha lugha",
-  "upload_image_optional": "Tuma Picha (Hiari)"
+  "upload_image_optional": "Tuma Picha (Hiari)",
+  "avatar_selected": "Picha imechaguliwa",
+  "image_too_large": "Picha ni kubwa kuliko ukomo 2MB",
+  "invalid_image_type": "Aina ya picha sio sahihi"
 
 
 

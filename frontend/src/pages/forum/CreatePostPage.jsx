@@ -60,7 +60,7 @@ const CreatePost = () => {
       return toast.error(t("invalid_image_type"));
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 2 * 1024 * 1024) {
       return toast.error(t("image_too_large"));
     }
 

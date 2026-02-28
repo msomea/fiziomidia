@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import avatar from "../../assets/avatar.jpg";
+import { useTranslation } from "react-i18next"; 
 
 export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFile, onChange }) {
+  const {t} = useTranslation();
   const [previewUrl, setPreviewUrl] = useState(profileImageUrl);
 
   // Load current avatar from backend
@@ -21,11 +23,11 @@ export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFi
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Please select an image file");
+      toast.error(t("invalid_image_type"));
       return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size should be less than 5MB");
+      toast.error(t("image_too_large"));
       return;
     }
 
@@ -40,7 +42,7 @@ export default function AvatarUpload({ profileImageUrl, selectedFile, setImageFi
     setImageFile(file);
     if (onChange) onChange(file);
 
-    toast.success("Image selected successfully");
+    toast.success(t("avatar_selected"));
   };
 
   return (
