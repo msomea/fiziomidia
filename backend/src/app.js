@@ -50,12 +50,18 @@ const allowedOrigins = [
 /* ---------------------------------- */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 200,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+
   keyGenerator: (req) => {
-    return req.headers["x-forwarded-for"]?.split(",")[0] || req.ip;
+    return (
+      req.headers["cf-connecting-ip"] ||
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.ip
+    );
   },
+
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -82,8 +88,7 @@ app.use(morgan(ENV.debug ? "dev" : "combined"));
 
 //temporaly log
 app.use((req, res, next) => {
-  console.log("⚠️ IP:", req.ip);
-  console.log("⚠️ Forwarded:", req.headers["x-forwarded-for"]);
+  console.log("⚠️ Final RateLimit Key:", req.headers["cf-connecting-ip"]);
   next();
 });
 
