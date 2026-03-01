@@ -11,6 +11,15 @@ const loginLimiter = rateLimit({
   max: 5, // 5 attempts per IP
   standardHeaders: true,
   legacyHeaders: false,
+
+  keyGenerator: (req) => {
+    return (
+      req.headers["cf-connecting-ip"] ||
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.ip
+    );
+  },
+
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -23,6 +32,15 @@ const loginLimiter = rateLimit({
 const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+
+  keyGenerator: (req) => {
+    return (
+      req.headers["cf-connecting-ip"] ||
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.ip
+    );
+  },
+
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -35,6 +53,15 @@ const registerLimiter = rateLimit({
 const resetLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 3,
+
+  keyGenerator: (req) => {
+    return (
+      req.headers["cf-connecting-ip"] ||
+      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+      req.ip
+    );
+  },
+  
   handler: (req, res) => {
     res.status(429).json({
       success: false,

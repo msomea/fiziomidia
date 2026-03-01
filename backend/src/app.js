@@ -50,7 +50,7 @@ const allowedOrigins = [
 /* ---------------------------------- */
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
 
@@ -85,12 +85,6 @@ app.set("trust proxy", "loopback, linklocal, uniquelocal");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
-
-//temporaly log
-app.use((req, res, next) => {
-  console.log("⚠️ Final RateLimit Key:", req.headers["cf-connecting-ip"]);
-  next();
-});
 
 /* ---------------------------------- */
 /* Static Uploads                      */
