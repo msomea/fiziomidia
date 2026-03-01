@@ -49,14 +49,19 @@ const allowedOrigins = [
 /* Global Middleware (API)             */
 /* ---------------------------------- */
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per window
-  message: {
-    success: false,
-    message: "Too many requests. Please try again later."
-  },
+  windowMs: 15 * 60 * 1000,
+  max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    return req.headers["x-forwarded-for"]?.split(",")[0] || req.ip;
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      code: "RATE_LIMIT_GENERAL",
+    });
+  },
 });
 
 app.use(
@@ -70,10 +75,17 @@ app.use(
   })
 );
 app.use(helmet());
-app.set("trust proxy", 1);
+app.set("trust proxy", "loopback, linklocal, uniquelocal");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(ENV.debug ? "dev" : "combined"));
+
+//temporaly log
+app.use((req, res, next) => {
+  console.log("⚠️ IP:", req.ip);
+  console.log("⚠️ Forwarded:", req.headers["x-forwarded-for"]);
+  next();
+});
 
 /* ---------------------------------- */
 /* Static Uploads                      */

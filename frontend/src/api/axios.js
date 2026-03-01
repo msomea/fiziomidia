@@ -75,7 +75,7 @@ API.interceptors.response.use(
       } if (code === "RATE_LIMIT_CONTACT"){
         toast.error(i18n.t("rate_limit_contact"))
       }
-      else {
+      else if (code === "RATE_LIMIT_GENERAL") {
         toast.error(i18n.t("rate_limit_general"));
       }
 
