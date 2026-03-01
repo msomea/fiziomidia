@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
 import { useTranslation } from "react-i18next";
 import { getSocket } from "../socket";
+import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
 
@@ -13,6 +14,7 @@ export const DEFAULT_USER = {
   role: "guest",
   createdAt: null,
   email: null,
+  language: "sw",
 };
 
 export const AuthProvider = ({ children }) => {
@@ -93,9 +95,8 @@ export const AuthProvider = ({ children }) => {
       i18n.changeLanguage(user.language || "sw");
   
       return data.user;
-    } catch (err) {
-      // Let the calling component (Login.jsx) handle the error toast
-      throw err;
+    } catch (error) {
+      throw error;
     }
   };
 

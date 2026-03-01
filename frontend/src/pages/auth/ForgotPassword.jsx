@@ -7,9 +7,14 @@ import toast from "react-hot-toast";
 
 export default function ForgotPassword() {
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false); // ✅ Added loading state
   const { t } = useTranslation();
 
   const handleSubmit = async (data) => {
+    if (loading) return; // ✅ Prevent double click
+
+    setLoading(true); // ✅ Start sending
+
     try {
       await API.post(`${API_URL}/auth/forgot-password`, {
         email: data.email,
@@ -19,6 +24,8 @@ export default function ForgotPassword() {
       toast.success(t("reset_link_sent"));
     } catch (err) {
       toast.error(err.response?.data?.message || t("something_went_wrong"));
+    } finally {
+      setLoading(false); // ✅ Stop sending
     }
   };
 
@@ -40,8 +47,9 @@ export default function ForgotPassword() {
   return (
     <AuthForm
       titleKey="forgot_password_title"
-      buttonLabelKey="send_reset_link"
+      buttonLabelKey={loading ? (t("sending")) : "send_reset_link"} // ✅ Dynamic label
       onSubmit={handleSubmit}
+      isLoading={loading} // ✅ Pass loading to form
       fields={[
         {
           name: "email",

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { API_URL } from "../config/constants";
+import i18n from "i18next";
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -36,7 +37,6 @@ API.interceptors.request.use(
 // Response interceptor
 API.interceptors.response.use(
   (response) => {
-    // If backend refreshed the access token on activity, update stored token
     const refreshed =
       response.headers &&
       (response.headers["x-access-token"] ||
@@ -44,7 +44,7 @@ API.interceptors.response.use(
     if (refreshed) {
       const token = refreshed;
       localStorage.setItem("accessToken", token);
-      // keep `user` object in sync if present
+
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         try {
@@ -52,7 +52,6 @@ API.interceptors.response.use(
           u.accessToken = token;
           localStorage.setItem("user", JSON.stringify(u));
         } catch (e) {
-          // ignore malformed user
         }
       }
       API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -62,10 +61,37 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // ------------------------------
+    // HANDLE RATE LIMIT (429)
+    // ------------------------------
+    if (error.response?.status === 429) {
+      const code = error.response?.data?.code;
+      if (code === "RATE_LIMIT_LOGIN") {
+        toast.error(i18n.t("rate_limit_login"));
+      } if (code === "RATE_LIMIT_REGISTER"){
+        toast.error(i18n.t("rate_limit_register"))
+      } if (code === "RATE_LIMIT_RESET"){
+        toast.error(i18n.t("rate_limit_reset"))
+      } if (code === "RATE_LIMIT_CONTACT"){
+        toast.error(i18n.t("rate_limit_contact"))
+      }
+      else {
+        toast.error(i18n.t("rate_limit_general"));
+      }
+
+      const retryAfter = error.response.headers["retry-after"];
+
+      if (retryAfter) {
+        toast.error(`${message} Try again in ${retryAfter} seconds.`);
+      }
+
+      return Promise.reject(error);
+    }
+
+    // ------------------------------
+    // 401 REFRESH LOGIC
+    // ------------------------------
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Avoid treating auth login/register attempts as "session expired".
-      // If the request was explicitly to login or register, just reject so
-      // the calling code can show appropriate error messages.
       const authSkip = ["/auth/login", "/auth/register", "/auth/logout"];
       if (
         originalRequest.url &&

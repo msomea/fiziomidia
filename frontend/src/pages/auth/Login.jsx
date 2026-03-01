@@ -32,9 +32,8 @@ export default function Login() {
         navigate(`/dashboard/admin`);
       else navigate("/");
 
-    } catch (err) {
-      console.error("Login failed:", err);
-      toast.error(err.response?.data?.error || err.message);
+    } catch (error) {
+      toast.error(t("login_fail"))
     } finally {
       setLoading(false);
     }

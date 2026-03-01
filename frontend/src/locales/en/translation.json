@@ -260,6 +260,7 @@
   "logging_in": "Logging in...",
   "no_account": "Don’t have an account?",
   "login_success": "Login successful!",
+  "login_fail": "Login failed!",
   "full_name": "Full Name",
   "signing_up": "Signing up...",
   "already_have_account": "Already have an account?",
@@ -758,7 +759,13 @@
   "upload_image_optional": "Upload Image (Optional)",
   "avatar_selected": "Image selected successfully",
   "invalid_image_type": "Invalid Image type",
-  "change_profile_image": "Change profile Image"
+  "change_profile_image": "Change profile Image",
+  "rate_limit_login": "Too many login attempts. Please try again in 10 minutes.",
+  "rate_limit_general": "Too many requests. Try again later.",
+  "rate_limit_register": "Too many accounts created. Try again later.",
+  "rate_limit_reset": "Too many reset link request. Try again later",
+  "rate_limit_contact": "Message sent. Try again later",
+  "resetting": "Resseting"
 
 
 

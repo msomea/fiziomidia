@@ -259,6 +259,7 @@
   "logging_in": "Inaingia...",
   "no_account": "Huna akaunti?",
   "login_success": "Umeingia kwa mafanikio!",
+  "login_fail": "Umeshindwa kuingia!",
   "full_name": "Jina Kamili",
   "password": "Nenosiri",
   "signing_up": "Inasajili...",
@@ -760,7 +761,13 @@
   "upload_image_optional": "Tuma Picha (Hiari)",
   "avatar_selected": "Picha imechaguliwa",
   "invalid_image_type": "Aina ya picha sio sahihi",
-  "change_profile_image": "Badilisha Picha"
+  "change_profile_image": "Badilisha Picha",
+  "rate_limit_login": "Umejaribu kuingia mara nyingi sana. Tafadhali jaribu tena baada ya dakika 10.",
+  "rate_limit_general": "Maombi mengi sana. Jaribu tena baadae.",
+  "rate_limit_register": "Akaunti nyingi zimetengenezwa. Jaribu tena baadae",
+  "rate_limit_reset": "Maombi mengi ya kiungo. Jaribu tena baadae",
+  "rate_limit_contact": "Umetuma ujumbe. Jaribu tena baadae",
+  "resetting": "Inabadili"
 
 
 

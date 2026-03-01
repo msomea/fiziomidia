@@ -1,5 +1,5 @@
 {
-  "name": "fiziomidia-backend",
+  "name": "api.fiziomidia",
   "version": "1.0.0",
   "description": "Fiziomidia backend - MERN skeleton",
   "main": "src/server.js",
@@ -24,6 +24,7 @@
     "express-async-handler": "^1.2.0",
     "express-rate-limit": "^8.2.1",
     "faker": "^5.5.3",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.0",
     "morgan": "^1.10.0",

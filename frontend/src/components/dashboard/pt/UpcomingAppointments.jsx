@@ -52,7 +52,7 @@ export default function UpcomingAppointments({ appointments, viewMore }) {
       setUpdatingId(null);
     }
   };
-console.log(appointments)
+
   return (
     <div className="bg-white rounded-xl shadow p-4 m-6">
       <div className="flex justify-between items-center mb-3">
