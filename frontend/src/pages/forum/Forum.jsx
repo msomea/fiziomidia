@@ -21,11 +21,13 @@ const Forum = () => {
   const {
     posts,
     setPosts,
-    fetchPosts,
+    fetchForumPageData,
     fetchSub,
     selectedSub,
     setSelectedSub,
     loadingPosts,
+    userPermissions,
+    refreshPosts
   } = useForum();
 
   const [requesting, setRequesting] = useState(false);
@@ -43,9 +45,13 @@ const Forum = () => {
     );
   }, [selectedSub]);
 
+  // Sync user permissions with local state
+  useEffect(() => {
+    setHasRequested(userPermissions?.hasPendingRequest || false);
+  }, [userPermissions]);
 
   /* ------------------ Permissions ------------------ */
-  const isMod = selectedSub?.moderators?.some(
+  const isMod = userPermissions?.isMod || selectedSub?.moderators?.some(
     (m) => m.user?._id?.toString() === user._id || m.user?.toString() === user._id && m.role === "mod"
   );
 
@@ -60,9 +66,8 @@ const Forum = () => {
 
   /* ------------------ Handlers ------------------ */
   const handleSelectTopic = async (topic) => {
-    await fetchSub(topic._id);
-    await fetchPosts(topic._id);
-    await checkModRequestStatus(topic._id);
+    // 🚀 Use the new consolidated API call
+    await fetchForumPageData(topic._id);
   };
 
   const handleAddRule = () => setRulesDraft((prev) => [...prev, ""]);
@@ -94,6 +99,8 @@ const Forum = () => {
   };
 
   /* ------------------ Moderator Request ------------------ */
+  // Note: This function is kept for individual mod requests, but checkModRequestStatus
+  // is now handled automatically by fetchForumPageData
   const checkModRequestStatus = async (subId) => {
     if (!user || user.role !== "physiotherapist") return;
 
@@ -130,9 +137,9 @@ const Forum = () => {
   const showRequestButton =
     user?.role === "physiotherapist" &&
     selectedSub &&
-    !selectedSub.moderators?.some((m) => m.user?.toString() === user._id) &&
-    selectedSub.createdBy?.toString() !== user._id &&
-    !hasRequested;
+    !userPermissions?.isMod &&
+    !userPermissions?.isOwner &&
+    !userPermissions?.hasPendingRequest;
 
   /* ------------------ Pin Logic ------------------ */
   const togglePin = async (postId, pinned) => {
@@ -143,7 +150,8 @@ const Forum = () => {
 
       if (res.data.success) {
         toast.success(!pinned ? t("post_pinned") : t("post_unpinned"));
-        await fetchPosts(selectedSub._id);
+        // Refresh posts to get updated pinned status
+        await refreshPosts(selectedSub._id);
       } else {
         toast.error(res.data.error || t("update_failed"));
       }

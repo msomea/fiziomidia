@@ -5,6 +5,7 @@ import { requireForumPermission } from "../middlewares/forumPermissions.js";
 import * as forum from "../controllers/forumController.js";
 import * as comment from "../controllers/forumCommentController.js";
 import * as modReq from "../controllers/modReqController.js";
+import { getForumPageData } from "../controllers/forumPageController.js";
 import { upload } from "../services/uploadService.js";
 import { limiters } from "../utils/rateLimiter.js";
 
@@ -19,6 +20,9 @@ router.get("/subs", forum.listSubs);
 router.get("/subs/:id", forum.getSubById);
 router.get("/subs/:subId/posts", forum.listPosts);
 router.get("/posts/:id", forum.getPostById); 
+
+// 🚀 Consolidated Forum Page API
+router.get("/subs/:subId/forum-page", authenticate, getForumPageData);
 
 // 🧠 Authenticated actions
 router.post("/posts/:id/vote", authenticate, forum.votePost);

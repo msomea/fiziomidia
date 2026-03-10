@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import API from "../api/axios";
 import { API_URL } from "../config/constants";
 import { toast } from "react-hot-toast";
@@ -10,8 +10,45 @@ export const ForumProvider = ({ children }) => {
   const [selectedSub, setSelectedSub] = useState(null);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [loadingSub, setLoadingSub] = useState(false);
+  const [userPermissions, setUserPermissions] = useState({
+    isMod: false,
+    isOwner: false,
+    hasPendingRequest: false
+  });
 
-  // Fetch Subforum details
+  // 🚀 Consolidated fetch for forum page data (subforum + posts + permissions)
+  const fetchForumPageData = useCallback(async (subId, options = {}) => {
+    if (!subId) return;
+
+    try {
+      setLoadingSub(true);
+      setLoadingPosts(true);
+
+      const params = new URLSearchParams({
+        page: options.page || 1,
+        limit: options.limit || 10,
+      });
+
+      const res = await API.get(`${API_URL}/forum/subs/${subId}/forum-page?${params}`);
+      const data = res.data;
+
+      if (data.success) {
+        setSelectedSub(data.subforum);
+        setPosts(data.posts || []);
+        setUserPermissions(data.userPermissions || {});
+        return data;
+      }
+    } catch (err) {
+      console.error("Error fetching forum page data:", err);
+      toast.error("Failed to load forum data");
+      return null;
+    } finally {
+      setLoadingSub(false);
+      setLoadingPosts(false);
+    }
+  }, []);
+
+  // Fetch Subforum details (legacy - kept for compatibility)
   const fetchSub = async (subId) => {
     if (!subId) return;
 
@@ -32,7 +69,7 @@ export const ForumProvider = ({ children }) => {
     }
   };
 
-  // Fetch posts for a sub (requires full sub)
+  // Fetch posts for a sub (legacy - kept for compatibility)
   const fetchPosts = async (subId) => {
     if (!subId) return;
 
@@ -70,6 +107,51 @@ export const ForumProvider = ({ children }) => {
     );
   };
 
+  // Refresh posts only (for pagination or new posts)
+  const refreshPosts = useCallback(async (subId, options = {}) => {
+    if (!subId) return;
+
+    try {
+      setLoadingPosts(true);
+
+      const params = new URLSearchParams({
+        page: options.page || 1,
+        limit: options.limit || 10,
+      });
+
+      const res = await API.get(`${API_URL}/forum/subs/${subId}/posts?${params}`);
+      setPosts(res.data.posts || []);
+      
+      return res.data;
+    } catch (err) {
+      console.error("Error refreshing posts:", err);
+      toast.error("Failed to refresh posts");
+      return null;
+    } finally {
+      setLoadingPosts(false);
+    }
+  }, []);
+
+  // Check mod request status (for PT users)
+  const checkModRequestStatus = useCallback(async (subId) => {
+    if (!subId || !userPermissions) return;
+
+    try {
+      const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
+      const hasRequested = res.data.requested || res.data.alreadyMod || false;
+      
+      setUserPermissions(prev => ({
+        ...prev,
+        hasPendingRequest: hasRequested
+      }));
+
+      return hasRequested;
+    } catch (err) {
+      console.error("Failed to check mod request:", err);
+      return false;
+    }
+  }, [userPermissions]);
+
   return (
     <ForumContext.Provider
       value={{
@@ -79,10 +161,15 @@ export const ForumProvider = ({ children }) => {
         setSelectedSub,
         loadingPosts,
         loadingSub,
+        userPermissions,
+        setUserPermissions,
+        fetchForumPageData,
         fetchSub,
         fetchPosts,
         updatePost,
         updatePostComments,
+        refreshPosts,
+        checkModRequestStatus,
       }}
     >
       {children}
