@@ -222,9 +222,9 @@ const PTProfileSettings = () => {
         <div className="space-y-6">
           <AvailabilitySection formData={formData} handleChange={handleChange} t={t} />
           <PasswordChangeSection t={t} />
-          <SaveButton loading={loading} t={t} />
         </div>
         <DefaultLanguageSection t={t} />
+        <SaveButton loading={loading} t={t} />
       </form>
     </div>
   );

@@ -183,7 +183,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
   const displayedPosts = pinnedSponsorPost
     ? [pinnedSponsorPost, ...currentPosts]
     : currentPosts;
-console.log(currentTopic.sponsorWebsite)
+console.log(posts)
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">

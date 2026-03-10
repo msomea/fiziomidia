@@ -5,6 +5,7 @@ import Promotion from "../models/Promotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
 import AdminActivityLog from "../models/AdminActivityLog.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
+import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 // ============================================
 // CONSOLIDATED ADMIN DASHBOARD API
@@ -24,6 +25,20 @@ export const getDashboardData = async (req, res) => {
       page = 1,
       limit = 10,
     } = req.query;
+
+    // Generate cache key based on filters
+    const cacheKey =
+      CacheKeys.DASHBOARD_ADMIN(req.user._id) +
+      `:filters=${JSON.stringify({ search, role, licenseStatus, clinic, pt, requester, appointmentStatus, promotionStatus, productStatus, page, limit })}`;
+
+    // Try to get from cache first
+    const cachedData = await CacheService.get(cacheKey);
+    if (cachedData) {
+      console.log(`🎯 Admin dashboard cache hit for user: ${req.user._id}`);
+      return res.json(cachedData);
+    }
+
+    console.log(`💨 Admin dashboard cache miss for user: ${req.user._id}`);
 
     // Build all queries in parallel for better performance
     const [
@@ -90,7 +105,7 @@ export const getDashboardData = async (req, res) => {
         .lean(),
     ]);
 
-    return res.json({
+    const responseData = {
       success: true,
       users,
       appointments,
@@ -101,7 +116,13 @@ export const getDashboardData = async (req, res) => {
       adminStats,
       activityLogs: recentActivityLogs,
       lastFetched: new Date(),
-    });
+    };
+
+    // Cache the response for 5 minutes (dashboard data changes frequently)
+    await CacheService.set(cacheKey, responseData, CacheTTL.SHORT);
+    console.log(`💾 Admin dashboard cached for user: ${req.user._id}`);
+
+    return res.json(responseData);
   } catch (err) {
     console.error("Dashboard data fetch error:", err);
     return res.status(500).json({
@@ -110,6 +131,16 @@ export const getDashboardData = async (req, res) => {
     });
   }
 };
+
+// Helper function to invalidate admin dashboard cache
+async function invalidateAdminDashboardCache(adminId) {
+  try {
+    await CacheService.delPattern(`dashboard:admin:${adminId}*`);
+    console.log(`🗑️ Admin dashboard cache invalidated for admin: ${adminId}`);
+  } catch (error) {
+    console.error('Error invalidating admin dashboard cache:', error);
+  }
+}
 
 // Helper functions for building queries
 function buildUserQuery({ search, role, licenseStatus }) {

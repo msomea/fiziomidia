@@ -5,6 +5,7 @@ import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../services/uploadService.js";
+import { CacheService } from "../utils/redis.js";
 
 
 // ===== SUBS =====
@@ -289,24 +290,25 @@ export const createPost = async (req, res) => {
     if (!sub) return res.status(400).json({ error: "Sub (topic) is required" });
 
     // Upload image to cloudinary
-    let imageData = null
+    let imageData = null;
 
     if (req.file) {
       const result = await uploadToCloudinary(req.file.buffer);
 
       imageData = {
         url: result.secure_url,
-        public_id: result.public_id
+        public_id: result.public_id,
       };
     }
 
     // 1️⃣ Create new post
-    const post = new Post({ 
+    const post = new Post({
       title,
       body,
       sub,
       author,
-      image: imageData });
+      image: imageData,
+    });
 
     await post.save();
 
@@ -315,6 +317,10 @@ export const createPost = async (req, res) => {
 
     // 3️⃣ Fetch updated sub to return with post
     const updatedSub = await ForumSub.findById(sub);
+
+    // 4️⃣ Invalidate cache for this subforum
+    await CacheService.delPattern(`forum:sub:${sub}*`);
+    console.log(`🗑️ Forum cache invalidated for sub: ${sub}`);
 
     res.status(201).json({ post, sub: updatedSub });
   } catch (err) {
@@ -531,11 +537,14 @@ export const deletePost = async (req, res) => {
     const isAuthor = post.author.toString() === req.user._id.toString();
     const isAdmin = req.user.role === "admin";
     const isMod =
-      sub?.moderators?.some((m) => m.user.toString() === req.user._id.toString()) || false;
+      sub?.moderators?.some(
+        (m) => m.user.toString() === req.user._id.toString(),
+      ) || false;
 
     if (!isAuthor && !isAdmin && !isMod) {
       return res.status(403).json({
-        error: "Only the post author, admin, or moderators of this sub can delete this post",
+        error:
+          "Only the post author, admin, or moderators of this sub can delete this post",
       });
     }
     // Delete image from cloudinary if exists
@@ -549,6 +558,10 @@ export const deletePost = async (req, res) => {
     if (sub) {
       await ForumSub.findByIdAndUpdate(sub._id, { $inc: { totalPosts: -1 } });
     }
+
+    // Invalidate cache for this subforum
+    await CacheService.delPattern(`forum:sub:${post.sub}*`);
+    console.log(`🗑️ Forum cache invalidated for sub: ${post.sub}`);
 
     res.json({ message: "Post deleted successfully" });
   } catch (err) {
@@ -622,21 +635,27 @@ export const togglePinPost = async (req, res) => {
 
   try {
     const post = await Post.findById(subId).populate("sub");
-    if (!post) return res.status(404).json({ success: false, error: "Post not found" });
+    if (!post)
+      return res.status(404).json({ success: false, error: "Post not found" });
 
     const sub = post.sub;
-    if (!sub) return res.status(404).json({ success: false, error: "Forum sub not found" });
+    if (!sub)
+      return res
+        .status(404)
+        .json({ success: false, error: "Forum sub not found" });
 
     // Sponsored posts cannot be pinned/unpinned
     if (sub.isSponsored) {
-      return res.status(403).json({ success: false, error: "Cannot pin/unpin sponsored posts" });
+      return res
+        .status(403)
+        .json({ success: false, error: "Cannot pin/unpin sponsored posts" });
     }
 
     // Permissions check
     const isAdmin = user.role === "admin";
     const isSubOwner = sub.createdBy.toString() === user._id.toString();
     const isMod = sub.moderators?.some(
-      (m) => m.user.toString() === user._id.toString() && m.role === "mod"
+      (m) => m.user.toString() === user._id.toString() && m.role === "mod",
     );
 
     if (!isAdmin && !isSubOwner && !isMod) {
@@ -649,6 +668,10 @@ export const togglePinPost = async (req, res) => {
     // Toggle pinned
     post.pinned = !post.pinned;
     await post.save();
+
+    // Invalidate cache for this subforum
+    await CacheService.delPattern(`forum:sub:${post.sub}*`);
+    console.log(`🗑️ Forum cache invalidated for sub: ${post.sub}`);
 
     res.json({
       success: true,

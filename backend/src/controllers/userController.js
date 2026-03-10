@@ -4,6 +4,7 @@ import {
   uploadToCloudinary,
   deleteFromCloudinary,
 } from "../services/uploadService.js";
+import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 
 const SALT_ROUNDS = 10;
@@ -38,18 +39,45 @@ export const getAllUsers = async (req, res) => {
 export const getProfile = async (req, res) => {
   try {
     const userId = req.user._id;
+    const cacheKey = CacheKeys.USER_PROFILE(userId);
+
+    // Try to get from cache first
+    const cachedUser = await CacheService.get(cacheKey);
+    if (cachedUser) {
+      console.log(`🎯 User profile cache hit for user: ${userId}`);
+      return res.json(cachedUser);
+    }
+
+    console.log(`💨 User profile cache miss for user: ${userId}`);
+
     const user = await User.findById(userId)
     .select("-passwordHash -refreshTokens")
     .populate("savedPTs", "fullName profileImageUrl ptProfile.speciality")
+    
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    // Cache the user profile for 30 minutes
+    await CacheService.set(cacheKey, user, CacheTTL.MEDIUM);
+    console.log(`💾 User profile cached for user: ${userId}`);
+
     res.json(user);
   } catch (err) {
     console.error("Error fetching profile:", err);
     res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
+
+// Helper function to invalidate user profile cache
+async function invalidateUserProfileCache(userId) {
+  try {
+    await CacheService.del(CacheKeys.USER_PROFILE(userId));
+    console.log(`🗑️ User profile cache invalidated for user: ${userId}`);
+  } catch (error) {
+    console.error('Error invalidating user profile cache:', error);
+  }
+}
 
 // Get a single user by ID (public profile)
 export const getUserById = async (req, res) => {
@@ -100,7 +128,8 @@ export const updateProfile = async (req, res) => {
     // Location handling
     // -------------------------------------------------
     if (location) {
-      const loc = typeof location === "string" ? JSON.parse(location) : location;
+      const loc =
+        typeof location === "string" ? JSON.parse(location) : location;
 
       updateData.location = {
         type: "Point",
@@ -195,7 +224,7 @@ export const updateProfile = async (req, res) => {
     // -------------------------------------------------
     if (req.files?.galleryImages?.length > 0) {
       const uploads = await Promise.all(
-        req.files.galleryImages.map((file) => uploadToCloudinary(file))
+        req.files.galleryImages.map((file) => uploadToCloudinary(file)),
       );
 
       const galleryItems = uploads.map((up, i) => ({
@@ -216,10 +245,14 @@ export const updateProfile = async (req, res) => {
     // -------------------------------------------------
     // Upgrade to Physiotherapist (STRICT VALIDATION)
     // -------------------------------------------------
-    if (upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true") {
-
+    if (
+      upgradeToPhysiotherapist === true ||
+      upgradeToPhysiotherapist === "true"
+    ) {
       if (user.role === "pendingPhysiotherapist") {
-        return res.status(400).json({ error: "Upgrade request already pending" });
+        return res
+          .status(400)
+          .json({ error: "Upgrade request already pending" });
       }
 
       if (user.role === "physiotherapist") {
@@ -245,7 +278,9 @@ export const updateProfile = async (req, res) => {
       }
 
       if (!ptProfile?.speciality?.length) {
-        return res.status(400).json({ error: "At least one speciality required" });
+        return res
+          .status(400)
+          .json({ error: "At least one speciality required" });
       }
 
       updateData.role = "pendingPhysiotherapist";
@@ -261,15 +296,16 @@ export const updateProfile = async (req, res) => {
       runValidators: true,
     }).select("-passwordHash");
 
+    // Invalidate user profile cache
+    await invalidateUserProfileCache(userId);
+
     res.json({
       message:
-        upgradeToPhysiotherapist === true ||
-        upgradeToPhysiotherapist === "true"
+        upgradeToPhysiotherapist === true || upgradeToPhysiotherapist === "true"
           ? "Upgrade request submitted successfully"
           : "Profile updated successfully",
       user: updatedUser,
     });
-
   } catch (err) {
     console.error("❌ Update profile error:", err);
     res.status(500).json({ error: "Failed to update profile" });
@@ -291,14 +327,15 @@ export const toggleSavePT = async (req, res) => {
     const alreadySaved = member.savedPTs.includes(ptId);
 
     if (alreadySaved) {
-      member.savedPTs = member.savedPTs.filter(
-        (id) => id.toString() !== ptId
-      );
+      member.savedPTs = member.savedPTs.filter((id) => id.toString() !== ptId);
     } else {
       member.savedPTs.push(ptId);
     }
 
     await member.save();
+
+    // Invalidate user profile cache
+    await invalidateUserProfileCache(memberId);
 
     res.status(200).json({
       success: true,
