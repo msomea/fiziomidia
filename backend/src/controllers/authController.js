@@ -229,7 +229,7 @@ export async function loginUser(req, res) {
 
     const user = await User.findOne({ email });
     if (!user) return fail(res, 401, "Invalid credentials");
-
+console.log("✅✅ ✅ User",user)
     // blocked / inactive checks
     if (!user.isActive) return fail(res, 403, "Account disabled");
     if (user.isBanned) return fail(res, 403, "Account banned");
@@ -272,11 +272,13 @@ export async function loginUser(req, res) {
         isLoggedIn: user.isLoggedIn,
         lastLogin: user.lastLogin,
         profileImageUrl: user.profileImageUrl || "",
-        language: user.language || "sw" 
+        language: user.language 
       },
       accessToken,
       refreshToken,
     });
+
+    
   } catch (err) {
     console.error("Login error:", err);
     return fail(res, 500, "Server error");

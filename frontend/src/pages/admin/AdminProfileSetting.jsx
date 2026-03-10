@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import AdminLanguage from "../../components/admin/AdminLanguage";
 
 const AdminProfile = () => {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ const AdminProfile = () => {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+    language: user.language || "sw"
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
@@ -84,9 +86,8 @@ const AdminProfile = () => {
             type="email"
             placeholder={t("email_label")}
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full border rounded-lg p-2"
-            required
+            className=" w-full border rounded-lg p-2"
+            disabled
           />
 
           {/* Current Password */}
@@ -145,6 +146,9 @@ const AdminProfile = () => {
               {showConfirm ? <EyeOff /> : <Eye />}
             </span>
           </div>
+
+          {/* Language Change */}
+          <AdminLanguage />
 
           {/* Avatar Upload */}
           <div>
