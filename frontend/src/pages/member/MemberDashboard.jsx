@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
-import API from "../../api/axios";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { useAuth } from "../../context/AuthContext";
+import { MemberDashboardProvider, useMemberDashboard } from "../../contexts/MemberDashboardContext";
 import {
   Home,
   Calendar,
@@ -21,7 +21,6 @@ import {
 } from "../../components/profiles";
 
 import avatar from "../../assets/avatar.jpg";
-import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
 
 // Default guest user
@@ -34,59 +33,55 @@ const DEFAULT_USER = {
   email: null,
 };
 
-const MemberDashboard = () => {
+function MemberNavLink({ to, icon, label }) {
+  return (
+    <Link
+      to={to}
+      className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
+    >
+      {icon}
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function MemberDashboardContent() {
   const navigate = useNavigate();
   const { user: authUser, logout, setUser } = useAuth();
   const { t } = useTranslation()
+  const { 
+    memberProfile, 
+    appointments, 
+    savedPTs, 
+    stats, 
+    loading, 
+    error, 
+    fetchMemberDashboardData 
+  } = useMemberDashboard();
 
-  // Use authUser or guest as initial state
-  const [memberData, setMemberData] = useState(authUser || DEFAULT_USER);
-  const [loading, setLoading] = useState(authUser?.role !== "guest");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // Fetch full user data if logged in
-  const fetchUserData = async () => {
+  // Use authUser or guest as initial state
+  const memberData = memberProfile || authUser || DEFAULT_USER;
+
+  useEffect(() => {
     if (!authUser || authUser.role === "guest") {
-      setLoading(false);
       return;
     }
 
-    try {
-      const response = await API.get(`${API_URL}/users/profile`);
-      const fullUserData = response.data;
-      const timestamp = new Date().getTime();
-      if (fullUserData.profileImageUrl) {
-        fullUserData.profileImageUrl = fullUserData.profileImageUrl.includes("?")
-          ? `${fullUserData.profileImageUrl}&t=${timestamp}`
-          : `${fullUserData.profileImageUrl}?t=${timestamp}`;
-      }
-
-      setMemberData(fullUserData);
-      const updatedUser = { ...authUser, ...fullUserData };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-    } catch (err) {
-      console.error("Error fetching member data:", err);
-      if (err.response?.status === 401) {
-        logout(navigate);
-      }
-      toast.error(err.response?.data?.error || "Failed to load profile data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+    // Fetch all dashboard data at once
+    fetchMemberDashboardData();
+  }, [authUser, fetchMemberDashboardData]);
 
   useEffect(() => {
     const handleProfileUpdate = () => {
-      fetchUserData();
+      if (authUser && authUser.role !== "guest") {
+        fetchMemberDashboardData();
+      }
     };
     window.addEventListener("profileUpdated", handleProfileUpdate);
     return () => window.removeEventListener("profileUpdated", handleProfileUpdate);
-  }, []);
+  }, [authUser, fetchMemberDashboardData]);
 
   if (loading) {
     return (
@@ -98,8 +93,22 @@ const MemberDashboard = () => {
       </div>
     );
   }
-  // Safe passing of savedPT to avoid undefined errors
-  const savedPT = memberData.savedPTs || [];
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500">
+        <div className="text-center">
+          <p className="mb-4">{t('dashboard_load_error')}</p>
+          <button 
+            onClick={() => fetchMemberDashboardData()}
+            className="btn btn-primary"
+          >
+            {t('retry')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Safe avatar rendering
   const profileImage = memberData.profileImageUrl
@@ -171,8 +180,8 @@ const MemberDashboard = () => {
         {memberData.role !== "guest" && (
           <div className="lg:col-span-2 space-y-6">
             <MemberDetails member={memberData} />
-            <MemberAppointments memberId={memberData._id} />
-            <MemberSavedPTs memberId={memberData._id} savedPTs={savedPT} />
+            <MemberAppointments appointments={appointments} />
+            <MemberSavedPTs savedPTs={savedPTs} />
           </div>
         )}
 
@@ -220,18 +229,12 @@ const MemberDashboard = () => {
       </div>
     </div>
   );
-};
-
-function MemberNavLink({ to, icon, label }) {
-  return (
-    <Link
-      to={to}
-      className="flex items-center gap-3 text-black hover:text-caribbean hover:bg-alice px-3 py-2 rounded-lg transition-colors"
-    >
-      {icon}
-      <span>{label}</span>
-    </Link>
-  );
 }
 
-export default MemberDashboard;
+export default function MemberDashboard() {
+  return (
+    <MemberDashboardProvider>
+      <MemberDashboardContent />
+    </MemberDashboardProvider>
+  );
+}

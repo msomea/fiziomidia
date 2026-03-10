@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import toast from "react-hot-toast";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
 import { useAuth } from "../../context/AuthContext";
+import { PTDashboardProvider, usePTDashboard } from "../../contexts/PTDashboardContext";
 import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
 import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement";
@@ -24,63 +23,52 @@ import {
 
 import { useTranslation } from "react-i18next";
 
-export default function PTDashboard() {
+function PTDashboardContent() {
   const { t } = useTranslation();
   const { _id } = useParams(); // PT ID
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { 
+    ptProfile, 
+    appointments, 
+    forumPosts, 
+    promotion, 
+    stats, 
+    loading, 
+    error, 
+    fetchPTDashboardData 
+  } = usePTDashboard();
 
-  const [ptProfile, setPtProfile] = useState(null);
-  const [appointments, setAppointments] = useState([]);
-  const [forumPosts, setForumPosts] = useState([]);
-  const [promotion, setPromotion] = useState(null);
-  const [stats, setStats] = useState({
-    totalAppointments: 0,
-    pendingRequests: 0,
-    totalForumPosts: 0,
-    promotionDaysLeft: 0,
-  });
-  const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !_id || user._id === null) return;
 
-    const token = localStorage.getItem("accessToken");
-    const headers = { Authorization: `Bearer ${token}` };
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [ptRes, apptRes, forumRes, promoRes, statsRes] = await Promise.all([
-          API.get(`${API_URL}/pts/${_id}`, { headers }),
-          API.get(`${API_URL}/appointments?ptId=${_id}&limit=3`, { headers }),
-          API.get(`${API_URL}/forum?ptId=${_id}&limit=3`, { headers }),
-          API.get(`${API_URL}/promotions?ptId=${_id}`, { headers }),
-          API.get(`${API_URL}/pts/${_id}/dashboard-stats`, { headers }),
-        ]);
-
-        setPtProfile(ptRes.data);
-        setAppointments(apptRes.data.appointments || []);
-        setForumPosts(forumRes.data.posts || []);
-        setPromotion(promoRes.data || null);
-        setStats(statsRes.data || statsRes);
-      } catch (err) {
-        console.error("Error loading PT dashboard:", err.response?.data || err.message);
-        toast.error(t("dashboard_load_error"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user, _id, t]);
+    // Fetch all dashboard data at once
+    fetchPTDashboardData(_id);
+  }, [user, _id, fetchPTDashboardData]);
 
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-caribbean">
         <LoaderIcon className="animate-spin size-10" />
         {t("loading_dashboard")}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500">
+        <div className="text-center">
+          <p className="mb-4">{t("dashboard_load_error")}</p>
+          <button 
+            onClick={() => fetchPTDashboardData(_id)}
+            className="btn btn-primary"
+          >
+            {t("retry")}
+          </button>
+        </div>
       </div>
     );
   }
@@ -155,6 +143,14 @@ export default function PTDashboard() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PTDashboard() {
+  return (
+    <PTDashboardProvider>
+      <PTDashboardContent />
+    </PTDashboardProvider>
   );
 }
 

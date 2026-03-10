@@ -4,6 +4,7 @@ import { requireRole } from "../middlewares/roles.js";
 import * as userController from "../controllers/userController.js";
 import { upload } from "../services/uploadService.js";
 import { getSavedPTsByMember } from "../controllers/ptController.js";
+import { getMemberDashboardData } from "../controllers/memberDashboardController.js";
 
 const router = express.Router();
 
@@ -14,6 +15,9 @@ router.get("/", authenticate, userController.getAllUsers);
 
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);
+
+// Consolidated Member Dashboard API
+router.get("/dashboard", authenticate, getMemberDashboardData);
 
 // Update current user profile
 router.put(
