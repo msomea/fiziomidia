@@ -1,7 +1,12 @@
 import express from "express";
 import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
-import * as admin from "../controllers/adminController.js";
-import * as modReq from "../controllers/adminForumModController.js";
+import * as userController from "../controllers/admin/adminUserController.js";
+import * as appointmentController from "../controllers/admin/adminAppointmentController.js";
+import * as promotionController from "../controllers/admin/adminPromotionController.js";
+import * as sponsorshipController from "../controllers/admin/adminSponsorshipController.js";
+import * as productController from "../controllers/admin/adminSponsoredProductController.js";
+import * as monitoringController from "../controllers/admin/adminMonitoringController.js";
+import * as modReq from "../controllers/admin/adminForumModController.js";
 import { upload } from "../services/uploadService.js";
 import {
   getRateLimitStats,
@@ -14,24 +19,28 @@ const router = express.Router();
 router.use(authenticate, authenticateAdmin);
 
 // Users Section
-router.get("/users", admin.listUsers);
-router.get("/users/:id", admin.getUserDetails);
-router.put("/users/:id/role", admin.updateUserRole);
-router.put("/users/:id/license", admin.updateLicenseStatus);
+router.get("/users", userController.listUsers);
+router.get("/users/:id", userController.getUserDetails);
+router.put("/users/:id/role", userController.updateUserRole);
+router.put("/users/:id/license", userController.updateLicenseStatus);
 
 // Send email to user
-router.post("/users/:id/email", admin.sendEmailToUser);
+router.post("/users/:id/email", userController.sendEmailToUser);
 
 // Appointments Section
-router.get("/appointments", admin.getAllAppointments);
-router.get("/appointments/:id", admin.getAppointmentDetails);
-router.put("/appointments/:id", admin.updateAppointment);
-router.delete("/appointments/:id", admin.deleteAppointment);
+router.get("/appointments", appointmentController.getAllAppointments);
+router.get("/appointments/:id", appointmentController.getAppointmentDetails);
+router.put("/appointments/:id", appointmentController.updateAppointment);
+router.delete("/appointments/:id", appointmentController.deleteAppointment);
 
 // Admin sub and sponsorship
-router.get("/subs/:id", admin.getSingleForumSub);
-router.put("/subs/:id/sponsorship", upload.single("logo"), admin.updateSponsorship);
-router.delete("/subs/:id", admin.deleteSub);
+router.get("/subs/:id", sponsorshipController.getSingleForumSub);
+router.put(
+  "/subs/:id/sponsorship",
+  upload.single("logo"),
+  sponsorshipController.updateSponsorship,
+);
+router.delete("/subs/:id", sponsorshipController.deleteSub);
 
 // Moderator Requests
 router.get("/forum/mod-requests", modReq.listModRequests);
@@ -40,17 +49,35 @@ router.put("/forum/mod-requests/:id/role", modReq.updateModRequestRole);
 
 
 // Admin PT Promotions
-router.get("/promotions", admin.getAllPromotions);
-router.get("/promotions/:id", admin.getAdminPromotion);
-router.put("/promotions/:id", admin.updateAdminPromotion);
-router.delete("/promotions/:id", admin.deleteAdminPromotion);
+router.get("/promotions", promotionController.getAllPromotions);
+router.get("/promotions/:id", promotionController.getAdminPromotion);
+router.put("/promotions/:id", promotionController.updateAdminPromotion);
+router.delete("/promotions/:id", promotionController.deleteAdminPromotion);
 
 //Admin Sponsored Products
-router.get("/sponsored-products", admin.getAllSponsoredProducts);
-router.post("/sponsored-products", upload.single("product"), admin.createSponsoredProduct);
-router.get("/sponsored-products/:id", admin.getSponsoredProductById);
-router.put("/sponsored-products/:id", upload.single("product"), admin.updateSponsoredProduct);
-router.delete("/sponsored-products/:id", admin.deleteSponsoredProduct);
+router.get("/sponsored-products", productController.getAllSponsoredProducts);
+router.post(
+  "/sponsored-products",
+  upload.single("product"),
+  productController.createSponsoredProduct,
+);
+router.get(
+  "/sponsored-products/:id",
+  productController.getSponsoredProductById,
+);
+router.put(
+  "/sponsored-products/:id",
+  upload.single("product"),
+  productController.updateSponsoredProduct,
+);
+router.delete(
+  "/sponsored-products/:id",
+  productController.deleteSponsoredProduct,
+);
+
+// Admin Monitoring Routes
+router.get("/monitoring/logs", monitoringController.getAdminActivityLogs);
+router.get("/monitoring/stats", monitoringController.getAdminStats);
 
 // Rate Limit Monitoring
 router.get("/rate-limits/stats", async (req, res) => {
@@ -85,8 +112,6 @@ router.post("/rate-limits/clear", async (req, res) => {
   }
 });
 
-// Admin Monitoring Routes
-router.get("/monitoring/logs", admin.getAdminActivityLogs);
-router.get("/monitoring/stats", admin.getAdminStats);
+
 
 export default router;

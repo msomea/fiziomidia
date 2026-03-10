@@ -1,5 +1,5 @@
-import ForumSub from "../models/ForumSub.js";
-import ForumSubModRequest from "../models/ForumSubModRequest.js";
+import ForumSub from "../../models/ForumSub.js";
+import ForumSubModRequest from "../../models/ForumSubModRequest.js";
 
 // ------------------------------------
 // LIST ALL MODERATOR REQUESTS
