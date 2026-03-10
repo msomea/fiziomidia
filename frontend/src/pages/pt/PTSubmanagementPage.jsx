@@ -1,72 +1,65 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
-import toast from "react-hot-toast";
 import { X, Trash2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { usePTSubmanagement, PTSubmanagementProvider } from "../../contexts/PTSubmanagementContext";
 
-export default function PTSubManagementPage() {
+function PTSubManagementContent() {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || "en";
   const fallbackLang = "en";
 
   const { subId } = useParams();
   const navigate = useNavigate();
-  const [sub, setSub] = useState(null);
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // 🚀 Use consolidated context instead of local state
+  const {
+    subforum,
+    modRequests,
+    userPermissions,
+    loading,
+    activeTab,
+    canManage,
+    fetchSubmanagementData,
+    refreshModRequests,
+    updateSubforum,
+    updateModRequest,
+    handleTabChange,
+  } = usePTSubmanagement();
 
+  // Local form state
   const [titleEn, setTitleEn] = useState("");
   const [titleSw, setTitleSw] = useState("");
   const [descEn, setDescEn] = useState("");
   const [descSw, setDescSw] = useState("");
   const [rulesDraft, setRulesDraft] = useState([]); // array of {en, sw}
 
-  const [activeTab, setActiveTab] = useState("pending");
-
-  /* ---------------- FETCH SUB ---------------- */
+  // Initialize form data when subforum loads
   useEffect(() => {
-    fetchSubData();
-  }, [subId]);
-
-  const fetchSubData = async () => {
-    try {
-      setLoading(true);
-      const subRes = await API.get(`${API_URL}/forum/subs/${subId}`);
-      const subData = subRes.data.sub;
-
-      setSub(subData);
-      setTitleEn(subData.title?.en || "");
-      setTitleSw(subData.title?.sw || "");
-      setDescEn(subData.description?.en || "");
-      setDescSw(subData.description?.sw || "");
+    if (subforum) {
+      setTitleEn(subforum.title?.en || "");
+      setTitleSw(subforum.title?.sw || "");
+      setDescEn(subforum.description?.en || "");
+      setDescSw(subforum.description?.sw || "");
       setRulesDraft(
-        (subData.rules || []).map((r) => ({ en: r.en || "", sw: r.sw || "" }))
+        (subforum.rules || []).map((r) => ({ en: r.en || "", sw: r.sw || "" }))
       );
-    } catch (err) {
-      console.error(err);
-      toast.error(t("failed_fetch_sub"));
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [subforum]);
 
-  /* ---------------- FETCH MOD REQUESTS ---------------- */
+  // Initial data fetch
   useEffect(() => {
-    fetchRequests();
-  }, [subId, activeTab]);
-
-  const fetchRequests = async () => {
-    try {
-      const res = await API.get(
-        `${API_URL}/forum/subs/${subId}/mod-requests?status=${activeTab}`
-      );
-      setRequests(res.data.requests || []);
-    } catch (err) {
-      toast.error(t("failed_load_requests"));
+    if (subId) {
+      fetchSubmanagementData(subId);
     }
-  };
+  }, [subId, fetchSubmanagementData]);
+
+  // Handle tab changes
+  useEffect(() => {
+    if (subId && activeTab) {
+      refreshModRequests(subId, activeTab);
+    }
+  }, [subId, activeTab, refreshModRequests]);
 
   /* ---------------- SUB UPDATE ---------------- */
   const handleUpdateSub = async (e) => {
@@ -96,31 +89,22 @@ export default function PTSubManagementPage() {
         rules: cleanedRules,
       };
 
-      const res = await API.put(`${API_URL}/forum/subs/${subId}`, payload);
-
-      if (!res.data.success) throw new Error();
-
-      setSub(res.data.sub);
-      toast.success(t("sub_updated_success"));
+      // 🚀 Use context function instead of direct API call
+      const updatedSub = await updateSubforum(subId, payload);
+      
+      if (updatedSub) {
+        // Form data will be updated automatically via useEffect
+      }
     } catch (err) {
       console.error(err);
-      toast.error(t("failed_update_sub"));
+      // Error handling is done in context
     }
   };
 
   /* ---------------- MOD REQUEST UPDATE ---------------- */
   const handleUpdateRequest = async (requestId, role) => {
-    try {
-      await API.patch(
-        `${API_URL}/forum/subs/${subId}/mod-requests/${requestId}`,
-        { role }
-      );
-
-      toast.success(t("role_updated"));
-      await Promise.all([fetchRequests(), fetchSubData()]);
-    } catch (err) {
-      toast.error(t("failed_update_role"));
-    }
+    // 🚀 Use context function instead of direct API call
+    await updateModRequest(subId, requestId, role);
   };
 
   /* ---------------- RULE HANDLERS ---------------- */
@@ -135,13 +119,13 @@ export default function PTSubManagementPage() {
     setRulesDraft(rulesDraft.filter((_, i) => i !== index));
 
   if (loading) return <p>{t("loading")}...</p>;
-  if (!sub) return <p>{t("sub_not_found")}</p>;
+  if (!subforum) return <p>{t("sub_not_found")}</p>;
 
   return (
     <div className="p-4 space-y-8 mt-20">
       <div className="flex justify-between mb-3">
         <h1 className="text-2xl text-caribbean font-bold">
-          {t("manage_sub")}: {sub.title[currentLang] || sub.title[fallbackLang]}
+          {t("manage_sub")}: {subforum.title[currentLang] || subforum.title[fallbackLang]}
         </h1>
         <button onClick={() => navigate(-1)}>
           <X className="text-red-400 hover:text-red-800" />
@@ -244,7 +228,7 @@ export default function PTSubManagementPage() {
           {["pending", "approved", "rejected"].map((s) => (
             <button
               key={s}
-              onClick={() => setActiveTab(s)}
+              onClick={() => handleTabChange(s)}
               className={`px-3 py-1 rounded ${
                 activeTab === s ? "bg-tufts text-white" : "bg-gray-200"
               }`}
@@ -255,9 +239,9 @@ export default function PTSubManagementPage() {
         </div>
 
         {/* REQUEST LIST */}
-        {requests.length ? (
+        {modRequests.length ? (
           <ul className="space-y-3">
-            {requests.map((r) => (
+            {modRequests.map((r) => (
               <li
                 key={r._id}
                 className="flex justify-between items-center border p-3 rounded"
@@ -308,5 +292,13 @@ export default function PTSubManagementPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function PTSubManagementPage() {
+  return (
+    <PTSubmanagementProvider>
+      <PTSubManagementContent />
+    </PTSubmanagementProvider>
   );
 }

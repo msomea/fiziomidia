@@ -6,6 +6,7 @@ import * as forum from "../controllers/forumController.js";
 import * as comment from "../controllers/forumCommentController.js";
 import * as modReq from "../controllers/modReqController.js";
 import { getForumPageData } from "../controllers/forumPageController.js";
+import { getPTSubmanagementData } from "../controllers/ptSubmanagementController.js";
 import { upload } from "../services/uploadService.js";
 import { limiters } from "../utils/rateLimiter.js";
 
@@ -23,6 +24,9 @@ router.get("/posts/:id", forum.getPostById);
 
 // 🚀 Consolidated Forum Page API
 router.get("/subs/:subId/forum-page", authenticate, getForumPageData);
+
+// 🚀 Consolidated PT Submanagement Page API
+router.get("/subs/:subId/management", authenticate, getPTSubmanagementData);
 
 // 🧠 Authenticated actions
 router.post("/posts/:id/vote", authenticate, forum.votePost);
