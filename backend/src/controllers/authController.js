@@ -229,7 +229,7 @@ export async function loginUser(req, res) {
 
     const user = await User.findOne({ email });
     if (!user) return fail(res, 401, "Invalid credentials");
-console.log("✅✅ ✅ User",user)
+
     // blocked / inactive checks
     if (!user.isActive) return fail(res, 403, "Account disabled");
     if (user.isBanned) return fail(res, 403, "Account banned");

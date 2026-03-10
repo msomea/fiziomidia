@@ -66,23 +66,33 @@ API.interceptors.response.use(
     // ------------------------------
     if (error.response?.status === 429) {
       const code = error.response?.data?.code;
+      const message = error.response?.data?.message;
+      const retryAfter = error.response?.data?.retryAfter;
+      
       if (code === "RATE_LIMIT_LOGIN") {
-        toast.error(i18n.t("rate_limit_login"));
-      } if (code === "RATE_LIMIT_REGISTER"){
-        toast.error(i18n.t("rate_limit_register"))
-      } if (code === "RATE_LIMIT_RESET"){
-        toast.error(i18n.t("rate_limit_reset"))
-      } if (code === "RATE_LIMIT_CONTACT"){
-        toast.error(i18n.t("rate_limit_contact"))
+        toast.error(message || i18n.t("rate_limit_login"));
+      } else if (code === "RATE_LIMIT_REGISTER") {
+        toast.error(message || i18n.t("rate_limit_register"));
+      } else if (code === "RATE_LIMIT_RESET") {
+        toast.error(message || i18n.t("rate_limit_reset"));
+      } else if (code === "RATE_LIMIT_CONTACT") {
+        toast.error(message || i18n.t("rate_limit_contact"));
+      } else if (code === "RATE_LIMIT_REFRESH") {
+        toast.error(message || i18n.t("rate_limit_refresh"));
+      } else if (code === "RATE_LIMIT_MESSAGE") {
+        toast.error(message || i18n.t("rate_limit_message"));
+      } else if (code === "RATE_LIMIT_UPLOAD") {
+        toast.error(message || i18n.t("rate_limit_upload"));
+      } else if (code === "RATE_LIMIT_FORUM_POST") {
+        toast.error(message || i18n.t("rate_limit_forum_post"));
+      } else if (code === "RATE_LIMIT_FORUM_COMMENT") {
+        toast.error(message || i18n.t("rate_limit_forum_comment"));
+      } else if (code === "RATE_LIMIT_GENERAL") {
+        toast.error(message || i18n.t("rate_limit_general"));
       }
-      else if (code === "RATE_LIMIT_GENERAL") {
-        toast.error(i18n.t("rate_limit_general"));
-      }
-
-      const retryAfter = error.response.headers["retry-after"];
 
       if (retryAfter) {
-        toast.error(`${message} Try again in ${retryAfter} seconds.`);
+        toast.error(`Try again in ${retryAfter} seconds.`);
       }
 
       return Promise.reject(error);

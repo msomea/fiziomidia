@@ -12,6 +12,10 @@ const requiredVars = [
   "CLOUDINARY_CLOUD_NAME",
   "CLOUDINARY_API_KEY",
   "RESEND_API_KEY",
+  "REDIS_PASSWORD",
+  "REDIS_HOST",
+  "REDIS_PORT",
+  "REDIS_URL"
 ];
 
 // Validate required environment variables
@@ -75,5 +79,11 @@ export const ENV = {
 
   // Optional Production Settings
   PRODUCTION_CLIENT_URL: process.env.PRODUCTION_CLIENT_URL,
+
+  // Redis Cloud Configuration
+  REDIS_HOST: process.env.REDIS_HOST || "localhost",
+  REDIS_PORT: process.env.REDIS_PORT || 6379,
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD,
+  REDIS_URL: process.env.REDIS_URL || "redis://localhost:6379", // Fallback URL
 };
 

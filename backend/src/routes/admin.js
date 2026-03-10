@@ -3,6 +3,10 @@ import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
 import * as admin from "../controllers/adminController.js";
 import * as modReq from "../controllers/adminForumModController.js";
 import { upload } from "../services/uploadService.js";
+import {
+  getRateLimitStats,
+  clearRateLimitData,
+} from "../utils/rateLimitMonitor.js";
 
 const router = express.Router();
 // route /api/admin
@@ -47,5 +51,38 @@ router.post("/sponsored-products", upload.single("product"), admin.createSponsor
 router.get("/sponsored-products/:id", admin.getSponsoredProductById);
 router.put("/sponsored-products/:id", upload.single("product"), admin.updateSponsoredProduct);
 router.delete("/sponsored-products/:id", admin.deleteSponsoredProduct);
+
+// Rate Limit Monitoring
+router.get("/rate-limits/stats", async (req, res) => {
+  try {
+    const stats = await getRateLimitStats();
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Failed to get rate limit stats",
+    });
+  }
+});
+
+router.post("/rate-limits/clear", async (req, res) => {
+  try {
+    const { pattern } = req.body;
+    const clearedCount = await clearRateLimitData(pattern || "rl:*");
+    res.json({
+      success: true,
+      message: `Cleared ${clearedCount} rate limit keys`,
+      clearedCount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Failed to clear rate limit data",
+    });
+  }
+});
 
 export default router;

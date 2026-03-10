@@ -13,11 +13,24 @@
 | Manage rules                       | ✅     | ✅   | ❌      |
 
 
-registered for domain
+| Endpoint Type | Window | Limit | Key Type |
+| ------------- | ------ | ----- | -------- |
+| General API   | 15min  | 200   | IP       |
+| Login         | 10min  | 5     | IP       |
+| Register      | 15min  | 5     | IP       |
+| Password Reset| 15min  | 3     | IP       |
+| Refresh Token | 15min  | 50    | User+IP  |
+| Contact Form  | 10min  | 2     | IP       |
+| Messages      | 5min   | 10    | User+IP  |
+| Forum Posts   | 10min  | 5     | User+IP  |
+| Comments      | 5min   | 15    | User+IP  |
+| Uploads       | 10min  | 20    | User+IP  |
+
+
 MongoDb cruster
 backend to Render
 Front end Cloudflare
 Image on Cloudinary
-GMAIL stmp to send mail
+Resend to send mail
 ImproveMX to receive email
 

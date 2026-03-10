@@ -4,9 +4,9 @@ import morgan from "morgan";
 import path from "path";
 import cron from "node-cron";
 import { fileURLToPath } from "url";
-import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { ENV } from "./config/env.js";
+import { limiters } from "./utils/rateLimiter.js";
 import ForumSub from "./models/ForumSub.js";
 import User from "./models/User.js";
 import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
@@ -46,30 +46,8 @@ const allowedOrigins = [
 ];
 
 /* ---------------------------------- */
-/* Global Middleware (API)             */
+/* Global Middleware                     */
 /* ---------------------------------- */
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
-
-  keyGenerator: (req) => {
-    return (
-      req.headers["cf-connecting-ip"] ||
-      req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
-      req.ip
-    );
-  },
-
-  handler: (req, res) => {
-    res.status(429).json({
-      success: false,
-      code: "RATE_LIMIT_GENERAL",
-    });
-  },
-});
-
 app.use(
   cors({
     origin(origin, callback) {
@@ -133,7 +111,7 @@ app.get("/api/logo", (req, res) => {
 /* ---------------------------------- */
 /* API Routes                          */
 /* ---------------------------------- */
-app.use("/api", limiter);
+app.use("/api", limiters.general);
 app.use("/api/contact", contactRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/auth", authRoutes);

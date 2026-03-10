@@ -39,6 +39,8 @@ export const AuthProvider = ({ children }) => {
             if (JSON.stringify(user) !== JSON.stringify(updatedUser)) {
               setUser(updatedUser);
               localStorage.setItem("user", JSON.stringify(updatedUser));
+              // 🔥 Update language based on user preference
+              i18n.changeLanguage(updatedUser.language || "sw");
             }
           }
         }
@@ -91,8 +93,8 @@ export const AuthProvider = ({ children }) => {
       if (socket.connected) socket.disconnect(); // disconnect old socket
       socket.connect(); // reconnect with new token
       
-      // 🔥 Change language based on backend preference
-      i18n.changeLanguage(user.language || "sw");
+      // 🔥 Change language based on user preference
+      i18n.changeLanguage(data.user.language || "sw");
   
       return data.user;
     } catch (error) {
