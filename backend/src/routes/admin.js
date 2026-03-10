@@ -85,4 +85,8 @@ router.post("/rate-limits/clear", async (req, res) => {
   }
 });
 
+// Admin Monitoring Routes
+router.get("/monitoring/logs", admin.getAdminActivityLogs);
+router.get("/monitoring/stats", admin.getAdminStats);
+
 export default router;

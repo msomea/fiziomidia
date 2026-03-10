@@ -6,6 +6,7 @@ import Promotion from "../models/Promotion.js";
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
+import AdminActivityLog from "../models/AdminActivityLog.js";
 import asyncHandler from "express-async-handler";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import {
@@ -14,6 +15,16 @@ import {
 } from "../services/uploadService.js";
 import { sendEmail, EMAIL_FROM} from "../services/sendEmailService.js";
 import { generateFiziomidiaEmail } from "../templates/emailHelper.js";
+import {
+  logAdminActivity,
+  getUserTargetInfo,
+  getLicenseTargetInfo,
+  getAppointmentTargetInfo,
+  getPromotionTargetInfo,
+  getSponsorshipTargetInfo,
+  getProductTargetInfo,
+  getEmailTargetInfo,
+} from "../middlewares/adminActivityLogger.js";
 
 // -------------------------------------------
 // USERS CONTROLER
@@ -78,200 +89,231 @@ export const getUserDetails = async (req, res) => {
 };
 
 // UPDATE USER ROLE
-export const updateUserRole = async (req, res) => {
-  try {
-    const { role } = req.body;
-    const userId = req.params.id;
+export const updateUserRole = [
+  logAdminActivity("USER_ROLE_UPDATED", getUserTargetInfo),
+  async (req, res) => {
+    try {
+      const { role } = req.body;
+      const userId = req.params.id;
 
-    const validRoles = ["member", "physiotherapist", "pendingPhysiotherapist", "admin"];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: "Invalid role" });
+      const validRoles = [
+        "member",
+        "physiotherapist",
+        "pendingPhysiotherapist",
+        "admin",
+      ];
+      if (!validRoles.includes(role)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid role" });
+      }
+
+      const user = await User.findById(userId);
+      if (!user)
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+
+      user.role = role;
+
+      // 🔥 IMPORTANT FIX: If user is changed back to member → wipe PT data
+      if (role === "member") {
+        user.ptProfile = null;
+        user.physioApproval = false;
+      }
+
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: "Role updated successfully",
+        user,
+      });
+    } catch (err) {
+      console.error("Update role error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to update user role" });
     }
-
-    const user = await User.findById(userId);
-    if (!user)
-      return res.status(404).json({ success: false, message: "User not found" });
-
-    user.role = role;
-
-    // 🔥 IMPORTANT FIX: If user is changed back to member → wipe PT data
-    if (role === "member") {
-      user.ptProfile = null;
-      user.physioApproval = false;
-    }
-
-    await user.save();
-
-    return res.json({
-      success: true,
-      message: "Role updated successfully",
-      user,
-    });
-  } catch (err) {
-    console.error("Update role error:", err);
-    return res.status(500).json({ success: false, message: "Failed to update user role" });
-  }
-};
+  },
+];
 ;
 
 // VERIFY OR REJECT PT LICENSE
-export const updateLicenseStatus = asyncHandler( async (req, res) => {
-  try {
-    const { status, notes, index } = req.body;
+export const updateLicenseStatus = [
+  logAdminActivity(
+    (req) =>
+      req.body.status === "approved" ? "LICENSE_VERIFIED" : "LICENSE_REJECTED",
+    getLicenseTargetInfo,
+  ),
+  asyncHandler(async (req, res) => {
+    try {
+      const { status, notes, index } = req.body;
 
-    const valid = ["pending", "approved", "rejected"];
-    if (!valid.includes(status)) {
-      return res.status(400).json({ success: false, message: "Invalid license status" });
-    }
+      const valid = ["pending", "approved", "rejected"];
+      if (!valid.includes(status)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid license status" });
+      }
 
-    const userId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      return res.status(400).json({ success: false, message: "Invalid user id" });
-    }
+      const userId = req.params.id;
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid user id" });
+      }
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+      const user = await User.findById(userId);
+      if (!user)
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
 
-    if (!user.ptProfile || !user.ptProfile.licenses?.length) {
-      return res.status(400).json({ success: false, message: "No licenses found for this user" });
-    }
+      if (!user.ptProfile || !user.ptProfile.licenses?.length) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No licenses found for this user" });
+      }
 
-    // ✅ Select license by index (fallback to first)
-    const licenseDoc =
-      typeof index === "number"
-        ? user.ptProfile.licenses[index]
-        : user.ptProfile.licenses[0];
+      // ✅ Select license by index (fallback to first)
+      const licenseDoc =
+        typeof index === "number"
+          ? user.ptProfile.licenses[index]
+          : user.ptProfile.licenses[0];
 
-    if (!licenseDoc) {
-      return res.status(404).json({ success: false, message: "License not found" });
-    }
+      if (!licenseDoc) {
+        return res
+          .status(404)
+          .json({ success: false, message: "License not found" });
+      }
 
-    // Update license details
-    licenseDoc.verificationStatus = status;
-    if (typeof notes === "string") {
-      licenseDoc.verificationNotes = notes;
-    }
-    licenseDoc.verified = status === "approved";
+      // Update license details
+      licenseDoc.verificationStatus = status;
+      if (typeof notes === "string") {
+        licenseDoc.verificationNotes = notes;
+      }
+      licenseDoc.verified = status === "approved";
 
-    // Update profile verification info
-    user.ptProfile.lastLicenseVerificationAt = new Date();
+      // Update profile verification info
+      user.ptProfile.lastLicenseVerificationAt = new Date();
 
-    // Determine if overall profile is verified
-    user.ptProfile.isVerified = user.ptProfile.licenses.every(
-      (lic) => lic.verificationStatus === "approved"
-    );
+      // Determine if overall profile is verified
+      user.ptProfile.isVerified = user.ptProfile.licenses.every(
+        (lic) => lic.verificationStatus === "approved",
+      );
 
-    // 🔥 Role & access logic
-    if (status === "approved") {
-      user.physioApproval = true;
-      user.role = "physiotherapist";
+      // 🔥 Role & access logic
+      if (status === "approved") {
+        user.physioApproval = true;
+        user.role = "physiotherapist";
+      } else if (status === "rejected") {
+        user.physioApproval = false;
+        user.role = "member";
+      } else if (status === "pending") {
+        user.physioApproval = false;
+        user.role = "pendingPhysiotherapist";
+      }
 
-    } else if (status === "rejected") {
-      user.physioApproval = false;
-      user.role = "member";
+      await user.save();
 
-    } else if (status === "pending") {
-      user.physioApproval = false;
-      user.role = "pendingPhysiotherapist";
-    }
-
-    await user.save();
-
-    // Generate email
-    const emailHTML = generateFiziomidiaEmail({
-      title: "🎉 License Approved!",
-      body: `
+      // Generate email
+      const emailHTML = generateFiziomidiaEmail({
+        title: "🎉 License Approved!",
+        body: `
         <p>Hello ${user.fullName || "there"},</p>
         <p>Great news! Your professional license has been <strong>approved</strong>.</p>
         <p>You now have full access to the Fiziomidia platform features.</p>
         <p>We’re excited to have you onboard and look forward to your contribution.</p>
       `,
-      buttonText: "Login",
-      buttonURL: `https://fiziomidia.org/login`
-    });
-
-    // Send email (non-blocking safe pattern)
-    try {
-      await sendEmail({
-        from: EMAIL_FROM.ADMIN,
-        to: user.email,
-        subject: "Your License Has Been Approved - FizioMidia",
-        html: emailHTML
+        buttonText: "Login",
+        buttonURL: `https://fiziomidia.org/login`,
       });
-    } catch (error) {
-      console.error("License approval email failed:", error.message);
+
+      // Send email (non-blocking safe pattern)
+      try {
+        await sendEmail({
+          from: EMAIL_FROM.ADMIN,
+          to: user.email,
+          subject: "Your License Has Been Approved - FizioMidia",
+          html: emailHTML,
+        });
+      } catch (error) {
+        console.error("License approval email failed:", error.message);
+      }
+
+      res.json({
+        success: true,
+        message: `License ${status}`,
+        user,
+        license: licenseDoc,
+      });
+    } catch (err) {
+      console.error("License update error:", err);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to update license status" });
     }
-
-    res.json({
-      success: true,
-      message: `License ${status}`,
-      user,
-      license: licenseDoc,
-    });
-
-  } catch (err) {
-    console.error("License update error:", err);
-    res.status(500).json({ success: false, message: "Failed to update license status" });
-  }
-}
-);
+  }),
+];
 
 
 
 // ============================================
 // ADMIN SEND EMAIL TO USER
 export const sendEmailToUser = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { title, body, buttonText, buttonURL, logoURL } = req.body;
+    const { id } = req.params;
+    const { title, body, buttonText, buttonURL, logoURL } = req.body;
 
-  // Validate required fields
-  if (!title || !body) {
-    return res.status(400).json({
-      success: false,
-      message: "Email title and body are required"
+    // Validate required fields
+    if (!title || !body) {
+      return res.status(400).json({
+        success: false,
+        message: "Email title and body are required",
+      });
+    }
+
+    // Find user
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Generate branded email HTML
+    const emailHTML = generateFiziomidiaEmail({
+      title,
+      body,
+      buttonText,
+      buttonURL,
+      logoURL: "https://api.fiziomidia.org/api/logo",
     });
+
+    // Send email
+    try {
+      await sendEmail({
+        to: user.email,
+        from: EMAIL_FROM.ADMIN,
+        subject: title,
+        html: emailHTML,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Email sent successfully",
+      });
+    } catch (err) {
+      console.error("Admin send email error:", err.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Failed to send email",
+      });
+    }
   }
-
-  // Find user
-  const user = await User.findById(id);
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: "User not found"
-    });
-  }
-
-  // Generate branded email HTML
-  const emailHTML = generateFiziomidiaEmail({
-    title,
-    body,
-    buttonText,
-    buttonURL,
-    logoURL : "https://api.fiziomidia.org/api/logo"
-  });
-
-  // Send email
-  try {
-    await sendEmail({
-      to: user.email,
-      from: EMAIL_FROM.ADMIN,
-      subject: title,
-      html: emailHTML
-    });
-
-    return res.status(200).json({
-      success: true,
-      message: "Email sent successfully"
-    });
-  } catch (err) {
-    console.error("Admin send email error:", err.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to send email"
-    });
-  }
-});
+);
 
 
 // APPOINTMENTS CONTROLLER
@@ -364,44 +406,57 @@ export const getAppointmentDetails = async (req, res) => {
 };
 
 //  UPDATE APPOINTMENT (Admin override)
-export const updateAppointment = async (req, res) => {
-  try {
-    const { status, date, time, physiotherapist, adminNotes } = req.body;
+export const updateAppointment = [
+  logAdminActivity("APPOINTMENT_UPDATED", getAppointmentTargetInfo),
+  async (req, res) => {
+    try {
+      const { status, date, time, physiotherapist, adminNotes } = req.body;
 
-    const updated = await Appointment.findByIdAndUpdate(
-      req.params.id,
-      {
-        status,
-        scheduledDate: date,
-        scheduledTime: time,
-        adminNotes,
-        pt: physiotherapist,
-      },
-      { new: true }
-    );
+      const updated = await Appointment.findByIdAndUpdate(
+        req.params.id,
+        {
+          status,
+          scheduledDate: date,
+          scheduledTime: time,
+          adminNotes,
+          pt: physiotherapist,
+        },
+        { new: true },
+      );
 
-    res.json({ success: true, appointment: updated });
-  } catch {
-    res.status(500).json({ success: false });
-  }
-};
+      res.json({ success: true, appointment: updated });
+    } catch {
+      res.status(500).json({ success: false });
+    }
+  },
+];
 
 // DELETE APPOINTMENT
-export const deleteAppointment = async (req, res) => {
-  try {
-    const { id } = req.params;
+export const deleteAppointment = [
+  logAdminActivity("APPOINTMENT_DELETED", getAppointmentTargetInfo),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    const deleted = await Appointment.findByIdAndDelete(id);
+      const deleted = await Appointment.findByIdAndDelete(id);
 
-    if (!deleted)
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      if (!deleted)
+        return res
+          .status(404)
+          .json({ success: false, message: "Appointment not found" });
 
-    return res.json({ success: true, message: "Appointment deleted successfully" });
-  } catch (err) {
-    console.error("Admin delete appointment error:", err);
-    return res.status(500).json({ success: false, message: "Failed to delete appointment" });
-  }
-};
+      return res.json({
+        success: true,
+        message: "Appointment deleted successfully",
+      });
+    } catch (err) {
+      console.error("Admin delete appointment error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Failed to delete appointment" });
+    }
+  },
+];
 
 
 // -----------------------------------------
@@ -459,61 +514,67 @@ export const getAdminPromotion = async (req, res) => {
 };
 
 //UPDATE PROMOTION
-export const updateAdminPromotion = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, endAt } = req.body;
+export const updateAdminPromotion = [
+  logAdminActivity("PROMOTION_UPDATED", getPromotionTargetInfo),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, endAt } = req.body;
 
-    const promotion = await Promotion.findById(id);
-    if (!promotion)
-      return res.status(404).json({ message: "Promotion not found" });
+      const promotion = await Promotion.findById(id);
+      if (!promotion)
+        return res.status(404).json({ message: "Promotion not found" });
 
-    // Update end date if provided
-    if (endAt) {
-      const formattedEndAt = new Date(endAt);
-      if (isNaN(formattedEndAt)) {
-        return res.status(400).json({ message: "Invalid endAt date format" });
+      // Update end date if provided
+      if (endAt) {
+        const formattedEndAt = new Date(endAt);
+        if (isNaN(formattedEndAt)) {
+          return res.status(400).json({ message: "Invalid endAt date format" });
+        }
+        promotion.endAt = formattedEndAt;
       }
-      promotion.endAt = formattedEndAt;
+
+      // Determine current status
+      const now = new Date();
+
+      if (status === "suspended") {
+        // Suspended promotions stay suspended until reactivated
+        promotion.status = "suspended";
+      } else if (promotion.endAt && promotion.endAt < now) {
+        // If endAt is past, mark as expired
+        promotion.status = "expired";
+      } else {
+        // Otherwise active
+        promotion.status = "active";
+      }
+
+      await promotion.save();
+
+      return res.json({
+        message: "Promotion updated successfully",
+        promotion,
+      });
+    } catch (err) {
+      console.error("Update promotion error:", err);
+      return res.status(500).json({ message: "Internal server error" });
     }
-
-    // Determine current status
-    const now = new Date();
-
-    if (status === "suspended") {
-      // Suspended promotions stay suspended until reactivated
-      promotion.status = "suspended";
-    } else if (promotion.endAt && promotion.endAt < now) {
-      // If endAt is past, mark as expired
-      promotion.status = "expired";
-    } else {
-      // Otherwise active
-      promotion.status = "active";
-    }
-
-    await promotion.save();
-
-    return res.json({
-      message: "Promotion updated successfully",
-      promotion,
-    });
-  } catch (err) {
-    console.error("Update promotion error:", err);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
+  },
+];
 
 
 
 // DELETE PROMOTION
-export const deleteAdminPromotion = async (req, res) => {
-  try {
-    await Promotion.findByIdAndDelete(req.params.id);
-    res.json({ message: "Promotion deleted" });
-  } catch {
-    res.status(500).json({ message: "Delete failed" });
-  }
-};
+export const deleteAdminPromotion = [
+  logAdminActivity("PROMOTION_DELETED", getPromotionTargetInfo),
+  async (req, res) => {
+    try {
+      await Promotion.findByIdAndDelete(req.params.id);
+      res.json({ message: "Promotion deleted" });
+    } catch {
+      res.status(500).json({ message: "Delete failed" });
+    }
+  },
+];
 
 
 // -----------------------------------------
@@ -569,118 +630,118 @@ export const getSingleForumSub = async (req, res) => {
 };
 
 //UPDATE SUB SPONSORSHIP
-export const updateSponsorship = async (req, res) => {
-  const { id } = req.params;
+export const updateSponsorship = [
+  logAdminActivity("SPONSORSHIP_UPDATED", getSponsorshipTargetInfo),
+  async (req, res) => {
+    const { id } = req.params;
 
-  try {
-    const sub = await ForumSub.findById(id);
-    if (!sub) {
-      return res.status(404).json({
-        success: false,
-        error: "Forum sub not found",
-      });
-    }
-
-    // Convert isSponsored safely
-    const isSponsored =
-      req.body.isSponsored === true ||
-      req.body.isSponsored === "true";
-
-    /* --------------------------------------------------
-       Sponsorship OFF → reset everything
-    -------------------------------------------------- */
-    if (!isSponsored) {
-      // Remove logo from Cloudinary if exists
-      if (sub.sponsorLogoPublicId) {
-        await deleteFromCloudinary(sub.sponsorLogoPublicId);
+    try {
+      const sub = await ForumSub.findById(id);
+      if (!sub) {
+        return res.status(404).json({
+          success: false,
+          error: "Forum sub not found",
+        });
       }
 
-      sub.isSponsored = false;
-      sub.sponsorTitle = { en: "", sw: "" };
-      sub.sponsorName = { en: "", sw: "" };
-      sub.sponsorLogo = "";
-      sub.sponsorLogoPublicId = "";
-      sub.sponsorMessage = { en: "", sw: "" };
-      sub.sponsorWebsite = "";
-      sub.startDate = null;
-      sub.endDate = null;
+      // Convert isSponsored safely
+      const isSponsored =
+        req.body.isSponsored === true || req.body.isSponsored === "true";
+
+      /* --------------------------------------------------
+       Sponsorship OFF → reset everything
+    -------------------------------------------------- */
+      if (!isSponsored) {
+        // Remove logo from Cloudinary if exists
+        if (sub.sponsorLogoPublicId) {
+          await deleteFromCloudinary(sub.sponsorLogoPublicId);
+        }
+
+        sub.isSponsored = false;
+        sub.sponsorTitle = { en: "", sw: "" };
+        sub.sponsorName = { en: "", sw: "" };
+        sub.sponsorLogo = "";
+        sub.sponsorLogoPublicId = "";
+        sub.sponsorMessage = { en: "", sw: "" };
+        sub.sponsorWebsite = "";
+        sub.startDate = null;
+        sub.endDate = null;
+
+        await sub.save();
+
+        return res.json({
+          success: true,
+          message: "Sponsorship disabled",
+          sub,
+        });
+      }
+
+      /* --------------------------------------------------
+       Sponsorship ON → update fields
+    -------------------------------------------------- */
+      sub.isSponsored = true;
+
+      /* Sponsor Title (multilingual) */
+      if (req.body.sponsorTitle !== undefined) {
+        sub.sponsorTitle =
+          typeof req.body.sponsorTitle === "string"
+            ? JSON.parse(req.body.sponsorTitle)
+            : req.body.sponsorTitle;
+      }
+
+      /* Sponsor Name (multilingual) */
+      if (req.body.sponsorName !== undefined) {
+        sub.sponsorName =
+          typeof req.body.sponsorName === "string"
+            ? JSON.parse(req.body.sponsorName)
+            : req.body.sponsorName;
+      }
+
+      /* Sponsor Message (multilingual) */
+      if (req.body.sponsorMessage !== undefined) {
+        sub.sponsorMessage =
+          typeof req.body.sponsorMessage === "string"
+            ? JSON.parse(req.body.sponsorMessage)
+            : req.body.sponsorMessage;
+      }
+
+      if (req.body.sponsorWebsite !== undefined)
+        sub.sponsorWebsite = req.body.sponsorWebsite;
+
+      // Handle logo upload
+      if (req.file) {
+        // Delete old logo if exists
+        if (sub.sponsorLogoPublicId) {
+          await deleteFromCloudinary(sub.sponsorLogoPublicId);
+        }
+
+        const result = await uploadToCloudinary(req.file);
+
+        sub.sponsorLogo = result.secure_url;
+        sub.sponsorLogoPublicId = result.public_id;
+      }
+
+      // Dates
+      if (req.body.startDate) sub.startDate = new Date(req.body.startDate);
+
+      if (req.body.endDate) sub.endDate = new Date(req.body.endDate);
 
       await sub.save();
 
       return res.json({
         success: true,
-        message: "Sponsorship disabled",
+        message: "Sponsorship updated successfully",
         sub,
       });
+    } catch (err) {
+      console.error("❌ Error updating sponsorship:", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update sponsorship",
+      });
     }
-
-    /* --------------------------------------------------
-       Sponsorship ON → update fields
-    -------------------------------------------------- */
-    sub.isSponsored = true;
-
-    /* Sponsor Title (multilingual) */
-    if (req.body.sponsorTitle !== undefined) {
-      sub.sponsorTitle =
-        typeof req.body.sponsorTitle === "string"
-          ? JSON.parse(req.body.sponsorTitle)
-          : req.body.sponsorTitle;
-    }
-
-    /* Sponsor Name (multilingual) */
-    if (req.body.sponsorName !== undefined) {
-      sub.sponsorName =
-        typeof req.body.sponsorName === "string"
-          ? JSON.parse(req.body.sponsorName)
-          : req.body.sponsorName;
-    }
-
-    /* Sponsor Message (multilingual) */
-    if (req.body.sponsorMessage !== undefined) {
-      sub.sponsorMessage =
-        typeof req.body.sponsorMessage === "string"
-          ? JSON.parse(req.body.sponsorMessage)
-          : req.body.sponsorMessage;
-    }
-
-    if (req.body.sponsorWebsite !== undefined)
-      sub.sponsorWebsite = req.body.sponsorWebsite;
-
-    // Handle logo upload
-    if (req.file) {
-      // Delete old logo if exists
-      if (sub.sponsorLogoPublicId) {
-        await deleteFromCloudinary(sub.sponsorLogoPublicId);
-      }
-
-      const result = await uploadToCloudinary(req.file);
-
-      sub.sponsorLogo = result.secure_url;
-      sub.sponsorLogoPublicId = result.public_id;
-    }
-
-    // Dates
-    if (req.body.startDate)
-      sub.startDate = new Date(req.body.startDate);
-
-    if (req.body.endDate)
-      sub.endDate = new Date(req.body.endDate);
-
-    await sub.save();
-
-    return res.json({
-      success: true,
-      message: "Sponsorship updated successfully",
-      sub,
-    });
-  } catch (err) {
-    console.error("❌ Error updating sponsorship:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to update sponsorship",
-    });
-  }
-};
+  },
+];
 
 // DELETE SUB
 export const deleteSub = async (req, res) => {
@@ -709,52 +770,55 @@ export const deleteSub = async (req, res) => {
 // -----------------------------------------
 
 // Create a new Sponsored Product
-export const createSponsoredProduct = async (req, res) => {
-  try {
-    // Convert isActive / isSponsored safely
-    const isActive =
-      req.body.isActive === "true" || req.body.isActive === true;
+export const createSponsoredProduct = [
+  logAdminActivity("PRODUCT_CREATED", getProductTargetInfo),
+  async (req, res) => {
+    try {
+      // Convert isActive / isSponsored safely
+      const isActive =
+        req.body.isActive === "true" || req.body.isActive === true;
 
-    const productData = {
-      name: req.body.name,
-      description: req.body.description || "",
-      price: req.body.price,
-      sponsorName: req.body.sponsorName || "",
-      sponsorWebsite: req.body.sponsorWebsite || "",
-      sponsorMessage: req.body.sponsorMessage || "",
-      isActive,
-    };
+      const productData = {
+        name: req.body.name,
+        description: req.body.description || "",
+        price: req.body.price,
+        sponsorName: req.body.sponsorName || "",
+        sponsorWebsite: req.body.sponsorWebsite || "",
+        sponsorMessage: req.body.sponsorMessage || "",
+        isActive,
+      };
 
-    // Handle image / logo upload
-    if (req.file) {
-      productData.image = `/uploads/sponsored_products/${req.file.filename}`;
+      // Handle image / logo upload
+      if (req.file) {
+        productData.image = `/uploads/sponsored_products/${req.file.filename}`;
+      }
+
+      // Optional dates
+      if (req.body.startDate) {
+        productData.startDate = new Date(req.body.startDate);
+      }
+
+      if (req.body.endDate) {
+        productData.endDate = new Date(req.body.endDate);
+      }
+
+      const product = new SponsoredProduct(productData);
+      await product.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Sponsored product created successfully",
+        product,
+      });
+    } catch (err) {
+      console.error("❌ Create sponsored product error:", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to create sponsored product",
+      });
     }
-
-    // Optional dates
-    if (req.body.startDate) {
-      productData.startDate = new Date(req.body.startDate);
-    }
-
-    if (req.body.endDate) {
-      productData.endDate = new Date(req.body.endDate);
-    }
-
-    const product = new SponsoredProduct(productData);
-    await product.save();
-
-    return res.status(201).json({
-      success: true,
-      message: "Sponsored product created successfully",
-      product,
-    });
-  } catch (err) {
-    console.error("❌ Create sponsored product error:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to create sponsored product",
-    });
-  }
-};
+  },
+];
 
 // List all Sponsored Products with pagination
 export const getAllSponsoredProducts = async (req, res) => {
@@ -823,134 +887,296 @@ export const getSponsoredProductById = async (req, res) => {
 
 // Update Sponsored Product
 // Update Sponsored Product (ADMIN)
-export const updateSponsoredProduct = async (req, res) => {
-  const { id } = req.params;
+export const updateSponsoredProduct = [
+  logAdminActivity("PRODUCT_UPDATED", getProductTargetInfo),
+  async (req, res) => {
+    const { id } = req.params;
 
-  try {
-    const product = await SponsoredProduct.findById(id);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        error: "Sponsored product not found",
-      });
-    }
+    try {
+      const product = await SponsoredProduct.findById(id);
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          error: "Sponsored product not found",
+        });
+      }
 
-    /* =========================
+      /* =========================
        BASIC FIELDS
     ========================== */
-    if (req.body.name !== undefined) product.name = req.body.name;
-    if (req.body.category !== undefined) product.category = req.body.category;
-    if (req.body.description !== undefined)
-      product.description = req.body.description;
+      if (req.body.name !== undefined) product.name = req.body.name;
+      if (req.body.category !== undefined) product.category = req.body.category;
+      if (req.body.description !== undefined)
+        product.description = req.body.description;
 
-    if (req.body.price !== undefined) {
-      const price = Number(req.body.price);
-      if (Number.isNaN(price)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid price value",
-        });
+      if (req.body.price !== undefined) {
+        const price = Number(req.body.price);
+        if (Number.isNaN(price)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid price value",
+          });
+        }
+        product.price = price;
       }
-      product.price = price;
-    }
 
-    if (req.body.duration !== undefined) {
-      const duration = Number(req.body.duration);
-      if (Number.isNaN(duration)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid duration value",
-        });
+      if (req.body.duration !== undefined) {
+        const duration = Number(req.body.duration);
+        if (Number.isNaN(duration)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid duration value",
+          });
+        }
+        product.duration = duration;
       }
-      product.duration = duration;
-    }
 
-    if (req.body.link !== undefined) product.link = req.body.link;
+      if (req.body.link !== undefined) product.link = req.body.link;
 
-    /* =========================
+      /* =========================
        STATUS CHANGE (ADMIN ONLY)
        pending | approved | rejected
        Dates & activation handled by schema hook
     ========================== */
-    if (req.body.status !== undefined) {
-      const validStatus = ["pending", "approved", "rejected"];
-      if (!validStatus.includes(req.body.status)) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid status value",
-        });
+      if (req.body.status !== undefined) {
+        const validStatus = ["pending", "approved", "rejected"];
+        if (!validStatus.includes(req.body.status)) {
+          return res.status(400).json({
+            success: false,
+            error: "Invalid status value",
+          });
+        }
+
+        product.status = req.body.status;
       }
 
-      product.status = req.body.status;
-    }
-
-    /* =========================
+      /* =========================
        MANUAL ACTIVE TOGGLE
        (Only allowed if approved)
     ========================== */
-    if (req.body.isActive !== undefined) {
-      const isActive =
-        req.body.isActive === true || req.body.isActive === "true";
+      if (req.body.isActive !== undefined) {
+        const isActive =
+          req.body.isActive === true || req.body.isActive === "true";
 
-      if (isActive && product.status !== "approved") {
-        return res.status(400).json({
-          success: false,
-          error: "Only approved products can be activated",
-        });
+        if (isActive && product.status !== "approved") {
+          return res.status(400).json({
+            success: false,
+            error: "Only approved products can be activated",
+          });
+        }
+
+        product.isActive = isActive;
       }
 
-      product.isActive = isActive;
-    }
-
-    /* =========================
+      /* =========================
        IMAGE HANDLING
     ========================== */
-    if (req.file) {
-      product.image = `/uploads/products/${req.file.filename}`;
-    } else if (req.body.image !== undefined) {
-      product.image = req.body.image;
+      if (req.file) {
+        product.image = `/uploads/products/${req.file.filename}`;
+      } else if (req.body.image !== undefined) {
+        product.image = req.body.image;
+      }
+
+      await product.save(); // triggers schema hooks
+
+      return res.json({
+        success: true,
+        message: "Sponsored product updated successfully",
+        product,
+      });
+    } catch (err) {
+      console.error("❌ Error updating sponsored product:", err);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to update sponsored product",
+      });
     }
-
-    await product.save(); // triggers schema hooks
-
-    return res.json({
-      success: true,
-      message: "Sponsored product updated successfully",
-      product,
-    });
-  } catch (err) {
-    console.error("❌ Error updating sponsored product:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to update sponsored product",
-    });
-  }
-};
+  },
+];
 
 
 
 // Delete Sponsored Product (ADMIN)
-export const deleteSponsoredProduct = async (req, res) => {
-  try {
-    const product = await SponsoredProduct.findByIdAndDelete(req.params.id);
+export const deleteSponsoredProduct = [
+  logAdminActivity("PRODUCT_DELETED", getProductTargetInfo),
+  async (req, res) => {
+    try {
+      const product = await SponsoredProduct.findByIdAndDelete(req.params.id);
 
-    if (!product) {
-      return res.status(404).json({
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          error: "Sponsored product not found",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message: "Sponsored product deleted successfully",
+      });
+    } catch (err) {
+      console.error("❌ Delete sponsored product error:", err);
+      return res.status(500).json({
         success: false,
-        error: "Sponsored product not found",
+        error: "Failed to delete sponsored product",
       });
     }
+  },
+];
+
+// -----------------------------------------
+// ADMIN MONITORING CONTROLLER
+// -----------------------------------------
+
+export const getAdminActivityLogs = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      admin: adminId,
+      action,
+      targetType,
+      startDate,
+      endDate,
+    } = req.query;
+
+    // Build query
+    const query = {};
+
+    // Filter by admin
+    if (adminId) {
+      query.admin = adminId;
+    }
+
+    // Filter by action type
+    if (action) {
+      query.action = action;
+    }
+
+    // Filter by target type
+    if (targetType) {
+      query.targetType = targetType;
+    }
+
+    // Filter by date range
+    if (startDate || endDate) {
+      query.createdAt = {};
+      if (startDate) {
+        query.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        query.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [logs, totalCount] = await Promise.all([
+      AdminActivityLog.find(query)
+        .populate("admin", "fullName email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      AdminActivityLog.countDocuments(query),
+    ]);
 
     return res.json({
       success: true,
-      message: "Sponsored product deleted successfully",
+      logs,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        limit: parseInt(limit),
+      },
     });
   } catch (err) {
-    console.error("❌ Delete sponsored product error:", err);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to delete sponsored product",
+    console.error("Get admin activity logs error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch activity logs" });
+  }
+};
+
+export const getAdminStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    // Build date filter
+    const dateFilter = {};
+    if (startDate || endDate) {
+      dateFilter.createdAt = {};
+      if (startDate) {
+        dateFilter.createdAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        dateFilter.createdAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Get activity stats by action type
+    const actionStats = await AdminActivityLog.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: "$action", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+
+    // Get activity stats by admin
+    const adminStats = await AdminActivityLog.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: "$admin", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "adminInfo",
+        },
+      },
+      { $unwind: "$adminInfo" },
+      {
+        $project: {
+          adminName: "$adminInfo.fullName",
+          adminEmail: "$adminInfo.email",
+          count: 1,
+        },
+      },
+    ]);
+
+    // Get daily activity trends (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const dailyStats = await AdminActivityLog.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            day: { $dayOfMonth: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]);
+
+    return res.json({
+      success: true,
+      stats: {
+        actionStats,
+        adminStats,
+        dailyStats,
+      },
     });
+  } catch (err) {
+    console.error("Get admin stats error:", err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch admin stats" });
   }
 };
 

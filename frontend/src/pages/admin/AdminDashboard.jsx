@@ -10,6 +10,7 @@ import PromotionsSection from "../../components/admin/PromotionsSection";
 import SponsorshipSection from "../../components/admin/SubSponsorshipSection";
 import SponsoredProductsSection from "../../components/admin/ProductSponsorshipSection";
 import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
+import AdminMonitoringSection from "../../components/admin/AdminMonitoringSection";
 
 export default function AdminDashboard() {
   const [user, setUser] = useState(null);
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
 
       {/* Dashboard Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+        <AdminMonitoringSection />
         <UsersSection />
         <AppointmentsSection />
         <PromotionsSection />

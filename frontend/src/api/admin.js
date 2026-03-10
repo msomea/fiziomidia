@@ -61,3 +61,24 @@ export const updateSponsoredProduct = (id, data) =>
 
 export const deleteSponsoredProduct = (id) =>
   API.delete(`${API_URL}/admin/sponsored/${id}`);
+
+// Admin Monitoring APIs
+export const getAdminActivityLogs = async (params = {}) => {
+  try {
+    const res = await API.get(`${API_URL}/admin/monitoring/logs`, { params });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch admin activity logs:", err);
+    throw err;
+  }
+};
+
+export const getAdminStats = async (params = {}) => {
+  try {
+    const res = await API.get(`${API_URL}/admin/monitoring/stats`, { params });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch admin stats:", err);
+    throw err;
+  }
+};
