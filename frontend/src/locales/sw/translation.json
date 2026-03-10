@@ -741,6 +741,8 @@
   "failed_update_sponsorship": "Imeshindikana kusasisha udhamini.",
   "failed_load_appointments": "Imeshindikana kupakia miadi.",
   "appointment_details": "Maelezo ya Miadi",
+  "no_promotions_found": "Hakuna tangazo",
+  "no_language_change": "Lugha Haijabadilika",
   "decline": "Kataa",
   "back": "Rudi",
   "scheduled_at": "Imepangwa",
@@ -771,6 +773,7 @@
   "rate_limit_upload": "Maombi mengi ya kupakia faili. Jaribu tena baadae",
   "rate_limit_forum_post": "Maombi mengi ya kutuma mada. Jaribu tena baadae",
   "rate_limit_forum_comment": "Maombi mengi ya kutuma maoni. Jaribu tena baadae",
+  "rate_limit_admin":"Maombi mengi ya utendaji wa msimamizi. Jaribu tena baadae",
   "rate_limit_general": "Maombi mengi sana. Jaribu tena baadae.",
   "resetting": "Inabadili",
   "admin_monitoring": "Uchunguzi wa Msimamizi",
@@ -793,5 +796,10 @@
   "loading_activities": "Inapakia shughuli...",
   "no_activities_found": "Hakuna shughuli zilizopatikana",
   "by": "na",
-  "target": "lengo"
+  "target": "lengo",
+  "system_overview": "Maelezo ya Mfumo",
+  "content_overview": "Maelezo ya Maudhui",
+  "data_status": "Hali ya Data",
+  "last_updated": "Mara ya mwisho kusasishwa",
+  "error_loading_dashboard": "Imeshindikana kupakia dashibodi"
 }

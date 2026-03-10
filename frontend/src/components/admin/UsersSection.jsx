@@ -5,34 +5,38 @@ import API from "../../api/axios";
 import CollapsibleSection from "./CollapsibleSection";
 import { API_URL } from "../../config/constants";
 import { Link } from "react-router";
+import { useDashboard } from "../../contexts/DashboardContext";
 
 export default function AdminUsers() {
   const { t } = useTranslation()
-  const [users, setUsers] = useState([]);
+  const { users, refreshUsers, loading: dashboardLoading } = useDashboard();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [licenseFilter, setLicenseFilter] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadUsers();
+    // Only refresh if filters change and we have initial data
+    if (users.length > 0) {
+      loadUsers();
+    }
   }, [roleFilter, licenseFilter]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/users`, {
-        params: {
-          search,
-          role: roleFilter,
-          licenseStatus: licenseFilter,
-        },
+      await refreshUsers({
+        search,
+        role: roleFilter,
+        licenseStatus: licenseFilter,
       });
-      setUsers(res.data.users);
     } finally {
       setLoading(false);
     }
   };
+
+  // Use dashboard loading state for initial load, local loading for refreshes
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t('users_management')}>
@@ -102,7 +106,7 @@ export default function AdminUsers() {
           </thead>
 
           <tbody className="text-tufts">
-            {loading ? (
+            {isLoading ? (
               <tr>
                 <td className="p-4 text-center" colSpan="6">Loading...</td>
               </tr>

@@ -8,15 +8,17 @@ import * as productController from "../controllers/admin/adminSponsoredProductCo
 import * as monitoringController from "../controllers/admin/adminMonitoringController.js";
 import * as modReq from "../controllers/admin/adminForumModController.js";
 import { upload } from "../services/uploadService.js";
+import { getDashboardData } from "../controllers/adminController.js";
 import {
   getRateLimitStats,
   clearRateLimitData,
 } from "../utils/rateLimitMonitor.js";
+import { limiters } from "../utils/rateLimiter.js";
 
 const router = express.Router();
 // route /api/admin
 // All routes require admin authentication
-router.use(authenticate, authenticateAdmin);
+router.use(authenticate, authenticateAdmin, limiters.admin);
 
 // Users Section
 router.get("/users", userController.listUsers);
@@ -78,6 +80,9 @@ router.delete(
 // Admin Monitoring Routes
 router.get("/monitoring/logs", monitoringController.getAdminActivityLogs);
 router.get("/monitoring/stats", monitoringController.getAdminStats);
+
+// Consolidated Dashboard Route
+router.get("/dashboard", getDashboardData);
 
 // Rate Limit Monitoring
 router.get("/rate-limits/stats", async (req, res) => {

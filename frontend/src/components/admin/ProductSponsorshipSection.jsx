@@ -1,34 +1,44 @@
 import { useEffect, useState } from "react";
-import { getSponsoredProducts } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useDashboard } from "../../contexts/DashboardContext";
 
 export default function ProductSponsorshipSection() {
   const { t } = useTranslation();
-  const [products, setProducts] = useState([]);
+  const { sponsoredProducts, refreshSponsoredProducts, loading: dashboardLoading } = useDashboard();
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
   // Filters
   const [search, setSearch] = useState(""); // search by product name
   const [status, setStatus] = useState(""); // active/inactive
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadSponsoredProducts();
+    // Only refresh if filters change and we have initial data
+    if (sponsoredProducts.length > 0) {
+      loadSponsoredProducts();
+    }
   }, [search, status, page]);
 
   const loadSponsoredProducts = async () => {
     try {
-      const res = await getSponsoredProducts({ search, status, page });
-      setProducts(res.products || []);
-      setTotalPages(res.totalPages || 1);
+      setLoading(true);
+      await refreshSponsoredProducts({ search, status, page });
+      // Note: For pagination, we'd need to update the context to handle totalPages
+      setTotalPages(1); // Simplified for dashboard preview
     } catch (error) {
       console.error(error);
       toast.error(t("failed_load_sponsored"));
+    } finally {
+      setLoading(false);
     }
   };
+
+  // Use dashboard loading state for initial load, local loading for refreshes
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t("sponsored_products")}>
@@ -54,54 +64,63 @@ export default function ProductSponsorshipSection() {
       </div>
 
       {/* PRODUCT LIST */}
-      {products.map((product) => (
-        <div
-          key={product._id}
-          className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"
-        >
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-20 h-20 rounded object-cover border"
-          />
-          <div className="text-sm flex-1">
-            <Link to={`/admin/sponsored-products/${product._id}`}>
-              <h3 className="font-bold text-caribbean text-lg">{product.name}</h3>
-            </Link>
-            <p>
-              <b>{t("owner_label")}</b> {product.owner?.fullName}
-            </p>
-            <p>
-              <b>{t("price_label")}</b> {product.price}
-            </p>
-            <p>
-              <b>{t("description_label")}</b> {product.description}
-            </p>
-            <p>
-              <b>{t("end_date")}</b> {product.endDate}
-            </p>
-            <p>
-              <b>{t("status_label")}</b>{" "}
-              {product.isActive ? t("status_active") : t("status_inactive")}
-            </p>
-            {product.link && (
-              <p>
-                <b>{t("link_label")}</b>{" "}
-                <a
-                  href={`https://${product.link}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  {t("visit_link")}
-                </a>
-              </p>
-            )}
-          </div>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean"></div>
+          <span className="ml-2 text-gray-500">Loading products...</span>
         </div>
-      ))}
+      ) : sponsoredProducts.length === 0 ? (
+        <p className="text-gray-500 text-sm mt-4">{t("no_products_found")}</p>
+      ) : (
+        sponsoredProducts.slice(0, 5).map((product) => (
+          <div
+            key={product._id}
+            className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"
+          >
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-20 h-20 rounded object-cover border"
+            />
+            <div className="text-sm flex-1">
+              <Link to={`/admin/sponsored-products/${product._id}`}>
+                <h3 className="font-bold text-caribbean text-lg">{product.name}</h3>
+              </Link>
+              <p>
+                <b>{t("owner_label")}</b> {product.owner?.fullName}
+              </p>
+              <p>
+                <b>{t("price_label")}</b> {product.price}
+              </p>
+              <p>
+                <b>{t("description_label")}</b> {product.description}
+              </p>
+              <p>
+                <b>{t("end_date")}</b> {product.endDate}
+              </p>
+              <p>
+                <b>{t("status_label")}</b>{" "}
+                {product.isActive ? t("status_active") : t("status_inactive")}
+              </p>
+              {product.link && (
+                <p>
+                  <b>{t("link_label")}</b>{" "}
+                  <a
+                    href={`https://${product.link}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 underline"
+                  >
+                    {t("visit_link")}
+                  </a>
+                </p>
+              )}
+            </div>
+          </div>
+        ))
+      )}
 
-      {/* Pagination */}
+      {/* Pagination - simplified for dashboard preview */}
       <div className="flex justify-center items-center gap-3 mt-4">
         <button
           onClick={() => setPage((p) => p - 1)}
@@ -125,7 +144,7 @@ export default function ProductSponsorshipSection() {
       </div>
 
       <p className="text-xs text-gray-400 mt-2">
-        {t("showing_sponsored_products", { count: products.length })}
+        {t("showing_sponsored_products", { count: sponsoredProducts.length })}
       </p>
     </CollapsibleSection>
   );

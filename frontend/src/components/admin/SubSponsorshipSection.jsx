@@ -1,34 +1,22 @@
 import { useEffect, useState } from "react";
-import { fetchForumSubs } from "../../api/admin";
 import CollapsibleSection from "./CollapsibleSection";
 import { useTranslation } from 'react-i18next';
 import toast from "react-hot-toast";
 import { Link } from "react-router";
+import { useDashboard } from "../../contexts/DashboardContext";
 
 export default function SponsorshipSection() {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || "en";
   const fallbackLang = "en";
+  const { forumSubs, loading: dashboardLoading } = useDashboard();
 
-  const [subs, setSubs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetchForumSubs();
-        setSubs(res.subs || []);
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to load forum subs");
-      }
-    };
-    load();
-  }, []);
+  const [loading, setLoading] = useState(false);
 
   // 🔎 Filter logic (applied instantly in UI)
-  const filteredSubs = subs.filter((sub) => {
+  const filteredSubs = forumSubs.filter((sub) => {
     const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
     const matchesSearch =
       titleText.toLowerCase().includes(searchQuery.toLowerCase());
@@ -42,6 +30,9 @@ export default function SponsorshipSection() {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Use dashboard loading state for initial load
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t('forum_sponsorships')}>
@@ -68,39 +59,47 @@ export default function SponsorshipSection() {
         </select>
       </div>
 
-      {/* Listing */}
-      {filteredSubs.slice(0, 10).map((sub) => {
-        const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
-
-        return (
-          <div
-            key={sub._id}
-            className="mt-2 border p-2 rounded text-sm text-tufts"
-          >
-            <Link to={`/admin/sponsorship/${sub._id}`}>
-              <h2 className="text-caribbean">
-                <b>{t('sub_label_short')}</b> #{sub._id}
-              </h2>
-            </Link>
-
-            <p>
-              <b>{t('name_label')}</b> {titleText}
-            </p>
-
-            <p>
-              <b>{t('status_label')}</b>{" "}
-              {sub.isSponsored ? (
-                <span className="text-green-600">{t('sponsored')}</span>
-              ) : (
-                <span className="text-red-600">{t('not_sponsored')}</span>
-              )}
-            </p>
-          </div>
-        );
-      })}
-
-      {filteredSubs.length === 0 && (
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean"></div>
+          <span className="ml-2 text-gray-500">Loading forum subs...</span>
+        </div>
+      ) : filteredSubs.length === 0 ? (
         <p className="text-gray-500 text-sm mt-4">{t('no_subs_found')}</p>
+      ) : (
+        <>
+          {/* Listing */}
+          {filteredSubs.slice(0, 10).map((sub) => {
+            const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
+
+            return (
+              <div
+                key={sub._id}
+                className="mt-2 border p-2 rounded text-sm text-tufts"
+              >
+                <Link to={`/admin/sponsorship/${sub._id}`}>
+                  <h2 className="text-caribbean">
+                    <b>{t('sub_label_short')}</b> #{sub._id}
+                  </h2>
+                </Link>
+
+                <p>
+                  <b>{t('name_label')}</b> {titleText}
+                </p>
+
+                <p>
+                  <b>{t('status_label')}</b>{" "}
+                  {sub.isSponsored ? (
+                    <span className="text-green-600">{t('sponsored')}</span>
+                  ) : (
+                    <span className="text-red-600">{t('not_sponsored')}</span>
+                  )}
+                </p>
+              </div>
+            );
+          })}
+        </>
       )}
     </CollapsibleSection>
   );

@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { fetchCurrentUser } from "../../api/auth";
 import { Settings } from "lucide-react";
 import { useTranslation } from 'react-i18next'
+import { DashboardProvider, useDashboard } from "../../contexts/DashboardContext";
 import UsersSection from "../../components/admin/UsersSection"
 import AppointmentsSection from "../../components/admin/AppointmentsSection";
 import PromotionsSection from "../../components/admin/PromotionsSection";
@@ -12,10 +13,11 @@ import SponsoredProductsSection from "../../components/admin/ProductSponsorshipS
 import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
 import AdminMonitoringSection from "../../components/admin/AdminMonitoringSection";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
   const { t } = useTranslation()
+  const { fetchDashboardData, loading, error } = useDashboard();
 
   useEffect(() => {
     const load = async () => {
@@ -29,6 +31,11 @@ export default function AdminDashboard() {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    // Fetch all dashboard data at once - only run once on mount
+    fetchDashboardData();
+  }, []); // Remove fetchDashboardData from dependency array
 
   return (
     <div className="p-6 mt-16">
@@ -55,6 +62,21 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-caribbean"></div>
+          <span className="ml-3 text-caribbean font-medium">Loading dashboard...</span>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          <p className="font-medium">{t('error_loading_dashboard')}</p>
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
 
       {/* Dashboard Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -82,5 +104,13 @@ export default function AdminDashboard() {
 
       
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <DashboardProvider>
+      <AdminDashboardContent />
+    </DashboardProvider>
   );
 }

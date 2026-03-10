@@ -87,7 +87,10 @@ API.interceptors.response.use(
         toast.error(message || i18n.t("rate_limit_forum_post"));
       } else if (code === "RATE_LIMIT_FORUM_COMMENT") {
         toast.error(message || i18n.t("rate_limit_forum_comment"));
-      } else if (code === "RATE_LIMIT_GENERAL") {
+      } else if (code === "RATE_LIMIT_ADMIN") {
+        toast.error(message || i18n.t("rate_limit_admin"));
+      }
+       else if (code === "RATE_LIMIT_GENERAL") {
         toast.error(message || i18n.t("rate_limit_general"));
       }
 

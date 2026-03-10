@@ -7,11 +7,12 @@ import { Loader2 } from "lucide-react";
 import { API_URL } from "../../config/constants";
 import CollapsibleSection from "./CollapsibleSection";
 import { useTranslation } from "react-i18next";
+import { useDashboard } from "../../contexts/DashboardContext";
 
 export default function AdminAppointments() {
   const { t } = useTranslation();
+  const { appointments, refreshAppointments, loading: dashboardLoading } = useDashboard();
 
-  const [appointments, setAppointments] = useState([]);
   const [search, setSearch] = useState("");
   const [clinic, setClinic] = useState("");
   const [pt, setPt] = useState("");
@@ -20,16 +21,16 @@ export default function AdminAppointments() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadAppointments();
+    // Only refresh if filters change and we have initial data
+    if (appointments.length > 0) {
+      loadAppointments();
+    }
   }, [clinic, pt, requester, status]);
 
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/appointments`, {
-        params: { search, clinic, pt, requester, status },
-      });
-      setAppointments(res.data.appts || []);
+      await refreshAppointments({ search, clinic, pt, requester, status });
     } catch (error) {
       toast.error(t("failed_fetch_appointments"));
     } finally {
@@ -59,6 +60,9 @@ export default function AdminAppointments() {
       toast.error(t("delete_failed"));
     }
   };
+
+  // Use dashboard loading state for initial load, local loading for refreshes
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t("appointments_management")}>
@@ -102,7 +106,7 @@ export default function AdminAppointments() {
 
         {/* RESULTS */}
         <div className="mt-4">
-          {loading ? (
+          {isLoading ? (
             <div className="h-screen flex flex-col items-center justify-center">
               <Loader2 className="w-12 h-12 text-caribbean animate-spin" />
               <p className="mt-4 text-caribbean font-medium animate-pulse">

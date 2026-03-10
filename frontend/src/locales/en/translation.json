@@ -731,6 +731,8 @@
   "status_expiring_soon": "Expiring Soon",
   "add_edit_sponsorship": "Add / Edit Sponsorship",
   "select_forum_sub": "Select Forum Sub",
+  "no_promotions_found": "No promotions found",
+  "no_language_change": "Language not changed",
   "sponsor_name": "Sponsor Name",
   "sponsor_logo": "Sponsor Logo URL",
   "sponsor_message": "Sponsor Message",
@@ -769,6 +771,7 @@
   "rate_limit_upload": "Too many file upload. Try again later",
   "rate_limit_forum_post": "Too many post created. Try again later",
   "rate_limit_forum_comment": "Too many comments created. Try again later",
+  "rate_limit_admin": "Too many admin actions. Try again later",
   "rate_limit_general": "Too many requests. Try again later.",
   "resetting": "Resseting",
   "admin_monitoring": "Admin Monitoring",
@@ -791,5 +794,10 @@
   "loading_activities": "Loading activities...",
   "no_activities_found": "No activities found",
   "by": "by",
-  "target": "target"
+  "target": "Target",
+  "system_overview": "System Overview",
+  "content_overview": "Content Overview",
+  "data_status": "Data Status",
+  "last_updated": "Last Updated",
+  "error_loading_dashboard": "Error loading dashboard"
 }

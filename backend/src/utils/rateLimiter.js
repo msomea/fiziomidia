@@ -130,6 +130,13 @@ export const limiters = {
     code: "RATE_LIMIT_REFRESH",
   }),
 
+  admin: createLimiter({
+    windowMs: 60 * 1000,
+    max: 100,
+    keyGenerator: getUserKey,
+    code: "RATE_LIMIT_ADMIN",
+  }),
+
   /*
   Contact form
   */
