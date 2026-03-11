@@ -45,7 +45,7 @@ const PostDetailPage = () => {
   const socket = getSocket();
 
   const canEdit =
-    user && (user.role === "admin" || user._id === post?.author?._id);
+    user && user._id && (user.role === "admin" || user._id === post?.author?._id);
 
   const fetchPost = async () => {
     setLoading(true);

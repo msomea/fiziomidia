@@ -17,6 +17,7 @@ import GallerySection from "../../components/ptsetting/GallerySection";
 import SaveButton from "../../components/ptsetting/SaveButton";
 import LocationSelector from "../../components/ptsetting/LocationSelector";
 import DefaultLanguageSection from "../../components/ptsetting/DefaultLanguageSection";
+import ClinicManagement from "../../components/ptsetting/ClinicManagement";
 
 const PTProfileSettings = () => {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ const PTProfileSettings = () => {
     languages: [],
     professionalMemberships: [],
     documents: [],
+    clinicIds: [],
   });
 
   useEffect(() => {
@@ -81,6 +83,7 @@ const PTProfileSettings = () => {
           licenses: profileData.ptProfile?.licenses || [],
           professionalMemberships: profileData.ptProfile?.professionalMemberships || [],
           documents: profileData.ptProfile?.documents || [],
+          clinicIds: profileData.ptProfile?.clinicIds || [],
         });
       } catch (err) {
         console.error("Error loading profile:", err);
@@ -135,10 +138,12 @@ const PTProfileSettings = () => {
         }
       });
 
-      const ptFields = ["title","services","workExperience","education","institution","licenses","speciality","yearsOfExperience","workingHours","isPrivatePractice","languages","professionalMemberships","documents","licenseVerificationStatus","licenseVerificationNotes","availability"];
+      const ptFields = ["title","services","workExperience","education","institution","licenses","speciality","yearsOfExperience","workingHours","isPrivatePractice","languages","professionalMemberships","documents","licenseVerificationStatus","licenseVerificationNotes","availability","clinicIds"];
       const ptProfilePayload = {};
       ptFields.forEach(field => {
-        if (formData[field] !== undefined) ptProfilePayload[field] = formData[field];
+        if (formData[field] !== undefined && formData[field] !== null) {
+          ptProfilePayload[field] = formData[field];
+        }
       });
 
       const newFiles = [];
@@ -178,9 +183,17 @@ const PTProfileSettings = () => {
       setUser(updatedUserData);
       localStorage.setItem("user", JSON.stringify(updatedUserData));
 
-      setImageFile(null);
-      setFormData(prev => ({ ...prev, ...updatedUser, profileImageUrl: newProfileImageUrl, previewUrl: null }));
+      // Reload the complete profile data to get the updated ptProfile including clinicIds
+      const profileData = await getProfile();
+      setFormData(prev => ({ 
+        ...prev, 
+        ...updatedUser, 
+        profileImageUrl: newProfileImageUrl, 
+        previewUrl: null,
+        clinicIds: profileData.ptProfile?.clinicIds || []
+      }));
 
+      setImageFile(null);
       toast.success(t("profile_updated"));
       window.dispatchEvent(new Event("profileUpdated"));
     } catch (err) {
@@ -216,6 +229,7 @@ const PTProfileSettings = () => {
           <Education formData={formData} setFormData={setFormData} t={t} />
           <WorkingHours formData={formData} setFormData={setFormData} t={t} />
           <LicenseInfo formData={formData} setFormData={setFormData} setLicenseFile={setLicenseFile} user={user} t={t} />
+          <ClinicManagement formData={formData} setFormData={setFormData} user={user} t={t} />
           <GallerySection formData={formData} setFormData={setFormData} t={t} />
         </div>
 

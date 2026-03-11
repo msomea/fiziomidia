@@ -149,7 +149,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
   };
 
   const canAddSub =
-    user && (user.role === "physiotherapist" || user.role === "admin");
+    user && user._id && (user.role === "physiotherapist" || user.role === "admin");
 
   return (
     <div className="bg-white text-black shadow-md rounded-2xl p-4">

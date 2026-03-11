@@ -7,6 +7,11 @@ const reviewSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    clinic: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Clinic",
+      required: true,
+    },
     physiotherapist: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

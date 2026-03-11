@@ -51,16 +51,17 @@ const Forum = () => {
   }, [userPermissions]);
 
   /* ------------------ Permissions ------------------ */
-  const isMod = userPermissions?.isMod || selectedSub?.moderators?.some(
+  const isMod = userPermissions?.isMod || (user?._id && selectedSub?.moderators?.some(
     (m) => m.user?._id?.toString() === user._id || m.user?.toString() === user._id && m.role === "mod"
-  );
+  ));
 
   const ownerId =
     selectedSub?.createdBy?._id?.toString() || selectedSub?.createdBy?.toString();
-  const isOwner = ownerId === user._id;
+  const isOwner = user?._id && ownerId === user._id;
 
   const canEditRules =
     user &&
+    user._id &&
     selectedSub &&
     (user.role === "admin" || isMod || isOwner);
 
@@ -102,7 +103,7 @@ const Forum = () => {
   // Note: This function is kept for individual mod requests, but checkModRequestStatus
   // is now handled automatically by fetchForumPageData
   const checkModRequestStatus = async (subId) => {
-    if (!user || user.role !== "physiotherapist") return;
+    if (!user || !user._id || user.role !== "physiotherapist") return;
 
     try {
       const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
@@ -135,7 +136,9 @@ const Forum = () => {
   };
 
   const showRequestButton =
-    user?.role === "physiotherapist" &&
+    user &&
+    user._id &&
+    user.role === "physiotherapist" &&
     selectedSub &&
     !userPermissions?.isMod &&
     !userPermissions?.isOwner &&
@@ -181,9 +184,9 @@ const Forum = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-caribbean">{t("forum")}</h1>
 
-          {/* Later allow onyl PT and Admin to post */}
+          {/* Later allow only PT and Admin to post */}
           <div className="flex gap-2">
-            {["physiotherapist","member", "pendingPhysiotherapist", "admin"].includes(user.role) && (
+            {user && user._id && ["physiotherapist","member", "pendingPhysiotherapist", "admin"].includes(user.role) && (
               <button
                 onClick={() => navigate("/forum/create")}
                 className="btn p-2 bg-caribbean text-white"

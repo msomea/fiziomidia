@@ -26,6 +26,7 @@ import conversationRoute from "./routes/conversation.js";
 import adminRoutes from "./routes/admin.js";
 import locationRoutes from "./routes/location.js";
 import sponsoredProduct from "./routes/sponsoredProduct.js";
+import clinicRoutes from "./routes/clinics.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,6 +125,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/locations", locationRoutes);
 app.use("/api/sponsored-products", sponsoredProduct);
+app.use("/api/clinics", clinicRoutes);
 
 /* ---------------------------------- */
 /* Health Check                        */

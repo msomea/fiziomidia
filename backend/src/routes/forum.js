@@ -22,8 +22,8 @@ router.get("/subs/:id", forum.getSubById);
 router.get("/subs/:subId/posts", forum.listPosts);
 router.get("/posts/:id", forum.getPostById); 
 
-// 🚀 Consolidated Forum Page API
-router.get("/subs/:subId/forum-page", authenticate, getForumPageData);
+// 🚀 Consolidated Forum Page API (public - allows guest access)
+router.get("/subs/:subId/forum-page", getForumPageData);
 
 // 🚀 Consolidated PT Submanagement Page API
 router.get("/subs/:subId/management", authenticate, getPTSubmanagementData);

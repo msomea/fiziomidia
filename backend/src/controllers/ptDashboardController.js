@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Post from "../models/Post.js";
 import Promotion from "../models/Promotion.js";
+import Clinic from "../models/Clinic.js";
 import asyncHandler from "express-async-handler";
 
 // ============================================
@@ -13,40 +14,40 @@ export const getPTDashboardData = async (req, res) => {
     const { limit = 3 } = req.query;
 
     // Build all queries in parallel for better performance
-    const [
-      ptProfile,
-      appointments,
-      forumPosts,
-      promotion,
-      stats
-    ] = await Promise.all([
-      // PT Profile query
-      User.findById(ptId).select("-passwordHash -refreshTokens"),
+    const [ptProfile, clinics, appointments, forumPosts, promotion, stats] =
+      await Promise.all([
+        // PT Profile query
+        User.findById(ptId).select("-passwordHash -refreshTokens"),
 
-      // Appointments query
-      Appointment.find({ pt: ptId })
-        .populate("requester", "fullName email phone")
-        .populate("clinic", "name location address")
-        .sort({ appointmentDate: 1 })
-        .limit(parseInt(limit)),
+        // Clinics query - NEW
+        Clinic.find({ ownerUserId: ptId })
+          .populate("ownerUserId", "fullName email phone")
+          .populate("physiotherapists", "fullName email phone"),
 
-      // Forum Posts query
-      Post.find({ createdBy: ptId })
-        .populate("sub", "title slug")
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit)),
+        // Appointments query
+        Appointment.find({ pt: ptId })
+          .populate("requester", "fullName email phone")
+          .populate("clinic", "name location address")
+          .sort({ appointmentDate: 1 })
+          .limit(parseInt(limit)),
 
-      // Promotion query
-      Promotion.findOne({ pt: ptId })
-        .sort({ createdAt: -1 }),
+        // Forum Posts query
+        Post.find({ createdBy: ptId })
+          .populate("sub", "title slug")
+          .sort({ createdAt: -1 })
+          .limit(parseInt(limit)),
 
-      // Dashboard Stats
-      getPTDashboardStats(ptId)
-    ]);
+        // Promotion query
+        Promotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
+
+        // Dashboard Stats
+        getPTDashboardStats(ptId),
+      ]);
 
     return res.json({
       success: true,
       ptProfile,
+      clinics, // NEW - Add populated clinics
       appointments,
       forumPosts,
       promotion,

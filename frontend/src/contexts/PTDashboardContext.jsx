@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 // Initial state
 const initialState = {
   ptProfile: null,
+  clinics: [], // NEW - Add clinics to state
   appointments: [],
   forumPosts: [],
   promotion: null,

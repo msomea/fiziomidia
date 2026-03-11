@@ -7,6 +7,7 @@ import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
 import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement";
 import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
+import ClinicList from "../../components/dashboard/pt/ClinicList";
 
 import {
   Menu,
@@ -30,6 +31,7 @@ function PTDashboardContent() {
   const navigate = useNavigate();
   const { 
     ptProfile, 
+    clinics,
     appointments, 
     forumPosts, 
     promotion, 
@@ -46,6 +48,21 @@ function PTDashboardContent() {
 
     // Fetch all dashboard data at once
     fetchPTDashboardData(_id);
+  }, [user, _id, fetchPTDashboardData]);
+
+  // Listen for clinic updates from settings
+  useEffect(() => {
+    const handleClinicsUpdated = () => {
+      if (user && _id) {
+        fetchPTDashboardData(_id);
+      }
+    };
+    
+    window.addEventListener("clinicsUpdated", handleClinicsUpdated);
+    
+    return () => {
+      window.removeEventListener("clinicsUpdated", handleClinicsUpdated);
+    };
   }, [user, _id, fetchPTDashboardData]);
 
   if (loading) {
@@ -96,6 +113,9 @@ function PTDashboardContent() {
         appointments={appointments}
         viewMore={`/pt/${user._id}/appointments`}
       />
+
+      {/* Clinics */}
+      <ClinicList clinics={clinics} viewMore={`/settings/pt/${user._id}`} />
 
       {/* Forum & Promotion */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">

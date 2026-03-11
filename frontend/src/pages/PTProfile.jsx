@@ -16,6 +16,7 @@ import {
   PTAvailability,
   PTGallery,
   PTRatings,
+  PTClinics,
 } from "../components/profiles";
 
 import avatarFallback from "../assets/avatar.jpg";
@@ -171,6 +172,7 @@ const PTProfile = () => {
           <PTServices services={ptProfile.services} />
           <PTExperience experience={ptProfile.workExperience} />
           <PTEducation education={ptProfile.education} />
+          <PTClinics clinicIds={ptProfile.clinicIds} ptId={id} />
           <PTGallery gallery={ptProfile.gallery} />
           <PTRatings ratings={ptProfile.ratings} reviews={ptProfile.reviews} />
           <PTAvailability availability={ptProfile.availability} />

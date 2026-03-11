@@ -10,6 +10,13 @@ const ClinicSchema = new Schema({
   },
   contactPhone: String,
   ownerUserId: { type: Schema.Types.ObjectId, ref: "User" },
+  physiotherapists: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  services: [String],
+
+  rating: {
+    average: Number,
+    count: Number
+  },
 });
 
 ClinicSchema.index({ location: "2dsphere" });
