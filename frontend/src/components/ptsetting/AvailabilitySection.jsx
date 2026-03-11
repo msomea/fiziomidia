@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Calendar } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const AvailabilitySection = ({ formData, handleChange }) => {
@@ -34,7 +34,10 @@ const AvailabilitySection = ({ formData, handleChange }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("availability")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Calendar className="w-5 h-5" />
+          {t("availability")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

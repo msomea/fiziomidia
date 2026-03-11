@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useTranslation } from "react-i18next";
@@ -53,7 +53,10 @@ const DefaultLanguageSection = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("default_language")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Globe className="w-5 h-5" />
+          {t("default_language")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

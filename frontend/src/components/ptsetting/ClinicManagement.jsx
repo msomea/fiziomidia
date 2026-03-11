@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X } from "lucide-react";
-import { getClinics, createClinic, updateClinic, deleteClinic, getPTClinics } from "../../api/clinics";
+import { createClinic, updateClinic, deleteClinic, getPTClinics } from "../../api/clinics";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 
 const ClinicManagement = ({ formData, setFormData, user, t }) => {
   const [clinics, setClinics] = useState([]);
@@ -10,11 +9,14 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingClinic, setEditingClinic] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  const [serviceInput, setServiceInput] = useState("");
+
   const [clinicForm, setClinicForm] = useState({
     name: "",
     address: "",
     contactPhone: "",
-    coordinates: [0, 0], // [longitude, latitude]
+    coordinates: [0, 0],
     services: [],
     physiotherapists: []
   });
@@ -26,13 +28,11 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
   const fetchClinics = async () => {
     try {
       const data = await getPTClinics(user._id);
-      const ptClinics = data;
-      setClinics(ptClinics);
-      
-      // Update formData with clinic IDs (this will be saved when profile is saved)
+      setClinics(data);
+
       setFormData(prev => ({
         ...prev,
-        clinicIds: ptClinics.map(clinic => clinic._id)
+        clinicIds: data.map(c => c._id)
       }));
     } catch (error) {
       console.error("Error fetching clinics:", error);
@@ -40,23 +40,59 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
     }
   };
 
-  const handleNewClinicChange = (e) => {
-    const { name, value } = e.target;
-    setClinicForm(prev => ({ ...prev, [name]: value }));
+  /* ---------------------- SERVICE INPUT ---------------------- */
+
+  const addService = () => {
+    const value = serviceInput.trim();
+    if (!value) return;
+
+    console.log("🔥 Adding service:", value);
+    console.log("🔥 Current services before:", clinicForm.services);
+
+    if (clinicForm.services.includes(value)) {
+      toast.error(t("service_already_added"));
+      return;
+    }
+
+    setClinicForm(prev => {
+      const newServices = [...prev.services, value];
+      console.log("🔥 New services array:", newServices);
+      return {
+        ...prev,
+        services: newServices
+      };
+    });
+
+    setServiceInput("");
+    console.log("🔥 Service added, input cleared");
   };
 
+  const removeService = (index) => {
+    setClinicForm(prev => ({
+      ...prev,
+      services: prev.services.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleServiceKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addService();
+    }
+  };
+
+  /* ---------------------- FORM SUBMIT ---------------------- */
+
   const handleSubmit = async () => {
-    // Validate form
     if (!clinicForm.name || !clinicForm.address || !clinicForm.contactPhone) {
       toast.error(t("fill_all_fields"));
       return;
     }
 
-    // Validate coordinates
-    if (!clinicForm.coordinates || clinicForm.coordinates.length !== 2) {
-      toast.error("Please provide valid coordinates");
-      return;
-    }
+    // Debug: Log services array
+    console.log("🔥 Services being submitted:", clinicForm.services);
+    console.log("🔥 Services type:", typeof clinicForm.services);
+    console.log("🔥 Services length:", clinicForm.services.length);
 
     setLoading(true);
 
@@ -67,12 +103,14 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
         contactPhone: clinicForm.contactPhone,
         location: {
           type: "Point",
-          coordinates: clinicForm.coordinates // [longitude, latitude]
+          coordinates: clinicForm.coordinates
         },
         ownerUserId: user._id,
         services: clinicForm.services,
         physiotherapists: clinicForm.physiotherapists
       };
+
+      console.log("🔥 Full clinicData:", clinicData);
 
       if (editingClinic) {
         await updateClinic(editingClinic._id, clinicData);
@@ -82,22 +120,10 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
         toast.success(t("clinic_added"));
       }
 
-      setClinicForm({ 
-        name: "", 
-        address: "", 
-        contactPhone: "", 
-        coordinates: [0, 0], 
-        services: [], 
-        physiotherapists: [] 
-      });
-      setShowAddForm(false);
-      setEditingClinic(null);
-      
-      // Refresh clinics and update formData.clinicIds
+      resetForm();
       await fetchClinics();
-      
-      // Trigger global event to notify other components (dashboard, profile)
       window.dispatchEvent(new Event("clinicsUpdated"));
+
     } catch (error) {
       console.error("Error saving clinic:", error);
       toast.error(t("failed_to_save_clinic"));
@@ -106,8 +132,11 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
     }
   };
 
+  /* ---------------------- EDIT CLINIC ---------------------- */
+
   const handleEdit = (clinic) => {
     setEditingClinic(clinic);
+
     setClinicForm({
       name: clinic.name,
       address: clinic.address,
@@ -116,42 +145,89 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
       services: clinic.services || [],
       physiotherapists: clinic.physiotherapists || []
     });
+
+    setServiceInput("");
     setShowAddForm(true);
   };
 
-  const handleDelete = async (clinicId) => {
-    if (!confirm(t("confirm_delete_clinic"))) return;
+  /* ---------------------- DELETE CLINIC ---------------------- */
 
-    try {
-      await deleteClinic(clinicId);
-      toast.success(t("clinic_deleted"));
-      
-      // Refresh clinics and update formData.clinicIds
-      await fetchClinics();
-      
-      // Trigger global event to notify other components (dashboard, profile)
-      window.dispatchEvent(new Event("clinicsUpdated"));
-    } catch (error) {
-      console.error("Error deleting clinic:", error);
-      toast.error(t("failed_to_delete_clinic"));
-    }
+  const handleDelete = async (clinicId) => {
+    const backup = [...clinics];
+    const clinicToDelete = clinics.find(c => c._id === clinicId);
+    
+    // Optimistic UI update - remove clinic immediately
+    setClinics(prev => prev.filter(c => c._id !== clinicId));
+    
+    let undoClicked = false;
+
+    const toastUndo = toast((tToast) => (
+      <div className="flex items-center gap-3">
+        <span>{t("clinic_deleted", { name: clinicToDelete?.name || "Clinic" })}</span>
+        <button
+          onClick={() => {
+            undoClicked = true;
+            setClinics(backup);
+            toast.dismiss(tToast.id);
+          }}
+          className="text-blue-500 underline font-medium"
+        >
+          {t("undo")}
+        </button>
+      </div>
+    ));
+
+    // Wait 5 seconds before proceeding with deletion
+    const timeoutId = setTimeout(async () => {
+      // Only proceed with delete if undo was not clicked
+      if (undoClicked) return;
+
+      try {
+        await deleteClinic(clinicId);
+        toast.success(t("clinic_deleted_successfully"));
+        
+        // Update formData.clinicIds
+        setFormData(prev => ({
+          ...prev,
+          clinicIds: backup.filter(c => c._id !== clinicId).map(c => c._id)
+        }));
+        
+        // Trigger global event to notify other components
+        window.dispatchEvent(new Event("clinicsUpdated"));
+        
+      } catch (error) {
+        console.error("Error deleting clinic:", error);
+        setClinics(backup); // Restore backup on error
+        toast.error(t("failed_to_delete_clinic"));
+      }
+    }, 5000);
+
+    // Cleanup timeout if component unmounts
+    return () => clearTimeout(timeoutId);
   };
 
-  const handleCancel = () => {
-    setClinicForm({ 
-      name: "", 
-      address: "", 
-      contactPhone: "", 
-      coordinates: [0, 0], 
-      services: [], 
-      physiotherapists: [] 
+  /* ---------------------- RESET FORM ---------------------- */
+
+  const resetForm = () => {
+    setClinicForm({
+      name: "",
+      address: "",
+      contactPhone: "",
+      coordinates: [0, 0],
+      services: [],
+      physiotherapists: []
     });
+
+    setServiceInput("");
     setShowAddForm(false);
     setEditingClinic(null);
   };
 
+  /* ---------------------- UI ---------------------- */
+
   return (
-    <div className="card bg-white shadow-md p-6">
+    <div className="card bg-white shadow-md p-6 text-tufts">
+
       {/* HEADER */}
       <button
         type="button"
@@ -162,6 +238,7 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
           <Building className="w-5 h-5" />
           {t("clinic_management")}
         </h2>
+
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
@@ -169,217 +246,160 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
         />
       </button>
 
-      {/* COLLAPSIBLE BODY */}
+      {/* BODY */}
       {isOpen && (
         <div className="mt-4">
-          <div className="flex justify-between items-center mb-6">
+
+          {/* ADD BUTTON */}
+          <div className="flex justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800">{t("manage_clinics")}</h3>
+
             <button
               type="button"
               onClick={() => setShowAddForm(true)}
-              className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts transition flex items-center gap-2"
+              className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-tufts flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus size={16} />
               {t("add_clinic")}
             </button>
           </div>
 
-          {/* Clinics List */}
+          {/* CLINIC LIST */}
           <div className="space-y-4 mb-6">
             {clinics.length === 0 ? (
               <p className="text-gray-500 text-center py-8">{t("no_clinics_added")}</p>
             ) : (
               clinics.map((clinic) => (
-                <div key={clinic._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-800 mb-2">{clinic.name}</h4>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>{clinic.address}</span>
+                <div key={clinic._id} className="border rounded-lg p-4">
+
+                  <div className="flex justify-between">
+
+                    <div>
+
+                      <h4 className="text-caribbean font-semibold">{clinic.name}</h4>
+
+                      <div className="text-sm text-gray-600">
+
+                        <div className="flex gap-2 items-center">
+                          <MapPin size={14} />
+                          {clinic.address}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4" />
-                          <span>{clinic.contactPhone}</span>
+
+                        <div className="flex gap-2 items-center">
+                          <Phone size={14} />
+                          {clinic.contactPhone}
                         </div>
-                        {clinic.location?.coordinates && (
-                          <div className="text-xs text-gray-500">
-                            📍 {clinic.location.coordinates[1]}, {clinic.location.coordinates[0]}
+
+                        {/* SERVICES */}
+                        {clinic.services?.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {clinic.services.map((s, i) => (
+                              <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                                {s}
+                              </span>
+                            ))}
                           </div>
                         )}
-                        {clinic.services && clinic.services.length > 0 && (
-                          <div className="mt-2">
-                            <span className="text-xs font-medium text-gray-700">{t("services")}: </span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {clinic.services.map((service, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                                  {service}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {clinic.physiotherapists && clinic.physiotherapists.length > 0 && (
-                          <div className="text-xs text-gray-500">
-                            👥 {clinic.physiotherapists.length} {t("physiotherapists")}
-                            <div className="ml-4">
-                              {clinic.physiotherapists.map((pt, idx) => (
-                                <span key={idx} className="block">
-                                  • {pt.fullName || pt.email}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {clinic.ownerUserId && (
-                          <div className="text-xs text-gray-500">
-                            👤 {t("owner")}: {clinic.ownerUserId.fullName || clinic.ownerUserId.email}
-                          </div>
-                        )}
+
                       </div>
                     </div>
+
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(clinic)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
-                      >
-                        <Edit2 className="w-4 h-4" />
+                      <button onClick={() => handleEdit(clinic)}>
+                        <Edit2 size={18} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(clinic._id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                      >
-                        <Trash2 className="w-4 h-4" />
+
+                      <button onClick={() => handleDelete(clinic._id)}>
+                        <Trash2 size={18} className="text-red-500"/>
                       </button>
                     </div>
+
                   </div>
+
                 </div>
               ))
             )}
           </div>
 
-          {/* Add/Edit Clinic Form */}
+          {/* ADD / EDIT FORM */}
           {showAddForm && (
-            <div className="border-t pt-6">
-              <h4 className="font-semibold text-gray-800 mb-4">
-                {editingClinic ? t("edit_clinic") : t("add_new_clinic")}
-              </h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("clinic_name")}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={clinicForm.name}
-                    onChange={(e) => setClinicForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="input input-bordered w-full text-sm"
-                    placeholder={t("enter_clinic_name")}
-                  />
+            <div className="border-t pt-6 space-y-4">
+
+              <input
+                type="text"
+                value={clinicForm.name}
+                onChange={(e)=>setClinicForm(p=>({...p,name:e.target.value}))}
+                placeholder={t("clinic_name")}
+                className="input input-bordered w-full"
+              />
+
+              <textarea
+                value={clinicForm.address}
+                onChange={(e)=>setClinicForm(p=>({...p,address:e.target.value}))}
+                placeholder={t("clinic_address")}
+                className="input input-bordered w-full"
+              />
+
+              <input
+                type="tel"
+                value={clinicForm.contactPhone}
+                onChange={(e)=>setClinicForm(p=>({...p,contactPhone:e.target.value}))}
+                placeholder={t("contact_phone")}
+                className="input input-bordered w-full"
+              />
+
+              {/* SERVICE INPUT */}
+              <div>
+
+                <input
+                  type="text"
+                  value={serviceInput}
+                  onChange={(e)=>setServiceInput(e.target.value)}
+                  onKeyDown={handleServiceKeyDown}
+                  placeholder={t("type_service_press_enter")}
+                  className="input input-bordered w-full"
+                />
+
+                {/* SERVICE TAGS */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {clinicForm.services.map((service,index)=>(
+                    <span
+                      key={index}
+                      className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                    >
+                      {service}
+
+                      <button onClick={()=>removeService(index)}>
+                        <X size={12}/>
+                      </button>
+                    </span>
+                  ))}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("clinic_address")}
-                  </label>
-                  <textarea
-                    required
-                    value={clinicForm.address}
-                    onChange={(e) => setClinicForm(prev => ({ ...prev, address: e.target.value }))}
-                    className="input input-bordered w-full text-sm"
-                    rows={3}
-                    placeholder={t("enter_clinic_address")}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("contact_phone")}
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={clinicForm.contactPhone}
-                    onChange={(e) => setClinicForm(prev => ({ ...prev, contactPhone: e.target.value }))}
-                    className="input input-bordered w-full text-sm"
-                    placeholder={t("enter_contact_phone")}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t("longitude")}
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={clinicForm.coordinates[0]}
-                      onChange={(e) => setClinicForm(prev => ({
-                        ...prev,
-                        coordinates: [parseFloat(e.target.value) || 0, prev.coordinates[1]]
-                      }))}
-                      className="input input-bordered w-full text-sm"
-                      placeholder="0.0"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {t("latitude")}
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={clinicForm.coordinates[1]}
-                      onChange={(e) => setClinicForm(prev => ({
-                        ...prev,
-                        coordinates: [prev.coordinates[0], parseFloat(e.target.value) || 0]
-                      }))}
-                      className="input input-bordered w-full text-sm"
-                      placeholder="0.0"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t("services")}
-                  </label>
-                  <input
-                    type="text"
-                    value={clinicForm.services.join(", ")}
-                    onChange={(e) => setClinicForm(prev => ({
-                      ...prev,
-                      services: e.target.value.split(",").map(s => s.trim()).filter(s => s)
-                    }))}
-                    className="input input-bordered w-full text-sm"
-                    placeholder={t("enter_services_comma_separated")}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{t("comma_separated_values")}</p>
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="btn bg-caribbean text-white hover:bg-tufts flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? t("saving") : (editingClinic ? t("update") : t("add"))}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="btn bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  >
-                    {t("cancel")}
-                  </button>
-                </div>
               </div>
+
+              <div className="flex gap-3 pt-4">
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="btn p-2 bg-caribbean text-white hover:bg-caribbean/90"
+                >
+                  {loading ? t("saving") : editingClinic ? t("update") : t("add")}
+                </button>
+
+                <button
+                  onClick={resetForm}
+                  className="btn p-2 bg-gray-200 hover:bg-gray-300"
+                >
+                  {t("cancel")}
+                </button>
+
+              </div>
+
             </div>
           )}
+
         </div>
       )}
     </div>

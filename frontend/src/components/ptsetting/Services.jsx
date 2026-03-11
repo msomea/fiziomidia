@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronDown, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -60,7 +60,10 @@ const Services = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t('services')}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Briefcase className="w-5 h-5" />
+          {t('services')}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

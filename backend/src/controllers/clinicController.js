@@ -46,6 +46,12 @@ export const getClinicsByPT = async (req, res) => {
 
 export const createClinic = async (req, res) => {
   try {
+    console.log("🔥 Backend: createClinic called");
+    console.log("🔥 Backend: req.body:", JSON.stringify(req.body, null, 2));
+    console.log("🔥 Backend: services received:", req.body.services);
+    console.log("🔥 Backend: services type:", typeof req.body.services);
+    console.log("🔥 Backend: services length:", req.body.services?.length);
+    
     const { name, address, contactPhone, location, services, physiotherapists } = req.body;
     
     if (!name || !address || !contactPhone) {
@@ -64,6 +70,11 @@ export const createClinic = async (req, res) => {
       services: services || [],
       physiotherapists: physiotherapists || []
     };
+
+    console.log(
+      "🔥 Backend: Final clinicData to save:",
+      JSON.stringify(clinicData, null, 2),
+    );
 
     const clinic = new Clinic(clinicData);
     await clinic.save();

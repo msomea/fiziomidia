@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Shield } from "lucide-react";
 import toast from "react-hot-toast";
 import { ASSET_URL } from "../../config/constants";
 import { useTranslation } from "react-i18next";
@@ -106,7 +106,10 @@ const LicenseInfo = ({ formData, setFormData, setLicenseFile }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("license_info")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Shield className="w-5 h-5" />
+          {t("license_info")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 text-caribbean transition-transform duration-300 ${
             isOpen ? "rotate-180" : ""

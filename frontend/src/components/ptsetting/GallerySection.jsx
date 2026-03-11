@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Image } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ASSET_URL } from "../../config/constants";
 
@@ -58,7 +58,10 @@ const GallerySection = ({ formData, setFormData }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("gallery")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Image className="w-5 h-5" />
+          {t("gallery")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, Eye, EyeOff } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, Key } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
@@ -84,7 +84,10 @@ const PasswordChangeSection = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("change_password")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <Key className="w-5 h-5" />
+          {t("change_password")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""

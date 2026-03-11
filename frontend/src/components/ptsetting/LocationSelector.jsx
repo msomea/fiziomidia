@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function LocationSelector({ onLocationSelect, initialLocation }) {
@@ -107,7 +107,10 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center"
       >
-        <h2 className="text-xl font-bold text-caribbean">{t("location")}</h2>
+        <h2 className="text-xl font-bold text-caribbean flex items-center gap-2">
+          <MapPin className="w-5 h-5" />
+          {t("location")}
+        </h2>
         <ChevronDown
           className={`h-5 w-5 transition-transform text-caribbean duration-300 ${
             isOpen ? "rotate-180" : ""
