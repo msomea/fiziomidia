@@ -47,7 +47,7 @@ export default function CreatePromotion() {
         ...prev,
         duration: t(duration),
         price,
-        description,
+        description: "",
       }));
     }
   }, [form.title, t]);

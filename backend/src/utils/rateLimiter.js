@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit,{ipKeyGenerator} from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 import { redisClient } from "../config/redis.js";
 
@@ -8,11 +8,7 @@ IP KEY GENERATOR (Cloudflare compatible)
 ========================================
 */
 const getIPKey = (req) => {
-  return (
-    req.headers["cf-connecting-ip"] ||
-    req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
-    req.ip
-  );
+  return ipKeyGenerator(req);
 };
 
 /*
@@ -25,7 +21,7 @@ const getUserKey = (req) => {
     return `user:${req.user.id}`;
   }
 
-  return `ip:${getIPKey(req)}`;
+  return `ip:${ipKeyGenerator(req)}`;
 };
 
 /*
@@ -33,13 +29,14 @@ const getUserKey = (req) => {
 REDIS STORE
 ========================================
 */
-const redisStore =
-  redisClient && redisClient.isOpen
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.sendCommand(args),
-        prefix: "rl:",
-      })
-    : undefined;
+const getRedisStore = () => {
+  if (!redisClient || !redisClient.isOpen) return undefined;
+
+  return new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+    prefix: "rl:",
+  });
+};
 
 /*
 ========================================
@@ -60,7 +57,7 @@ const createLimiter = ({
     standardHeaders: true,
     legacyHeaders: false,
 
-    store: redisStore,
+    store: getRedisStore(),
 
     keyGenerator: keyGenerator || getIPKey,
 
