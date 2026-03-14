@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 const { Schema } = mongoose;
 
-const PromotionSchema = new Schema(
+const PTPromotionSchema = new Schema(
   {
     pt: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
@@ -33,11 +33,11 @@ const PromotionSchema = new Schema(
 );
 
 // Pre-save middleware to calculate endAt based on duration
-PromotionSchema.pre("save", function (next) {
+PTPromotionSchema.pre("save", function (next) {
   if (this.duration && !this.endAt) {
     this.endAt = new Date(this.startAt.getTime() + this.duration * 24 * 60 * 60 * 1000);
   }
   next();
 });
 
-export default mongoose.model("Promotion", PromotionSchema);
+export default mongoose.model("PTPromotion", PTPromotionSchema);

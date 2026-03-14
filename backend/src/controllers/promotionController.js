@@ -1,4 +1,4 @@
-import Promotion from "../models/Promotion.js";
+import PTPromotion from "../models/PTPromotion.js";
 import User from "../models/User.js";
 import Stripe from "stripe";
 import config from "../config/index.js";
@@ -41,7 +41,7 @@ export const createPromotion = async (req, res) => {
       imagePublicId = result.public_id;
     }
 
-    const promotion = new Promotion({
+    const promotion = new PTPromotion({
       pt: pt._id,
       title,
       description,
@@ -91,7 +91,7 @@ export const stripeWebhook = async (req, res) => {
       const startAt = new Date();
       const endAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
-      const promotion = await Promotion.findByIdAndUpdate(
+      const promotion = await PTPromotion.findByIdAndUpdate(
         promotionId,
         { status: "active", startAt, endAt },
         { new: true }
@@ -119,7 +119,7 @@ export const getPTPromotion = async (req, res) => {
     const { ptId } = req.query;
     if (!ptId) return res.status(400).json({ error: "ptId is required" });
 
-    const promotion = await Promotion.findOne({ pt: ptId, status: "active" })
+    const promotion = await PTPromotion.findOne({ pt: ptId, status: "active" })
       //.populate("pt", "fullName profileImageUrl");
 
     if (!promotion) {
@@ -150,7 +150,7 @@ export const getPromotionById = async (req, res) => {
       return res.status(400).json({ error: "Promotion ID is required" });
     }
 
-    const promotion = await Promotion.findById(promotionId).populate("pt", "fullName email"); // optional: include PT info
+    const promotion = await PTPromotion.findById(promotionId).populate("pt", "fullName email"); // optional: include PT info
 
     if (!promotion) {
       return res.status(404).json({ error: "Promotion not found" });

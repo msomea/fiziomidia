@@ -1,7 +1,7 @@
 import ForumSub from "../models/ForumSub.js";
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
-import Promotion from "../models/Promotion.js";
+import PTPromotion from "../models/PTPromotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
 import AdminActivityLog from "../models/AdminActivityLog.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
@@ -74,7 +74,7 @@ export const getDashboardData = async (req, res) => {
         .limit(20),
 
       // Promotions query
-      Promotion.find(buildPromotionQuery({ search, status: promotionStatus }))
+      PTPromotion.find(buildPromotionQuery({ search, status: promotionStatus }))
         .populate("pt", "fullName email")
         .sort({ createdAt: -1 })
         .limit(20),

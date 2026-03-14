@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import Promotion from "../models/Promotion.js";
+import PTPromotion from "../models/PTPromotion.js";
 import Post from "../models/Post.js";
 import Appointment from "../models/Appointment.js";
 import dayjs from "dayjs";
@@ -99,7 +99,7 @@ export const getSavedPTsByMember = async (req, res) => {
 export const getPTsWithActivePromotions = async (req, res) => {
   try {
     // Find all active promotions
-    const activePromotions = await Promotion.find({ status: "active" })
+    const activePromotions = await PTPromotion.find({ status: "active" })
       .populate("pt", "fullName profileImageUrl ptProfile role");
 
     // Map PTs to include their active promotion
@@ -140,7 +140,7 @@ export const getPTDashboardStats = async (req, res) => {
     let promotionDaysLeft = 0;
 
     // Find active promotion (can be null)
-    const activePromotion = await Promotion.findOne({ pt: ptId, status: "active" });
+    const activePromotion = await PTPromotion.findOne({ pt: ptId, status: "active" });
 
     if (activePromotion && activePromotion.endAt) {
       const endDate = dayjs(activePromotion.endAt);

@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Post from "../models/Post.js";
-import Promotion from "../models/Promotion.js";
+import PTPromotion from "../models/PTPromotion.js";
 import Clinic from "../models/Clinic.js";
 import asyncHandler from "express-async-handler";
 
@@ -38,7 +38,7 @@ export const getPTDashboardData = async (req, res) => {
           .limit(parseInt(limit)),
 
         // Promotion query
-        Promotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
+        PTPromotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
 
         // Dashboard Stats
         getPTDashboardStats(ptId),
@@ -86,7 +86,7 @@ async function getPTDashboardStats(ptId) {
       Post.countDocuments({ createdBy: ptId }),
 
       // Active promotion for days left calculation
-      Promotion.findOne({ 
+      PTPromotion.findOne({ 
         pt: ptId,
         status: "active",
         endAt: { $gt: new Date() }

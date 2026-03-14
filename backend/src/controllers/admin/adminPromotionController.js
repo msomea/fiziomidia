@@ -1,5 +1,5 @@
 import User from "../../models/User.js";
-import Promotion from "../../models/Promotion.js";
+import PTPromotion from "../../models/PTPromotion.js";
 import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
@@ -39,7 +39,7 @@ export const getAllPromotions = async (req, res) => {
       query.status = status;
     }
 
-    const promotions = await Promotion.find(query)
+    const promotions = await PTPromotion.find(query)
       .populate("pt", "fullName email")
       .sort({ createdAt: -1 });
 
@@ -52,7 +52,7 @@ export const getAllPromotions = async (req, res) => {
 // Get one Promotion
 export const getAdminPromotion = async (req, res) => {
   try {
-    const promotion = await Promotion.findById(req.params.id)
+    const promotion = await PTPromotion.findById(req.params.id)
       .populate("pt", "fullName email");
 
     res.json({ promotion });
@@ -69,7 +69,7 @@ export const updateAdminPromotion = [
       const { id } = req.params;
       const { status, endAt } = req.body;
 
-      const promotion = await Promotion.findById(id);
+      const promotion = await PTPromotion.findById(id);
       if (!promotion)
         return res.status(404).json({ message: "Promotion not found" });
 
@@ -114,7 +114,7 @@ export const deleteAdminPromotion = [
   logAdminActivity("PROMOTION_DELETED", getPromotionTargetInfo),
   async (req, res) => {
     try {
-      await Promotion.findByIdAndDelete(req.params.id);
+      await PTPromotion.findByIdAndDelete(req.params.id);
       res.json({ message: "Promotion deleted" });
     } catch {
       res.status(500).json({ message: "Delete failed" });
