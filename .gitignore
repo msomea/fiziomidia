@@ -5,7 +5,10 @@ frontend/node_modules/
 # Environment variables
 /backend/.env
 /frontend/.env
+/backend/.env.me
+/frontend/.env.me
 *.env
+*.env.example
 *hint.js
 # Logs
 *.log
