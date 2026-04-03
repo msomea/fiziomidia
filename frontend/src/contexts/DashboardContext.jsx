@@ -137,15 +137,16 @@ export const DashboardProvider = ({ children }) => {
     try {
       const response = await API.get(`${API_URL}/admin/sponsored-products`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_SPONSORED_PRODUCTS, payload: response.data.products || [] });
+      return response.data; // Return response data for pagination
     } catch (error) {
       console.error('Products refresh error:', error);
       toast.error('Failed to refresh products');
     }
   };
 
-  const refreshModRequests = async () => {
+  const refreshModRequests = async (filters = {}) => {
     try {
-      const response = await API.get(`${API_URL}/admin/forum/mod-requests`);
+      const response = await API.get(`${API_URL}/admin/forum/mod-requests`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_MOD_REQUESTS, payload: response.data.modRequests || [] });
     } catch (error) {
       console.error('Mod requests refresh error:', error);

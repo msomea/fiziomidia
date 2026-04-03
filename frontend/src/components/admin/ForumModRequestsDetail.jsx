@@ -63,7 +63,7 @@ export default function ForumModRequestsDetail() {
 
       <div className="space-y-4 text-tufts">
         <p><b>{t('user_label')}</b> {request.user.fullName}</p>
-        <p><b>{t('sub_label')}</b> {request.sub.title}</p>
+        <p><b>{t('sub_label')}</b> {request.sub.title?.en || request.sub.title}</p>
         <p><b>{t('current_status')}</b> {request.status}</p>
         <p><b>{t('current_role')}</b> {request.role}</p>
 

@@ -14,16 +14,21 @@ export default function ForumModRequestsSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (modRequests.length > 0) {
+    loadRequests();
+  }, [status]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (modRequests.length === 0) {
       loadRequests();
     }
-  }, [status]);
+  }, []);
 
   const loadRequests = async () => {
     try {
       setLoading(true);
-      await refreshModRequests();
+      const filters = status ? { status } : {};
+      await refreshModRequests(filters);
     } catch (err) {
       toast.error(t("failed_load_mod_requests"));
     } finally {
@@ -40,7 +45,6 @@ export default function ForumModRequestsSection() {
 
   // Use dashboard loading state for initial load, local loading for refreshes
   const isLoading = dashboardLoading || loading;
-
   return (
     <CollapsibleSection title={t("forum_mod_requests_title")}>
       <div className="space-y-4">
@@ -69,7 +73,7 @@ export default function ForumModRequestsSection() {
             {t("no_mod_requests")}
           </p>
         ) : (
-          modRequests.slice(0, 5).map((req) => (
+          modRequests.map((req) => (
             <div
               key={req._id}
               className="border rounded p-3 bg-gray-50 cursor-pointer hover:bg-gray-100"
@@ -80,18 +84,20 @@ export default function ForumModRequestsSection() {
               <div className="flex justify-between items-start">
                 <div className="text-sm text-tufts space-y-1">
                   <p className="font-semibold text-caribbean">
-                    {req.createdBy?.fullName}
+                    {req.user?.fullName}
                   </p>
-                  <p className="text-xs text-gray-600">{req.createdBy?.email}</p>
+                  <p className="text-xs text-gray-600">{req.user?.email}</p>
 
                   <p>
-                    <span className="font-semibold">{t("sub_label")}:</span>{" "}
-                    {req.title}{" "}
-                    <span className="text-gray-400">(/ {req.slug})</span>
+                    <span className="font-semibold">{t("sub_label")}</span>{" "}
+                    {req.sub?.title?.en || req.sub?.title}{" "}
+                    <span className="text-gray-400">(/ {req.sub?.slug})</span>
                   </p>
 
-                  <span className={statusBadge(req.isSponsored ? "approved" : "pending")}>
-                    {req.isSponsored ? t("status_approved") : t("status_pending")}
+                  <span className={statusBadge(req.status)}>
+                    {req.status === "approved" ? t("status_approved") : 
+                     req.status === "rejected" ? t("status_rejected") : 
+                     t("status_pending")}
                   </span>
                 </div>
               </div>

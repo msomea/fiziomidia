@@ -628,6 +628,7 @@
   "currency": "Tsh",
   "service_name": "Service Name",
   "duration_placeholder": "Duration (minutes)",
+  "no_products_found": "No products found",
   "price_placeholder": "Price (Tsh)",
   "service_description": "Service Description",
   "add_service": "Add Service",

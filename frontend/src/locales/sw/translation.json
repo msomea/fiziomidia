@@ -631,6 +631,7 @@
   "duration_placeholder": "Muda (dakika)",
   "price_placeholder": "Bei (Tsh)",
   "service_description": "Maelezo ya Huduma",
+  "no_products_found": "Hakuna bidhaa zilizopatikana",
   "add_service": "Ongeza Huduma",
   "fill_all_service_fields": "Tafadhali jaza maelezo yote ya huduma",
   "duration_must_be_number": "Muda lazima uwe nambari",

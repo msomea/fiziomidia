@@ -17,18 +17,24 @@ export default function ProductSponsorshipSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (sponsoredProducts.length > 0) {
+    loadSponsoredProducts();
+  }, [search, status, page]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (sponsoredProducts.length === 0) {
       loadSponsoredProducts();
     }
-  }, [search, status, page]);
+  }, []);
 
   const loadSponsoredProducts = async () => {
     try {
       setLoading(true);
-      await refreshSponsoredProducts({ search, status, page });
-      // Note: For pagination, we'd need to update the context to handle totalPages
-      setTotalPages(1); // Simplified for dashboard preview
+      const response = await refreshSponsoredProducts({ search, status, page });
+      // Update totalPages from response if available
+      if (response && response.totalPages) {
+        setTotalPages(response.totalPages);
+      }
     } catch (error) {
       console.error(error);
       toast.error(t("failed_load_sponsored"));
@@ -72,7 +78,7 @@ export default function ProductSponsorshipSection() {
       ) : sponsoredProducts.length === 0 ? (
         <p className="text-gray-500 text-sm mt-4">{t("no_products_found")}</p>
       ) : (
-        sponsoredProducts.slice(0, 5).map((product) => (
+        sponsoredProducts.map((product) => (
           <div
             key={product._id}
             className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"

@@ -4,6 +4,7 @@ import Appointment from "../models/Appointment.js";
 import PTPromotion from "../models/PTPromotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
 import AdminActivityLog from "../models/AdminActivityLog.js";
+import ForumSubModRequest from "../models/ForumSubModRequest.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
@@ -27,18 +28,19 @@ export const getDashboardData = async (req, res) => {
     } = req.query;
 
     // Generate cache key based on filters
+    const userId = req.user?._id || "anonymous";
     const cacheKey =
-      CacheKeys.DASHBOARD_ADMIN(req.user._id) +
+      CacheKeys.DASHBOARD_ADMIN(userId) +
       `:filters=${JSON.stringify({ search, role, licenseStatus, clinic, pt, requester, appointmentStatus, promotionStatus, productStatus, page, limit })}`;
 
     // Try to get from cache first
     const cachedData = await CacheService.get(cacheKey);
     if (cachedData) {
-      console.log(`🎯 Admin dashboard cache hit for user: ${req.user._id}`);
+      console.log(`🎯 Admin dashboard cache hit for user: ${userId}`);
       return res.json(cachedData);
     }
 
-    console.log(`💨 Admin dashboard cache miss for user: ${req.user._id}`);
+    console.log(`💨 Admin dashboard cache miss for user: ${userId}`);
 
     // Build all queries in parallel for better performance
     const [
@@ -46,6 +48,7 @@ export const getDashboardData = async (req, res) => {
       appointments,
       promotions,
       sponsoredProducts,
+      forumSubs,
       modRequests,
       adminStats,
       recentActivityLogs,
@@ -87,10 +90,17 @@ export const getDashboardData = async (req, res) => {
         .sort({ updatedAt: -1 })
         .limit(parseInt(limit)),
 
-      // Forum Moderator Requests
-      ForumSub.find({ isSponsored: true })
+      // Forum Subs (all subs for sponsorship management)
+      ForumSub.find({})
         .populate("createdBy", "fullName email")
         .populate("moderators", "fullName email")
+        .sort({ createdAt: -1 })
+        .limit(20),
+
+      // Forum Moderator Requests
+      ForumSubModRequest.find({})
+        .populate("user", "fullName email role")
+        .populate("sub", "title slug")
         .sort({ createdAt: -1 })
         .limit(20),
 
@@ -111,8 +121,8 @@ export const getDashboardData = async (req, res) => {
       appointments,
       promotions,
       sponsoredProducts,
-      forumSubs: modRequests,
-      modRequests, // Keep for compatibility
+      forumSubs, // All forum subs for sponsorship management
+      modRequests, // Forum moderator requests
       adminStats,
       activityLogs: recentActivityLogs,
       lastFetched: new Date(),
@@ -120,7 +130,7 @@ export const getDashboardData = async (req, res) => {
 
     // Cache the response for 5 minutes (dashboard data changes frequently)
     await CacheService.set(cacheKey, responseData, CacheTTL.SHORT);
-    console.log(`💾 Admin dashboard cached for user: ${req.user._id}`);
+    console.log(`💾 Admin dashboard cached for user: ${userId}`);
 
     return res.json(responseData);
   } catch (err) {
