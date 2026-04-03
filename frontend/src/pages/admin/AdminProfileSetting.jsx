@@ -76,9 +76,8 @@ const AdminProfile = () => {
             type="text"
             placeholder={t("full_name")}
             value={formData.fullName}
-            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             className="w-full border rounded-lg p-2"
-            required
+            disabled
           />
 
           {/* Email */}

@@ -83,7 +83,6 @@ const PTProfileSettings = () => {
           licenses: profileData.ptProfile?.licenses || [],
           professionalMemberships: profileData.ptProfile?.professionalMemberships || [],
           documents: profileData.ptProfile?.documents || [],
-          clinicIds: profileData.ptProfile?.clinicIds || [],
         });
       } catch (err) {
         console.error("Error loading profile:", err);

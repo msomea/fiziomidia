@@ -46,22 +46,6 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       </div>
     );
   }
-
-  if (!posts.length) {
-  // Show 3 skeletons as placeholder
-  return (
-    <div className="space-y-4 mt-4">
-      {[...Array(3)].map((_, i) => (
-        <PostSkeleton key={i} />
-      ))}
-      <p className="text-center text-gray-500 mt-2">
-        {t("no_posts_yet")}
-      </p>
-    </div>
-  );
-}
-
-
   const totalPosts = postList.length;
   const totalPages = Math.ceil(totalPosts / postsPerPage);
   const startIndex = (currentPage - 1) * postsPerPage;
@@ -179,11 +163,24 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
       }
     : null;
 
-
   const displayedPosts = pinnedSponsorPost
     ? [pinnedSponsorPost, ...currentPosts]
     : currentPosts;
-console.log(posts)
+
+  if (!postList.length && !pinnedSponsorPost) {
+    // Show 3 skeletons as placeholder
+    return (
+      <div className="space-y-4 mt-4">
+        {[...Array(3)].map((_, i) => (
+          <PostSkeleton key={i} />
+        ))}
+        <p className="text-center text-gray-500 mt-2">
+          {t("no_posts_yet")}
+        </p>
+      </div>
+    );
+  }
+    
   return (
     <div className="space-y-4">
       <p className="text-gray-500 text-sm">
@@ -193,7 +190,7 @@ console.log(posts)
 
       {displayedPosts.map((post) => {
         const author = post.author || DEFAULT_AUTHOR;
-        const isSponsorPost = post._id.startsWith("sponsor-");
+        const isSponsorPost = typeof post._id === "string" && post._id.startsWith("sponsor-");
 
         // Role-based permissions
         const isAdmin = user?.role === "admin";
