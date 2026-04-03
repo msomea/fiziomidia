@@ -15,6 +15,15 @@ export default function SponsorshipSection() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // Initial load when component mounts
+    if (forumSubs.length === 0) {
+      setLoading(true);
+      // Data will be loaded by DashboardContext initial fetch
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []);
+
   // 🔎 Filter logic (applied instantly in UI)
   const filteredSubs = forumSubs.filter((sub) => {
     const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
@@ -70,7 +79,7 @@ export default function SponsorshipSection() {
       ) : (
         <>
           {/* Listing */}
-          {filteredSubs.slice(0, 10).map((sub) => {
+          {filteredSubs.map((sub) => {
             const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
 
             return (

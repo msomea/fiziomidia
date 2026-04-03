@@ -16,11 +16,15 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (users.length > 0) {
+    loadUsers();
+  }, [roleFilter, licenseFilter]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (users.length === 0) {
       loadUsers();
     }
-  }, [roleFilter, licenseFilter]);
+  }, []);
 
   const loadUsers = async () => {
     try {
@@ -30,6 +34,9 @@ export default function AdminUsers() {
         role: roleFilter,
         licenseStatus: licenseFilter,
       });
+    } catch (error) {
+      console.error(error);
+      toast.error(t("failed_load_users"));
     } finally {
       setLoading(false);
     }

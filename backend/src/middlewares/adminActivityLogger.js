@@ -10,25 +10,25 @@ export const logAdminActivity = (action, getTargetInfo = () => ({})) => {
     let statusCode = 200;
 
     // Override res.json to capture response data
-    res.json = function(data) {
+    res.json = function (data) {
       responseData = data;
-      return originalJson.call(this, data);
+      return originalJson.apply(this, arguments);
     };
 
     // Override res.status to capture status code
-    res.status = function(code) {
+    res.status = function (code) {
       statusCode = code;
-      return originalStatus.call(this, code);
+      return originalStatus.apply(this, arguments);
     };
 
     // Continue to the actual controller
-    res.on('finish', async () => {
-      // Only log successful admin actions (2xx status codes)
-      if (req.user?.role === 'admin' && statusCode >= 200 && statusCode < 300) {
-        try {
-          const targetInfo = getTargetInfo(req, responseData);
-          
-          await AdminActivityLog.create({
+    res.on("finish", () => {
+      if (req.user?.role === "admin" && statusCode >= 200 && statusCode < 300) {
+        const targetInfo = getTargetInfo(req, responseData);
+
+        // 🔥 FIRE AND FORGET (non-blocking)
+        setImmediate(() => {
+          AdminActivityLog.create({
             admin: req.user._id,
             action,
             targetId: targetInfo.targetId,
@@ -41,12 +41,9 @@ export const logAdminActivity = (action, getTargetInfo = () => ({})) => {
               statusCode,
             },
             ipAddress: req.ip || req.connection.remoteAddress,
-            userAgent: req.get('User-Agent'),
-          });
-        } catch (error) {
-          console.error('Failed to log admin activity:', error);
-          // Don't block the response if logging fails
-        }
+            userAgent: req.get("User-Agent"),
+          }).catch((err) => console.error("⚠️ Admin Log failed:", err.message));
+        });
       }
     });
 

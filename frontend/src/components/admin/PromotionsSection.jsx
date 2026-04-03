@@ -16,11 +16,15 @@ export default function PromotionsSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (promotions.length > 0) {
+    loadPromotions();
+  }, [search, status]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (promotions.length === 0) {
       loadPromotions();
     }
-  }, [search, status]);
+  }, []);
 
   const loadPromotions = async () => {
     try {
@@ -72,7 +76,7 @@ export default function PromotionsSection() {
       ) : promotions.length === 0 ? (
         <p className="text-gray-500 text-sm mt-4">{t("no_promotions_found")}</p>
       ) : (
-        promotions.slice(0, 10).map((promo) => (
+        promotions.map((promo) => (
           <div key={promo._id} className="mt-2 p-2 bg-gray-100 rounded text-tufts">
             <Link to={`/admin/promotions/${promo._id}`}>
               <h3 className="font-bold textarea-s text-caribbean">

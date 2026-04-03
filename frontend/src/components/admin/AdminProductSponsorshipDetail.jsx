@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
+import { getSponsoredProductById, updateSponsoredProduct, deleteSponsoredProduct } from "../../api/admin";
+
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
-import { API_URL, ASSET_URL } from "../../config/constants";
-import { getSponsoredProductById } from "../../api/admin";
 
 const CATEGORIES = ["equipment", "digital", "services", "others"];
 
@@ -78,16 +77,17 @@ export default function AdminProductSponsorshipDetail() {
 
       // ✅ Only send isActive if approved
       if (product.status === "approved") {
-        data.append("isActive", form.isActive);
+        data.append("isActive", String(form.isActive));
+        console.log("Sending isActive:", form.isActive);
       }
 
       if (newImage) data.append("image", newImage);
 
-      if (newImage.size > 2 * 1024 * 1024) {
+      if (newImage && newImage.size > 2 * 1024 * 1024) {
         return toast.error(t("image_size_limit"));
       }
 
-      await API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
+      await updateSponsoredProduct(id, data);
 
       toast.success(t('product_updated'));
       loadProduct();
@@ -103,7 +103,7 @@ export default function AdminProductSponsorshipDetail() {
 
     try {
       setDeleting(true);
-      await API.delete(`${API_URL}/admin/sponsored-products/${id}`);
+      await deleteSponsoredProduct(id);
       toast.success(t('product_deleted'));
       navigate(-1);
     } catch (err) {
@@ -144,7 +144,7 @@ export default function AdminProductSponsorshipDetail() {
   const updateStatus = async (status) => {
     try {
       setSavingStatus(true);
-      await API.put(`/admin/sponsored-products/${id}`, { status });
+      await updateSponsoredProduct(id, { status });
       toast.success(`Product ${status}`);
       loadProduct();
     } catch (err) {
@@ -153,7 +153,6 @@ export default function AdminProductSponsorshipDetail() {
       setSavingStatus(false);
     }
   };
-
 
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">

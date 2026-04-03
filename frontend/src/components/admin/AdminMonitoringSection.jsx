@@ -20,11 +20,15 @@ export default function AdminMonitoringSection() {
   const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (activityLogs.length > 0) {
+    loadLogs();
+  }, [currentPage, adminFilter, actionFilter, targetFilter, startDate, endDate]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (activityLogs.length === 0) {
       loadLogs();
     }
-  }, [currentPage, adminFilter, actionFilter, targetFilter, startDate, endDate]);
+  }, []);
 
   const loadLogs = async () => {
     try {
@@ -218,7 +222,7 @@ export default function AdminMonitoringSection() {
             </div>
           ) : (
             <div className="divide-y">
-              {activityLogs.slice(0, 10).map((log) => (
+              {activityLogs.map((log) => (
                 <div key={log._id} className="p-3 hover:bg-gray-50">
                   <div className="flex items-start gap-3">
                     <div className={getActionColor(log.action)}>

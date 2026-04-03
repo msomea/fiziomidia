@@ -54,13 +54,13 @@ export const getSponsoredProductById = async (id) => {
 };
 
 export const createSponsoredProduct = (data) =>
-  API.post(`${API_URL}/admin/sponsored`, data);
+  API.post(`${API_URL}/admin/sponsored-products`, data);
 
 export const updateSponsoredProduct = (id, data) =>
-  API.put(`${API_URL}/admin/sponsored/${id}`, data);
+  API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
 
 export const deleteSponsoredProduct = (id) =>
-  API.delete(`${API_URL}/admin/sponsored/${id}`);
+  API.delete(`${API_URL}/admin/sponsored-products/${id}`);
 
 // Admin Monitoring APIs
 export const getAdminActivityLogs = async (params = {}) => {

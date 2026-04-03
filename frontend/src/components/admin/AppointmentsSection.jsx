@@ -21,11 +21,15 @@ export default function AdminAppointments() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only refresh if filters change and we have initial data
-    if (appointments.length > 0) {
+    loadAppointments();
+  }, [clinic, pt, requester, status]);
+
+  useEffect(() => {
+    // Initial load when component mounts
+    if (appointments.length === 0) {
       loadAppointments();
     }
-  }, [clinic, pt, requester, status]);
+  }, []);
 
   const loadAppointments = async () => {
     try {

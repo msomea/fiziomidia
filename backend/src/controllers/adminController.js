@@ -134,7 +134,7 @@ export const getDashboardData = async (req, res) => {
 
     return res.json(responseData);
   } catch (err) {
-    console.error("Dashboard data fetch error:", err);
+    console.error("⚠️Dashboard data fetch error:", err);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard data",
@@ -148,7 +148,7 @@ async function invalidateAdminDashboardCache(adminId) {
     await CacheService.delPattern(`dashboard:admin:${adminId}*`);
     console.log(`🗑️ Admin dashboard cache invalidated for admin: ${adminId}`);
   } catch (error) {
-    console.error('Error invalidating admin dashboard cache:', error);
+    console.error('⚠️ Error invalidating admin dashboard cache:', error);
   }
 }
 
@@ -249,7 +249,7 @@ async function getAdminStatsData() {
     ] = await Promise.all([
       User.countDocuments(),
       Appointment.countDocuments(),
-      Promotion.countDocuments(),
+      PTPromotion.countDocuments(),
       SponsoredProduct.countDocuments(),
       ForumSub.countDocuments({ isSponsored: true }),
     ]);
@@ -272,7 +272,7 @@ async function getAdminStatsData() {
       lastUpdated: new Date(),
     };
   } catch (error) {
-    console.error("Error getting admin stats:", error);
+    console.error("⚠️ Error getting admin stats:", error);
     return {
       userCount: 0,
       appointmentCount: 0,

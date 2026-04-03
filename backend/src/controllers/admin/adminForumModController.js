@@ -6,7 +6,6 @@ import ForumSubModRequest from "../../models/ForumSubModRequest.js";
 // ------------------------------------
 export const listModRequests = async (req, res) => {
   try {
-    console.log("Request from frontend:", req.params);
     const statusFilter = req.query.status; // "pending", "approved", "rejected"
     const search = req.query.search || "";
 
@@ -37,7 +36,6 @@ export const listModRequests = async (req, res) => {
 // ------------------------------------
 export const getModRequestDetail = async (req, res) => {
   try {
-    console.log("Request from frontend:", req.params);
     const { id } = req.params;
     const request = await ForumSubModRequest.findById(id)
       .populate("user", "fullName email role")

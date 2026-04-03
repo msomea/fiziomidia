@@ -107,6 +107,7 @@ export const DashboardProvider = ({ children }) => {
     try {
       const response = await API.get(`${API_URL}/admin/users`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_USERS, payload: response.data.users || [] });
+      return response.data;
     } catch (error) {
       console.error('Users refresh error:', error);
       toast.error('Failed to refresh users');
@@ -117,6 +118,7 @@ export const DashboardProvider = ({ children }) => {
     try {
       const response = await API.get(`${API_URL}/admin/appointments`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_APPOINTMENTS, payload: response.data.appts || [] });
+      return response.data;
     } catch (error) {
       console.error('Appointments refresh error:', error);
       toast.error('Failed to refresh appointments');
@@ -127,6 +129,7 @@ export const DashboardProvider = ({ children }) => {
     try {
       const response = await API.get(`${API_URL}/admin/promotions`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_PROMOTIONS, payload: response.data.promotions || [] });
+      return response.data;
     } catch (error) {
       console.error('Promotions refresh error:', error);
       toast.error('Failed to refresh promotions');
@@ -148,6 +151,7 @@ export const DashboardProvider = ({ children }) => {
     try {
       const response = await API.get(`${API_URL}/admin/forum/mod-requests`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_MOD_REQUESTS, payload: response.data.modRequests || [] });
+      return response.data;
     } catch (error) {
       console.error('Mod requests refresh error:', error);
       toast.error('Failed to refresh moderator requests');
