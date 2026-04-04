@@ -17,11 +17,13 @@ router.post("/", authenticate, createConversation);
 // Get all conversations for logged in user
 router.get("/", authenticate, getConversations);
 
-// Get conversation with specific user
+// Get conversation with specific user (MUST come before /:id)
 router.get("/user/:id", authenticate, getConversationWithUser);
-// Update Unread counter
+
+// Update Unread counter (MUST come before /:id)
 router.put("/:id/mark-read", authenticate, updateUnreadCount)
-// Delete a conversation by ID
+
+// Delete a conversation by ID (MUST come last)
 router.delete("/:id", authenticate, deleteConversation);
 
 export default router;

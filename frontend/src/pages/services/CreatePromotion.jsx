@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { createPTPromotion } from "../../api/promotions";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -83,7 +82,7 @@ export default function CreatePromotion() {
 
       if (image) fd.append("image", image);
 
-      await API.post(`${API_URL}/promotions/create`, fd);
+      await createPTPromotion(fd);
 
       toast.success(t("promotion_created_success"));
       navigate("/services");

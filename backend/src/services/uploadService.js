@@ -70,7 +70,13 @@ const getCloudinaryFolder = (fieldname) => {
     case "product":
       return "products";
     case "post":
-      return "posts"
+      return "posts";
+    case "clinic":
+      return "clinics";
+    case "clinicPromotion":
+      return "clinic_promotions";
+    case "ptPromotion":
+      return "pt_promotions";
     default:
       return "others";
   }

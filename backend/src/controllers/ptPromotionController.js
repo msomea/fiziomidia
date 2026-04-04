@@ -36,7 +36,7 @@ export const createPromotion = async (req, res) => {
 
     // Upload image to Cloudinary if provided
     if (req.file) {
-      const result = await uploadToCloudinary(req.file);
+      const result = await uploadToCloudinary(req.file.ptPromotion);
       imageUrl = result.secure_url;
       imagePublicId = result.public_id;
     }
@@ -113,28 +113,40 @@ export const stripeWebhook = async (req, res) => {
   }
 };
 
-// GET /api/promotions?ptId=<id> Returns active promotion
+// GET /api/promotions Returns active promotion(s)
 export const getPTPromotion = async (req, res) => {
   try {
     const { ptId } = req.query;
-    if (!ptId) return res.status(400).json({ error: "ptId is required" });
+    
+    if (ptId) {
+      // Get specific PT's promotion
+      const promotion = await PTPromotion.findOne({ pt: ptId, status: "active" })
+      .populate("pt", "fullName profileImageUrl");
 
-    const promotion = await PTPromotion.findOne({ pt: ptId, status: "active" })
-      //.populate("pt", "fullName profileImageUrl");
+      if (!promotion) {
+        return res.json({ active: false });
+      }
 
-    if (!promotion) {
-      return res.json({ active: false });
+      const endDate = promotion.endAt;
+      const today = dayjs();
+      const daysLeft = dayjs(endDate).diff(today, "day");
+
+      res.json({
+        active: true,
+        promotion,
+        daysLeft,
+      });
+    } else {
+      // Get all active PT promotions for carousel
+      const promotions = await PTPromotion.find({ 
+        status: "active",
+        endAt: { $gt: new Date() } // Only include non-expired promotions
+      })
+      .populate("pt", "fullName profileImageUrl ptProfile.speciality")
+      .sort({ createdAt: -1 }); // Newest first
+
+      res.json(promotions);
     }
-
-    const endDate = promotion.endAt;
-    const today = dayjs();
-    const daysLeft = dayjs(endDate).diff(today, "day");
-
-    res.json({
-      active: true,
-      promotion,
-      daysLeft,
-    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch promotion" });

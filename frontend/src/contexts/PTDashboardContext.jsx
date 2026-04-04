@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useCallback } from 'react
 import API from '../api/axios';
 import { API_URL } from '../config/constants';
 import toast from 'react-hot-toast';
+import { fetchPromotions } from '../api/promotions';
 
 // Initial state
 const initialState = {
@@ -79,10 +80,7 @@ export const PTDashboardProvider = ({ children }) => {
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       dispatch({ type: actionTypes.CLEAR_ERROR });
 
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard`, { headers });
+      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard`);
       
       dispatch({
         type: actionTypes.SET_DASHBOARD_DATA,
@@ -102,10 +100,7 @@ export const PTDashboardProvider = ({ children }) => {
   // Refresh specific data sections
   const refreshPTProfile = useCallback(async (ptId) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/pts/${ptId}`, { headers });
+      const response = await API.get(`${API_URL}/pts/${ptId}`);
       dispatch({ type: actionTypes.UPDATE_PT_PROFILE, payload: response.data });
     } catch (error) {
       console.error('PT profile refresh error:', error);
@@ -115,10 +110,7 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshAppointments = useCallback(async (ptId, limit = 3) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/appointments?ptId=${ptId}&limit=${limit}`, { headers });
+      const response = await API.get(`${API_URL}/appointments?ptId=${ptId}&limit=${limit}`);
       dispatch({ type: actionTypes.UPDATE_APPOINTMENTS, payload: response.data.appointments || [] });
     } catch (error) {
       console.error('Appointments refresh error:', error);
@@ -128,10 +120,7 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshForumPosts = useCallback(async (ptId, limit = 3) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/forum?ptId=${ptId}&limit=${limit}`, { headers });
+      const response = await API.get(`${API_URL}/forum?ptId=${ptId}&limit=${limit}`);
       dispatch({ type: actionTypes.UPDATE_FORUM_POSTS, payload: response.data.posts || [] });
     } catch (error) {
       console.error('Forum posts refresh error:', error);
@@ -141,10 +130,9 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshPromotion = useCallback(async (ptId) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/promotions?ptId=${ptId}`, { headers });
+      const response = await API.get(`${API_URL}/promotions/pt`, { 
+        params: { ptId }
+      });
       dispatch({ type: actionTypes.UPDATE_PROMOTION, payload: response.data || null });
     } catch (error) {
       console.error('Promotion refresh error:', error);
@@ -154,10 +142,7 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshStats = useCallback(async (ptId) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard-stats`, { headers });
+      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard-stats`);
       dispatch({ type: actionTypes.UPDATE_STATS, payload: response.data || {} });
     } catch (error) {
       console.error('Stats refresh error:', error);

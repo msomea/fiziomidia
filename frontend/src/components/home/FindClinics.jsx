@@ -1,6 +1,10 @@
 import {
   ArrowBigLeftIcon,
   ArrowBigRightIcon,
+  Building,
+  MapPin,
+  Calendar,
+  ExternalLink,
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -8,9 +12,9 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import avatar from "../../assets/avatar.jpg";
 import SkeletonProfessionalCard from "./SkeletonProfessionalCard";
-import { fetchPromotions } from "../../api/promotions";
+import { fetchClinicPromotions } from "../../api/promotions";
 
-export default function FindProfessionals() {
+export default function FindClinics() {
   const { t } = useTranslation();
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,15 +24,15 @@ export default function FindProfessionals() {
 
   const carouselRef = useRef(null);
 
-  /* ---------- Load promoted PTs ---------- */
+  /* ---------- Load promoted Clinics ---------- */
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        const data = await fetchPromotions();
+        const data = await fetchClinicPromotions();
         setPromotions(data);
       } catch (err) {
-        toast.error(t("failed_load_professionals"));
+        toast.error(t("failed_load_clinics"));
       } finally {
         setLoading(false);
       }
@@ -94,12 +98,39 @@ export default function FindProfessionals() {
     return () => clearInterval(interval);
   }, [totalPages, paused]);
 
+  const formatExpiryDate = (endDate) => {
+    if (!endDate) return t("no_expiry_date");
+    const expiryDate = new Date(endDate);
+    const today = new Date();
+    const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+    
+    if (daysLeft < 0) return t("expired");
+    if (daysLeft === 0) return t("expires_today");
+    if (daysLeft === 1) return t("expires_tomorrow");
+    
+    return t("expires_in_days", { days: daysLeft });
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "active":
+        return "text-green-600 bg-green-100";
+      case "pending":
+        return "text-yellow-600 bg-yellow-100";
+      case "expired":
+      case "suspended":
+        return "text-red-600 bg-red-100";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+
   const showSkeletons = loading || promotions.length < 1;
   return (
-    <section className="bg-white py-16 min-h-[25vh] flex items-center">
+    <section className="bg-gray-50 py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
         <h2 className="text-3xl font-bold text-caribbean mb-8 text-center">
-          {t("find_professionals")}
+          {t("find_clinics")}
         </h2>
 
         <div
@@ -131,45 +162,57 @@ export default function FindProfessionals() {
               promotions.map((promotion) => (
                 <div
                   key={promotion._id}
-                  className="flex-shrink-0 w-[85%] sm:w-[300px] bg-alice rounded-2xl p-4 shadow hover:shadow-lg transition text-center"
+                  className="flex-shrink-0 w-[85%] sm:w-[300px] bg-white rounded-2xl p-4 shadow hover:shadow-lg transition"
                 >
                   <div className="mx-auto mb-4 w-full h-40 object-cover rounded-xl ring ring-caribbean ring-offset-2 overflow-hidden">
                     <img
                       src={
-                        promotion.imageUrl // first use promotion image
-                          ? promotion.imageUrl
-                          : promotion.pt.profileImageUrl // fallback to PT profile image
-                          ? promotion.pt.profileImageUrl
-                          : avatar // fallback to default
+                        promotion.imageUrl || 
+                        promotion.clinic?.imageUrl || 
+                        avatar
                       }
-                      alt={promotion.pt.fullName || "PT Profile"}
+                      alt={promotion.clinic?.name || "Clinic"}
                       loading="lazy"
                       onError={(e) => (e.target.src = avatar)}
                       className="w-full h-full object-cover"
                     />
-
                   </div>
 
-                  <h3 className="font-semibold text-caribbean text-lg">
-                    {promotion.pt?.fullName || t("unnamed_pt")}
-                  </h3>
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Building className="w-4 h-4 text-caribbean" />
+                    <h3 className="font-semibold text-caribbean text-lg text-center">
+                      {promotion.clinic?.name || t("unnamed_clinic")}
+                    </h3>
+                  </div>
 
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {promotion.pt?.ptProfile?.speciality?.length
-                      ? promotion.pt?.ptProfile?.speciality.join(", ")
-                      : t("no_speciality_listed")}
-                  </p>
+                  <div className="flex items-center justify-center gap-1 text-sm text-gray-600 mb-2">
+                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                    <span className="line-clamp-1 text-center">
+                      {promotion.clinic?.address || t("no_address_available")}
+                    </span>
+                  </div>
+                  
+                  {promotion.customTitle && (
+                    <p className="text-sm font-medium text-gray-700 mb-1 text-center">
+                      {promotion.customTitle}
+                    </p>
+                  )}
 
-                  <p className="text-sm text-gray-500 mt-1">
-                    {promotion.description || t("no_description_available")}
-                  </p>
+                  {promotion.customDescription && (
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3 text-center">
+                      {promotion.customDescription}
+                    </p>
+                  )}
 
-                  <Link
-                    to={`/profile/pt/${promotion.pt._id}`}
-                    className="btn btn-sm bg-caribbean text-white mt-3 w-full hover:bg-tufts"
-                  >
-                    {t("view_profile")}
-                  </Link>
+                  <div className="flex justify-center gap-2">                    
+                    {promotion.clinic?._id && (
+                      <Link
+                        className="btn btn-sm bg-caribbean text-white flex-1 hover:bg-tufts text-xs text-center"
+                      >
+                        {t("view_clinic")}
+                      </Link>
+                    )}
+                  </div>
                 </div>
               ))
             )}

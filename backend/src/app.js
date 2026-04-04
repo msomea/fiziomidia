@@ -10,6 +10,8 @@ import { limiters } from "./utils/rateLimiter.js";
 import ForumSub from "./models/ForumSub.js";
 import User from "./models/User.js";
 import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
+import { expireClinicPromotionsJob } from "./cron/expiredClinicPromotions.js";
+import { expirePTPromotionsJob } from "./cron/expiredPTPromotions.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 
@@ -91,6 +93,8 @@ cron.schedule("0 0 * * *", async () => {
 });
 
 expireSponsoredProductsJob();
+expireClinicPromotionsJob();
+expirePTPromotionsJob();
 
 /* ---------------------------------- */
 /* Socket.IO Attachment                */

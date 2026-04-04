@@ -26,7 +26,7 @@ redisClient.on('error', (err) => {
 });
 
 redisClient.on('ready', () => {
-  console.log('✅ Redis ready for commands');
+  console.log('🤖 Redis ready for commands');
 });
 
 // Connect to Redis

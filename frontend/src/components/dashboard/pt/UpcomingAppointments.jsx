@@ -54,7 +54,7 @@ export default function UpcomingAppointments({ appointments, viewMore }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow p-4 m-6">
+    <div className="bg-white rounded-xl shadow p-4 my-4">
       <div className="flex justify-between items-center mb-3">
         <h2 className="font-semibold text-lg">
           {t("upcoming_appointments")}

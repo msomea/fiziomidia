@@ -24,3 +24,8 @@ export const getPTClinics = async (ptId) => {
   const response = await API.get(`/clinics/pt/${ptId}`);
   return response.data;
 };
+
+export const getUserClinics = async (userId) => {
+  const response = await API.get(`/clinics/user/${userId}`);
+  return response.data;
+};

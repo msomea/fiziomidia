@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   LockKeyhole,
   ShieldCheck,
+  Building,
 } from "lucide-react";
 
 export default function Services() {
@@ -48,7 +49,32 @@ export default function Services() {
         </div>
 
         {/* ------------------------------
-          2. SPONSORED PRODUCTS (Member + Physio + Admin)
+          2. CLINIC PROMOTIONS (Member + Physio + Guest View)
+        ------------------------------- */}
+        <div className="w-full max-w-md flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
+          <Building className="w-10 h-10 text-caribbean mb-4" />
+          <h2 className="text-xl text-tufts font-semibold mb-2">{t('clinic_promotions')}</h2>
+          <p className="text-gray-600 mb-4">{t('clinic_promotions_desc')}</p>
+
+          <Link
+            to="/services/clinic-promotions"
+            className="btn bg-caribbean text-white w-full"
+          >
+            {t('view_clinic_promotions')}
+          </Link>
+
+          {(role === "member" || role === "physiotherapist") && (
+            <Link
+              to="/services/clinic-promotions/create"
+              className="btn bg-tufts text-white mt-3 w-full"
+            >
+              {t('create_clinic_promotion')}
+            </Link>
+          )}
+        </div>
+
+        {/* ------------------------------
+          3. SPONSORED PRODUCTS (Member + Physio + Admin)
         ------------------------------- */}
         <div className="w-full max-w-md flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
           <ShoppingBag className="w-10 h-10 text-caribbean mb-4" />
@@ -73,7 +99,7 @@ export default function Services() {
         </div>
 
         {/* ------------------------------
-          3. GUEST LOGIN CTA
+          4. GUEST LOGIN CTA
         ------------------------------- */}
         {isGuest && (
           <div className="w-full max-w-md p-6 bg-white shadow-md rounded-xl border border-gray-100 text-center">

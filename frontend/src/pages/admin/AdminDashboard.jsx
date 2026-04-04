@@ -10,6 +10,7 @@ import AppointmentsSection from "../../components/admin/AppointmentsSection";
 import PromotionsSection from "../../components/admin/PromotionsSection";
 import SponsorshipSection from "../../components/admin/SubSponsorshipSection";
 import SponsoredProductsSection from "../../components/admin/ProductSponsorshipSection";
+import ClinicPromotionSection from "../../components/admin/ClinicPromotionSection";
 import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
 import AdminMonitoringSection from "../../components/admin/AdminMonitoringSection";
 
@@ -84,6 +85,7 @@ function AdminDashboardContent() {
         <UsersSection />
         <AppointmentsSection />
         <PromotionsSection />
+        <ClinicPromotionSection />
         <SponsorshipSection />
         <ForumModRequestsSection />
         <SponsoredProductsSection />

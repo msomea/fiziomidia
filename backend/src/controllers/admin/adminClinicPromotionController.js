@@ -1,0 +1,287 @@
+import ClinicPromotion from "../../models/ClinicPromotion.js";
+import { deleteFromCloudinary, uploadToCloudinary } from "../../services/uploadService.js";
+
+/*
+========================================
+GET SINGLE PROMOTION (ADMIN VIEW)
+========================================
+*/
+export const getClinicPromotionByIdAdmin = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id)
+      .populate("clinic");
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    res.json({ promotion });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+GET ALL PROMOTIONS (ADMIN VIEW)
+========================================
+*/
+export const getAllClinicPromotionsAdmin = async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+
+    const promotions = await ClinicPromotion.find(filter)
+      .populate("clinic")
+      .sort({ createdAt: -1 });
+
+    res.json(promotions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+APPROVE & ACTIVATE PROMOTION
+========================================
+*/
+export const approveClinicPromotion = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.status = "active";
+
+    // Optional: reset start date when approved
+    promotion.startAt = new Date();
+
+    await promotion.save();
+
+    res.json({
+      message: "Clinic promotion approved and activated",
+      promotion,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+REJECT PROMOTION
+========================================
+*/
+export const rejectClinicPromotion = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.status = "suspended";
+
+    await promotion.save();
+
+    res.json({
+      message: "Clinic promotion rejected/suspended",
+      promotion,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+MANUAL EXPIRE PROMOTION
+========================================
+*/
+export const expireClinicPromotion = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.status = "expired";
+    await promotion.save();
+
+    res.json({
+      message: "Promotion expired manually",
+      promotion,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+SET PRIORITY SCORE (VERY IMPORTANT)
+========================================
+*/
+export const setClinicPromotionPriority = async (req, res) => {
+  try {
+    const { priorityScore } = req.body;
+
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.priorityScore = priorityScore;
+    await promotion.save();
+
+    res.json({
+      message: "Priority score updated",
+      promotion,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+GET PROMOTION ANALYTICS
+========================================
+*/
+export const getClinicPromotionAnalytics = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    const ctr =
+      promotion.impressions > 0
+        ? (promotion.clicks / promotion.impressions) * 100
+        : 0;
+
+    res.json({
+      clicks: promotion.clicks,
+      impressions: promotion.impressions,
+      ctr: ctr.toFixed(2) + "%",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+UPDATE PROMOTION (ADMIN VIEW)
+========================================
+*/
+export const updateClinicPromotionAdmin = async (req, res) => {
+  try {
+    const { status, endAt } = req.body;
+    
+    const promotion = await ClinicPromotion.findById(req.params.id)
+      .populate("clinic");
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    // Update only provided fields
+    if (status) promotion.status = status;
+    if (endAt) promotion.endAt = new Date(endAt);
+
+    await promotion.save();
+
+    res.json({
+      message: "Clinic promotion updated successfully",
+      promotion,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+TRACK CLICK (ADMIN VIEW)
+========================================
+*/
+export const trackClinicPromotionClickAdmin = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.clicks += 1;
+    await promotion.save();
+
+    res.json({ message: "Click tracked" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+TRACK IMPRESSION (ADMIN VIEW)
+========================================
+*/
+export const trackClinicPromotionImpressionAdmin = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    promotion.impressions += 1;
+    await promotion.save();
+
+    res.json({ message: "Impression tracked" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/*
+========================================
+DELETE PROMOTION
+========================================
+*/
+export const deleteClinicPromotion = async (req, res) => {
+  try {
+    const promotion = await ClinicPromotion.findById(req.params.id);
+
+    if (!promotion) {
+      return res.status(404).json({ message: "Promotion not found" });
+    }
+
+    // Clean up associated image if it exists
+    if (promotion.imagePublicId) {
+      try {
+        await deleteFromCloudinary(promotion.imagePublicId);
+      } catch (error) {
+        console.error("Failed to delete image from Cloudinary:", error);
+        // Continue with deletion even if image cleanup fails
+      }
+    }
+
+    await ClinicPromotion.findByIdAndDelete(req.params.id);
+
+    res.json({
+      message: "Clinic promotion deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

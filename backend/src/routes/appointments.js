@@ -15,20 +15,20 @@ const router = express.Router();
 // Members can request appointments
 router.post("/", authenticate, requireRole("member"), requestAppointment);
 
-// Get a single appointment by ID (requester, PT, or admin)
-router.get("/:id", authenticate, getAppointmentById);
+// Get appointments by member (MUST come before /:id)
+router.get("/member/:id", authenticate, requireRole("member", "admin"), getAppointmentsByMember);
 
 // PTs/admin can view appointments
 router.get("/", authenticate, getAppointments);
+
+// Get a single appointment by ID (MUST come last)
+router.get("/:id", authenticate, getAppointmentById);
 
 // PT/admin can update appointment status
 router.patch("/:id/status", authenticate, requireRole("physiotherapist", "admin"), updateAppointmentStatus);
 
 // Requester, PT, or admin can delete an appointment
 router.delete("/:id", authenticate, deleteAppointment);
-
-// Get appointments by member
-router.get("/member/:id", authenticate, requireRole("member", "admin"), getAppointmentsByMember);
 
 
 export default router;

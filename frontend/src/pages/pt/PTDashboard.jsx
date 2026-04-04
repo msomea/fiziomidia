@@ -6,8 +6,8 @@ import { PTDashboardProvider, usePTDashboard } from "../../contexts/PTDashboardC
 import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
 import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement";
+import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
 import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
-import ClinicList from "../../components/dashboard/pt/ClinicList";
 
 import {
   Menu,
@@ -114,10 +114,10 @@ function PTDashboardContent() {
         viewMore={`/pt/${user._id}/appointments`}
       />
 
-      {/* Clinics */}
-      <ClinicList clinics={clinics} viewMore={`/settings/pt/${user._id}`} />
+      {/* Clinic Promotions */}
+      <ClinicPromotionStatus />
 
-      {/* Forum & Promotion */}
+      {/* Forum & PT Promotion */}
       <div className="grid md:grid-cols-2 gap-4 mt-4">
         <ForumSubManagement />
         <PromotionStatus

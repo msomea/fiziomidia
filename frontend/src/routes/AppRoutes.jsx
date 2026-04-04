@@ -29,6 +29,7 @@ import UsersPage from "../pages/message/UsersPage";
 import AdminUserDetails from "../components/admin/AdminUserDetails";
 import AdminAppointmentDetails from "../components/admin/AdminAppointmentDetails";
 import AdminPromotionDetail from "../components/admin/AdminPromotionDetail";
+import AdminClinicPromotionDetail from "../components/admin/AdminClinicPromotionDetail";
 import AdminSponsorshipDetail from "../components/admin/AdminSubSponsorshipDetail";
 import AdminProductSponsorshipDetail from "../components/admin/AdminProductSponsorshipDetail";
 import AdminProfileSettings from "../pages/admin/AdminProfileSetting";
@@ -37,6 +38,9 @@ import CreatePromotion from "../pages/services/CreatePromotion";
 import ListPromotions from "../pages/services/ListPromotions";
 import ListSponsoredProduct from "../pages/services/ListSponsoredProduct";
 import CreateSponsoredProduct from "../pages/services/CreateSponsoredProduct";
+import CreateClinicPromotion from "../pages/services/CreateClinicPromotion";
+import ListClinicPromotions from "../pages/services/ListClinicPromotions";
+import ManageClinicPromotion from "../pages/clinic/ManageClinicPromotion";
 import ForumModRequestsDetail from "../components/admin/ForumModRequestsDetail";
 import AdminSendEmail from "../pages/admin/AdminSendEmail";
 import PTAppointmentsPage from "../pages/pt/PTAppointmentsPage";
@@ -72,6 +76,11 @@ export default function AppRoutes() {
       <Route path="/services/promotions" element={<ListPromotions />} />
       <Route path="/services/sponsored" element={<ListSponsoredProduct />} />
       <Route path="/services/sponsored/create" element={<CreateSponsoredProduct />} />
+      
+      {/* Clinic Promotion Routes */}
+      <Route path="/services/clinic-promotions/create" element={<CreateClinicPromotion />} />
+      <Route path="/services/clinic-promotions" element={<ListClinicPromotions />} />
+      <Route path="/clinic/promotions/manage/:promotionId" element={<ManageClinicPromotion />} />
 
 
       {/* Dashboard Routes */}
@@ -107,6 +116,7 @@ export default function AppRoutes() {
       <Route path="/admin/users/:id" element={<AdminUserDetails />} />
       <Route path="/admin/appointments/:id" element={<AdminAppointmentDetails />} />
       <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
+      <Route path="/admin/clinic-promotions/:id" element={<AdminClinicPromotionDetail />} />
       <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
       <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
       <Route path="/admin/forum/mod-requests/:id" element={<ForumModRequestsDetail />} />

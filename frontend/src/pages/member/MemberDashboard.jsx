@@ -19,6 +19,7 @@ import {
   MemberAppointments,
   MemberSavedPTs,
 } from "../../components/profiles";
+import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
 
 import avatar from "../../assets/avatar.jpg";
 import toast from "react-hot-toast";
@@ -182,11 +183,12 @@ function MemberDashboardContent() {
             <MemberDetails member={memberData} />
             <MemberAppointments appointments={appointments} />
             <MemberSavedPTs savedPTs={savedPTs} />
+            <ClinicPromotionStatus />
           </div>
         )}
 
         {/* Right Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-6">          
           <div className="bg-white shadow-sm rounded-2xl p-5">
             <h2 className="text-lg font-semibold text-black mb-3">{t('reminders')}</h2>
             <p className="text-sm text-gray-600">{t('reminders_text')}</p>

@@ -17,6 +17,6 @@ export const connectDB = async () => {
 
   // Optional: listen for disconnects
   mongoose.connection.on("disconnected", () => {
-    console.warn("⚠️ MongoDB disconnected!");
+    console.warn("⛔ MongoDB disconnected!");
   });
 };

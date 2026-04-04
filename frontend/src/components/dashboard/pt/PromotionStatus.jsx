@@ -7,7 +7,7 @@ const PromotionStatus = ({ promotion }) => {
 
   if (!promotion?.active) {
     return (
-      <div className="bg-white p-4 rounded-xl shadow mt-6">
+      <div className="bg-white p-4 rounded-xl shadow mt-3">
         <h2 className="text-lg font-semibold mb-3">
           {t("promotion_status")}
         </h2>
@@ -36,7 +36,7 @@ const PromotionStatus = ({ promotion }) => {
   const progressPercentage = Math.min(daysLeft, 30) * (100 / 30);
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow mt-6">
+    <div className="bg-white p-4 rounded-xl shadow mt-3">
       <h2 className="text-lg font-semibold mb-3">
         {t("promotion_status")}
       </h2>

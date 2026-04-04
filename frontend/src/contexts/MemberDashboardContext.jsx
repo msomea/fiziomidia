@@ -74,10 +74,7 @@ export const MemberDashboardProvider = ({ children }) => {
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       dispatch({ type: actionTypes.CLEAR_ERROR });
 
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const response = await API.get(`${API_URL}/users/dashboard`, { headers });
+      const response = await API.get(`${API_URL}/users/dashboard`);
       
       dispatch({
         type: actionTypes.SET_DASHBOARD_DATA,
@@ -97,10 +94,7 @@ export const MemberDashboardProvider = ({ children }) => {
   // Refresh specific data sections
   const refreshMemberProfile = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const headers = { Authorization: `Bearer ${token}` };
-      
-      const response = await API.get(`${API_URL}/users/profile`, { headers });
+      const response = await API.get(`${API_URL}/users/profile`);
       
       // Add timestamp to profile image URL to prevent caching
       const fullUserData = response.data;

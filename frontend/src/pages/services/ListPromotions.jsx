@@ -5,7 +5,8 @@ import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import SkeletonProfessionalCard from "../../components/home/SkeletonProfessionalCard"; 
+import SkeletonProfessionalCard from "../../components/home/SkeletonProfessionalCard";
+import { fetchPromotions } from "../../api/promotions"; 
 
 const ITEMS_PER_PAGE = 4; // Bigger cards → fewer per page
 const AUTO_PLAY_INTERVAL = 6000;
@@ -21,17 +22,17 @@ export default function ListPromotions() {
   const itemsRef = useRef(null);
 
   useEffect(() => {
-    const fetchPromotions = async () => {
+    const fetchPromotionsData = async () => {
       try {
-        const res = await API.get(`${API_URL}/pts/promotions`);
-        setPts(res.data || []);
+        const data = await fetchPromotions();
+        setPts(data || []);
       } catch (err) {
         console.error(t("failed_load_promotions"), err);
       } finally {
         setLoading(false);
       }
     };
-    fetchPromotions();
+    fetchPromotionsData();
   }, [t]);
 
   const totalPages = Math.ceil(pts.length / ITEMS_PER_PAGE);

@@ -221,14 +221,21 @@ const UserSchema = new Schema({
   passwordHash: { type: String },
   role: {
     type: String,
-    enum: ["guest", "member","pendingPhysiotherapist", "physiotherapist", "admin"],
+    enum: [
+      "guest",
+      "member",
+      "pendingPhysiotherapist",
+      "physiotherapist",
+      "admin",
+    ],
     default: "member",
   },
   fullName: { type: String },
   savedPTs: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   phone: String,
   profileImageUrl: String,
-  profileImagePublicId: String, 
+  profileImagePublicId: String,
+  clinicIds: [{ type: Schema.Types.ObjectId, ref: "Clinic" }], // NEW: For universal clinic access
   ptProfile: PtProfileSchema,
   bio: String,
   createdAt: { type: Date, default: Date.now },
@@ -244,7 +251,7 @@ const UserSchema = new Schema({
   language: {
     type: String,
     enum: ["en", "sw"],
-    default: "sw"
+    default: "sw",
   },
 
   refreshTokens: [
@@ -269,20 +276,19 @@ const UserSchema = new Schema({
   },
   location: {
     type: {
-      type: String,      
+      type: String,
       enum: ["Point"],
-      default: "Point"
+      default: "Point",
     },
     coordinates: {
       type: [Number],
-      default: [0, 0]
+      default: [0, 0],
     },
     region: { type: String },
     district: { type: String },
     ward: { type: String },
-    street: { type: String }
+    street: { type: String },
   },
-
 });
 
 // Indexes

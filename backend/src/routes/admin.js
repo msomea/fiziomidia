@@ -7,6 +7,8 @@ import * as sponsorshipController from "../controllers/admin/adminSponsorshipCon
 import * as productController from "../controllers/admin/adminSponsoredProductController.js";
 import * as monitoringController from "../controllers/admin/adminMonitoringController.js";
 import * as modReq from "../controllers/admin/adminForumModController.js";
+import * as clinicPromo from "../controllers/admin/adminClinicPromotionController.js";
+
 import { upload } from "../services/uploadService.js";
 import { getDashboardData } from "../controllers/adminController.js";
 import {
@@ -76,6 +78,19 @@ router.delete(
   "/sponsored-products/:id",
   productController.deleteSponsoredProduct,
 );
+
+//Admin Clinic Promotion Routes
+router.get("/clinic-promotions", clinicPromo.getAllClinicPromotionsAdmin);
+router.get("/clinic-promotions/:id", clinicPromo.getClinicPromotionByIdAdmin);
+router.put("/clinic-promotions/:id", clinicPromo.updateClinicPromotionAdmin);
+router.patch("/clinic-promotions/:id/reject", clinicPromo.rejectClinicPromotion);
+router.patch("/clinic-promotions/:id/expire", clinicPromo.expireClinicPromotion);
+router.patch("/clinic-promotions/:id/approve", clinicPromo.approveClinicPromotion);
+router.patch("/clinic-promotions/:id/priority", clinicPromo.setClinicPromotionPriority);
+router.get("/clinic-promotions/:id/analytics", clinicPromo.getClinicPromotionAnalytics);
+router.post("/clinic-promotions/:id/click", clinicPromo.trackClinicPromotionClickAdmin);
+router.post("/clinic-promotions/:id/impression", clinicPromo.trackClinicPromotionImpressionAdmin);
+router.delete("/clinic-promotions/:id", clinicPromo.deleteClinicPromotion);
 
 // Admin Monitoring Routes
 router.get("/monitoring/logs", monitoringController.getAdminActivityLogs);

@@ -3,10 +3,11 @@ import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile } from "../../api/profile";
-import LocationSelector from "../../components/membersetting/LocationSelector";
+import LocationSelector from "../../components/location/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
 import AvatarUpload from "../../components/form/AvatarUpload";
+import ClinicManagement from "../../components/membersetting/ClinicManagement";
 import { useTranslation } from "react-i18next";
 import API from "../../api/axios";
 
@@ -382,6 +383,11 @@ export default function MemberProfileSettings() {
             {loading ? t("saving") : t("save_changes")}
           </button>
         </form>
+
+        {/* Clinic Management Section */}
+        <div className="mt-8">
+          <ClinicManagement user={user} t={t} />
+        </div>
 
         
       </div>

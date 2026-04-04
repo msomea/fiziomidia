@@ -32,14 +32,14 @@ router.put(
   userController.updateProfile
 );
 
-// Public: get profile by ID
-router.get("/:id", userController.getUserById);
+// Get saved PTs for a member (MUST come before /:id)
+router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
 
 // Save PT to member's saved list
 router.post("/save-pt/:ptId", authenticate, requireRole("member"), userController.toggleSavePT);
 
-// Get saved PTs for a member
-router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
+// Public: get profile by ID (MUST come last)
+router.get("/:id", userController.getUserById);
 
 // Update preferred language
 router.put("/update-language", authenticate, userController.updateLanguage);

@@ -23,7 +23,7 @@ const MemberDetails = () => {
   }, [user, t]);
 
   return (
-    <section className="bg-white shadow-sm rounded-2xl p-5">
+    <section className="bg-white shadow-sm rounded-2xl p-6">
       <h2 className="text-xl font-semibold text-black mb-3">
         {t("member_details_title")}
       </h2>

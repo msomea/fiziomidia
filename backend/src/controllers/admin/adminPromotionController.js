@@ -5,6 +5,7 @@ import {
   logAdminActivity,
   getPromotionTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import { deleteFromCloudinary } from "../../services/uploadService.js";
 
 // -----------------------------------------
 // PT PROMOTIONS CONTROLLER
@@ -114,6 +115,10 @@ export const deleteAdminPromotion = [
   logAdminActivity("PROMOTION_DELETED", getPromotionTargetInfo),
   async (req, res) => {
     try {
+      const promotion = await PTPromotion.findById(req.params.id);
+      if (promotion?.imagePublicId) {
+        await deleteFromCloudinary(promotion.imagePublicId);
+      }
       await PTPromotion.findByIdAndDelete(req.params.id);
       res.json({ message: "Promotion deleted" });
     } catch {

@@ -13,20 +13,19 @@ router.get("/",authenticate, ptController.listPts);
 // Get all physiotherapists (PTs) with active promotions
 router.get("/promotions", ptController.getPTsWithActivePromotions);
 
-// get pt by id
+// Get saved PTs by member (MUST come before /:id)
+router.get("/users/:id/saved-pts", ptController.getSavedPTsByMember)
+
+// Get PT dashboard stats (MUST come before /:id)
+router.get("/:id/dashboard-stats",  ptController.getPTDashboardStats)
+
+// Consolidated PT Dashboard API (MUST come before /:id)
+router.get("/:id/dashboard", authenticate, getPTDashboardData);
+
+// get pt by id (MUST come last)
 router.get("/:id", ptController.getPTById);
 
 // update pt (owner or admin)
 router.put("/:id", authenticate, requireRole("physiotherapist", "admin"), ptController.updatePTProfile);
 
-// get pt dashboard stats (legacy)
-router.get("/:id/dashboard-stats",  ptController.getPTDashboardStats)
-
-// Consolidated PT Dashboard API
-router.get("/:id/dashboard", authenticate, getPTDashboardData);
-
 export default router;
-
-// get member saved pt
-router.get("/users/:id/saved-pts", ptController.getSavedPTsByMember)
-

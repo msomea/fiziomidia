@@ -54,7 +54,7 @@ const MemberAppointments = () => {
   }
 
   return (
-    <section className="bg-white p-6 rounded-2xl shadow-md max-w-3xl mx-auto mt-6">
+    <section className="bg-white p-6 rounded-2xl shadow-md mt-6">
       <h2 className="text-2xl font-semibold text-gray-800 mb-5">
         {t("upcoming_appointments")}
       </h2>

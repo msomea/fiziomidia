@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X } from "lucide-react";
-import { createClinic, updateClinic, deleteClinic, getPTClinics } from "../../api/clinics";
+import { createClinic, updateClinic, deleteClinic, getUserClinics } from "../../api/clinics";
 import toast from "react-hot-toast";
 import LocationSelector from "../location/LocationSelector";
 
-const ClinicManagement = ({ formData, setFormData, user, t }) => {
+const ClinicManagement = ({ user, t }) => {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -36,56 +36,15 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
 
   useEffect(() => {
     fetchClinics();
-  }, []);
+  }, [user]);
 
   const fetchClinics = async () => {
     try {
-      const data = await getPTClinics(user._id);
+      const data = await getUserClinics(user._id);
       setClinics(data);
-
-      setFormData(prev => ({
-        ...prev,
-        clinicIds: data.map(c => c._id)
-      }));
     } catch (error) {
       console.error("Error fetching clinics:", error);
       toast.error(t("failed_to_load_clinics"));
-    }
-  };
-
-  /* ---------------------- SERVICE INPUT ---------------------- */
-
-  const addService = () => {
-    const value = serviceInput.trim();
-    if (!value) return;
-
-    if (clinicForm.services.includes(value)) {
-      toast.error(t("service_already_added"));
-      return;
-    }
-
-    setClinicForm(prev => {
-      const newServices = [...prev.services, value];
-      return {
-        ...prev,
-        services: newServices
-      };
-    });
-
-    setServiceInput("");
-  };
-
-  const removeService = (index) => {
-    setClinicForm(prev => ({
-      ...prev,
-      services: prev.services.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleServiceKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addService();
     }
   };
 
@@ -110,6 +69,39 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
     }));
   };
 
+  /* ---------------------- SERVICE INPUT ---------------------- */
+
+  const addService = () => {
+    const value = serviceInput.trim();
+    if (!value) return;
+
+    if (clinicForm.services.includes(value)) {
+      toast.error(t("service_already_added"));
+      return;
+    }
+
+    setClinicForm(prev => ({
+      ...prev,
+      services: [...prev.services, value]
+    }));
+
+    setServiceInput("");
+  };
+
+  const removeService = (index) => {
+    setClinicForm(prev => ({
+      ...prev,
+      services: prev.services.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleServiceKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addService();
+    }
+  };
+
   /* ---------------------- FORM SUBMIT ---------------------- */
 
   const handleSubmit = async () => {
@@ -118,15 +110,15 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
       return;
     }
 
+    // Validate location selection
+    if (!location.region || !location.district) {
+      toast.error(t("please_select_region_and_district"));
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Validate location selection
-      if (!location.region || !location.district) {
-        toast.error(t("please_select_region_and_district"));
-        return;
-      }
-
       const clinicData = {
         name: clinicForm.name,
         address: clinicForm.address,
@@ -155,11 +147,10 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
 
       resetForm();
       await fetchClinics();
-      window.dispatchEvent(new Event("clinicsUpdated"));
 
     } catch (error) {
       console.error("Error saving clinic:", error);
-      toast.error(t("failed_to_save_clinic"));
+      toast.error(error.response?.data?.message || t("failed_to_save_clinic"));
     } finally {
       setLoading(false);
     }
@@ -229,12 +220,6 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
       try {
         await deleteClinic(clinicId);
         toast.success(t("clinic_deleted_successfully"));
-        
-        // Update formData.clinicIds
-        setFormData(prev => ({
-          ...prev,
-          clinicIds: backup.filter(c => c._id !== clinicId).map(c => c._id)
-        }));
         
         // Trigger global event to notify other components
         window.dispatchEvent(new Event("clinicsUpdated"));
@@ -378,7 +363,7 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
 
           {/* ADD / EDIT FORM */}
           {showAddForm && (
-            <div className="border-t pt-6 space-y-4">
+            <div className="border-t pt-6 space-y-4 text-tufts">
 
               {/* Clinic Information */}
               <div className="space-y-4">
@@ -463,36 +448,36 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
                   </div>
                 </div>
 
-              </div>
+                {/* SERVICE INPUT */}
+                <div>
+                  <label className="block text-sm font-medium text-tufts mb-2">
+                    {t("services")}
+                  </label>
+                  <input
+                    type="text"
+                    value={serviceInput}
+                    onChange={(e)=>setServiceInput(e.target.value)}
+                    onKeyDown={handleServiceKeyDown}
+                    placeholder={t("type_service_press_enter")}
+                    className="input input-bordered w-full"
+                  />
 
-              {/* SERVICE INPUT */}
-              <div>
+                  {/* SERVICE TAGS */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {clinicForm.services.map((service, index) => (
+                      <span
+                        key={`${service}-${index}`}
+                        className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                      >
+                        {service}
 
-                <input
-                  type="text"
-                  value={serviceInput}
-                  onChange={(e)=>setServiceInput(e.target.value)}
-                  onKeyDown={handleServiceKeyDown}
-                  placeholder={t("type_service_press_enter")}
-                  className="input input-bordered w-full"
-                />
-
-                {/* SERVICE TAGS */}
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {clinicForm.services.map((service,index)=>(
-                    <span
-                      key={index}
-                      className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-                    >
-                      {service}
-
-                      <button onClick={()=>removeService(index)}>
-                        <X size={12}/>
-                      </button>
-                    </span>
-                  ))}
+                        <button onClick={() => removeService(index)}>
+                          <X size={12}/>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-
               </div>
 
               <div className="flex gap-3 pt-4">
