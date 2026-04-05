@@ -3,6 +3,7 @@ import API from '../api/axios';
 import { API_URL } from '../config/constants';
 import toast from 'react-hot-toast';
 import { fetchPromotions } from '../api/promotions';
+import dayjs from 'dayjs';
 
 // Initial state
 const initialState = {
@@ -82,12 +83,29 @@ export const PTDashboardProvider = ({ children }) => {
 
       const response = await API.get(`${API_URL}/pts/${ptId}/dashboard`);
       
+      let dashboardData = response.data;
+      
+      // Calculate daysLeft for promotion if it exists and is active
+      if (dashboardData.promotion && dashboardData.promotion.status === 'active' && dashboardData.promotion.endAt) {
+        const endDate = dayjs(dashboardData.promotion.endAt);
+        const today = dayjs();
+        const daysLeft = endDate.diff(today, 'day');
+        
+        dashboardData = {
+          ...dashboardData,
+          promotion: {
+            ...dashboardData.promotion,
+            daysLeft: Math.max(0, daysLeft)
+          }
+        };
+      }
+      
       dispatch({
         type: actionTypes.SET_DASHBOARD_DATA,
-        payload: response.data,
+        payload: dashboardData,
       });
 
-      return response.data;
+      return dashboardData;
     } catch (error) {
       console.error('PT Dashboard data fetch error:', error);
       const errorMessage = error.response?.data?.message || 'Failed to load PT dashboard data';
@@ -133,7 +151,22 @@ export const PTDashboardProvider = ({ children }) => {
       const response = await API.get(`${API_URL}/promotions/pt`, { 
         params: { ptId }
       });
-      dispatch({ type: actionTypes.UPDATE_PROMOTION, payload: response.data || null });
+      
+      let promotionData = response.data || null;
+      
+      // Calculate daysLeft if promotion exists and is active
+      if (promotionData && promotionData.status === 'active' && promotionData.endAt) {
+        const endDate = dayjs(promotionData.endAt);
+        const today = dayjs();
+        const daysLeft = endDate.diff(today, 'day');
+        
+        promotionData = {
+          ...promotionData,
+          daysLeft: Math.max(0, daysLeft)
+        };
+      }
+      
+      dispatch({ type: actionTypes.UPDATE_PROMOTION, payload: promotionData });
     } catch (error) {
       console.error('Promotion refresh error:', error);
       toast.error('Failed to refresh promotion');

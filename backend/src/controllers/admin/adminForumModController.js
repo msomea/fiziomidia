@@ -1,5 +1,6 @@
 import ForumSub from "../../models/ForumSub.js";
 import ForumSubModRequest from "../../models/ForumSubModRequest.js";
+import { CacheService } from "../../utils/redis.js";
 
 // ------------------------------------
 // LIST ALL MODERATOR REQUESTS
@@ -77,7 +78,7 @@ export const updateModRequestRole = async (req, res) => {
 
     // find moderator entry (if exists)
     const modEntry = sub.moderators.find(
-      (m) => m.user && m.user.equals(request.user)
+      (m) => m.user && m.user.equals(request.user),
     );
 
     // If role is member, remove from moderators
@@ -85,7 +86,7 @@ export const updateModRequestRole = async (req, res) => {
       request.status = "rejected";
       if (modEntry) {
         sub.moderators = sub.moderators.filter(
-          (m) => m.user && !m.user.equals(request.user)
+          (m) => m.user && !m.user.equals(request.user),
         );
         await sub.save();
       }
@@ -103,11 +104,16 @@ export const updateModRequestRole = async (req, res) => {
       await sub.save();
     }
 
-
     request.role = role;
     request.reviewedBy = req.user._id;
     request.reviewedAt = new Date();
     await request.save();
+
+    // Invalidate admin dashboard cache due to moderator request update
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to moderator request update`,
+    );
 
     res.json({
       success: true,

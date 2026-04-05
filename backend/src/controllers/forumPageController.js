@@ -34,13 +34,11 @@ export const getForumPageData = async (req, res) => {
       ForumSub.findById(subId)
         .populate({
           path: "createdBy",
-          select: "fullName email",
-          strictPopulate: false,
+          select: "fullName email role",
         })
         .populate({
           path: "moderators.user",
-          select: "fullName email",
-          strictPopulate: false,
+          select: "fullName email role",
         })
         .lean(),
 
@@ -49,12 +47,10 @@ export const getForumPageData = async (req, res) => {
         .populate({
           path: "author",
           select: "fullName role profileImageUrl",
-          strictPopulate: false,
         })
         .populate({
           path: "sub",
           select: "title slug isSponsored",
-          strictPopulate: false,
         })
         .sort({ pinned: -1, createdAt: -1 })
         .limit(parseInt(limit))

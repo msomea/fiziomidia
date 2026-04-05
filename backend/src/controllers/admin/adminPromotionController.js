@@ -1,5 +1,6 @@
 import User from "../../models/User.js";
 import PTPromotion from "../../models/PTPromotion.js";
+import { CacheService } from "../../utils/redis.js";
 import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
@@ -98,6 +99,12 @@ export const updateAdminPromotion = [
       }
 
       await promotion.save();
+
+      // Invalidate admin dashboard cache due to promotion update
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to promotion update`,
+      );
 
       return res.json({
         message: "Promotion updated successfully",

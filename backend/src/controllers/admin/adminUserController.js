@@ -1,4 +1,5 @@
 import User from "../../models/User.js";
+import { CacheService } from "../../utils/redis.js";
 import mongoose from "mongoose";
 import asyncHandler from "express-async-handler";
 import escapeRegExp from "../../utils/escapeRegExp.js";
@@ -109,6 +110,12 @@ export const updateUserRole = [
 
       await user.save();
 
+      // Invalidate admin dashboard cache due to user role change
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to user role change`,
+      );
+
       return res.json({
         success: true,
         message: "Role updated successfully",
@@ -200,6 +207,12 @@ export const updateLicenseStatus = [
       }
 
       await user.save();
+
+      // Invalidate admin dashboard cache due to PT approval change
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to PT approval change`,
+      );
 
       // Generate email
       const emailHTML = generateFiziomidiaEmail({

@@ -1,4 +1,5 @@
 import SponsoredProduct from "../models/SponsoredProduct.js";
+import { CacheService } from "../utils/redis.js";
 import {
   uploadToCloudinary,
   deleteFromCloudinary,
@@ -44,6 +45,12 @@ export const createSponsoredProduct = async (req, res) => {
     };
 
     const product = await SponsoredProduct.create(productData);
+
+    // Invalidate admin dashboard cache due to new sponsored product
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated due to new sponsored product`,
+    );
 
     res.status(201).json({
       success: true,

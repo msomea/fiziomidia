@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
+import { CacheService } from "../utils/redis.js";
 import User from "../models/User.js";
 import { io } from "../config/socket.js";
 
@@ -24,6 +25,13 @@ export const createConversation = async (req, res) => {
         [receiver]: 0,
       },
     });
+
+    // Invalidate user profile caches due to new conversation
+    await CacheService.del(`user:${sender}:profile`);
+    await CacheService.del(`user:${receiver}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for users: ${sender}, ${receiver} due to new conversation`,
+    );
 
     res.status(201).json(newConvo.toObject());
   } catch (err) {
@@ -144,6 +152,12 @@ export const deleteConversation = async (req, res) => {
     if (!conversation.deletedBy.includes(userId)) {
       conversation.deletedBy.push(userId);
       await conversation.save();
+
+      // Invalidate user profile cache due to conversation deletion
+      await CacheService.del(`user:${userId}:profile`);
+      console.log(
+        `🗑️ User profile cache invalidated for user: ${userId} due to conversation deletion`,
+      );
     }
 
     // Check if all participants have deleted the conversation
@@ -180,6 +194,12 @@ export const updateUnreadCount = async (req, res) => {
     for (const m of unreadMessages) {
       m.status = "read";
       await m.save();
+
+      // Invalidate sender's user profile cache due to message read status change
+      await CacheService.del(`user:${m.sender}:profile`);
+      console.log(
+        `🗑️ User profile cache invalidated for user: ${m.sender} due to message read status change`,
+      );
 
       try {
         if (io && m.sender) {

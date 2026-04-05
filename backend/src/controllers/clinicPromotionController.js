@@ -1,4 +1,5 @@
 import ClinicPromotion from "../models/ClinicPromotion.js";
+import { CacheService } from "../utils/redis.js";
 import Clinic from "../models/Clinic.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../services/uploadService.js";
 
@@ -173,7 +174,9 @@ DELETE PROMOTION
 */
 export const deleteClinicPromotion = async (req, res) => {
   try {
-    const promotion = await ClinicPromotion.findById(req.params.id).populate("clinic");
+    const promotion = await ClinicPromotion.findById(req.params.id).populate(
+      "clinic",
+    );
 
     if (!promotion) {
       return res.status(404).json({ message: "Promotion not found" });
@@ -190,6 +193,12 @@ export const deleteClinicPromotion = async (req, res) => {
     }
 
     await promotion.deleteOne();
+
+    // Invalidate admin dashboard cache due to promotion deletion
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated due to promotion deletion`,
+    );
 
     res.json({ message: "Promotion deleted successfully" });
   } catch (error) {
@@ -213,6 +222,10 @@ export const trackClinicPromotionClick = async (req, res) => {
     promotion.clicks += 1;
     await promotion.save();
 
+    // Invalidate admin dashboard cache due to click tracking
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(`🗑️ Admin dashboard cache invalidated due to click tracking`);
+
     res.json({ message: "Click tracked" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -234,6 +247,12 @@ export const trackClinicPromotionImpression = async (req, res) => {
 
     promotion.impressions += 1;
     await promotion.save();
+
+    // Invalidate admin dashboard cache due to impression tracking
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated due to impression tracking`,
+    );
 
     res.json({ message: "Impression tracked" });
   } catch (error) {

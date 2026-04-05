@@ -1,6 +1,7 @@
 import User from "../../models/User.js";
 import Clinic from "../../models/Clinic.js";
 import Appointment from "../../models/Appointment.js";
+import { CacheService } from "../../utils/redis.js";
 import mongoose from "mongoose";
 import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
@@ -115,6 +116,12 @@ export const updateAppointment = [
           pt: physiotherapist,
         },
         { new: true },
+      );
+
+      // Invalidate admin dashboard cache due to appointment update
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to appointment update`,
       );
 
       res.json({ success: true, appointment: updated });

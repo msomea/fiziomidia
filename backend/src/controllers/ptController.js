@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { CacheService } from "../utils/redis.js";
 import PTPromotion from "../models/PTPromotion.js";
 import Post from "../models/Post.js";
 import Appointment from "../models/Appointment.js";
@@ -66,6 +67,13 @@ export const updatePTProfile = async (req, res) => {
     const pt = await User.findByIdAndUpdate(id, allowed, { new: true }).select(
       "-passwordHash",
     );
+
+    // Invalidate PT profile cache due to profile update
+    await CacheService.del(`user:${id}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for PT: ${id} due to profile update`,
+    );
+
     res.json({ pt });
   } catch (err) {
     console.error("Error updating PT profile:", err);

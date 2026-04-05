@@ -1,4 +1,5 @@
 import ClinicPromotion from "../../models/ClinicPromotion.js";
+import { CacheService } from "../../utils/redis.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../../services/uploadService.js";
 
 /*
@@ -63,6 +64,12 @@ export const approveClinicPromotion = async (req, res) => {
 
     await promotion.save();
 
+    // Invalidate admin dashboard cache due to clinic promotion approval
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to clinic promotion approval`,
+    );
+
     res.json({
       message: "Clinic promotion approved and activated",
       promotion,
@@ -89,6 +96,12 @@ export const rejectClinicPromotion = async (req, res) => {
 
     await promotion.save();
 
+    // Invalidate admin dashboard cache due to clinic promotion rejection
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to clinic promotion rejection`,
+    );
+
     res.json({
       message: "Clinic promotion rejected/suspended",
       promotion,
@@ -113,6 +126,12 @@ export const expireClinicPromotion = async (req, res) => {
 
     promotion.status = "expired";
     await promotion.save();
+
+    // Invalidate admin dashboard cache due to clinic promotion expiration
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to clinic promotion expiration`,
+    );
 
     res.json({
       message: "Promotion expired manually",
@@ -140,6 +159,12 @@ export const setClinicPromotionPriority = async (req, res) => {
 
     promotion.priorityScore = priorityScore;
     await promotion.save();
+
+    // Invalidate admin dashboard cache due to priority score update
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to priority score update`,
+    );
 
     res.json({
       message: "Priority score updated",
@@ -186,9 +211,10 @@ UPDATE PROMOTION (ADMIN VIEW)
 export const updateClinicPromotionAdmin = async (req, res) => {
   try {
     const { status, endAt } = req.body;
-    
-    const promotion = await ClinicPromotion.findById(req.params.id)
-      .populate("clinic");
+
+    const promotion = await ClinicPromotion.findById(req.params.id).populate(
+      "clinic",
+    );
 
     if (!promotion) {
       return res.status(404).json({ message: "Promotion not found" });
@@ -199,6 +225,12 @@ export const updateClinicPromotionAdmin = async (req, res) => {
     if (endAt) promotion.endAt = new Date(endAt);
 
     await promotion.save();
+
+    // Invalidate admin dashboard cache due to clinic promotion update
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to clinic promotion update`,
+    );
 
     res.json({
       message: "Clinic promotion updated successfully",
@@ -225,6 +257,12 @@ export const trackClinicPromotionClickAdmin = async (req, res) => {
     promotion.clicks += 1;
     await promotion.save();
 
+    // Invalidate admin dashboard cache due to click tracking
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to click tracking`,
+    );
+
     res.json({ message: "Click tracked" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -246,6 +284,12 @@ export const trackClinicPromotionImpressionAdmin = async (req, res) => {
 
     promotion.impressions += 1;
     await promotion.save();
+
+    // Invalidate admin dashboard cache due to impression tracking
+    await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to impression tracking`,
+    );
 
     res.json({ message: "Impression tracked" });
   } catch (error) {

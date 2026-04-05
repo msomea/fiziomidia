@@ -1,4 +1,5 @@
 import SponsoredProduct from "../../models/SponsoredProduct.js";
+import { CacheService } from "../../utils/redis.js";
 import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
@@ -44,6 +45,12 @@ export const createSponsoredProduct = [
 
       const product = new SponsoredProduct(productData);
       await product.save();
+
+      // Invalidate admin dashboard cache due to sponsored product creation
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to sponsored product creation`,
+      );
 
       return res.status(201).json({
         success: true,
@@ -214,6 +221,12 @@ export const updateSponsoredProduct = [
       }
 
       await product.save(); // triggers schema hooks
+
+      // Invalidate admin dashboard cache due to sponsored product update
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to sponsored product update`,
+      );
 
       return res.json({
         success: true,

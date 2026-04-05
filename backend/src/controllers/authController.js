@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import config from "../config/index.js";
 import User from "../models/User.js";
+import { CacheService } from "../utils/redis.js";
 import { sendEmail } from "../services/sendEmailService.js";
 import { EMAIL_FROM } from "../services/sendEmailService.js";
 import {
@@ -367,6 +368,13 @@ export async function logoutUser(req, res) {
     if (!token) {
       // If client doesn't send token, we can just set isLoggedIn = false
       await User.findByIdAndUpdate(userId, { isLoggedIn: false });
+
+      // Invalidate user profile cache due to login status change
+      await CacheService.del(`user:${userId}:profile`);
+      console.log(
+        `🗑️ User profile cache invalidated for user: ${userId} due to logout`,
+      );
+
       return success(res, "Logged out successfully");
     }
 
@@ -374,6 +382,12 @@ export async function logoutUser(req, res) {
       isLoggedIn: false,
       $pull: { refreshTokens: { token } },
     });
+
+    // Invalidate user profile cache due to login status change
+    await CacheService.del(`user:${userId}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for user: ${userId} due to logout`,
+    );
 
     // Emit socket event if present
     try {

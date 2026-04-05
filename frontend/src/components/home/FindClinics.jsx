@@ -98,33 +98,6 @@ export default function FindClinics() {
     return () => clearInterval(interval);
   }, [totalPages, paused]);
 
-  const formatExpiryDate = (endDate) => {
-    if (!endDate) return t("no_expiry_date");
-    const expiryDate = new Date(endDate);
-    const today = new Date();
-    const daysLeft = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-    
-    if (daysLeft < 0) return t("expired");
-    if (daysLeft === 0) return t("expires_today");
-    if (daysLeft === 1) return t("expires_tomorrow");
-    
-    return t("expires_in_days", { days: daysLeft });
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "text-green-600 bg-green-100";
-      case "pending":
-        return "text-yellow-600 bg-yellow-100";
-      case "expired":
-      case "suspended":
-        return "text-red-600 bg-red-100";
-      default:
-        return "text-gray-600 bg-gray-100";
-    }
-  };
-
   const showSkeletons = loading || promotions.length < 1;
   return (
     <section className="bg-gray-50 py-16 min-h-[25vh] flex items-center">

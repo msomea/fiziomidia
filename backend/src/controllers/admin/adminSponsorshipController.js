@@ -1,4 +1,5 @@
 import ForumSub from "../../models/ForumSub.js";
+import { CacheService } from "../../utils/redis.js";
 import Post from "../../models/Post.js";
 import {
   uploadToCloudinary,
@@ -101,6 +102,12 @@ export const updateSponsorship = [
 
         await sub.save();
 
+        // Invalidate admin dashboard cache due to sponsorship removal
+        await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+        console.log(
+          `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to sponsorship removal`,
+        );
+
         return res.json({
           success: true,
           message: "Sponsorship disabled",
@@ -159,6 +166,12 @@ export const updateSponsorship = [
       if (req.body.endDate) sub.endDate = new Date(req.body.endDate);
 
       await sub.save();
+
+      // Invalidate admin dashboard cache due to sponsorship removal
+      await CacheService.delPattern(`dashboard:admin:${req.user._id}*`);
+      console.log(
+        `🗑️ Admin dashboard cache invalidated for admin: ${req.user._id} due to sponsorship removal`,
+      );
 
       return res.json({
         success: true,

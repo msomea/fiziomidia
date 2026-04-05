@@ -1,4 +1,5 @@
 import Appointment from "../models/Appointment.js";
+import { CacheService } from "../utils/redis.js";
 import Clinic from "../models/Clinic.js";
 import mongoose from "mongoose";
 
@@ -170,6 +171,13 @@ export const deleteAppointment = async (req, res) => {
     }
 
     await appt.deleteOne();
+
+    // Invalidate admin dashboard cache due to appointment deletion
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated due to appointment deletion`,
+    );
+
     res.json({ message: "Appointment deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });

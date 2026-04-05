@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import ForumTopics from "../../components/forum/ForumTopics";
 import ForumList from "../../components/forum/ForumList";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { useForum } from "../../context/ForumContext";
 import API from "../../api/axios";
@@ -11,6 +11,7 @@ import CollapsibleSection from "../../components/admin/CollapsibleSection";
 import { Plus, Trash2 } from "lucide-react";
 import { socket } from "../../socket";
 import { useTranslation } from "react-i18next";
+import ProfileBadge from "../../components/Badge.jsx";
 
 const Forum = () => {
   const { t, i18n } = useTranslation();
@@ -32,6 +33,8 @@ const Forum = () => {
 
   const [requesting, setRequesting] = useState(false);
   const [hasRequested, setHasRequested] = useState(false);
+  const [alreadyMod, setAlreadyMod] = useState(false);
+  const [isOwnerFromAPI, setIsOwnerFromAPI] = useState(false);
   const [isEditingRules, setIsEditingRules] = useState(false);
   const [rulesDraft, setRulesDraft] = useState([]);
 
@@ -50,14 +53,21 @@ const Forum = () => {
     setHasRequested(userPermissions?.hasPendingRequest || false);
   }, [userPermissions]);
 
+  // Check mod request status when subforum changes
+  useEffect(() => {
+    if (selectedSub && user?.role === "physiotherapist") {
+      checkModRequestStatus(selectedSub._id);
+    }
+  }, [selectedSub, user]);
+
   /* ------------------ Permissions ------------------ */
   const isMod = userPermissions?.isMod || (user?._id && selectedSub?.moderators?.some(
-    (m) => m.user?._id?.toString() === user._id || m.user?.toString() === user._id && m.role === "mod"
+    (m) => (m.user?._id?.toString() === user._id.toString() || m.user?.toString() === user._id.toString()) && m.role === "mod"
   ));
 
   const ownerId =
     selectedSub?.createdBy?._id?.toString() || selectedSub?.createdBy?.toString();
-  const isOwner = user?._id && ownerId === user._id;
+  const isOwner = user?._id && ownerId === user._id.toString();
 
   const canEditRules =
     user &&
@@ -107,7 +117,10 @@ const Forum = () => {
 
     try {
       const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
+      // Set hasRequested to true if user has pending request OR is already a mod
       setHasRequested(res.data.requested || res.data.alreadyMod || false);
+      setAlreadyMod(res.data.alreadyMod || false);
+      setIsOwnerFromAPI(res.data.isOwner || false);
     } catch (err) {
       console.error("Failed to check mod request:", err);
     }
@@ -123,7 +136,10 @@ const Forum = () => {
       if (res.data.success) {
         toast.success(t("moderator_request_sent"));
         setHasRequested(true);
-        await fetchSub(selectedSub._id);
+        // Refresh the forum page data to get updated permissions
+        await fetchForumPageData(selectedSub._id);
+        // Also check mod status to be thorough
+        await checkModRequestStatus(selectedSub._id);
       } else {
         toast.error(res.data.error || t("request_failed"));
       }
@@ -141,9 +157,14 @@ const Forum = () => {
     user.role === "physiotherapist" &&
     selectedSub &&
     !userPermissions?.isMod &&
+    !isMod &&  // Double-check with local moderator calculation
+    !alreadyMod &&  // Check if already a mod via API
     !userPermissions?.isOwner &&
+    !isOwner &&  // Double-check with local calculation
+    !isOwnerFromAPI &&  // Check if owner via API
     !userPermissions?.hasPendingRequest;
 
+  
   /* ------------------ Pin Logic ------------------ */
   const togglePin = async (postId, pinned) => {
     try {
@@ -174,8 +195,7 @@ const Forum = () => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
   };
-
-
+console.log(selectedSub)
   /* ------------------ Render ------------------ */
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">
@@ -304,6 +324,72 @@ const Forum = () => {
                     </div>
                   </>
                 )}
+              </CollapsibleSection>
+            )}
+
+            {selectedSub && (
+              <CollapsibleSection title={t("moderation_team")}>
+                <div className="space-y-4">
+                  {/* Sub Owner */}
+                  {selectedSub.createdBy && (
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-tufts text-sm">{t("sub_owner")}:</span>
+                      <Link
+                        to={
+                          selectedSub.createdBy.role === "physiotherapist"
+                            ? `/profile/pt/${selectedSub.createdBy._id}`
+                            : `/profile/member/${selectedSub.createdBy._id}`
+                        }
+                        className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                      >
+                        <span className="font-medium text-black">
+                          {selectedSub.createdBy.fullName}
+                        </span>
+                        <ProfileBadge role={selectedSub.createdBy.role} showTooltip={false} />
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Moderators */}
+                  {selectedSub.moderators && selectedSub.moderators.length > 0 && (
+                    <div>
+                      <span className="font-semibold text-tufts text-sm block mb-2">
+                        {t("moderators")} ({selectedSub.moderators.length}):
+                      </span>
+                      <div className="space-y-2">
+                        {selectedSub.moderators.map((mod, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">
+                              {mod.role === "mod" ? t("moderator") : t("sub_moderator")}:
+                            </span>
+                            {mod.user && (
+                              <Link
+                                to={
+                                  mod.user.role === "physiotherapist"
+                                    ? `/profile/pt/${mod.user._id}`
+                                    : `/profile/member/${mod.user._id}`
+                                }
+                                className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+                              >
+                                <span className="font-medium text-black text-sm">
+                                  {mod.user.fullName}
+                                </span>
+                                <ProfileBadge role={mod.user.role} showTooltip={false} />
+                              </Link>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* No moderators message */}
+                  {(!selectedSub.moderators || selectedSub.moderators.length === 0) && (
+                    <p className="text-gray-500 text-sm italic">
+                      {t("no_moderators_yet")}
+                    </p>
+                  )}
+                </div>
               </CollapsibleSection>
             )}
 

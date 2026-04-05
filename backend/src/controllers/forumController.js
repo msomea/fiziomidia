@@ -138,14 +138,21 @@ export const createSub = async (req, res) => {
 
   try {
     const sub = new ForumSub({
-      title,        // { en, sw }
+      title, // { en, sw }
       slug,
-      description,  // { en, sw }
+      description, // { en, sw }
       createdBy: req.user._id,
-      rules,        // [{ en, sw }]
+      rules, // [{ en, sw }]
     });
 
     await sub.save();
+
+    // Invalidate cache for forum subs list to reflect new sub
+    await CacheService.del(CacheKeys.FORUM_SUBS());
+    console.log(
+      `🗑️ Forum subs list cache invalidated due to new sub: ${sub._id}`,
+    );
+
     res.status(201).json({ sub });
   } catch (err) {
     console.error(err);
@@ -167,10 +174,9 @@ export const editSub = async (req, res) => {
 
     const isAdmin = req.user.role === "admin";
     const isOwner = sub.createdBy.toString() === req.user._id.toString();
-    const isMod =
-      sub.moderators?.some(
-        (m) => m.user.toString() === req.user._id.toString() && m.role === "mod"
-      );
+    const isMod = sub.moderators?.some(
+      (m) => m.user.toString() === req.user._id.toString() && m.role === "mod",
+    );
 
     if (!isAdmin && !isOwner && !isMod) {
       return res
@@ -200,6 +206,12 @@ export const editSub = async (req, res) => {
     if (slug !== undefined && isAdmin) sub.slug = slug; // admin-only for slug
 
     await sub.save();
+
+    // Invalidate cache for this subforum to reflect updated details
+    await CacheService.delPattern(`forum:sub:${sub._id}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sub update`,
+    );
 
     res.json({
       success: true,
@@ -260,17 +272,29 @@ export const updateModRequestRoleByOwner = async (req, res) => {
     let modEntry = sub.moderators.find((m) => m.user.equals(request.user));
     if (role === "mod" || role === "sub_mod") {
       if (!modEntry) {
-        sub.moderators.push({ user: request.user, role, assignedAt: new Date() });
+        sub.moderators.push({
+          user: request.user,
+          role,
+          assignedAt: new Date(),
+        });
       } else {
         modEntry.role = role; // upgrade/downgrade
       }
     } else {
       // role === "member" → remove mod entry
-      sub.moderators = sub.moderators.filter((m) => !m.user.equals(request.user));
+      sub.moderators = sub.moderators.filter(
+        (m) => !m.user.equals(request.user),
+      );
     }
 
     await sub.save();
     await request.save();
+
+    // Invalidate cache for this subforum to reflect moderator changes
+    await CacheService.delPattern(`forum:sub:${sub}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${sub} due to moderator changes`,
+    );
 
     res.json({ success: true, sub, request });
   } catch (err) {
@@ -368,7 +392,9 @@ export const votePost = async (req, res) => {
     const userId = req.user._id.toString();
 
     if (![1, -1].includes(vote)) {
-      return res.status(400).json({ error: "Vote must be 1 (upvote) or -1 (downvote)" });
+      return res
+        .status(400)
+        .json({ error: "Vote must be 1 (upvote) or -1 (downvote)" });
     }
 
     const post = await Post.findById(id)
@@ -395,13 +421,18 @@ export const votePost = async (req, res) => {
 
     await post.save();
 
+    // Invalidate cache for this subforum to reflect vote changes
+    await CacheService.delPattern(`forum:sub:${post.sub}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${post.sub} due to vote change`,
+    );
+
     res.json({
-      message: "Vote recorded",
-      postId: post._id,
-      upvotesCount: post.upvotes.length,
-      downvotesCount: post.downvotes.length,
-      score: post.score,
-    });
+  message: "Vote recorded",
+  upvotes: post.upvotes.length,
+  downvotes: post.downvotes.length,
+  score: post.score,
+});
   } catch (err) {
     console.error("❌ Error voting on post:", err);
     res.status(500).json({ error: "Failed to vote on post" });
@@ -417,7 +448,10 @@ export const updatePost = async (req, res) => {
 
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ error: "Post not found" });
-    if (req.user.role !== "admin" && post.author.toString() !== req.user._id.toString())
+    if (
+      req.user.role !== "admin" &&
+      post.author.toString() !== req.user._id.toString()
+    )
       return res.status(403).json({ error: "Forbidden" });
 
     post.title = title ?? post.title;
@@ -425,6 +459,13 @@ export const updatePost = async (req, res) => {
     post.updatedAt = new Date();
 
     await post.save();
+
+    // Invalidate cache for this subforum to reflect post update
+    await CacheService.delPattern(`forum:sub:${post.sub}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${post.sub} due to post update`,
+    );
+
     res.json({ post });
   } catch (err) {
     console.error("Update post error:", err);
@@ -597,6 +638,13 @@ export const updateSubSponsorship = async (req, res) => {
     sub.endDate = endDate ? new Date(endDate) : undefined;
 
     await sub.save();
+
+    // Invalidate cache for this subforum to reflect sponsorship changes
+    await CacheService.delPattern(`forum:sub:${sub._id}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sponsorship update`,
+    );
+
     res.json({ message: "Sponsorship updated successfully", sub });
   } catch (err) {
     console.error("Error updating sponsorship:", err);
@@ -621,6 +669,13 @@ export const removeSubSponsorship = async (req, res) => {
     sub.endDate = undefined;
 
     await sub.save();
+
+    // Invalidate cache for this subforum to reflect sponsorship removal
+    await CacheService.delPattern(`forum:sub:${sub._id}*`);
+    console.log(
+      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sponsorship removal`,
+    );
+
     res.json({ message: "Sponsorship removed successfully", sub });
   } catch (err) {
     console.error("Error removing sponsorship:", err);

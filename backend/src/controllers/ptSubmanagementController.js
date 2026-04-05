@@ -13,40 +13,33 @@ export const getPTSubmanagementData = async (req, res) => {
     const userId = req.user?._id;
 
     // Build all queries in parallel for better performance
-    const [
-      subforum,
-      modRequests,
-      userPermissions
-    ] = await Promise.all([
+    const [subforum, modRequests, userPermissions] = await Promise.all([
       // Subforum details
       ForumSub.findById(subId)
-        .populate({ 
-          path: "createdBy", 
-          select: "fullName email",
-          strictPopulate: false 
+        .populate({
+          path: "createdBy",
+          select: "fullName email role",
         })
-        .populate({ 
-          path: "moderators.user", 
-          select: "fullName email",
-          strictPopulate: false 
+        .populate({
+          path: "moderators.user",
+          select: "fullName email role",
         })
         .lean(),
 
       // Mod requests for this subforum
-      ForumSubModRequest.find({ 
+      ForumSubModRequest.find({
         sub: subId,
-        status: status 
+        status: status,
       })
         .populate({
           path: "user",
           select: "fullName email profileImageUrl",
-          strictPopulate: false
         })
         .sort({ createdAt: -1 })
         .lean(),
 
       // User permissions (check if user is owner or mod)
-      userId ? checkUserPermissions(subId, userId) : null
+      userId ? checkUserPermissions(subId, userId) : null,
     ]);
 
     // Check if user has management permissions
@@ -84,18 +77,16 @@ async function checkUserPermissions(subId, userId) {
   try {
     const [subforum, modRequest] = await Promise.all([
       ForumSub.findById(subId)
-        .populate({ 
-          path: "createdBy", 
-          select: "fullName email",
-          strictPopulate: false 
+        .populate({
+          path: "createdBy",
+          select: "fullName email role",
         })
-        .populate({ 
-          path: "moderators.user", 
-          select: "fullName email",
-          strictPopulate: false 
+        .populate({
+          path: "moderators.user",
+          select: "fullName email role",
         })
         .lean(),
-      ForumSubModRequest.findOne({ sub: subId, user: userId }).lean()
+      ForumSubModRequest.findOne({ sub: subId, user: userId }).lean(),
     ]);
 
     if (!subforum) return null;

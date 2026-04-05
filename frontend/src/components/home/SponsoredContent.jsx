@@ -90,7 +90,7 @@ const SponsoredContent = () => {
         goToPage(next);
         return next;
       });
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [totalPages, paused]);

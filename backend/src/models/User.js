@@ -221,6 +221,7 @@ const UserSchema = new Schema({
   passwordHash: { type: String },
   role: {
     type: String,
+    select: true,
     enum: [
       "guest",
       "member",

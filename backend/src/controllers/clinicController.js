@@ -1,5 +1,6 @@
 import Clinic from "../models/Clinic.js";
 import User from "../models/User.js";
+import { CacheService } from "../utils/redis.js";
 
 export const getAllClinics = async (req, res) => {
   try {
@@ -116,6 +117,12 @@ export const createClinic = async (req, res) => {
       );
     }
 
+    // Invalidate user profile cache due to clinic association change
+    await CacheService.del(`user:${req.user._id}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for user: ${req.user._id} due to clinic association`,
+    );
+
     res.status(201).json(clinic);
   } catch (error) {
     console.error("Error creating clinic:", error);
@@ -223,6 +230,12 @@ export const deleteClinic = async (req, res) => {
         { new: true },
       );
     }
+
+    // Invalidate user profile cache due to clinic association change
+    await CacheService.del(`user:${req.user._id}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for user: ${req.user._id} due to clinic removal`,
+    );
 
     res.json({ message: "Clinic deleted successfully" });
   } catch (error) {

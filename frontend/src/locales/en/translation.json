@@ -322,6 +322,12 @@
   "add_rule": "Add rule",
   "rules_updated": "Rules updated successfully",
   "rules_update_failed": "Failed to update rules",
+  "moderation_team": "Moderation Team",
+  "sub_owner": "Sub Owner",
+  "moderators": "Moderators",
+  "moderator": "Moderator",
+  "sub_moderator": "Sub-Moderator",
+  "no_moderators_yet": "No moderators yet",
   "post_pinned": "Post pinned",
   "post_unpinned": "Post unpinned",
   "update_profile_title": "Update Profile Information",
@@ -903,5 +909,4 @@
   "generated_address": "Generated Address",
   "select_location": "Select Location",
   "my_clinics": "My Clinics"
-  
 }

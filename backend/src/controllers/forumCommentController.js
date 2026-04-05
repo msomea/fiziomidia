@@ -1,6 +1,7 @@
 import { error } from "node:console";
 import Comment from "../models/Comment.js";
 import Post from "../models/Post.js";
+import { CacheService } from "../utils/redis.js";
 import { buildCommentTree } from "../utils/comments.js"
 import { io } from "../config/socket.js";
 
@@ -65,6 +66,14 @@ export const addComment = async (req, res) => {
     // 🔹 Add comment ID to post's comments array
     await Post.findByIdAndUpdate(id, { $push: { comments: comment._id } });
 
+    // Invalidate cache for this subforum due to new comment
+    if (post) {
+      await CacheService.delPattern(`forum:sub:${post.sub}*`);
+      console.log(
+        `🗑️ Forum cache invalidated for sub: ${post.sub} due to new comment`,
+      );
+    }
+
     // Populate for frontend
     const populatedComment = await Comment.findById(comment._id)
       .populate("author", "fullName profileImageUrl")
@@ -90,7 +99,6 @@ export const addComment = async (req, res) => {
 // Update own comment
 export const updateComment = async (req, res) => {
   try {
-
     const { commentId } = req.params;
     const { content } = req.body;
 
@@ -112,16 +120,29 @@ export const updateComment = async (req, res) => {
     comment.content = content;
     await comment.save();
 
+    // Invalidate cache for this subforum due to comment update
+    const post = await Comment.findById(commentId).populate("post");
+    if (post && post.post) {
+      await CacheService.delPattern(`forum:sub:${post.post.sub}*`);
+      console.log(
+        `🗑️ Forum cache invalidated for sub: ${post.post.sub} due to comment update`,
+      );
+    }
+
     const updatedComment = await Comment.findById(commentId)
       .populate("author", "fullName profileImageUrl")
       .lean();
 
-    if(req.io) {
-      req.io.to(updatedComment.post.toString()).emit("comment:updated", updatedComment);
+    if (req.io) {
+      req.io
+        .to(updatedComment.post.toString())
+        .emit("comment:updated", updatedComment);
     }
 
-    res.json({ message: "Comment updated successfully", comment: updatedComment });
-
+    res.json({
+      message: "Comment updated successfully",
+      comment: updatedComment,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "❌ Failed to update comment" });
@@ -148,16 +169,10 @@ export const deleteComment = async (req, res) => {
     const isOwner = post.sub.createdBy.equals(userId);
     const isMod = post.sub.moderators.some(
       (m) =>
-        m.user.equals(userId) &&
-        (m.role === "mod" || m.role === "sub_mod")
+        m.user.equals(userId) && (m.role === "mod" || m.role === "sub_mod"),
     );
 
-    if (
-      !isAuthor &&
-      !isAdmin &&
-      !isOwner &&
-      !isMod
-    ) {
+    if (!isAuthor && !isAdmin && !isOwner && !isMod) {
       return res
         .status(403)
         .json({ message: "Not authorized to delete this comment" });
@@ -169,7 +184,15 @@ export const deleteComment = async (req, res) => {
     //Update post to remove reference to deleted comment
     await Post.findByIdAndUpdate(id, { $pull: { comments: commentId } });
 
-    if(req.io) {
+    // Invalidate cache for this subforum due to comment deletion
+    if (post) {
+      await CacheService.delPattern(`forum:sub:${post.sub}*`);
+      console.log(
+        `🗑️ Forum cache invalidated for sub: ${post.sub} due to comment deletion`,
+      );
+    }
+
+    if (req.io) {
       req.io.to(id).emit("comment:deleted", commentId);
     }
 

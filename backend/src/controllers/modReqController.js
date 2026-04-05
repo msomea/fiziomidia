@@ -1,6 +1,7 @@
 // controllers/modReqController.js
 import ForumSub from "../models/ForumSub.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
+import { CacheService } from "../utils/redis.js";
 
 // List all requests for a specific sub
 export const listModRequestsBySub = async (req, res) => {
@@ -66,6 +67,16 @@ export const checkMyModStatus = async (req, res) => {
       return res.status(404).json({ error: "Sub not found" });
     }
 
+    // Check if user is the owner
+    if (sub.createdBy.equals(userId)) {
+      return res.json({
+        requested: true,
+        alreadyMod: true,
+        isOwner: true,
+        role: "owner",
+      });
+    }
+
     // ✅ role-aware moderator check
     const modEntry = sub.moderators.find((m) => m.user.equals(userId));
 
@@ -73,6 +84,7 @@ export const checkMyModStatus = async (req, res) => {
       return res.json({
         requested: true,
         alreadyMod: true,
+        isOwner: false,
         role: modEntry.role, // "mod" | "sub_mod"
       });
     }
@@ -106,16 +118,30 @@ export const createModRequest = async (req, res) => {
     const userId = req.user._id;
 
     const sub = await ForumSub.findById(subId);
-    if (!sub) return res.status(404).json({ success: false, error: "Sub not found" });
+    if (!sub)
+      return res.status(404).json({ success: false, error: "Sub not found" });
 
     // Only verified PT can request
     if (req.user.role !== "physiotherapist") {
-      return res.status(403).json({ success: false, error: "Only verified PTs can request to be a moderator" });
+      return res.status(403).json({
+        success: false,
+        error: "Only verified PTs can request to be a moderator",
+      });
+    }
+
+    // Check if user is the owner
+    if (sub.createdBy.equals(userId)) {
+      return res
+        .status(400)
+        .json({ success: false, error: "You are the owner of this subforum" });
     }
 
     // Check if already a mod
-    const isMod = sub.moderators.some((m) => m.equals(userId));
-    if (isMod) return res.status(400).json({ success: false, error: "You are already a moderator" });
+    const isMod = sub.moderators.some((m) => m.user.equals(userId));
+    if (isMod)
+      return res
+        .status(400)
+        .json({ success: false, error: "You are already a moderator" });
 
     // Check for existing pending request
     const existingRequest = await ForumSubModRequest.findOne({
@@ -124,13 +150,22 @@ export const createModRequest = async (req, res) => {
       status: "pending",
     });
 
-    if (existingRequest) return res.status(400).json({ success: false, error: "You already have a pending request" });
+    if (existingRequest)
+      return res
+        .status(400)
+        .json({ success: false, error: "You already have a pending request" });
 
     const newRequest = await ForumSubModRequest.create({
       sub: subId,
       user: userId,
       status: "pending",
     });
+
+    // Invalidate admin dashboard cache due to new moderator request
+    await CacheService.delPattern(`dashboard:admin:*`);
+    console.log(
+      `🗑️ Admin dashboard cache invalidated due to new moderator request`,
+    );
 
     res.json({ success: true, request: newRequest });
   } catch (err) {

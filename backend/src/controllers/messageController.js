@@ -1,4 +1,5 @@
 import Message from "../models/Message.js";
+import { CacheService } from "../utils/redis.js";
 import Conversation from "../models/Conversation.js";
 
 // Send message
@@ -12,7 +13,7 @@ export const sendMessage = async (req, res) => {
       return res.status(404).json({ message: "Conversation not found" });
 
     const receiver = conversation.participants.find(
-      (p) => p.toString() !== sender.toString()
+      (p) => p.toString() !== sender.toString(),
     );
 
     if (!receiver) {
@@ -25,8 +26,15 @@ export const sendMessage = async (req, res) => {
       conversation: conversationId,
       sender,
       receiver,
-      content,
+      content: content.trim(),
     });
+
+    // Invalidate user profile caches due to new message
+    await CacheService.del(`user:${sender}:profile`);
+    await CacheService.del(`user:${receiver}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for users: ${sender}, ${receiver} due to new message`,
+    );
 
     // Add message to conversation
     conversation.messages.push(message._id);
@@ -85,6 +93,13 @@ export const deleteMessage = async (req, res) => {
     );
 
     await msg.deleteOne();
+
+    // Invalidate user profile caches due to message deletion
+    await CacheService.del(`user:${msg.sender}:profile`);
+    await CacheService.del(`user:${msg.receiver}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for users: ${msg.sender}, ${msg.receiver} due to message deletion`,
+    );
 
     return res.json({ success: true });
   } catch (err) {

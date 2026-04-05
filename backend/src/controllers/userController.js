@@ -378,6 +378,12 @@ export const updateLanguage = async (req, res) => {
     user.language = language;
     await user.save();
 
+    // Invalidate user profile cache due to language change
+    await CacheService.del(`user:${user._id}:profile`);
+    console.log(
+      `🗑️ User profile cache invalidated for user: ${user._id} due to language change`,
+    );
+
     return res.status(200).json({
       success: true,
       message: "Language updated successfully",
