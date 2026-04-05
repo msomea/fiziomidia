@@ -112,3 +112,27 @@ export const getModRequestTargetInfo = (req, responseData) => ({
   description: `Moderator request ${req.params.id} role updated to ${req.body.role}`,
   details: { newRole: req.body.role }
 });
+
+export const getClinicPromotionTargetInfo = (req, responseData) => ({
+  targetId: req.params.id,
+  targetType: "ClinicPromotion",
+  description: `Clinic promotion ${req.params.id} ${req.route.path.includes("approve") ? "approved" : req.route.path.includes("reject") ? "rejected" : req.route.path.includes("expire") ? "expired" : req.route.path.includes("priority") ? "priority updated" : "deleted"}`,
+  details: { updates: req.body, promotion: responseData?.promotion },
+});
+
+export const getForumSubTargetInfo = (req, responseData) => ({
+  targetId: req.params.id,
+  targetType: "ForumSub",
+  description: `Forum sub ${req.params.id} deleted`,
+  details: { subTitle: responseData?.sub?.title },
+});
+
+export const getRateLimitTargetInfo = (req, responseData) => ({
+  targetId: null,
+  targetType: "RateLimit",
+  description: `Rate limit data cleared for pattern: ${req.body.pattern || "rl:*"}`,
+  details: {
+    pattern: req.body.pattern,
+    clearedCount: responseData?.clearedCount,
+  },
+});

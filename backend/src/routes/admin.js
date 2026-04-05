@@ -16,6 +16,10 @@ import {
   clearRateLimitData,
 } from "../utils/rateLimitMonitor.js";
 import { limiters } from "../utils/rateLimiter.js";
+import {
+  logAdminActivity,
+  getRateLimitTargetInfo,
+} from "../middlewares/adminActivityLogger.js";
 
 const router = express.Router();
 // route /api/admin
@@ -115,22 +119,25 @@ router.get("/rate-limits/stats", async (req, res) => {
   }
 });
 
-router.post("/rate-limits/clear", async (req, res) => {
-  try {
-    const { pattern } = req.body;
-    const clearedCount = await clearRateLimitData(pattern || "rl:*");
-    res.json({
-      success: true,
-      message: `Cleared ${clearedCount} rate limit keys`,
-      clearedCount,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: "Failed to clear rate limit data",
-    });
-  }
-});
+router.post("/rate-limits/clear", [
+  logAdminActivity("RATE_LIMIT_CLEARED", getRateLimitTargetInfo),
+  async (req, res) => {
+    try {
+      const { pattern } = req.body;
+      const clearedCount = await clearRateLimitData(pattern || "rl:*");
+      res.json({
+        success: true,
+        message: `Cleared ${clearedCount} rate limit keys`,
+        clearedCount,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "Failed to clear rate limit data",
+      });
+    }
+  },
+]);
 
 
 

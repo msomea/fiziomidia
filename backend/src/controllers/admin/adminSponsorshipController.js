@@ -1,13 +1,15 @@
 import ForumSub from "../../models/ForumSub.js";
+import ForumSubModRequest from "../../models/ForumSubModRequest.js";
 import { CacheService } from "../../utils/redis.js";
-import Post from "../../models/Post.js";
 import {
   uploadToCloudinary,
   deleteFromCloudinary,
 } from "../../services/uploadService.js";
+import Post from "../../models/Post.js";
 import {
   logAdminActivity,
   getSponsorshipTargetInfo,
+  getForumSubTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
 
 // -----------------------------------------
@@ -189,23 +191,28 @@ export const updateSponsorship = [
 ];
 
 // DELETE SUB
-export const deleteSub = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const sub = await ForumSub.findById(id);
+export const deleteSub = [
+  logAdminActivity("FORUM_SUB_DELETED", getForumSubTargetInfo),
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const sub = await ForumSub.findById(id);
 
-    if (!sub) {
-      return res.status(404).json({ error: "Forum sub not found" });
+      if (!sub) {
+        return res.status(404).json({ error: "Forum sub not found" });
+      }
+
+      const subTitle = sub.title;
+
+      // Pre-remove hook will cascade delete posts
+      await sub.remove();
+
+      res.json({
+        message: `Forum sub "${subTitle}" and its posts have been deleted successfully.`,
+      });
+    } catch (err) {
+      console.error("Error deleting sub:", err);
+      res.status(500).json({ error: "Failed to delete forum sub" });
     }
-
-    // Pre-remove hook will cascade delete posts
-    await sub.remove();
-
-    res.json({
-      message: `Forum sub "${sub.title}" and its posts have been deleted successfully.`,
-    });
-  } catch (err) {
-    console.error("Error deleting sub:", err);
-    res.status(500).json({ error: "Failed to delete forum sub" });
-  }
-};
+  },
+];
