@@ -18,8 +18,8 @@ export const getClinicById = async (req, res) => {
   try {
     const { id } = req.params;
     const clinic = await Clinic.findById(id)
-      .populate('ownerUserId', 'fullName email phone')
-      .populate('physiotherapists', 'fullName email phone');
+      .populate('ownerUserId', 'fullName email phone profileImageUrl')
+      .populate('physiotherapists', 'fullName email phone profileImageUrl');
     if (!clinic) {
       return res.status(404).json({ error: "Clinic not found" });
     }
@@ -52,8 +52,8 @@ export const getClinicsByUser = async (req, res) => {
     const userId = req.params.userId || req.user.id;
 
     const clinics = await Clinic.find({ ownerUserId: userId })
-      .populate("ownerUserId", "fullName email phone")
-      .populate("physiotherapists", "fullName email phone");
+      .populate("ownerUserId", "fullName email phone profileImageUrl")
+      .populate("physiotherapists", "fullName email phone profileImageUrl");
 
     res.json(clinics);
   } catch (error) {
@@ -90,6 +90,10 @@ export const createClinic = async (req, res) => {
       ownerUserId: req.user._id,
       services: services || [],
       physiotherapists: physiotherapists || [],
+      rating: {
+        average: 0,
+        count: 0,
+      },
     };
     const clinic = new Clinic(clinicData);
     await clinic.save();

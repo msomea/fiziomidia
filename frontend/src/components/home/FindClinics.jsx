@@ -180,6 +180,7 @@ export default function FindClinics() {
                   <div className="flex justify-center gap-2">                    
                     {promotion.clinic?._id && (
                       <Link
+                        to={`/clinic/${promotion.clinic._id}`}
                         className="btn btn-sm bg-caribbean text-white flex-1 hover:bg-tufts text-xs text-center"
                       >
                         {t("view_clinic")}

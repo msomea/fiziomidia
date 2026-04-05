@@ -47,6 +47,8 @@ import PTAppointmentsPage from "../pages/pt/PTAppointmentsPage";
 import PTAppointmentDetailsPage from "../pages/pt/PTApointmentDetailsPage";
 import BookAppointment from "../pages/appointment/RequestAppointment";
 import MemberAppointmentsPage from "../pages/member/MemberAppointmentPage";
+import ClinicDetails from "../pages/clinic/ClinicDetails";
+import CreateClinic from "../pages/clinic/CreateClinic";
 
 export default function AppRoutes() {
   return (
@@ -81,6 +83,10 @@ export default function AppRoutes() {
       <Route path="/services/clinic-promotions/create" element={<CreateClinicPromotion />} />
       <Route path="/services/clinic-promotions" element={<ListClinicPromotions />} />
       <Route path="/clinic/promotions/manage/:promotionId" element={<ManageClinicPromotion />} />
+
+      {/* Clinic Routes */}
+      <Route path="/clinic/:clinicId" element={<ClinicDetails />} />
+      <Route path="/clinic/create" element={<CreateClinic />} />
 
 
       {/* Dashboard Routes */}

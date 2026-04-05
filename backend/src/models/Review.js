@@ -15,7 +15,6 @@ const reviewSchema = new mongoose.Schema(
     physiotherapist: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     appointment: {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,7 +31,7 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.model("Review", reviewSchema);
