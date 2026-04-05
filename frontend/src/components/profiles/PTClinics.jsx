@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Building, MapPin, Phone, Globe, Users, Star, ChevronDown, ExternalLink } from "lucide-react";
+import { Building, MapPin, Phone, Globe, Users, Star, StarHalf, ChevronDown, ExternalLink } from "lucide-react";
 import { getPTClinics } from "../../api/clinics";
 import { useTranslation } from "react-i18next";
 
@@ -8,6 +8,20 @@ const PTClinics = ({ clinicIds, ptId }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (rating >= i) {
+        stars.push(<Star key={i} className="w-4 h-4 text-yellow-500 inline-block fill-current" />);
+      } else if (rating >= i - 0.5) {
+        stars.push(<StarHalf key={i} className="w-4 h-4 text-yellow-500 inline-block fill-current" />);
+      } else {
+        stars.push(<Star key={i} className="w-4 h-4 text-gray-300 inline-block" />);
+      }
+    }
+    return stars;
+  };
 
   useEffect(() => {
     fetchClinics();
@@ -99,10 +113,9 @@ const PTClinics = ({ clinicIds, ptId }) => {
                             {clinic.name}
                           </h3>
                           {clinic.rating?.average && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                              <span className="font-medium">{clinic.rating.average.toFixed(1)}</span>
-                              <span className="text-gray-500">({clinic.rating.count})</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex">{renderStars(clinic.rating.average)}</div>
+                              <span className="font-medium text-sm">{clinic.rating.average.toFixed(1)}</span>
                             </div>
                           )}
                         </div>
@@ -110,11 +123,7 @@ const PTClinics = ({ clinicIds, ptId }) => {
                     </div>
                     {clinic.rating?.average && (
                       <div className="text-right">
-                        <div className="flex items-center gap-1 text-sm font-medium text-yellow-600">
-                          <Star className="w-4 h-4 fill-current" />
-                          {clinic.rating.average.toFixed(1)}
-                        </div>
-                        <p className="text-xs text-gray-500">{clinic.rating.count} {t("reviews")}</p>
+                        <p className="text-sm text-gray-500">({clinic.rating.count} {t("reviews")})</p>
                       </div>
                     )}
                   </div>
@@ -162,22 +171,7 @@ const PTClinics = ({ clinicIds, ptId }) => {
                     </div>
                   )}
 
-                  {clinic.ownerUserId && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                            <Building className="w-3 h-3 text-gray-600" />
-                          </div>
-                          <span>{t("owner")}: {clinic.ownerUserId.fullName || clinic.ownerUserId.email}</span>
-                        </div>
-                        <button className="text-caribbean hover:text-tufts text-xs font-medium flex items-center gap-1 transition-colors">
-                          <ExternalLink className="w-3 h-3" />
-                          {t("view_details")}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               ))}
             </div>

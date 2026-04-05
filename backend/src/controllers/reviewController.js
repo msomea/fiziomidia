@@ -2,6 +2,22 @@ import Review from "../models/Review.js";
 import Clinic from "../models/Clinic.js";
 import User from "../models/User.js";
 
+export const getReviewsByPhysiotherapist = async (req, res) => {
+  try {
+    const { physiotherapistId } = req.params;
+
+    const reviews = await Review.find({ physiotherapist: physiotherapistId })
+      .populate("reviewer", "fullName email")
+      .populate("clinic", "name address")
+      .sort({ createdAt: -1 });
+
+    res.json(reviews);
+  } catch (error) {
+    console.error("Error fetching physiotherapist reviews:", error);
+    res.status(500).json({ error: "Failed to fetch reviews" });
+  }
+};
+
 export const getReviewsByClinic = async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -20,45 +36,76 @@ export const getReviewsByClinic = async (req, res) => {
 
 export const createReview = async (req, res) => {
   try {
-    const { clinicId, rating, comment, appointmentId } = req.body;
+    const { clinicId, physiotherapistId, rating, comment, appointmentId } =
+      req.body;
     const userId = req.user._id;
 
-    if (!clinicId || !rating) {
-      return res.status(400).json({ error: "Clinic and rating are required" });
+    if (!rating) {
+      return res.status(400).json({ error: "Rating is required" });
     }
 
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ error: "Rating must be between 1 and 5" });
     }
 
-    // Check if user already reviewed this clinic
-    const existingReview = await Review.findOne({
-      reviewer: userId,
-      clinic: clinicId
-    });
+    // Validate that at least one of clinicId or physiotherapistId is provided
+    if (!clinicId && !physiotherapistId) {
+      return res
+        .status(400)
+        .json({ error: "Either clinic or physiotherapist must be specified" });
+    }
+
+    // Check for duplicate reviews
+    let existingReview;
+    if (clinicId && physiotherapistId) {
+      existingReview = await Review.findOne({
+        reviewer: userId,
+        clinic: clinicId,
+        physiotherapist: physiotherapistId,
+      });
+    } else if (clinicId) {
+      existingReview = await Review.findOne({
+        reviewer: userId,
+        clinic: clinicId,
+      });
+    } else if (physiotherapistId) {
+      existingReview = await Review.findOne({
+        reviewer: userId,
+        physiotherapist: physiotherapistId,
+      });
+    }
 
     if (existingReview) {
-      return res.status(400).json({ error: "You have already reviewed this clinic" });
+      return res
+        .status(400)
+        .json({ error: "You have already reviewed this entity" });
     }
 
     // Create the review
     const review = new Review({
       reviewer: userId,
-      clinic: clinicId,
+      clinic: clinicId || null,
+      physiotherapist: physiotherapistId || null,
       appointment: appointmentId || null,
       rating,
-      comment: comment || ""
+      comment: comment || "",
     });
 
     await review.save();
 
-    // Update clinic rating
-    await updateClinicRating(clinicId);
+    // Update ratings
+    if (clinicId) {
+      await updateClinicRating(clinicId);
+    }
+    if (physiotherapistId) {
+      await updatePTRating(physiotherapistId);
+    }
 
     // Populate response data
     const populatedReview = await Review.findById(review._id)
-      .populate('reviewer', 'fullName email')
-      .populate('physiotherapist', 'fullName email');
+      .populate("reviewer", "fullName email")
+      .populate("physiotherapist", "fullName email")
+      .populate("clinic", "name address");
 
     res.status(201).json(populatedReview);
   } catch (error) {
@@ -84,7 +131,9 @@ export const updateReview = async (req, res) => {
 
     // Check if user owns this review
     if (review.reviewer.toString() !== userId.toString()) {
-      return res.status(403).json({ error: "Not authorized to update this review" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to update this review" });
     }
 
     const updateData = {};
@@ -92,12 +141,19 @@ export const updateReview = async (req, res) => {
     if (comment !== undefined) updateData.comment = comment;
 
     const updatedReview = await Review.findByIdAndUpdate(reviewId, updateData, {
-      new: true
-    }).populate('reviewer', 'fullName email')
-      .populate('physiotherapist', 'fullName email');
+      new: true,
+    })
+      .populate("reviewer", "fullName email")
+      .populate("physiotherapist", "fullName email")
+      .populate("clinic", "name address");
 
-    // Update clinic rating
-    await updateClinicRating(review.clinic);
+    // Update ratings
+    if (review.clinic) {
+      await updateClinicRating(review.clinic);
+    }
+    if (review.physiotherapist) {
+      await updatePTRating(review.physiotherapist);
+    }
 
     res.json(updatedReview);
   } catch (error) {
@@ -118,14 +174,23 @@ export const deleteReview = async (req, res) => {
 
     // Check if user owns this review
     if (review.reviewer.toString() !== userId.toString()) {
-      return res.status(403).json({ error: "Not authorized to delete this review" });
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this review" });
     }
 
     const clinicId = review.clinic;
+    const physiotherapistId = review.physiotherapist;
+
     await Review.findByIdAndDelete(reviewId);
 
-    // Update clinic rating
-    await updateClinicRating(clinicId);
+    // Update ratings
+    if (clinicId) {
+      await updateClinicRating(clinicId);
+    }
+    if (physiotherapistId) {
+      await updatePTRating(physiotherapistId);
+    }
 
     res.json({ message: "Review deleted successfully" });
   } catch (error) {
@@ -172,5 +237,30 @@ const updateClinicRating = async (clinicId) => {
     });
   } catch (error) {
     console.error("Error updating clinic rating:", error);
+  }
+};
+
+// Helper function to update PT rating
+const updatePTRating = async (physiotherapistId) => {
+  try {
+    const reviews = await Review.find({ physiotherapist: physiotherapistId });
+    
+    if (reviews.length === 0) {
+      await User.findByIdAndUpdate(physiotherapistId, {
+        'ptProfile.ratings.average': 0,
+        'ptProfile.ratings.count': 0
+      });
+      return;
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalRating / reviews.length;
+
+    await User.findByIdAndUpdate(physiotherapistId, {
+      'ptProfile.ratings.average': averageRating,
+      'ptProfile.ratings.count': reviews.length
+    });
+  } catch (error) {
+    console.error("Error updating PT rating:", error);
   }
 };

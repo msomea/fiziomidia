@@ -10,7 +10,6 @@ const reviewSchema = new mongoose.Schema(
     clinic: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Clinic",
-      required: true,
     },
     physiotherapist: {
       type: mongoose.Schema.Types.ObjectId,
@@ -33,5 +32,15 @@ const reviewSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Custom validation: at least one of clinic or physiotherapist must be provided
+reviewSchema.pre('save', function(next) {
+  if (!this.clinic && !this.physiotherapist) {
+    const error = new Error('Either clinic or physiotherapist must be provided');
+    error.name = 'ValidationError';
+    return next(error);
+  }
+  next();
+});
 
 export default mongoose.model("Review", reviewSchema);

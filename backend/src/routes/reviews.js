@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getReviewsByClinic,
+  getReviewsByPhysiotherapist,
   createReview,
   updateReview,
   deleteReview,
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Get reviews for a specific clinic
 router.get("/clinic/:clinicId", getReviewsByClinic);
+
+// Get reviews for a specific physiotherapist
+router.get("/physiotherapist/:physiotherapistId", getReviewsByPhysiotherapist);
 
 // Get current user's reviews
 router.get("/my-reviews", authenticate, getUserReviews);
