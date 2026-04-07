@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
-import API from "../../api/axios";
+import { fetchAppointmentById, updateAppointmentStatus } from "../../api/appointments";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 
 export default function AdminAppointmentDetails() {
   const { id } = useParams();
@@ -24,10 +23,9 @@ export default function AdminAppointmentDetails() {
 
   const fetchDetails = async () => {
     try {
-      const res = await API.get(`${API_URL}/admin/appointments/${id}`);
-      const data = res.data;
+      const data = await fetchAppointmentById(id);
 
-      if (!data.success) throw new Error();
+      if (!data.appointment) throw new Error();
 
       setAppointment(data.appointment);
 
@@ -54,15 +52,7 @@ export default function AdminAppointmentDetails() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const res = await API.put(`${API_URL}/admin/appointments/${id}`, {
-        status: form.status,
-        date: form.date,
-        time: form.time,
-        physiotherapist: form.physiotherapist,
-        adminNotes: form.adminNotes,
-      });
-
-      if (!res.data.success) throw new Error();
+      await updateAppointmentStatus(id, form.status, null, form.date, form.time);
 
       toast.success(t('appointment_updated'));
     } catch (err) {

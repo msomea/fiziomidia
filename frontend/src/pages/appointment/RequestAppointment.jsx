@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { requestAppointment } from "../../api/appointments";
+import { fetchPTById } from "../../api/pts";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
@@ -20,16 +21,16 @@ export default function BookAppointment() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchPt = async () => {
+    const loadPT = async () => {
       try {
-        const res = await API.get(`/pts/${ptId}`);
-        setPt(res.data);
+        const ptData = await fetchPTById(ptId);
+        setPt(ptData);
       } catch (error) {
         console.error(error);
         toast.error(t("failed_load_pt"));
       }
     };
-    fetchPt();
+    loadPT();
   }, [ptId, t]);
 
   const handleSubmit = async (e) => {
@@ -67,7 +68,7 @@ export default function BookAppointment() {
       </div>
     );
   }
-
+console.log(pt)
   return (
     <div className="max-w-lg mx-auto p-6 bg-white text-tufts rounded-lg shadow-md mt-20">
       <h2 className="text-2xl text-caribbean font-semibold mb-4">

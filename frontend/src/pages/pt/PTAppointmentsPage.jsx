@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchAppointments } from "../../api/appointments";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2, X } from "lucide-react";
@@ -19,11 +18,9 @@ export default function PTAppointmentsPage() {
   useEffect(() => {
     if (!user?._id) return;
 
-    const fetchAppointments = async () => {
+    const loadAppointments = async () => {
       try {
-        const { data } = await API.get(
-          `${API_URL}/appointments?ptId=${user._id}`
-        );
+        const data = await fetchAppointments();
         setAppointments(data.appointments);
       } catch (err) {
         toast.error(t("failed_load_appointments"));
@@ -32,7 +29,7 @@ export default function PTAppointmentsPage() {
       }
     };
 
-    fetchAppointments();
+    loadAppointments();
   }, [t, user?._id]);
 
   const filteredAppointments =

@@ -221,7 +221,7 @@ export const PTDashboardProvider = ({ children }) => {
     try {
       await markNotificationAsRead(ptId, notificationId);
       
-      // Update local state to remove the read notification
+      // Update local state to remove read notification (it will be deleted from backend)
       dispatch({ 
         type: actionTypes.UPDATE_NOTIFICATIONS, 
         payload: state.notifications.filter(n => n._id !== notificationId)

@@ -19,8 +19,13 @@ const checkAppointmentConflict = async (
   scheduledAt,
   durationMinutes = 60,
   excludeId = null,
+  hasWorkingHours = true,
 ) => {
   try {
+    if (!hasWorkingHours) {
+      return { hasConflict: false };
+    }
+
     const appointmentStart = new Date(scheduledAt);
     const appointmentEnd = new Date(
       appointmentStart.getTime() + durationMinutes * 60 * 1000,
@@ -125,7 +130,12 @@ const validatePTAvailability = async (ptId, date, time) => {
     );
 
     if (!workingHours) {
-      throw new Error(`Physiotherapist is not available on ${dayOfWeek}`);
+      // If no working hours are configured, allow booking (more user-friendly)
+      // PTs should configure working hours in their profile for proper scheduling
+      console.log(
+        `[INFO] No working hours configured for ${dayOfWeek}, allowing booking`,
+      );
+      return { hasWorkingHours: false, isValid: true };
     }
 
     // Validate time is within working hours
@@ -135,7 +145,7 @@ const validatePTAvailability = async (ptId, date, time) => {
       );
     }
 
-    return true;
+    return { hasWorkingHours: true, isValid: true };
   } catch (error) {
     throw error;
   }
@@ -155,8 +165,9 @@ export const requestAppointment = async (req, res) => {
     const scheduledAt = createEATDateTime(date, time);
 
     // Validate PT availability before creating appointment
+    let availabilityResult;
     try {
-      await validatePTAvailability(pt, date, time);
+      availabilityResult = await validatePTAvailability(pt, date, time);
     } catch (validationError) {
       return res.status(400).json({
         message: "Availability validation failed",
@@ -164,12 +175,14 @@ export const requestAppointment = async (req, res) => {
       });
     }
 
-    // Check for appointment conflicts
+    // Check for appointment conflicts only if PT has working hours
     try {
       const conflictCheck = await checkAppointmentConflict(
         pt,
         scheduledAt,
         durationMinutes,
+        null,
+        availabilityResult.hasWorkingHours,
       );
       if (conflictCheck.hasConflict) {
         return res.status(409).json({
@@ -197,6 +210,53 @@ export const requestAppointment = async (req, res) => {
     });
 
     await appointment.save();
+
+    // Create notification for the PT
+    try {
+      const ptUser = await User.findById(pt);
+      if (ptUser) {
+        // Check if PT has working hours configured
+        const hasWorkingHours = ptUser.ptProfile?.workingHours?.length > 0;
+
+        let notificationMessage = `New appointment request from ${req.user.fullName || "A patient"} for ${date} at ${time}`;
+        let notificationType = "new_appointment";
+        let notificationPriority = "important"; // Default priority for new appointments
+
+        if (!hasWorkingHours) {
+          notificationMessage +=
+            ". ⚠️ Please configure your working hours in your profile setting for better scheduling.";
+          notificationType = "setup_working_hours";
+          notificationPriority = "important"; // Setup reminders are important
+        }
+
+        const notification = {
+          type: notificationType,
+          message: notificationMessage,
+          priority: notificationPriority,
+          relatedId: appointment._id,
+          relatedModel: "Appointment",
+          read: false,
+          createdAt: new Date(),
+        };
+
+        // Add notification to PT's notifications array
+        ptUser.notifications.push(notification);
+        await ptUser.save();
+
+        console.log(
+          `📱 Notification sent to PT ${ptUser.fullName} for new appointment (Priority: ${notificationPriority})`,
+        );
+
+        if (!hasWorkingHours) {
+          console.log(
+            `⚠️ PT ${ptUser.fullName} has no working hours configured - reminder sent`,
+          );
+        }
+      }
+    } catch (notificationError) {
+      console.error("Failed to create PT notification:", notificationError);
+      // Don't fail the appointment creation if notification fails
+    }
 
     res.status(201).json({
       message: "Appointment booked successfully",
@@ -285,12 +345,18 @@ export const updateAppointmentStatus = async (req, res) => {
       ["pending", "accepted"].includes(status)
     ) {
       const finalDuration = durationMinutes || appt.durationMinutes || 60;
+
+      // Check if PT has working hours configured
+      const ptUser = await User.findById(appt.pt);
+      const hasWorkingHours = ptUser?.ptProfile?.workingHours?.length > 0;
+
       try {
         const conflictCheck = await checkAppointmentConflict(
           appt.pt.toString(),
           newScheduledAt,
           finalDuration,
           id, // Exclude current appointment from conflict check
+          hasWorkingHours,
         );
         if (conflictCheck.hasConflict) {
           return res.status(409).json({
@@ -315,6 +381,88 @@ export const updateAppointmentStatus = async (req, res) => {
     }
 
     await appt.save();
+
+    // Create notification for the PT when updating appointments (remind about working hours if needed)
+    try {
+      const ptUser = await User.findById(appt.pt);
+      if (ptUser) {
+        const hasWorkingHours = ptUser.ptProfile?.workingHours?.length > 0;
+
+        if (!hasWorkingHours && (scheduledAt || (date && time))) {
+          const setupNotification = {
+            type: "setup_working_hours",
+            message:
+              "⚠️ You updated an appointment but still have no working hours configured. Please set your working hours in your profile for better scheduling.",
+            priority: "important",
+            relatedId: appt._id,
+            relatedModel: "Appointment",
+            read: false,
+            createdAt: new Date(),
+          };
+
+          ptUser.notifications.push(setupNotification);
+          await ptUser.save();
+
+          console.log(
+            `⚠️ Working hours reminder sent to PT ${ptUser.fullName}`,
+          );
+        }
+      }
+    } catch (ptNotificationError) {
+      console.error(
+        "Failed to create PT reminder notification:",
+        ptNotificationError,
+      );
+    }
+
+    // Create notification for the patient when PT updates appointment status
+    try {
+      const patientUser = await User.findById(appt.requester);
+      if (patientUser) {
+        let notificationMessage = "";
+
+        switch (status) {
+          case "accepted":
+            notificationMessage = `Your appointment for ${new Date(appt.scheduledAt).toLocaleDateString()} at ${new Date(appt.scheduledAt).toTimeString().slice(0, 5)} has been accepted`;
+            break;
+          case "declined":
+            notificationMessage = `Your appointment for ${new Date(appt.scheduledAt).toLocaleDateString()} at ${new Date(appt.scheduledAt).toTimeString().slice(0, 5)} has been declined`;
+            break;
+          case "cancelled":
+            notificationMessage = `Your appointment for ${new Date(appt.scheduledAt).toLocaleDateString()} at ${new Date(appt.scheduledAt).toTimeString().slice(0, 5)} has been cancelled`;
+            break;
+          case "completed":
+            notificationMessage = `Your appointment for ${new Date(appt.scheduledAt).toLocaleDateString()} has been completed`;
+            break;
+          default:
+            notificationMessage = `Your appointment status has been updated to ${status}`;
+        }
+
+        const notification = {
+          type: "appointment_update",
+          message: notificationMessage,
+          priority: "update", // Appointment status updates are important
+          relatedId: appt._id,
+          relatedModel: "Appointment",
+          read: false,
+          createdAt: new Date(),
+        };
+
+        patientUser.notifications.push(notification);
+        await patientUser.save();
+
+        console.log(
+          `📱 Notification sent to patient ${patientUser.fullName} for appointment ${status} (Priority: update)`,
+        );
+      }
+    } catch (notificationError) {
+      console.error(
+        "Failed to create patient notification:",
+        notificationError,
+      );
+      // Don't fail the status update if notification fails
+    }
+
     res.json({ appointment: appt });
   } catch (err) {
     console.error("Error updating appointment status:", err);

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import API from "../../api/axios";
+import { updateAppointmentStatus, deleteAppointment as deleteAppointmentApi } from "../../api/appointments";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { Loader2 } from "lucide-react";
-import { API_URL } from "../../config/constants";
 import CollapsibleSection from "./CollapsibleSection";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
@@ -44,11 +43,11 @@ export default function AdminAppointments() {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await API.put(`${API_URL}/admin/appointments/${id}`, { status: newStatus });
+      await updateAppointmentStatus(id, newStatus);
       toast.success(t("status_updated"));
       loadAppointments();
-    } catch {
-      toast.error(t("update_failed"));
+    } catch (error) {
+      toast.error(t("failed_update_status"));
     }
   };
 
@@ -57,11 +56,11 @@ export default function AdminAppointments() {
     if (!confirmDelete) return;
 
     try {
-      await API.delete(`${API_URL}/admin/appointments/${id}`);
+      await deleteAppointmentApi(id);
       toast.success(t("appointment_deleted"));
       loadAppointments();
-    } catch {
-      toast.error(t("delete_failed"));
+    } catch (error) {
+      toast.error(t("failed_delete_appointment"));
     }
   };
 

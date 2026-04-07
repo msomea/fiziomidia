@@ -19,6 +19,7 @@ import {
   MemberAppointments,
   MemberSavedPTs,
 } from "../../components/profiles";
+import NotificationSection from "../../components/dashboard/NotificationSection";
 import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
 
 import avatar from "../../assets/avatar.jpg";
@@ -191,86 +192,11 @@ function MemberDashboardContent() {
 
         {/* Right Sidebar */}
         <div className="space-y-6">          
-          <div className="bg-white shadow-sm rounded-2xl p-5">
-            <h2 className="text-lg font-semibold text-black mb-3 flex items-center justify-between">
-              {t('notifications')}
-              {notifications && notifications.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {notifications.length}
-                </span>
-              )}
-            </h2>
-            
-            {notifications && notifications.length > 0 ? (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {notifications.slice(0, 5).map((notification) => (
-                  <div 
-                    key={notification._id}
-                    className={`p-3 rounded-lg border-l-4 cursor-pointer hover:opacity-80 transition-opacity ${
-                      notification.type === 'clinic_request_accepted' 
-                        ? 'border-green-500 bg-green-50' 
-                        : notification.type === 'clinic_request_rejected'
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-blue-500 bg-blue-50'
-                    }`}
-                    onClick={() => markNotificationRead(memberData._id, notification._id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0">
-                        {notification.type === 'clinic_request_accepted' ? (
-                          <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010-1.414l-8 8a1 1 0 00-1.414 1.414l8-8a1 1 0 001.414-1.414z" clipRule="evenodd"/>
-                            </svg>
-                          </div>
-                        ) : notification.type === 'clinic_request_rejected' ? (
-                          <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414-1.414l10 10a1 1 0 001.414 1.414l-10-10a1 1 0 01-1.414-1.414z" clipRule="evenodd"/>
-                            </svg>
-                          </div>
-                        ) : (
-                          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-3-8a3 3 0 00-3 3v6a3 3 0 003 3h6a3 3 0 003-3V5a3 3 0 00-3-3h-6z" clipRule="evenodd"/>
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-800 font-medium">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(notification.createdAt).toLocaleDateString()} {new Date(notification.createdAt).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {notifications.length > 5 && (
-                  <button
-                    onClick={() => {/* TODO: Navigate to full notifications page */}}
-                    className="w-full text-center text-sm text-caribbean hover:text-caribbean/80 py-2"
-                  >
-                    {t('view_all_notifications')}
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 2a6 6 0 00-6 6v6a6 6 0 016 6v6a6 6 0 01-6 6v6a6 6 0 0016 6v-6a6 6 0 00-6-6z"/>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 10v0"/>
-                  </svg>
-                </div>
-                <p className="text-gray-500 text-sm">{t('no_notifications')}</p>
-              </div>
-            )}
-          </div>
+          <NotificationSection 
+            notifications={notifications}
+            markNotificationRead={markNotificationRead}
+            userId={memberData._id}
+          />
         </div>
       </div>
 

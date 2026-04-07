@@ -267,6 +267,11 @@ const UserSchema = new Schema({
     {
       type: { type: String },
       message: String,
+      priority: {
+        type: String,
+        enum: ["critical", "important", "update", "information"],
+        default: "information",
+      },
       read: { type: Boolean, default: false },
       createdAt: { type: Date, default: Date.now },
     },

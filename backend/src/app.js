@@ -30,6 +30,7 @@ import locationRoutes from "./routes/location.js";
 import sponsoredProduct from "./routes/sponsoredProduct.js";
 import clinicRoutes from "./routes/clinics.js";
 import reviewRoutes from "./routes/reviews.js";
+import notificationRoutes from "./routes/notifications.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,6 +133,7 @@ app.use("/api/locations", locationRoutes);
 app.use("/api/sponsored-products", sponsoredProduct);
 app.use("/api/clinics", clinicRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 /* ---------------------------------- */
 /* Health Check                        */
