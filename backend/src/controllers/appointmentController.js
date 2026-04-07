@@ -2,18 +2,195 @@ import Appointment from "../models/Appointment.js";
 import { CacheService } from "../utils/redis.js";
 import Clinic from "../models/Clinic.js";
 import mongoose from "mongoose";
+import User from "../models/User.js";
+
+// Helper function to create datetime in East Africa Time
+const createEATDateTime = (date, time) => {
+  const dateTimeString = `${date}T${time}:00`;
+  const utcDate = new Date(dateTimeString);
+  // Convert to East Africa Time (UTC+3)
+  const eatDate = new Date(utcDate.getTime() + 3 * 60 * 60 * 1000);
+  return eatDate;
+};
+
+// Check for conflicting appointments
+const checkAppointmentConflict = async (
+  ptId,
+  scheduledAt,
+  durationMinutes = 60,
+  excludeId = null,
+) => {
+  try {
+    const appointmentStart = new Date(scheduledAt);
+    const appointmentEnd = new Date(
+      appointmentStart.getTime() + durationMinutes * 60 * 1000,
+    );
+
+    // Build query to find overlapping appointments
+    const conflictQuery = {
+      pt: new mongoose.Types.ObjectId(ptId),
+      status: { $in: ["pending", "accepted"] }, // Only check active appointments
+      scheduledAt: {
+        $gte: new Date(appointmentStart.toDateString()), // Start from beginning of day
+        $lt: new Date(appointmentEnd.toDateString() + "T23:59:59.999Z"), // End of day
+      },
+    };
+
+    // Exclude current appointment if updating
+    if (excludeId) {
+      conflictQuery._id = { $ne: new mongoose.Types.ObjectId(excludeId) };
+    }
+
+    const conflictingAppointments = await Appointment.find(conflictQuery);
+
+    for (const conflict of conflictingAppointments) {
+      const conflictStart = new Date(conflict.scheduledAt);
+      const conflictEnd = new Date(
+        conflictStart.getTime() + conflict.durationMinutes * 60 * 1000,
+      );
+
+      // Check for time overlap
+      // Case 1: New appointment starts during existing appointment
+      if (appointmentStart >= conflictStart && appointmentStart < conflictEnd) {
+        return {
+          hasConflict: true,
+          conflict,
+          reason: "Time slot already booked",
+          conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
+        };
+      }
+
+      // Case 2: New appointment ends during existing appointment
+      if (appointmentEnd > conflictStart && appointmentEnd <= conflictEnd) {
+        return {
+          hasConflict: true,
+          conflict,
+          reason: "Time slot overlaps with existing appointment",
+          conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
+        };
+      }
+
+      // Case 3: New appointment completely contains existing appointment
+      if (appointmentStart <= conflictStart && appointmentEnd >= conflictEnd) {
+        return {
+          hasConflict: true,
+          conflict,
+          reason: "Time slot conflicts with existing appointment",
+          conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
+        };
+      }
+    }
+
+    return { hasConflict: false };
+  } catch (error) {
+    throw new Error(`Conflict check failed: ${error.message}`);
+  }
+};
+
+// Validate PT availability for requested date and time
+const validatePTAvailability = async (ptId, date, time) => {
+  try {
+    const pt = await User.findById(ptId);
+    if (!pt || pt.role !== "physiotherapist") {
+      throw new Error("Physiotherapist not found");
+    }
+
+    // Check if PT is accepting new patients
+    if (!pt.ptProfile?.availability?.isAcceptingNewPatients) {
+      throw new Error("Physiotherapist is not accepting new patients");
+    }
+
+    // Check if next available date is set and in the future
+    if (pt.ptProfile?.availability?.nextAvailableDate) {
+      const nextAvailable = new Date(
+        pt.ptProfile.availability.nextAvailableDate,
+      );
+      const requestedDate = new Date(date);
+      if (requestedDate < nextAvailable) {
+        throw new Error(
+          `Physiotherapist is not available until ${nextAvailable.toDateString()}`,
+        );
+      }
+    }
+
+    // Check working hours for the requested day (use EAT timezone)
+    const scheduledDateTime = createEATDateTime(date, time);
+    const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
+      weekday: "long",
+      timeZone: "Africa/Dar_es_Salaam",
+    });
+
+    const workingHours = pt.ptProfile?.workingHours?.find(
+      (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable,
+    );
+
+    if (!workingHours) {
+      throw new Error(`Physiotherapist is not available on ${dayOfWeek}`);
+    }
+
+    // Validate time is within working hours
+    if (time < workingHours.from || time > workingHours.to) {
+      throw new Error(
+        `Requested time ${time} is outside working hours (${workingHours.from} - ${workingHours.to})`,
+      );
+    }
+
+    return true;
+  } catch (error) {
+    throw error;
+  }
+};
 
 // Request a new appointment
 export const requestAppointment = async (req, res) => {
   try {
-    const { pt, date, time, notes } = req.body; // pt = selected PT ID
+    const { pt, date, time, notes, durationMinutes = 60 } = req.body; // pt = selected PT ID
     const requesterId = req.user._id; // get logged-in member
 
     if (!pt) return res.status(400).json({ message: "PT is required" });
+    if (!date) return res.status(400).json({ message: "Date is required" });
+    if (!time) return res.status(400).json({ message: "Time is required" });
+
+    // Create scheduledAt datetime in East Africa Time
+    const scheduledAt = createEATDateTime(date, time);
+
+    // Validate PT availability before creating appointment
+    try {
+      await validatePTAvailability(pt, date, time);
+    } catch (validationError) {
+      return res.status(400).json({
+        message: "Availability validation failed",
+        error: validationError.message,
+      });
+    }
+
+    // Check for appointment conflicts
+    try {
+      const conflictCheck = await checkAppointmentConflict(
+        pt,
+        scheduledAt,
+        durationMinutes,
+      );
+      if (conflictCheck.hasConflict) {
+        return res.status(409).json({
+          message: "Appointment conflict detected",
+          error: `${conflictCheck.reason}. Conflicting time: ${conflictCheck.conflictTime}`,
+          conflict: conflictCheck.conflict,
+        });
+      }
+    } catch (conflictError) {
+      return res.status(500).json({
+        message: "Conflict check failed",
+        error: conflictError.message,
+      });
+    }
 
     const appointment = new Appointment({
       requester: new mongoose.Types.ObjectId(requesterId),
       pt: new mongoose.Types.ObjectId(pt),
+      scheduledAt: scheduledAt,
+      durationMinutes: durationMinutes,
+      // Keep legacy fields for backward compatibility
       scheduledDate: date,
       scheduledTime: time,
       notes,
@@ -73,7 +250,7 @@ export const getAppointments = async (req, res) => {
 export const updateAppointmentStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, scheduledAt } = req.body; // <- change here
+    const { status, scheduledAt, date, time, durationMinutes } = req.body;
     const appt = await Appointment.findById(id);
     if (!appt) return res.status(404).json({ error: "Not found" });
 
@@ -92,9 +269,50 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(400).json({ error: "Invalid status value" });
     }
 
-    appt.status = status;
+    // Handle scheduledAt updates (support both new format and legacy)
+    let newScheduledAt = appt.scheduledAt;
+    if (scheduledAt) {
+      newScheduledAt = new Date(scheduledAt);
+    } else if (date && time) {
+      newScheduledAt = createEATDateTime(date, time);
+      appt.scheduledDate = date;
+      appt.scheduledTime = time;
+    }
 
-    if (scheduledAt) appt.scheduledAt = scheduledAt;
+    // Check for conflicts if updating time (only for accepted/pending appointments)
+    if (
+      (scheduledAt || (date && time)) &&
+      ["pending", "accepted"].includes(status)
+    ) {
+      const finalDuration = durationMinutes || appt.durationMinutes || 60;
+      try {
+        const conflictCheck = await checkAppointmentConflict(
+          appt.pt.toString(),
+          newScheduledAt,
+          finalDuration,
+          id, // Exclude current appointment from conflict check
+        );
+        if (conflictCheck.hasConflict) {
+          return res.status(409).json({
+            message: "Appointment conflict detected",
+            error: `${conflictCheck.reason}. Conflicting time: ${conflictCheck.conflictTime}`,
+            conflict: conflictCheck.conflict,
+          });
+        }
+      } catch (conflictError) {
+        return res.status(500).json({
+          message: "Conflict check failed",
+          error: conflictError.message,
+        });
+      }
+    }
+
+    appt.status = status;
+    appt.scheduledAt = newScheduledAt;
+
+    if (durationMinutes) {
+      appt.durationMinutes = durationMinutes;
+    }
 
     await appt.save();
     res.json({ appointment: appt });

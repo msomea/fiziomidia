@@ -102,7 +102,7 @@ export default function PTAppointmentsPage() {
             </div>
 
             <p className="text-sm text-gray-500 mt-1">
-              {dayjs(appt.scheduledAt).format("DD MMM YYYY HH:mm")}
+              {dayjs(appt.scheduledAt || `${appt.scheduledDate}T${appt.scheduledTime}`).format("DD MMM YYYY HH:mm")}
             </p>
 
             <p className="text-sm text-gray-600 mt-1">
@@ -139,7 +139,7 @@ export default function PTAppointmentsPage() {
               <tr key={appt._id} className="text-tufts">
                 <td>{appt.requester?.fullName}</td>
                 <td>
-                  {dayjs(appt.scheduledAt).format(
+                  {dayjs(appt.scheduledAt || `${appt.scheduledDate}T${appt.scheduledTime}`).format(
                     "DD/MM/YYYY HH:mm"
                   )}
                 </td>

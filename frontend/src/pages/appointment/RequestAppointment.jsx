@@ -1,7 +1,7 @@
 // src/pages/appointments/BookAppointment.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
+import { requestAppointment } from "../../api/appointments";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
@@ -41,9 +41,8 @@ export default function BookAppointment() {
 
     setLoading(true);
     try {
-      await API.post("/appointments", {
+      await requestAppointment({
         pt: ptId,
-        member: user._id,
         date,
         time,
         notes,

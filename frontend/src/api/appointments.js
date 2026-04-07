@@ -14,8 +14,21 @@ export const fetchAppointments = async (role) => {
 };
 
 // Update appointment status
-export const updateAppointmentStatus = async (id, action, scheduledAt) => {
-  const res = await API.put(`${API_URL}/appointments/${id}`, { action, scheduledAt });
+export const updateAppointmentStatus = async (
+  id,
+  status,
+  scheduledAt,
+  date,
+  time,
+  durationMinutes,
+) => {
+  const res = await API.patch(`${API_URL}/appointments/${id}/status`, {
+    status,
+    scheduledAt,
+    date,
+    time,
+    durationMinutes,
+  });
   return res.data;
 };
 

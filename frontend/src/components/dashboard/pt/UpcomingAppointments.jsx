@@ -1,8 +1,7 @@
-import { use, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-import API from "../../../api/axios";
-import { API_URL } from "../../../config/constants";
+import { updateAppointmentStatus } from "../../../api/appointments";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 
@@ -33,9 +32,7 @@ export default function UpcomingAppointments({ appointments, viewMore }) {
     try {
       setUpdatingId(id);
 
-      await API.patch(`${API_URL}/appointments/${id}/status`, {
-        status: newStatus,
-      });
+      await updateAppointmentStatus(id, newStatus);
 
       // Optimistic update
       setLocalAppointments((prev) =>
@@ -84,7 +81,7 @@ export default function UpcomingAppointments({ appointments, viewMore }) {
                 <td>{appt.requester?.fullName}</td>
 
                 <td>
-                  {dayjs(appt.scheduledAt).format("ddd, DD/MM/YYYY")}
+                  {dayjs(appt.scheduledAt || appt.scheduledDate).format("ddd, DD/MM/YYYY")}
                 </td>
 
                 <td>{appt.clinic?.name}</td>
