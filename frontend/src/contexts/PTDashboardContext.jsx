@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import API from '../api/axios';
-import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
 import { API_URL } from '../config/constants';
-import toast from 'react-hot-toast';
+import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
 import { fetchPromotions } from '../api/promotions';
+import { fetchPTDashboardData, fetchPTDashboardStats, fetchPTById } from '../api/pts';
 import dayjs from 'dayjs';
+import toast from 'react-hot-toast';
 
 // Initial state
 const initialState = {
@@ -81,20 +82,17 @@ export const PTDashboardProvider = ({ children }) => {
   const [state, dispatch] = useReducer(ptDashboardReducer, initialState);
 
   // Fetch all PT dashboard data at once
-  const fetchPTDashboardData = useCallback(async (ptId) => {
+  const fetchDashboardData = useCallback(async (ptId) => {
     try {
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       dispatch({ type: actionTypes.CLEAR_ERROR });
 
-      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard`);
+      let dashboardData = await fetchPTDashboardData(ptId);
       
-      let dashboardData = response.data;
-      
-      // Calculate daysLeft for promotion if it exists and is active
+      // Use backend-calculated days left, no need to recalculate
       if (dashboardData.promotion && dashboardData.promotion.status === 'active' && dashboardData.promotion.endAt) {
-        const endDate = dayjs(dashboardData.promotion.endAt);
-        const today = dayjs();
-        const daysLeft = endDate.diff(today, 'day');
+        // Use the days left from stats if available, otherwise calculate as fallback
+        const daysLeft = dashboardData.stats?.promotionDaysLeft || 0;
         
         dashboardData = {
           ...dashboardData,
@@ -135,8 +133,8 @@ export const PTDashboardProvider = ({ children }) => {
   // Refresh specific data sections
   const refreshPTProfile = useCallback(async (ptId) => {
     try {
-      const response = await API.get(`${API_URL}/pts/${ptId}`);
-      dispatch({ type: actionTypes.UPDATE_PT_PROFILE, payload: response.data });
+      const ptProfile = await fetchPTById(ptId);
+      dispatch({ type: actionTypes.UPDATE_PT_PROFILE, payload: ptProfile });
     } catch (error) {
       console.error('PT profile refresh error:', error);
       toast.error('Failed to refresh PT profile');
@@ -145,6 +143,7 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshAppointments = useCallback(async (ptId, limit = 3) => {
     try {
+      // TODO: Move to centralized API when appointments API is created
       const response = await API.get(`${API_URL}/appointments?ptId=${ptId}&limit=${limit}`);
       dispatch({ type: actionTypes.UPDATE_APPOINTMENTS, payload: response.data.appointments || [] });
     } catch (error) {
@@ -155,6 +154,7 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshForumPosts = useCallback(async (ptId, limit = 3) => {
     try {
+      // TODO: Move to centralized API when forum API is created
       const response = await API.get(`${API_URL}/forum?ptId=${ptId}&limit=${limit}`);
       dispatch({ type: actionTypes.UPDATE_FORUM_POSTS, payload: response.data.posts || [] });
     } catch (error) {
@@ -165,17 +165,23 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshPromotion = useCallback(async (ptId) => {
     try {
+      // TODO: Move to centralized API when promotion API is updated
       const response = await API.get(`${API_URL}/promotions/pt`, { 
         params: { ptId }
       });
       
       let promotionData = response.data || null;
       
-      // Calculate daysLeft if promotion exists and is active
+      // Use backend-calculated days left, no need to recalculate
       if (promotionData && promotionData.status === 'active' && promotionData.endAt) {
-        const endDate = dayjs(promotionData.endAt);
-        const today = dayjs();
-        const daysLeft = endDate.diff(today, 'day');
+        // For individual promotion refresh, we need to calculate since we don't have stats
+        // But use a more reliable method
+        const endDate = new Date(promotionData.endAt);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day for consistent calculation
+        endDate.setHours(0, 0, 0, 0); // Set to start of day for consistent calculation
+        const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+        console.log("days left in refresh promotion:", daysLeft)
         
         promotionData = {
           ...promotionData,
@@ -192,8 +198,9 @@ export const PTDashboardProvider = ({ children }) => {
 
   const refreshStats = useCallback(async (ptId) => {
     try {
-      const response = await API.get(`${API_URL}/pts/${ptId}/dashboard-stats`);
-      dispatch({ type: actionTypes.UPDATE_STATS, payload: response.data || {} });
+      const stats = await fetchPTDashboardStats(ptId);
+      dispatch({ type: actionTypes.UPDATE_STATS, payload: stats || {} });
+      console.log("Stat is dash context", stats)
     } catch (error) {
       console.error('Stats refresh error:', error);
       toast.error('Failed to refresh stats');
@@ -235,7 +242,7 @@ export const PTDashboardProvider = ({ children }) => {
   // Context value
   const value = {
     ...state,
-    fetchPTDashboardData,
+    fetchPTDashboardData: fetchDashboardData,
     refreshPTProfile,
     refreshAppointments,
     refreshForumPosts,

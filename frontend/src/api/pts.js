@@ -18,3 +18,15 @@ export const updatePTProfile = async (id, data) => {
   const res = await API.put(`${API_URL}/pts/${id}`, data);
   return res.data;
 };
+
+// Fetch PT dashboard data
+export const fetchPTDashboardData = async (ptId) => {
+  const res = await API.get(`${API_URL}/pts/${ptId}/dashboard`);
+  return res.data;
+};
+
+// Fetch PT dashboard stats
+export const fetchPTDashboardStats = async (ptId) => {
+  const res = await API.get(`${API_URL}/pts/${ptId}/dashboard-stats`);
+  return res.data;
+};

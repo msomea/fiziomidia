@@ -134,7 +134,10 @@ export const getPTPromotion = async (req, res) => {
 
       const endDate = promotion.endAt;
       const today = dayjs();
-      const daysLeft = dayjs(endDate).diff(today, "day");
+      // Use the same calculation as dashboard controller for consistency
+      const daysLeft = Math.ceil(
+        (new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24),
+      );
 
       res.json({
         active: true,

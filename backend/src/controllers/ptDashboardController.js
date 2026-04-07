@@ -4,6 +4,7 @@ import Post from "../models/Post.js";
 import PTPromotion from "../models/PTPromotion.js";
 import Clinic from "../models/Clinic.js";
 import asyncHandler from "express-async-handler";
+import dayjs from "dayjs";
 
 // ============================================
 // CONSOLIDATED PT DASHBOARD API
@@ -13,41 +14,40 @@ export const getPTDashboardData = async (req, res) => {
     const { id: ptId } = req.params;
     const { limit = 3 } = req.query;
 
-    // Build all queries in parallel for better performance
     const [ptProfile, clinics, appointments, forumPosts, promotion, stats] =
       await Promise.all([
-        // PT Profile query
+        // PT Profile
         User.findById(ptId).select("-passwordHash -refreshTokens"),
 
-        // Clinics query - NEW
+        // Clinics
         Clinic.find({ ownerUserId: ptId })
           .populate("ownerUserId", "fullName email phone")
           .populate("physiotherapists", "fullName email phone"),
 
-        // Appointments query
+        // Appointments
         Appointment.find({ pt: ptId })
           .populate("requester", "fullName email phone")
           .populate("clinic", "name location address")
           .sort({ appointmentDate: 1 })
           .limit(parseInt(limit)),
 
-        // Forum Posts query
+        // Forum Posts
         Post.find({ createdBy: ptId })
           .populate("sub", "title slug")
           .sort({ createdAt: -1 })
           .limit(parseInt(limit)),
 
-        // Promotion query
+        // Latest promotion (any status)
         PTPromotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
 
-        // Dashboard Stats
+        // Stats
         getPTDashboardStats(ptId),
       ]);
 
     return res.json({
       success: true,
       ptProfile,
-      clinics, // NEW - Add populated clinics
+      clinics,
       appointments,
       forumPosts,
       promotion,
@@ -57,49 +57,53 @@ export const getPTDashboardData = async (req, res) => {
 
   } catch (err) {
     console.error("PT Dashboard data fetch error:", err);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Failed to fetch PT dashboard data" 
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch PT dashboard data",
     });
   }
 };
 
-// Helper function to get PT dashboard stats
+// ============================================
+// Helper: Dashboard Stats
+// ============================================
 async function getPTDashboardStats(ptId) {
   try {
     const [
       totalAppointments,
       pendingRequests,
       totalForumPosts,
-      activePromotion
+      activePromotion,
     ] = await Promise.all([
       // Total appointments
       Appointment.countDocuments({ pt: ptId }),
 
-      // Pending appointment requests
-      Appointment.countDocuments({ 
-        pt: ptId, 
-        status: "pending" 
+      // Pending appointments
+      Appointment.countDocuments({
+        pt: ptId,
+        status: "pending",
       }),
 
-      // Total forum posts
-      Post.countDocuments({ createdBy: ptId }),
+      // Forum posts
+      Post.countDocuments({ author: ptId }),
 
-      // Active promotion for days left calculation
-      PTPromotion.findOne({ 
+      // Active promotion
+      PTPromotion.findOne({
         pt: ptId,
         status: "active",
-        endAt: { $gt: new Date() }
-      }).sort({ endAt: 1 })
+        endAt: { $gt: new Date() },
+      }).sort({ endAt: 1 }),
     ]);
 
-    // Calculate promotion days left
+    // Promotion Days Left using Day.js
     let promotionDaysLeft = 0;
-    if (activePromotion && activePromotion.endAt) {
-      const today = new Date();
-      const endDate = new Date(activePromotion.endAt);
-      promotionDaysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-      promotionDaysLeft = Math.max(0, promotionDaysLeft);
+
+    if (activePromotion?.endAt) {
+      const today = dayjs().startOf("day"); // normalize to midnight
+      const endDate = dayjs(activePromotion.endAt).startOf("day");
+
+      // Difference in calendar days
+      promotionDaysLeft = Math.max(0, endDate.diff(today, "day"));
     }
 
     return {
@@ -107,17 +111,20 @@ async function getPTDashboardStats(ptId) {
       pendingRequests,
       totalForumPosts,
       promotionDaysLeft,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   } catch (error) {
     console.error("Error getting PT dashboard stats:", error);
+
     return {
       totalAppointments: 0,
       pendingRequests: 0,
       totalForumPosts: 0,
       promotionDaysLeft: 0,
       lastUpdated: new Date(),
-      error: "Failed to load some stats"
+      error: "Failed to load some stats",
     };
   }
 }
+
+export { getPTDashboardStats };

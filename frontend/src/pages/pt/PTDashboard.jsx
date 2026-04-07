@@ -101,7 +101,8 @@ function PTDashboardContent() {
       </div>
     );
   }
-console.log("Notification in PTDashboard", notifications)
+
+  
   return (
     <div className="relative min-h-screen bg-alice mt-10 text-black p-4 md:p-6">
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">

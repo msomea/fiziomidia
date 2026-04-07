@@ -135,38 +135,3 @@ export const getPTsWithActivePromotions = async (req, res) => {
   }
 };
 
-// GET /api/pts/:id/dashboard-stats
-export const getPTDashboardStats = async (req, res) => {
-  try {
-    const ptId = req.params.id;
-    if (!ptId) return res.status(400).json({ error: "PT ID required" });
-
-    // Initialize stats
-    let totalAppointments = await Appointment.countDocuments({ pt: ptId });
-    let pendingRequests = await Appointment.countDocuments({ pt: ptId, status: "pending" });
-    let totalForumPosts = await Post.countDocuments({ author: ptId });
-    let promotionDaysLeft = 0;
-
-    // Find active promotion (can be null)
-    const activePromotion = await PTPromotion.findOne({ pt: ptId, status: "active" });
-
-    if (activePromotion && activePromotion.endAt) {
-      const endDate = dayjs(activePromotion.endAt);
-      const today = dayjs();
-      promotionDaysLeft = endDate.diff(today, "day");
-    }
-
-    
-    res.json({
-      totalAppointments,
-      pendingRequests,
-      totalForumPosts,
-      promotionDaysLeft,
-    });
-
-  } catch (err) {
-    console.error("Dashboard stats error:", err);
-    res.status(500).json({ error: "❌ Failed to fetch dashboard stats" });
-  }
-};
-

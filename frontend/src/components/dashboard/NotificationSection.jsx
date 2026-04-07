@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
  */
 export default function NotificationSection({ notifications, markNotificationRead, userId }) {
   const { t } = useTranslation();
-  console.log("Notifications in NotificationSection", notifications);
+
 
   // Notification level configurations
   const notificationLevels = {
