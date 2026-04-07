@@ -81,7 +81,7 @@ const CreatePost = () => {
       formData.append("sub", selectedTopic._id);
 
       if (image) {
-        formData.append("image", image);
+        formData.append("post", image);
       }
 
       await API.post(`${API_URL}/forum/posts`, formData);

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import API from '../api/axios';
+import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
 import { API_URL } from '../config/constants';
 import toast from 'react-hot-toast';
 
@@ -8,6 +9,7 @@ const initialState = {
   memberProfile: null,
   appointments: [],
   savedPTs: [],
+  notifications: [],
   stats: {
     totalAppointments: 0,
     upcomingAppointments: 0,
@@ -28,6 +30,7 @@ const actionTypes = {
   UPDATE_APPOINTMENTS: 'UPDATE_APPOINTMENTS',
   UPDATE_SAVED_PTS: 'UPDATE_SAVED_PTS',
   UPDATE_STATS: 'UPDATE_STATS',
+  UPDATE_NOTIFICATIONS: 'UPDATE_NOTIFICATIONS',
   CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
@@ -54,6 +57,8 @@ const memberDashboardReducer = (state, action) => {
       return { ...state, savedPTs: action.payload };
     case actionTypes.UPDATE_STATS:
       return { ...state, stats: action.payload };
+    case actionTypes.UPDATE_NOTIFICATIONS:
+      return { ...state, notifications: action.payload };
     case actionTypes.CLEAR_ERROR:
       return { ...state, error: null };
     default:
@@ -80,6 +85,18 @@ export const MemberDashboardProvider = ({ children }) => {
         type: actionTypes.SET_DASHBOARD_DATA,
         payload: response.data,
       });
+
+      // Also fetch notifications separately
+      try {
+        const notifications = await getUserNotifications(response.data.memberProfile?._id);
+        dispatch({ 
+          type: actionTypes.UPDATE_NOTIFICATIONS, 
+          payload: notifications || [] 
+        });
+      } catch (notifError) {
+        console.error('Notifications fetch error:', notifError);
+        // Don't show toast for this, as it's not critical
+      }
 
       return response.data;
     } catch (error) {
@@ -147,6 +164,33 @@ export const MemberDashboardProvider = ({ children }) => {
     dispatch({ type: actionTypes.CLEAR_ERROR });
   };
 
+  // Refresh notifications
+  const refreshNotifications = useCallback(async (memberId) => {
+    try {
+      const notifications = await getUserNotifications(memberId);
+      dispatch({ type: actionTypes.UPDATE_NOTIFICATIONS, payload: notifications || [] });
+    } catch (error) {
+      console.error('Notifications refresh error:', error);
+      toast.error('Failed to refresh notifications');
+    }
+  }, []);
+
+  // Mark notification as read
+  const markNotificationRead = useCallback(async (memberId, notificationId) => {
+    try {
+      await markNotificationAsRead(memberId, notificationId);
+      
+      // Update local state to remove the read notification
+      dispatch({ 
+        type: actionTypes.UPDATE_NOTIFICATIONS, 
+        payload: state.notifications.filter(n => n._id !== notificationId)
+      });
+    } catch (error) {
+      console.error('Mark notification as read error:', error);
+      toast.error('Failed to mark notification as read');
+    }
+  }, [state.notifications]);
+
   // Context value
   const value = {
     ...state,
@@ -155,6 +199,8 @@ export const MemberDashboardProvider = ({ children }) => {
     refreshAppointments,
     refreshSavedPTs,
     refreshStats,
+    refreshNotifications,
+    markNotificationRead,
     clearError,
   };
 

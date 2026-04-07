@@ -47,7 +47,7 @@ const DefaultLanguageSection = () => {
   };
 
   return (
-    <div className="card bg-white shadow-md p-6 mt-6">
+    <div className="card bg-white shadow-md p-6">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}

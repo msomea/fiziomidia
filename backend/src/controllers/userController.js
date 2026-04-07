@@ -398,3 +398,100 @@ export const updateLanguage = async (req, res) => {
   }
 };
 
+// Search physiotherapists
+export const searchPhysiotherapists = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length < 2) {
+      return res.json([]);
+    }
+
+    const users = await User.find({
+      role: "physiotherapist",
+      isActive: true,
+      isBanned: false,
+      fullName: { 
+        $regex: q.trim(), 
+        $options: "i" 
+      }
+    })
+    .select("fullName email profileImageUrl ptProfile.speciality")
+    .limit(10)
+    .sort({ fullName: 1 });
+
+    res.json(users);
+  } catch (error) {
+    console.error("Error searching physiotherapists:", error);
+    res.status(500).json({ error: "Failed to search physiotherapists" });
+  }
+};
+
+// Get user notifications
+export const getUserNotifications = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cacheKey = CacheKeys.USER_NOTIFICATIONS(id);
+    
+    // Try to get from cache first
+    const cachedNotifications = await CacheService.get(cacheKey);
+    if (cachedNotifications) {
+      console.log(`User notifications cache hit for user: ${id}`);
+      return res.json(cachedNotifications);
+    }
+
+    const notifications = await User.findById(id)
+      .select('notifications')
+      .lean();
+    
+    // Sort by date (newest first) and filter unread only
+    const sortedNotifications = notifications?.notifications?.filter(n => !n.read)
+      .sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      ) || [];
+
+    // Cache the result
+    await CacheService.set(cacheKey, sortedNotifications, CacheTTL.NOTIFICATIONS);
+    
+    res.json(sortedNotifications);
+  } catch (error) {
+    console.error("Error fetching user notifications:", error);
+    res.status(500).json({ error: "Failed to fetch notifications" });
+  }
+};
+
+// Mark notification as read
+export const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notificationId } = req.body;
+    
+    if (!notificationId) {
+      return res.status(400).json({ error: "Notification ID is required" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Find and update the notification
+    const notification = user.notifications.id(notificationId);
+    if (!notification) {
+      return res.status(404).json({ error: "Notification not found" });
+    }
+
+    notification.read = true;
+    notification.readAt = new Date();
+    
+    await user.save();
+
+    // Clear cache
+    await CacheService.del(CacheKeys.USER_NOTIFICATIONS(id));
+    
+    res.json({ message: "Notification marked as read" });
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    res.status(500).json({ error: "Failed to mark notification as read" });
+  }
+};

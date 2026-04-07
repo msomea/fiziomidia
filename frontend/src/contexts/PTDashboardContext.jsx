@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import API from '../api/axios';
+import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
 import { API_URL } from '../config/constants';
 import toast from 'react-hot-toast';
 import { fetchPromotions } from '../api/promotions';
@@ -12,6 +13,7 @@ const initialState = {
   appointments: [],
   forumPosts: [],
   promotion: null,
+  notifications: [],
   stats: {
     totalAppointments: 0,
     pendingRequests: 0,
@@ -33,6 +35,7 @@ const actionTypes = {
   UPDATE_FORUM_POSTS: 'UPDATE_FORUM_POSTS',
   UPDATE_PROMOTION: 'UPDATE_PROMOTION',
   UPDATE_STATS: 'UPDATE_STATS',
+  UPDATE_NOTIFICATIONS: 'UPDATE_NOTIFICATIONS',
   CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
@@ -61,6 +64,8 @@ const ptDashboardReducer = (state, action) => {
       return { ...state, promotion: action.payload };
     case actionTypes.UPDATE_STATS:
       return { ...state, stats: action.payload };
+    case actionTypes.UPDATE_NOTIFICATIONS:
+      return { ...state, notifications: action.payload };
     case actionTypes.CLEAR_ERROR:
       return { ...state, error: null };
     default:
@@ -104,6 +109,18 @@ export const PTDashboardProvider = ({ children }) => {
         type: actionTypes.SET_DASHBOARD_DATA,
         payload: dashboardData,
       });
+
+      // Also fetch notifications separately
+      try {
+        const notifications = await getUserNotifications(ptId);
+        dispatch({ 
+          type: actionTypes.UPDATE_NOTIFICATIONS, 
+          payload: notifications || [] 
+        });
+      } catch (notifError) {
+        console.error('Notifications fetch error:', notifError);
+        // Don't show toast for this, as it's not critical
+      }
 
       return dashboardData;
     } catch (error) {
@@ -188,6 +205,33 @@ export const PTDashboardProvider = ({ children }) => {
     dispatch({ type: actionTypes.CLEAR_ERROR });
   };
 
+  // Refresh notifications
+  const refreshNotifications = useCallback(async (ptId) => {
+    try {
+      const notifications = await getUserNotifications(ptId);
+      dispatch({ type: actionTypes.UPDATE_NOTIFICATIONS, payload: notifications || [] });
+    } catch (error) {
+      console.error('Notifications refresh error:', error);
+      toast.error('Failed to refresh notifications');
+    }
+  }, []);
+
+  // Mark notification as read
+  const markNotificationRead = useCallback(async (ptId, notificationId) => {
+    try {
+      await markNotificationAsRead(ptId, notificationId);
+      
+      // Update local state to remove the read notification
+      dispatch({ 
+        type: actionTypes.UPDATE_NOTIFICATIONS, 
+        payload: state.notifications.filter(n => n._id !== notificationId)
+      });
+    } catch (error) {
+      console.error('Mark notification as read error:', error);
+      toast.error('Failed to mark notification as read');
+    }
+  }, [state.notifications]);
+
   // Context value
   const value = {
     ...state,
@@ -197,6 +241,8 @@ export const PTDashboardProvider = ({ children }) => {
     refreshForumPosts,
     refreshPromotion,
     refreshStats,
+    refreshNotifications,
+    markNotificationRead,
     clearError,
   };
 

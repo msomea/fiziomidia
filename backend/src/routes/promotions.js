@@ -12,14 +12,14 @@ const router = express.Router();
 PT PROMOTIONS
 ========================================
 */
-// Get active PT promotions (public)
-router.get("/pt", ptPromo.getPTPromotion)
-
-// Get a specific PT promotion by ID
-router.get("/pt/:id", ptPromo.getPromotionById);
 
 // Create a PT promotion (requires authentication)
-router.post("/pt/create", authenticate, upload.single("image"),  ptPromo.createPromotion);
+router.post(
+  "/pt/create",
+  authenticate,
+  upload.single("ptPromotion"),
+  ptPromo.createPromotion,
+);
 
 // Stripe webhook (no auth needed)
 router.post(
@@ -27,6 +27,13 @@ router.post(
   express.raw({ type: "application/json" }),
   ptPromo.stripeWebhook,
 );
+
+// Get active PT promotions (public)
+router.get("/pt", ptPromo.getPTPromotion)
+
+// Get a specific PT promotion by ID
+router.get("/pt/:id", ptPromo.getPromotionById);
+
 
 /*
 ========================================
@@ -47,7 +54,7 @@ router.get(
 router.post(
   "/clinic",
   authenticate,
-  upload.single("image"),
+  upload.single("clinicPromotion"),
   clinicPromo.createClinicPromotion,
 );
 
@@ -58,7 +65,7 @@ router.get("/clinic/:id", clinicPromo.getClinicPromotionById);
 router.put(
   "/clinic/:id",
   authenticate,
-  upload.single("image"),
+  upload.single("clinicPromotion"),
   clinicPromo.updateClinicPromotion,
 );
 

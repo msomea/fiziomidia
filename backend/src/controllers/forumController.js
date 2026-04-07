@@ -317,7 +317,7 @@ export const createPost = async (req, res) => {
     let imageData = null;
 
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer);
+      const result = await uploadToCloudinary(req.file);
 
       imageData = {
         url: result.secure_url,

@@ -81,7 +81,7 @@ export default function AdminProductSponsorshipDetail() {
         console.log("Sending isActive:", form.isActive);
       }
 
-      if (newImage) data.append("image", newImage);
+      if (newImage) data.append("product", newImage);
 
       if (newImage && newImage.size > 2 * 1024 * 1024) {
         return toast.error(t("image_size_limit"));

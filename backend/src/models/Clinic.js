@@ -12,10 +12,12 @@ const ClinicSchema = new Schema({
   ownerUserId: { type: Schema.Types.ObjectId, ref: "User" },
   physiotherapists: [{ type: Schema.Types.ObjectId, ref: "User" }],
   services: [String],
+  imageUrl: { type: String },
+  imagePublicId: { type: String },
 
   rating: {
     average: Number,
-    count: Number
+    count: Number,
   },
 });
 

@@ -5,6 +5,10 @@ import {
   logAdminActivity,
   getProductTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../../services/uploadService.js";
 
 // -----------------------------------------
 // PROMOTED PRODUCTS
@@ -31,7 +35,17 @@ export const createSponsoredProduct = [
 
       // Handle image / logo upload
       if (req.file) {
-        productData.image = `/uploads/sponsored_products/${req.file.filename}`;
+        try {
+          const uploadResult = await uploadToCloudinary(req.file);
+          productData.image = uploadResult.secure_url;
+          productData.imagePublicId = uploadResult.public_id;
+        } catch (uploadError) {
+          console.error("Error uploading product image:", uploadError);
+          return res.status(500).json({
+            success: false,
+            error: "Failed to upload product image",
+          });
+        }
       }
 
       // Optional dates
@@ -215,7 +229,23 @@ export const updateSponsoredProduct = [
        IMAGE HANDLING
     ========================== */
       if (req.file) {
-        product.image = `/uploads/products/${req.file.filename}`;
+        try {
+          // Delete old image if exists
+          if (product.imagePublicId) {
+            await deleteFromCloudinary(product.imagePublicId);
+          }
+
+          // Upload new image
+          const uploadResult = await uploadToCloudinary(req.file);
+          product.image = uploadResult.secure_url;
+          product.imagePublicId = uploadResult.public_id;
+        } catch (uploadError) {
+          console.error("Error updating product image:", uploadError);
+          return res.status(500).json({
+            success: false,
+            error: "Failed to update product image",
+          });
+        }
       } else if (req.body.image !== undefined) {
         product.image = req.body.image;
       }

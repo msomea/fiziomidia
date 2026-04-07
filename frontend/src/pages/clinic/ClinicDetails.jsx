@@ -229,6 +229,20 @@ const ClinicDetails = () => {
             {/* Clinic Header */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h1 className="text-3xl font-bold text-gray-900 mb-4">{clinic.name}</h1>
+              {/* Clinic Image */}
+              <div className="h-48 bg-gradient-to-br from-caribbean to-tufts relative overflow-hidden">
+                {clinic.imageUrl ? (
+                  <img
+                    src={clinic.imageUrl}
+                    alt={clinic.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Star className="w-16 h-16 text-white opacity-50" />
+                  </div>
+                )}
+              </div>
               
               {/* Rating Display */}
               <div className="flex items-center space-x-4 mb-6">

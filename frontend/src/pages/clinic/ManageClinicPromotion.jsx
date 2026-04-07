@@ -91,7 +91,7 @@ export default function ManageClinicPromotion() {
       
       if (formData.customTitle) formDataToSend.append("customTitle", formData.customTitle);
       if (formData.customDescription) formDataToSend.append("customDescription", formData.customDescription);
-      if (image) formDataToSend.append("image", image);
+      if (image) formDataToSend.append("clinicPromotion", image);
 
       await API.put(`${API_URL}/promotions/clinic/${promotionId}`, formDataToSend);
       

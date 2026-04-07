@@ -114,12 +114,6 @@ export default function ClinicPromotionStatus() {
         <p className="text-gray-600 mb-4">
           {t("need_clinic_to_create_promotion")}
         </p>
-        {/* <Link
-          to="/clinic/create"
-          className="btn bg-caribbean text-white"
-        >
-          {t("create_first_clinic")}
-        </Link> */}
       </div>
     );
   }
@@ -151,9 +145,9 @@ export default function ClinicPromotionStatus() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {clinic.name}
-                    </h3>
+                    <Link to={`/clinic/${clinic._id}`}>
+                      <h3 className="text-caribbean font-semibold">{clinic.name}</h3>
+                    </Link>
                     {promotion && (
                       <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(promotion.status)}`}>
                         {getStatusIcon(promotion.status)}

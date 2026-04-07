@@ -55,7 +55,17 @@ const upload = multer({
 });
 
 /* ------------------------------------------------------------------
-   Cloudinary folder mapping (keeps your original logic)
+   Validate File Size
+------------------------------------------------------------------- */
+const validateFileSize = (file) => {
+  const maxSize = 2 * 1024 * 1024; // 2MB
+  if (file.size > maxSize) {
+    throw new Error(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds 2MB limit`);
+  }
+};
+
+/* ------------------------------------------------------------------
+   Cloudinary folder mapping
 ------------------------------------------------------------------- */
 const getCloudinaryFolder = (fieldname) => {
   switch (fieldname) {
@@ -89,6 +99,8 @@ const uploadToCloudinary = (file) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error("No file provided"));
 
+    validateFileSize(file);
+
     const folder = getCloudinaryFolder(file.fieldname);
 
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -99,15 +111,20 @@ const uploadToCloudinary = (file) => {
         unique_filename: true,
         transformation: [
           {
-            quality: "auto",
+            quality: "auto:good",
             fetch_format: "auto",
+          },
+          {
+            width: 1200,
+            height: 1200,
+            crop: "limit",
           },
         ],
       },
       (error, result) => {
         if (error) return reject(error);
         resolve(result);
-      }
+      },
     );
 
     // 🔥 FIX HERE
@@ -124,24 +141,29 @@ const uploadToCloudinary = (file) => {
    Multiple files upload helper
 ------------------------------------------------------------------- */
 const uploadMultipleToCloudinary = async (files = []) => {
-  const results = [];
+  if (!files || files.length === 0) return [];
 
-  for (const file of files) {
-    const result = await uploadToCloudinary(file);
-    results.push(result);
-  }
+  // Validate all files before upload
+  files.forEach((file) => validateFileSize(file));
 
-  return results;
-};
+  return Promise.all(files.map((file) => uploadToCloudinary(file)));
+};;;;;;;;
 
 /* ------------------------------------------------------------------
    Delete file from Cloudinary
 ------------------------------------------------------------------- */
 const deleteFromCloudinary = async (publicId, resourceType = "image") => {
-  if (!publicId) return;
-  await cloudinary.uploader.destroy(publicId, {
-    resource_type: resourceType,
-  });
+  if (!publicId) return { deleted: false, reason: "No publicId provided" };
+
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: resourceType,
+    });
+    return { deleted: result.result === "ok", result };
+  } catch (error) {
+    console.error("🚫 Cloudinary deletion failed:", error);
+    throw error;
+  }
 };
 
 /* ------------------------------------------------------------------

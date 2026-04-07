@@ -20,6 +20,18 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  /* Initialize with initial location */
+  useEffect(() => {
+    if (initialLocation && !isInitialized) {
+      setSelectedRegion(initialLocation.region || "");
+      setSelectedDistrict(initialLocation.district || "");
+      setSelectedWard(initialLocation.ward || "");
+      setSelectedStreet(initialLocation.street || "");
+      setIsInitialized(true);
+    }
+  }, [initialLocation, isInitialized]);
 
   /* Fetch Regions */
   useEffect(() => {
@@ -91,13 +103,16 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
 
   /* Notify Parent */
   useEffect(() => {
-    onLocationSelect({
-      region: selectedRegion,
-      district: selectedDistrict,
-      ward: selectedWard,
-      street: selectedStreet,
-    });
-  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet]);
+    // Only notify parent after component is initialized and on actual user changes
+    if (isInitialized) {
+      onLocationSelect({
+        region: selectedRegion,
+        district: selectedDistrict,
+        ward: selectedWard,
+        street: selectedStreet,
+      });
+    }
+  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet, isInitialized, onLocationSelect]);
 
   return (
     <div className="bg-white rounded-xl shadow p-4 border border-gray-100">

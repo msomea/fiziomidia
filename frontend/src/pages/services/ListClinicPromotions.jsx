@@ -72,44 +72,13 @@ export default function ListClinicPromotions() {
     page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   );
 
-  const getTierColor = (tier) => {
-    switch (tier) {
-      case "platinum":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "gold":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "silver":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-TZ', {
-      style: 'currency',
-      currency: 'TZS',
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
-  const getDaysRemaining = (endDate) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diffTime = end - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
 
   return (
     <section className="max-w-7xl mt-4 mx-auto px-4 py-14">
       <h2 className="text-3xl font-bold text-caribbean mb-4 text-center">
         {t("featured_clinic_promotions")}
       </h2>
-      <p className="text-center text-gray-600 mb-10 max-w-2xl mx-auto">
-        {t("clinic_promotions_description")}
-      </p>
-
       <div
         className="relative transition-all duration-300"
         style={{ minHeight: containerHeight || "auto" }}
@@ -149,21 +118,10 @@ export default function ListClinicPromotions() {
                         <Star className="w-16 h-16 text-white opacity-50" />
                       </div>
                     )}
-                    
-                    {/* Tier Badge */}
-                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold border ${getTierColor(promotion.title)}`}>
-                      {t(promotion.title)}
-                    </div>
-
-                    {/* Time Remaining */}
-                    <div className="absolute bottom-3 left-3 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {getDaysRemaining(promotion.endAt)} {t("days_left")}
-                    </div>
                   </div>
 
                   {/* Promotion Content */}
-                  <div className="p-6">
+                  <div className="p-6 text-center">
                     {/* Clinic Name */}
                     <h3 className="font-bold text-lg text-caribbean mb-2">
                       {promotion.clinic?.name || t("unnamed_clinic")}
@@ -189,16 +147,16 @@ export default function ListClinicPromotions() {
 
                     {/* Clinic Location */}
                     {promotion.clinic?.address && (
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-4">
                         <MapPin className="w-4 h-4" />
-                        <span className="truncate">{promotion.clinic.address}</span>
+                        <span>{promotion.clinic.address}</span>
                       </div>
                     )}
 
                     {/* Services */}
                     {promotion.clinic?.services && promotion.clinic.services.length > 0 && (
                       <div className="mb-4">
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap justify-center gap-1">
                           {promotion.clinic.services.slice(0, 3).map((service, idx) => (
                             <span
                               key={idx}
@@ -217,16 +175,7 @@ export default function ListClinicPromotions() {
                     )}
 
                     {/* Price and CTA */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold text-caribbean">
-                          {formatPrice(promotion.price)}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {promotion.duration} {t("days")}
-                        </p>
-                      </div>
-                      
+                    <div className="flex items-center justify-center">                      
                       <Link
                         to={`/clinic/${promotion.clinic?._id}`}
                         className="btn bg-caribbean text-white btn-sm hover:bg-tufts"

@@ -90,7 +90,7 @@ export default function CreateClinicPromotion() {
       
       if (form.customTitle) fd.append("customTitle", form.customTitle);
       if (form.customDescription) fd.append("customDescription", form.customDescription);
-      if (image) fd.append("image", image);
+      if (image) fd.append("clinicPromotion", image);
 
       await API.post(`${API_URL}/promotions/clinic`, fd);
 

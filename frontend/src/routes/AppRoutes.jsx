@@ -48,7 +48,6 @@ import PTAppointmentDetailsPage from "../pages/pt/PTApointmentDetailsPage";
 import BookAppointment from "../pages/appointment/RequestAppointment";
 import MemberAppointmentsPage from "../pages/member/MemberAppointmentPage";
 import ClinicDetails from "../pages/clinic/ClinicDetails";
-import CreateClinic from "../pages/clinic/CreateClinic";
 
 export default function AppRoutes() {
   return (
@@ -86,7 +85,6 @@ export default function AppRoutes() {
 
       {/* Clinic Routes */}
       <Route path="/clinic/:clinicId" element={<ClinicDetails />} />
-      <Route path="/clinic/create" element={<CreateClinic />} />
 
 
       {/* Dashboard Routes */}

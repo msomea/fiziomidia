@@ -35,7 +35,7 @@ router.post(
   "/posts",
   authenticate,
   limiters.forumPost,
-  upload.single("image"),
+  upload.single("post"),
   forum.createPost,
 );
 router.delete("/posts/:id", authenticate, forum.deletePost);

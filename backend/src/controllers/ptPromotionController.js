@@ -36,7 +36,7 @@ export const createPromotion = async (req, res) => {
 
     // Upload image to Cloudinary if provided
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.ptPromotion);
+      const result = await uploadToCloudinary(req.file);
       imageUrl = result.secure_url;
       imagePublicId = result.public_id;
     }
@@ -120,8 +120,13 @@ export const getPTPromotion = async (req, res) => {
     
     if (ptId) {
       // Get specific PT's promotion
-      const promotion = await PTPromotion.findOne({ pt: ptId, status: "active" })
-      .populate("pt", "fullName profileImageUrl");
+      const promotion = await PTPromotion.findOne({
+        pt: ptId,
+        status: "active",
+      }).populate(
+        "pt",
+        "fullName profileImageUrl ptProfile.speciality ptProfile.institution",
+      );
 
       if (!promotion) {
         return res.json({ active: false });
@@ -138,12 +143,15 @@ export const getPTPromotion = async (req, res) => {
       });
     } else {
       // Get all active PT promotions for carousel
-      const promotions = await PTPromotion.find({ 
+      const promotions = await PTPromotion.find({
         status: "active",
-        endAt: { $gt: new Date() } // Only include non-expired promotions
+        endAt: { $gt: new Date() }, // Only include non-expired promotions
       })
-      .populate("pt", "fullName profileImageUrl ptProfile.speciality")
-      .sort({ createdAt: -1 }); // Newest first
+        .populate(
+          "pt",
+          "fullName profileImageUrl ptProfile.speciality ptProfile.institution",
+        )
+        .sort({ createdAt: -1 }); // Newest first
 
       res.json(promotions);
     }
@@ -162,7 +170,10 @@ export const getPromotionById = async (req, res) => {
       return res.status(400).json({ error: "Promotion ID is required" });
     }
 
-    const promotion = await PTPromotion.findById(promotionId).populate("pt", "fullName email"); // optional: include PT info
+    const promotion = await PTPromotion.findById(promotionId).populate(
+      "pt",
+      "fullName email ptProfile.speciality ptProfile.institution",
+    ); // optional: include PT info
 
     if (!promotion) {
       return res.status(404).json({ error: "Promotion not found" });

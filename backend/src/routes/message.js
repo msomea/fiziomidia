@@ -8,7 +8,7 @@ const router = express.Router();
 // routes /api/messages
 
 // Authenticated users only
+router.post("/", authenticate, limiters.message, sendMessage);
 router.get("/:chatId", authenticate, getMessages);
 router.delete("/:id", authenticate, deleteMessage);
-router.post("/", authenticate, limiters.message, sendMessage);
 export default router;

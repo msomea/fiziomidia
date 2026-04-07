@@ -14,7 +14,7 @@ const AUTO_PLAY_INTERVAL = 6000;
 export default function ListPromotions() {
   const { t } = useTranslation();
 
-  const [pts, setPts] = useState([]);
+  const [ptPromos, setPtPromos] = useState([]);
   const [loading, setLoading] = useState(true); 
   const [page, setPage] = useState(0);
   const intervalRef = useRef(null);
@@ -25,7 +25,7 @@ export default function ListPromotions() {
     const fetchPromotionsData = async () => {
       try {
         const data = await fetchPromotions();
-        setPts(data || []);
+        setPtPromos(data || []);
       } catch (err) {
         console.error(t("failed_load_promotions"), err);
       } finally {
@@ -35,7 +35,7 @@ export default function ListPromotions() {
     fetchPromotionsData();
   }, [t]);
 
-  const totalPages = Math.ceil(pts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(ptPromos.length / ITEMS_PER_PAGE);
 
   useEffect(() => {
     startAutoPlay();
@@ -45,7 +45,7 @@ export default function ListPromotions() {
       if (height > containerHeight) setContainerHeight(height);
     }
     return () => stopAutoPlay();
-  }, [page, pts]);
+  }, [page, ptPromos]);
 
   const startAutoPlay = () => {
     stopAutoPlay();
@@ -70,11 +70,11 @@ export default function ListPromotions() {
     setPage((prev) => (prev + 1) % totalPages);
   };
 
-  const currentItems = pts.slice(
+  const currentItems = ptPromos.slice(
     page * ITEMS_PER_PAGE,
     page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   );
-
+console.log(ptPromos)
   return (
     <section className="max-w-7xl mt-4 mx-auto px-4 py-14">
       <h2 className="text-3xl font-bold text-caribbean mb-10 text-center">
@@ -96,34 +96,34 @@ export default function ListPromotions() {
 
             {/* 🔹 Real PT Cards */}
             {!loading && currentItems.length > 0 &&
-              currentItems.map((pt, index) => (
+              currentItems.map((ptPromo, index) => (
                 <div
-                  key={pt._id || index}
+                  key={ptPromo._id || index}
                   className="bg-white rounded-2xl shadow p-5 hover:shadow-lg transition flex flex-col items-center text-center"
                 >
                   <div className="w-60 h-60 rounded-full ring ring-caribbean ring-offset-base-100 ring-offset-2 overflow-hidden">
                     <img
-                      src={pt.profileImageUrl || avatar}
-                      alt={pt.fullName || t("unnamed_pt")}
+                      src={ptPromo.imageUrl || avatar}
+                      alt={ptPromo.pt?.fullName || t("unnamed_pt")}
                       className="w-full h-full object-cover"
                       onError={(e) => (e.target.src = avatar)}
                     />
                   </div>
 
                   <h3 className="font-semibold text-lg text-caribbean mt-4">
-                    {pt.fullName || t("unnamed_pt")}
+                    {ptPromo.pt?.fullName || t("unnamed_pt")}
                   </h3>
                   <p className="text-md text-gray-600">
-                    {pt.ptProfile?.speciality?.length
-                      ? pt.ptProfile.speciality.join(", ")
+                    {ptPromo.pt?.ptProfile?.speciality?.length
+                      ? ptPromo.pt?.ptProfile?.speciality.join(", ")
                       : t("no_speciality_listed")}
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {pt.ptProfile?.institution || t("no_institution")}
+                    {ptPromo.pt?.ptProfile?.institution || t("no_institution")}
                   </p>
 
                   <Link
-                    to={`/profile/pt/${pt._id}`}
+                    to={`/profile/pt/${ptPromo.pt?._id}`}
                     className="btn btn-sm bg-caribbean text-white w-full mt-4 hover:bg-tufts"
                   >
                     {t("view_profile")}

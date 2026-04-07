@@ -13,11 +13,17 @@ const router = express.Router();
 // Get all users (for messaging)
 router.get("/", authenticate, userController.getAllUsers);
 
+// Search physiotherapists
+router.get("/search/physiotherapists", authenticate, userController.searchPhysiotherapists);
+
 // Get current user profile
 router.get("/profile", authenticate, userController.getProfile);
 
 // Consolidated Member Dashboard API
 router.get("/dashboard", authenticate, getMemberDashboardData);
+
+// Update preferred language
+router.put("/update-language", authenticate, userController.updateLanguage);
 
 // Update current user profile
 router.put(
@@ -32,6 +38,13 @@ router.put(
   userController.updateProfile
 );
 
+// Get user notifications
+router.get("/:id/notifications", authenticate, userController.getUserNotifications);
+
+// Mark notification as read
+router.put("/:id/notifications/read", authenticate, userController.markNotificationAsRead);
+
+
 // Get saved PTs for a member (MUST come before /:id)
 router.get("/:id/saved-pts", authenticate, getSavedPTsByMember );
 
@@ -41,7 +54,6 @@ router.post("/save-pt/:ptId", authenticate, requireRole("member"), userControlle
 // Public: get profile by ID (MUST come last)
 router.get("/:id", userController.getUserById);
 
-// Update preferred language
-router.put("/update-language", authenticate, userController.updateLanguage);
+
 
 export default router;

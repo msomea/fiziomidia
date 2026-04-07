@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X } from "lucide-react";
-import { createClinic, updateClinic, deleteClinic, getUserClinics } from "../../api/clinics";
+import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X, Upload, Search, User, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Link } from "react-router";
+import { createClinic, updateClinic, deleteClinic, getUserClinics, searchPhysiotherapists, sendPTRequest, getPTRequests, respondToPTRequest } from "../../api/clinics";
 import toast from "react-hot-toast";
 import LocationSelector from "../location/LocationSelector";
 
@@ -12,6 +13,15 @@ const ClinicManagement = ({ user, t }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const [serviceInput, setServiceInput] = useState("");
+  
+  // PT Selection states
+  const [ptSearchQuery, setPtSearchQuery] = useState("");
+  const [ptSearchResults, setPtSearchResults] = useState([]);
+  const [selectedPT, setSelectedPT] = useState(null);
+  const [showPTSearch, setShowPTSearch] = useState(false);
+  const [ptRequests, setPtRequests] = useState([]);
+  const [showRequests, setShowRequests] = useState(false);
+  const [requestMessage, setRequestMessage] = useState("");
 
   const [clinicForm, setClinicForm] = useState({
     name: "",
@@ -20,6 +30,8 @@ const ClinicManagement = ({ user, t }) => {
     coordinates: [0, 0],
     services: [],
     physiotherapists: [],
+    imageUrl: null,
+    imageFile: null,
     // Location data
     region: "",
     district: "",
@@ -38,13 +50,122 @@ const ClinicManagement = ({ user, t }) => {
     fetchClinics();
   }, [user]);
 
+  useEffect(() => {
+    if (editingClinic) {
+      fetchPTRequests(editingClinic._id);
+    }
+  }, [editingClinic]);
+
   const fetchClinics = async () => {
+    if (!user || !user._id) {
+      setClinics([]);
+      return;
+    }
+    
     try {
       const data = await getUserClinics(user._id);
       setClinics(data);
     } catch (error) {
       console.error("Error fetching clinics:", error);
       toast.error(t("failed_to_load_clinics"));
+    }
+  };
+
+  const fetchPTRequests = async (clinicId) => {
+    try {
+      const requests = await getPTRequests(clinicId);
+      setPtRequests(requests);
+    } catch (error) {
+      console.error("Error fetching PT requests:", error);
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error(t("image_too_large"));
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setClinicForm(prev => ({
+          ...prev,
+          imageFile: file,
+          imageUrl: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setClinicForm(prev => ({
+      ...prev,
+      imageFile: null,
+      imageUrl: null
+    }));
+  };
+
+  const searchPTs = async (query) => {
+    if (!query.trim()) {
+      setPtSearchResults([]);
+      return;
+    }
+    
+    try {
+      const results = await searchPhysiotherapists(query);
+      setPtSearchResults(results);
+    } catch (error) {
+      console.error("Error searching PTs:", error);
+      toast.error(t("failed_to_search_pts"));
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchPTs(ptSearchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [ptSearchQuery]);
+
+  const selectPT = (pt) => {
+    setSelectedPT(pt);
+    setPtSearchQuery("");
+    setPtSearchResults([]);
+    setShowPTSearch(false);
+  };
+
+  const sendPTInvite = async () => {
+    if (!selectedPT || !editingClinic) return;
+    
+    try {
+      await sendPTRequest({
+        clinicId: editingClinic._id,
+        physiotherapistId: selectedPT._id,
+        message: requestMessage
+      });
+      
+      toast.success(t("pt_request_sent"));
+      setSelectedPT(null);
+      setRequestMessage("");
+      fetchPTRequests(editingClinic._id);
+    } catch (error) {
+      console.error("Error sending PT request:", error);
+      toast.error(error.response?.data?.message || t("failed_to_send_request"));
+    }
+  };
+
+  const handlePTResponse = async (requestId, action) => {
+    try {
+      await respondToPTRequest(requestId, action);
+      toast.success(t(`request_${action}`));
+      fetchPTRequests(editingClinic._id);
+    } catch (error) {
+      console.error(`Error ${action} PT request:`, error);
+      toast.error(t(`failed_to_${action}_request`));
     }
   };
 
@@ -119,29 +240,33 @@ const ClinicManagement = ({ user, t }) => {
     setLoading(true);
 
     try {
-      const clinicData = {
-        name: clinicForm.name,
-        address: clinicForm.address,
-        contactPhone: clinicForm.contactPhone,
-        location: {
-          type: "Point",
-          coordinates: clinicForm.coordinates
-        },
-        ownerUserId: user._id,
-        services: clinicForm.services,
-        physiotherapists: clinicForm.physiotherapists,
-        // Add location data for backend
-        region: location.region,
-        district: location.district,
-        ward: location.ward,
-        street: location.street,
-      };
+      const formData = new FormData();
+      
+      // Add all clinic data
+      formData.append('name', clinicForm.name);
+      formData.append('address', clinicForm.address);
+      formData.append('contactPhone', clinicForm.contactPhone);
+      formData.append('location', JSON.stringify({
+        type: "Point",
+        coordinates: clinicForm.coordinates
+      }));
+      formData.append('services', JSON.stringify(clinicForm.services));
+      formData.append('physiotherapists', JSON.stringify(clinicForm.physiotherapists));
+      formData.append('region', location.region);
+      formData.append('district', location.district);
+      formData.append('ward', location.ward);
+      formData.append('street', location.street);
+      
+      // Add image if exists
+      if (clinicForm.imageFile) {
+        formData.append('clinic', clinicForm.imageFile);
+      }
 
       if (editingClinic) {
-        await updateClinic(editingClinic._id, clinicData);
+        await updateClinic(editingClinic._id, formData);
         toast.success(t("clinic_updated"));
       } else {
-        await createClinic(clinicData);
+        await createClinic(formData);
         toast.success(t("clinic_added"));
       }
 
@@ -168,6 +293,8 @@ const ClinicManagement = ({ user, t }) => {
       coordinates: clinic.location?.coordinates || [0, 0],
       services: clinic.services || [],
       physiotherapists: clinic.physiotherapists || [],
+      imageUrl: clinic.imageUrl || null,
+      imageFile: null,
       region: clinic.region || "",
       district: clinic.district || "",
       ward: clinic.ward || "",
@@ -245,6 +372,8 @@ const ClinicManagement = ({ user, t }) => {
       coordinates: [0, 0],
       services: [],
       physiotherapists: [],
+      imageUrl: null,
+      imageFile: null,
       region: "",
       district: "",
       ward: "",
@@ -261,6 +390,9 @@ const ClinicManagement = ({ user, t }) => {
     setServiceInput("");
     setShowAddForm(false);
     setEditingClinic(null);
+    setSelectedPT(null);
+    setRequestMessage("");
+    setPtRequests([]);
   };
 
   /* ---------------------- UI ---------------------- */
@@ -315,8 +447,10 @@ const ClinicManagement = ({ user, t }) => {
                   <div className="flex justify-between">
 
                     <div>
-
-                      <h4 className="text-caribbean font-semibold">{clinic.name}</h4>
+                      <Link to={`/clinic/${clinic._id}`}>
+                        <h4 className="text-caribbean font-semibold">{clinic.name}</h4>
+                      </Link>
+                      
 
                       <div className="text-sm text-gray-600">
 
@@ -386,6 +520,47 @@ const ClinicManagement = ({ user, t }) => {
                   placeholder={t("contact_phone")}
                   className="input input-bordered w-full"
                 />
+
+                {/* IMAGE UPLOAD */}
+                <div>
+                  <label className="block text-sm font-medium text-tufts mb-2">
+                    {t("clinic_image")}
+                  </label>
+                  
+                  {clinicForm.imageUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={clinicForm.imageUrl} 
+                        alt="Clinic" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <div className="mt-2">
+                        <label htmlFor="image-upload" className="cursor-pointer">
+                          <span className="text-caribbean font-medium">{t("upload_image")}</span>
+                          <input
+                            id="image-upload"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <p className="text-gray-500 text-xs mt-1">{t("image_size_limit")}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Location Selector */}
                 <div>
@@ -478,6 +653,181 @@ const ClinicManagement = ({ user, t }) => {
                     ))}
                   </div>
                 </div>
+
+                {/* PHYSIOTHERAPIST MANAGEMENT */}
+                <div className="space-y-4">
+                  <h4 className="text-md font-semibold text-tufts">{t("physiotherapist_management")}</h4>
+                    
+                    {/* PT Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-tufts mb-2">
+                        {t("invite_physiotherapist")}
+                      </label>
+                      
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={ptSearchQuery}
+                          onChange={(e) => {
+                            setPtSearchQuery(e.target.value);
+                            setShowPTSearch(true);
+                          }}
+                          onFocus={() => setShowPTSearch(true)}
+                          placeholder={t("search_physiotherapists")}
+                          className="input input-bordered w-full pl-10"
+                        />
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      </div>
+                      
+                      {/* Search Results Dropdown */}
+                      {showPTSearch && ptSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+                          {ptSearchResults.map((pt) => (
+                            <div
+                              key={pt._id}
+                              onClick={() => selectPT(pt)}
+                              className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex items-center gap-3">
+                                {pt.profileImageUrl ? (
+                                  <img
+                                    src={pt.profileImageUrl}
+                                    alt={pt.fullName}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <User className="w-8 h-8 text-gray-400" />
+                                )}
+                                <div>
+                                  <p className="font-medium text-sm">{pt.fullName}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {pt.ptProfile?.speciality?.join(", ") || t("general_physiotherapy")}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Selected PT */}
+                    {selectedPT && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {selectedPT.profileImageUrl ? (
+                              <img
+                                src={selectedPT.profileImageUrl}
+                                alt={selectedPT.fullName}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-10 h-10 text-blue-500" />
+                            )}
+                            <div>
+                              <p className="font-medium">{selectedPT.fullName}</p>
+                              <p className="text-xs text-gray-600">
+                                {selectedPT.ptProfile?.speciality?.join(", ") || t("general_physiotherapy")}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setSelectedPT(null)}
+                            className="text-blue-500 hover:text-blue-700"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                        
+                        <textarea
+                          value={requestMessage}
+                          onChange={(e) => setRequestMessage(e.target.value)}
+                          placeholder={t("optional_message_to_pt")}
+                          className="textarea textarea-bordered w-full mt-3 text-sm"
+                          rows="2"
+                        />
+                        
+                        <button
+                          onClick={sendPTInvite}
+                          className="btn bg-caribbean text-white hover:bg-caribbean/90 mt-3 w-full"
+                        >
+                          {t("send_invitation")}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* PT Requests */}
+                    {ptRequests.length > 0 && (
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <h5 className="text-sm font-medium text-tufts">{t("pending_requests")}</h5>
+                          <button
+                            onClick={() => setShowRequests(!showRequests)}
+                            className="text-caribbean text-sm hover:underline"
+                          >
+                            {showRequests ? t("hide") : t("show")} ({ptRequests.length})
+                          </button>
+                        </div>
+                        
+                        {showRequests && (
+                          <div className="space-y-2">
+                            {ptRequests.map((request) => (
+                              <div key={request._id} className="border rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    {request.physiotherapistId.profileImageUrl ? (
+                                      <img
+                                        src={request.physiotherapistId.profileImageUrl}
+                                        alt={request.physiotherapistId.fullName}
+                                        className="w-8 h-8 rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <User className="w-8 h-8 text-gray-400" />
+                                    )}
+                                    <div>
+                                      <p className="font-medium text-sm">{request.physiotherapistId.fullName}</p>
+                                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <Clock size={12} />
+                                        {new Date(request.requestedAt).toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-1">
+                                    {request.status === "pending" ? (
+                                      <div className="flex items-center gap-2 text-yellow-600">
+                                        <Clock size={16} />
+                                        <span className="text-xs font-medium">{t("pending")}</span>
+                                      </div>
+                                    ) : request.status === "accepted" ? (
+                                      <div className="flex items-center gap-2 text-green-600">
+                                        <CheckCircle size={16} />
+                                        <span className="text-xs font-medium">{t("accepted")}</span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-2 text-red-600">
+                                        <XCircle size={16} />
+                                        <span className="text-xs font-medium">{t("rejected")}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                
+                                {request.message && (
+                                  <p className="text-xs text-gray-600 mt-2 italic">"{request.message}"</p>
+                                )}
+                                
+                                {request.responseMessage && (
+                                  <p className="text-xs text-blue-600 mt-2 italic">"{request.responseMessage}"</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
               </div>
 
               <div className="flex gap-3 pt-4">

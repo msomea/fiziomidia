@@ -221,6 +221,7 @@ export default function MemberProfileSettings() {
               name="email"
               type="email"
               disabled
+              readOnly={true}
               value={user?.email}
             />
             <InputField

@@ -35,6 +35,7 @@ redisClient.connect().catch(console.error);
 // Cache utility functions
 export const CacheKeys = {
   USER_PROFILE: (id) => `user:${id}:profile`,
+  USER_NOTIFICATIONS: (id) => `user:${id}:notifications`,
   PT_PROFILE: (id) => `pt:${id}:profile`,
   DASHBOARD_ADMIN: (id) => `dashboard:admin:${id}`,
   DASHBOARD_PT: (id) => `dashboard:pt:${id}`,
@@ -48,10 +49,11 @@ export const CacheKeys = {
 
 // Cache TTL (Time To Live) in seconds
 export const CacheTTL = {
-  SHORT: 5 * 60,      // 5 minutes - hot data
-  MEDIUM: 30 * 60,    // 30 minutes - warm data
-  LONG: 2 * 60 * 60,  // 2 hours - cool data
+  SHORT: 5 * 60, // 5 minutes - hot data
+  MEDIUM: 30 * 60, // 30 minutes - warm data
+  LONG: 2 * 60 * 60, // 2 hours - cool data
   VERY_LONG: 24 * 60 * 60, // 24 hours - static data
+  NOTIFICATIONS: 10 * 60, // 10 minutes - notifications
 };
 
 // Cache helper functions

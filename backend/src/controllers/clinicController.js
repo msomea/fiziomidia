@@ -1,6 +1,11 @@
 import Clinic from "../models/Clinic.js";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import { CacheService } from "../utils/redis.js";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../services/uploadService.js";
 
 export const getAllClinics = async (req, res) => {
   try {
@@ -17,6 +22,9 @@ export const getAllClinics = async (req, res) => {
 export const getClinicById = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid clinic ID" });
+    }
     const clinic = await Clinic.findById(id)
       .populate('ownerUserId', 'fullName email phone profileImageUrl')
       .populate('physiotherapists', 'fullName email phone profileImageUrl');
@@ -51,6 +59,16 @@ export const getClinicsByUser = async (req, res) => {
     // For parameter route /user/:userId, use req.params.userId
     const userId = req.params.userId || req.user.id;
 
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Validate ObjectId format
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid user ID format" });
+    }
+
     const clinics = await Clinic.find({ ownerUserId: userId })
       .populate("ownerUserId", "fullName email phone profileImageUrl")
       .populate("physiotherapists", "fullName email phone profileImageUrl");
@@ -64,6 +82,15 @@ export const getClinicsByUser = async (req, res) => {
 
 export const createClinic = async (req, res) => {
   try {
+    // Handle FormData if it's FormData, otherwise handle JSON
+    let clinicData;
+
+    if (req.body instanceof FormData) {
+      // This shouldn't happen with multer, but just in case
+      return res.status(400).json({ error: "Invalid request format" });
+    }
+
+    // Parse JSON fields from FormData
     const {
       name,
       address,
@@ -71,7 +98,21 @@ export const createClinic = async (req, res) => {
       location,
       services,
       physiotherapists,
+      region,
+      district,
+      ward,
+      street,
     } = req.body;
+
+    // Parse JSON strings if they were stringified
+    const parsedLocation =
+      typeof location === "string" ? JSON.parse(location) : location;
+    const parsedServices =
+      typeof services === "string" ? JSON.parse(services) : services;
+    const parsedPhysiotherapists =
+      typeof physiotherapists === "string"
+        ? JSON.parse(physiotherapists)
+        : physiotherapists;
 
     if (!name || !address || !contactPhone) {
       return res
@@ -79,22 +120,44 @@ export const createClinic = async (req, res) => {
         .json({ error: "Name, address, and contact phone are required" });
     }
 
-    const clinicData = {
+    // Handle image upload if present
+    let imageUrl = null;
+    let imagePublicId = null;
+
+    if (req.file) {
+      try {
+        const uploadResult = await uploadToCloudinary(req.file);
+        imageUrl = uploadResult.secure_url;
+        imagePublicId = uploadResult.public_id;
+      } catch (uploadError) {
+        console.error("Error uploading clinic image:", uploadError);
+        return res.status(500).json({ error: "Failed to upload clinic image" });
+      }
+    }
+
+    clinicData = {
       name,
       address,
       contactPhone,
-      location: location || {
+      location: parsedLocation || {
         type: "Point",
         coordinates: [0, 0],
       },
       ownerUserId: req.user._id,
-      services: services || [],
-      physiotherapists: physiotherapists || [],
+      services: parsedServices || [],
+      physiotherapists: parsedPhysiotherapists || [],
+      imageUrl,
+      imagePublicId,
       rating: {
         average: 0,
         count: 0,
       },
+      region,
+      district,
+      ward,
+      street,
     };
+
     const clinic = new Clinic(clinicData);
     await clinic.save();
 
@@ -138,6 +201,7 @@ export const updateClinic = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Parse JSON fields from FormData
     const {
       name,
       address,
@@ -145,6 +209,10 @@ export const updateClinic = async (req, res) => {
       coordinates,
       services,
       physiotherapists,
+      region,
+      district,
+      ward,
+      street,
     } = req.body;
 
     const clinic = await Clinic.findById(id);
@@ -166,21 +234,57 @@ export const updateClinic = async (req, res) => {
     if (contactPhone) updateData.contactPhone = contactPhone;
 
     // ✅ FIX: update services (FULL overwrite)
-    if (Array.isArray(services)) {
-      updateData.services = services.filter((s) => s.trim() !== "");
+    const parsedServices =
+      typeof services === "string" ? JSON.parse(services) : services;
+    if (Array.isArray(parsedServices)) {
+      updateData.services = parsedServices.filter((s) => s.trim() !== "");
     }
 
     // Optional
-    if (Array.isArray(physiotherapists)) {
-      updateData.physiotherapists = physiotherapists;
+    const parsedPhysiotherapists =
+      typeof physiotherapists === "string"
+        ? JSON.parse(physiotherapists)
+        : physiotherapists;
+    if (Array.isArray(parsedPhysiotherapists)) {
+      updateData.physiotherapists = parsedPhysiotherapists;
     }
 
     // Update location
-    if (coordinates && Array.isArray(coordinates) && coordinates.length === 2) {
+    const parsedCoordinates =
+      typeof coordinates === "string" ? JSON.parse(coordinates) : coordinates;
+    if (
+      parsedCoordinates &&
+      Array.isArray(parsedCoordinates) &&
+      parsedCoordinates.length === 2
+    ) {
       updateData.location = {
         type: "Point",
-        coordinates: coordinates,
+        coordinates: parsedCoordinates,
       };
+    }
+
+    // Update location fields
+    if (region) updateData.region = region;
+    if (district) updateData.district = district;
+    if (ward) updateData.ward = ward;
+    if (street) updateData.street = street;
+
+    // Handle image upload if present
+    if (req.file) {
+      try {
+        // Delete old image if exists
+        if (clinic.imagePublicId) {
+          await deleteFromCloudinary(clinic.imagePublicId);
+        }
+
+        // Upload new image
+        const uploadResult = await uploadToCloudinary(req.file);
+        updateData.imageUrl = uploadResult.secure_url;
+        updateData.imagePublicId = uploadResult.public_id;
+      } catch (uploadError) {
+        console.error("Error updating clinic image:", uploadError);
+        return res.status(500).json({ error: "Failed to update clinic image" });
+      }
     }
 
     const updatedClinic = await Clinic.findByIdAndUpdate(id, updateData, {
@@ -208,6 +312,22 @@ export const deleteClinic = async (req, res) => {
       return res
         .status(403)
         .json({ error: "Not authorized to delete this clinic" });
+    }
+
+    // Delete image from Cloudinary if exists
+    if (clinic.imagePublicId) {
+      try {
+        await deleteFromCloudinary(clinic.imagePublicId);
+        console.log(
+          `🗑️ Deleted clinic image from Cloudinary: ${clinic.imagePublicId}`,
+        );
+      } catch (deleteError) {
+        console.error(
+          "Error deleting clinic image from Cloudinary:",
+          deleteError,
+        );
+        // Continue with clinic deletion even if image deletion fails
+      }
     }
 
     await Clinic.findByIdAndDelete(id);

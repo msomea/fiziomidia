@@ -80,7 +80,7 @@ export default function CreatePromotion() {
       fd.append("title", formattedTitle);
       fd.append("description", form.description);
 
-      if (image) fd.append("image", image);
+      if (image) fd.append("ptPromotion", image);
 
       await createPTPromotion(fd);
 
