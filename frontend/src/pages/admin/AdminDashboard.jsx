@@ -13,6 +13,7 @@ import SponsoredProductsSection from "../../components/admin/ProductSponsorshipS
 import ClinicPromotionSection from "../../components/admin/ClinicPromotionSection";
 import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
 import AdminMonitoringSection from "../../components/admin/AdminMonitoringSection";
+import SystemNotificationsSection from "../../components/admin/SystemNotificationsSection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -82,6 +83,7 @@ function AdminDashboardContent() {
       {/* Dashboard Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         <AdminMonitoringSection />
+        <SystemNotificationsSection />
         <UsersSection />
         <AppointmentsSection />
         <PromotionsSection />

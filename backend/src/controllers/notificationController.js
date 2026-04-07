@@ -157,3 +157,89 @@ export const getUnreadCount = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch unread count" });
   }
 };
+
+// Send system notification (admin only)
+export const sendSystemNotification = async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+
+    const { 
+      message, 
+      priority = 'information', 
+      targetUserIds = [], 
+      sendToAll = false,
+      targetRole = null, // "member", "physiotherapist", or null for all
+      type = 'system_announcement'
+    } = req.body;
+
+    if (!message || message.trim() === '') {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    // Validate priority
+    const validPriorities = ['critical', 'important', 'update', 'information'];
+    if (!validPriorities.includes(priority)) {
+      return res.status(400).json({ error: "Invalid priority level" });
+    }
+
+    let targetUsers;
+    
+    if (sendToAll) {
+      // Get all active users except admins
+      targetUsers = await User.find({ 
+        role: { $nin: ['admin'] }, 
+        isActive: true 
+      });
+    } else if (targetRole && (targetRole === 'member' || targetRole === 'physiotherapist')) {
+      // Get users by specific role
+      targetUsers = await User.find({ 
+        role: targetRole,
+        isActive: true 
+      });
+    } else if (targetUserIds && targetUserIds.length > 0) {
+      // Get specific users
+      targetUsers = await User.find({ 
+        _id: { $in: targetUserIds },
+        isActive: true 
+      });
+    } else {
+      return res.status(400).json({ error: "Either sendToAll, targetRole, or targetUserIds must be specified" });
+    }
+
+    if (targetUsers.length === 0) {
+      return res.status(404).json({ error: "No target users found" });
+    }
+
+    const notification = {
+      type,
+      message: message.trim(),
+      priority,
+      read: false,
+      createdAt: new Date(),
+    };
+
+    // Send notifications to all target users
+    const updatePromises = targetUsers.map(user => {
+      user.notifications.push(notification);
+      return user.save();
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log(`System notification sent to ${targetUsers.length} users (Priority: ${priority})`);
+
+    res.json({
+      message: `System notification sent successfully to ${targetUsers.length} users`,
+      sentTo: targetUsers.length,
+      priority,
+      type
+    });
+
+  } catch (error) {
+    console.error("Error sending system notification:", error);
+    res.status(500).json({ error: "Failed to send system notification" });
+  }
+};

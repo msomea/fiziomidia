@@ -7,6 +7,7 @@ import {
   deleteNotification,
   clearAllNotifications,
   getUnreadCount,
+  sendSystemNotification,
 } from "../controllers/notificationController.js";
 
 const router = express.Router();
@@ -31,5 +32,8 @@ router.delete("/:notificationId", deleteNotification);
 
 // Clear all notifications
 router.delete("/", clearAllNotifications);
+
+// Send system notification (admin only)
+router.post("/send-system", sendSystemNotification);
 
 export default router;

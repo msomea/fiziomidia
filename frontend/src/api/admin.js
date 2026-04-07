@@ -82,3 +82,14 @@ export const getAdminStats = async (params = {}) => {
     throw err;
   }
 };
+
+// System Notifications
+export const sendSystemNotification = async (payload) => {
+  try {
+    const { data } = await API.post(`${API_URL}/notifications/send-system`, payload);
+    return data;
+  } catch (err) {
+    console.error("Failed to send system notification:", err);
+    throw err;
+  }
+};
