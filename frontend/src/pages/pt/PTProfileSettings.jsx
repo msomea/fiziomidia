@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 import { getProfile, updateProfile } from "../../api/profile";
@@ -90,7 +90,7 @@ const PTProfileSettings = () => {
       }
     };
     loadProfile();
-  }, [t]);
+  }, []); // Empty dependency array - only run once on mount
 
   if (!formData) return <p>{t("loading")}</p>;
 
@@ -98,6 +98,10 @@ const PTProfileSettings = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleLocationSelect = useCallback((location) => {
+    setFormData(prev => ({ ...prev, location }));
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -218,7 +222,7 @@ const PTProfileSettings = () => {
           <div className="col-span-1 md:col-span-2">
             <LocationSelector
               initialLocation={formData.location}
-              onLocationSelect={(location) => setFormData(prev => ({ ...prev, location }))}
+              onLocationSelect={handleLocationSelect}
               t={t}
             />
           </div>

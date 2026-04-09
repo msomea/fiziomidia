@@ -38,14 +38,46 @@ export const getClinicById = async (req, res) => {
   }
 };
 
-export const getClinicsByPT = async (req, res) => {
+export const getClinicOwnedByPT = async (req, res) => {
+  try {
+    const { ptId } = req.params; 
+    // Get clinics where PT is the owner
+    const clinics = await Clinic.find({
+      $or: [
+        { ownerUserId: ptId },
+      ],
+    })
+      .populate("ownerUserId", "fullName email phone")
+      .populate("physiotherapists", "fullName email phone");
+
+    res.json(clinics);
+  } catch (error) {
+    console.error("Error fetching clinic:", error);
+    res.status(500).json({ error: "Failed to fetch clinic" });
+  }
+}
+
+export const getClinicsPTWork = async (req, res) => {
   try {
     const { ptId } = req.params;
-    
-    const clinics = await Clinic.find({ ownerUserId: ptId })
-      .populate('ownerUserId', 'fullName email phone')
-      .populate('physiotherapists', 'fullName email phone');
-    
+
+    // First get the PT to find their associated clinic IDs
+    const pt = await User.findById(ptId).select("ptProfile.clinicIds");
+
+    if (!pt) {
+      return res.status(404).json({ error: "PT not found" });
+    }
+
+    // Get clinics where PT is the owner OR works at (through ptProfile.clinicIds)
+    const clinics = await Clinic.find({
+      $or: [
+        { ownerUserId: ptId },
+        { _id: { $in: pt.ptProfile?.clinicIds || [] } },
+      ],
+    })
+      .populate("ownerUserId", "fullName email phone")
+      .populate("physiotherapists", "fullName email phone");
+
     res.json(clinics);
   } catch (error) {
     console.error("Error fetching PT clinics:", error);

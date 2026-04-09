@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
-import API from "../api/axios";
+import { fetchPTById } from "../api/pts";
 import { useNavigate } from "react-router";
 import { Loader2, Heart } from "lucide-react";
 import { toggleSavePT } from "../api/users";
@@ -20,7 +20,6 @@ import {
 } from "../components/profiles";
 
 import avatarFallback from "../assets/avatar.jpg";
-import { API_URL } from "../config/constants";
 
 const PTProfile = () => {
   const navigate = useNavigate();
@@ -35,8 +34,8 @@ const PTProfile = () => {
   useEffect(() => {
     const fetchPT = async () => {
       try {
-        const res = await API.get(`${API_URL}/pts/${id}`);
-        setPt(res.data); 
+        const ptData = await fetchPTById(id);
+        setPt(ptData); 
         const saved = loggedInUser?.savedPTs?.some((savedPT) => savedPT._id === id);
         setIsSaved(!!saved);
       } catch (err) {
@@ -104,7 +103,7 @@ const PTProfile = () => {
 
   const ptProfile = pt.ptProfile;
   const avatarSrc = pt.profileImageUrl || avatarFallback;
-
+console.log(pt)
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
       <div className="relative bg-white shadow-md rounded-b-3xl">
@@ -124,7 +123,12 @@ const PTProfile = () => {
                 : ""}
             </p>
             <p className="mt-2 text-sm text-gray-500">
-              {pt.location?.region}, {pt.location?.district}
+              {pt.location?.region
+                ? `${pt.location.region}`
+                : ""}
+              {pt.location?.district
+                ? `, ${pt.location.district}`
+                : ""}
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3 items-center">
@@ -175,7 +179,7 @@ const PTProfile = () => {
           <PTClinics clinicIds={ptProfile.clinicIds} ptId={id} />
           <PTGallery gallery={ptProfile.gallery} />
           <PTRatings ratings={ptProfile.ratings} reviews={ptProfile.reviews} />
-          <PTAvailability availability={ptProfile.availability} />
+          <PTAvailability availability={ptProfile.availability} workingHours={ptProfile.workingHours}/>
         </div>
       </div>
     </div>

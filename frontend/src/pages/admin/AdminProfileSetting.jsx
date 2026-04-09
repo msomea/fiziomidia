@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { updateProfile } from "../../api/users";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -46,11 +45,9 @@ const AdminProfile = () => {
       if (formData.newPassword) body.append("password", formData.newPassword);
       if (avatarFile) body.append("avatar", avatarFile);
 
-      const response = await API.put(`${API_URL}/users/profile`, body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await updateProfile(body);
 
-      const updatedUser = response.data.user;
+      const updatedUser = response.user;
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 

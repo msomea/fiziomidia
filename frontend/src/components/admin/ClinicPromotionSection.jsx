@@ -4,8 +4,7 @@ import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchClinicPromotions } from "../../api/admin";
 
 export default function ClinicPromotionSection() {
   const { t } = useTranslation();
@@ -24,12 +23,12 @@ export default function ClinicPromotionSection() {
   const loadClinicPromotions = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (search) params.append('search', search);
-      if (status) params.append('status', status);
+      const params = {};
+      if (search) params.search = search;
+      if (status) params.status = status;
 
-      const res = await API.get(`${API_URL}/admin/clinic-promotions?${params}`);
-      setPromotions(res.data || []);
+      const data = await fetchClinicPromotions(params);
+      setPromotions(data || []);
     } catch (error) {
       console.error(error);
       toast.error(t("failed_load_clinic_promotions"));

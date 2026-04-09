@@ -195,7 +195,7 @@ const Forum = () => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
   };
-console.log(selectedSub)
+
   /* ------------------ Render ------------------ */
   return (
     <div className="min-h-screen bg-alice mt-20 p-4 md:p-6">

@@ -515,14 +515,22 @@ const ClinicDetails = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('quick_actions')}</h3>
               <div className="space-y-3">
-                <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center">
+                <button 
+                  onClick={() => navigate(`/clinic/${clinicId}/request-appointment`)}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center"
+                >
                   <Calendar className="w-4 h-4 mr-2" />
                   {t('book_appointment')}
                 </button>
-                <button className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 flex items-center justify-center">
-                  <Phone className="w-4 h-4 mr-2" />
-                  {t('call_clinic')}
-                </button>
+                {clinic.contactPhone && (
+                  <button 
+                    onClick={() => window.open(`tel:${clinic.contactPhone}`, '_self')}
+                    className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 flex items-center justify-center"
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    {t('call_clinic')}
+                  </button>
+                )}
               </div>
             </div>
           </div>

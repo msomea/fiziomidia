@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { getClinicPromotionById, updateClinicPromotion, deleteClinicPromotion } from "../../api/admin";
 import { X, Loader2, Building, MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
@@ -25,12 +24,12 @@ export default function AdminClinicPromotionDetail() {
   const loadClinicPromotion = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/clinic-promotions/${id}`);
-      setPromo(res.data.promotion);
-      setStatus(res.data.promotion.status);
+      const data = await getClinicPromotionById(id);
+      setPromo(data.promotion);
+      setStatus(data.promotion.status);
 
       // Convert to yyyy-mm-dd for HTML date input
-      setEndAt(dayjs(res.data.promotion.endAt).format("YYYY-MM-DD"));
+      setEndAt(dayjs(data.promotion.endAt).format("YYYY-MM-DD"));
     } catch (err) {
       toast.error(t('failed_load_clinic_promotion'));
     } finally {
@@ -41,7 +40,7 @@ export default function AdminClinicPromotionDetail() {
   const updatePromotion = async () => {
     try {
       setSaving(true);
-      await API.put(`${API_URL}/admin/clinic-promotions/${id}`, {
+      await updateClinicPromotion(id, {
         status,
         endAt,
       });
@@ -88,7 +87,7 @@ export default function AdminClinicPromotionDetail() {
     setTimeout(async () => {
       if (undoClicked) return;
         try {
-          await API.delete(`${API_URL}/admin/clinic-promotions/${id}`);
+          await deleteClinicPromotion(id);
           toast.success(t('clinic_promotion_permanently_deleted'));
           navigate("/dashboard/admin"); // redirect after deletion
         } catch (err) {

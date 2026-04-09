@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { sendEmailToUser } from "../../api/admin";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -31,16 +30,13 @@ const AdminSendEmail = () => {
     }
 
     try {
-      const response = await API.post(
-        `${API_URL}/admin/users/${id}/email`,
-        formData
-      );
+      const response = await sendEmailToUser(id, formData);
 
-      if (response.data.success) {
-        toast.success(response.data.message || t("email_sent_success"));
+      if (response.success) {
+        toast.success(response.message || t("email_sent_success"));
         navigate("/dashboard/admin");
       } else {
-        toast.error(response.data.message || t("email_send_failed"));
+        toast.error(response.message || t("email_send_failed"));
       }
     } catch (err) {
       console.error("Send email failed:", err);

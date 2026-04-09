@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { getAdminSubById, updateSubInfo, updateSponsorship, removeSponsorship } from "../../api/admin";
+import { ASSET_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
@@ -44,8 +44,8 @@ export default function AdminSponsorshipDetail() {
   const loadSub = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/subs/${id}`);
-      const s = res.data.sub;
+      const data = await getAdminSubById(id);
+      const s = data.sub;
       setSub(s);
 
       // Load sponsorship
@@ -127,9 +127,9 @@ export default function AdminSponsorshipDetail() {
     try {
       setSavingBasic(true);
 
-      const res = await API.put(`${API_URL}/forum/subs/${id}`, basicForm);
+      const data = await updateSubInfo(id, basicForm);
 
-      if (!res.data?.success) throw new Error();
+      if (!data?.success) throw new Error();
 
       toast.success(t('sub_information_updated'));
       loadSub();
@@ -165,7 +165,7 @@ export default function AdminSponsorshipDetail() {
         return toast.error(t("image_size_limit"));
       }
 
-      await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, data);
+      await updateSponsorship(id, data);
 
       toast.success(t('sponsorship_updated'));
       loadSub();
@@ -180,7 +180,7 @@ export default function AdminSponsorshipDetail() {
     if (!confirm(t('confirm_remove_sponsorship'))) return;
 
     try {
-      await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, { isSponsored: false });
+      await removeSponsorship(id);
       toast.success(t('sponsorship_removed'));
       navigate(-1);
     } catch (err) {

@@ -114,7 +114,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       street: selectedStreet,
     };
     onLocationSelect(geoJson);
-  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet, onLocationSelect]);
+  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">

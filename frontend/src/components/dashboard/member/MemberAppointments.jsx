@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { getAppointmentsByMember } from "../../api/appointments";
-import { useAuth } from "../../context/AuthContext";
+import { getAppointmentsByMember } from "../../../api/appointments";
+import { useAuth } from "../../../context/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 
 const MemberAppointments = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -55,9 +57,16 @@ const MemberAppointments = () => {
 
   return (
     <section className="bg-white p-6 rounded-2xl shadow-md mt-6">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-5">
-        {t("upcoming_appointments")}
-      </h2>
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          {t("upcoming_appointments")}
+        </h2>
+        <button
+          onClick={() => navigate(`/appointments/member/${user._id}`)}
+          className="btn btn-sm p-1 bg-caribbean text-white hover:bg-tufts">
+          {t("view_all")}
+        </button>
+      </div>
 
       {error && <p className="text-red-500 mb-3">{error}</p>}
 
@@ -72,9 +81,20 @@ const MemberAppointments = () => {
                 <span className="font-medium text-gray-800">
                   {a.pt?.fullName || t("physiotherapist")}
                 </span>
-                {a.pt?.specialization && (
+                {a.pt?.phone && (
                   <span className="text-gray-500 text-sm">
-                    ({a.pt.specialization})
+                    ({a.pt.phone})
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span className="font-medium text-gray-800">
+                  {a.clinic?.name || t("clinic")}
+                </span>
+                {a.clinic?.contactPhone && (
+                  <span className="text-gray-500 text-sm">
+                    ({a.clinic.contactPhone})
                   </span>
                 )}
               </div>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
+import { getForumModRequestById, updateForumModRequestRole } from "../../api/admin";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 
@@ -23,9 +22,9 @@ export default function ForumModRequestsDetail() {
   const loadRequest = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
-      setRequest(res.data.request);
-      setNewRole(res.data.request.role); // current requested role
+      const data = await getForumModRequestById(id);
+      setRequest(data.request);
+      setNewRole(data.request.role); // current requested role
     } catch (err) {
       toast.error(t('failed_load_request'));
     } finally {
@@ -35,7 +34,7 @@ export default function ForumModRequestsDetail() {
 
   const updateRole = async () => {
     try {
-      await API.put(`${API_URL}/admin/forum/mod-requests/${id}/role`, { role: newRole });
+      await updateForumModRequestRole(id, { role: newRole });
       toast.success(t('request_role_updated'));
       loadRequest();
     } catch (err) {

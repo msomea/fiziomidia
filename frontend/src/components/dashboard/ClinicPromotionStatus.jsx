@@ -29,7 +29,7 @@ export default function ClinicPromotionStatus() {
   const fetchClinicPromotions = async () => {
     try {
       // Fetch user's clinics
-      const clinicsResponse = await API.get(`${API_URL}/clinics/my-clinics`);
+      const clinicsResponse = await API.get(`${API_URL}/clinics/owned-by-pt/${user._id}`);
       const userClinics = clinicsResponse.data || [];
       setClinics(userClinics);
 

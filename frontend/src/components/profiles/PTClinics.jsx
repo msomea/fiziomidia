@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Building, MapPin, Phone, Globe, Users, Star, StarHalf, ChevronDown, ExternalLink } from "lucide-react";
-import { getPTClinics } from "../../api/clinics";
+import { getClinicsPTWork } from "../../api/clinics";
 import { useTranslation } from "react-i18next";
 
 const PTClinics = ({ clinicIds, ptId }) => {
@@ -46,7 +46,7 @@ const PTClinics = ({ clinicIds, ptId }) => {
         return;
       }
       
-      const data = await getPTClinics(ptId);
+      const data = await getClinicsPTWork(ptId);
       setClinics(data);
     } catch (error) {
       console.error("Error fetching clinics:", error);

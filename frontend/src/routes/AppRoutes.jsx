@@ -44,10 +44,15 @@ import ManageClinicPromotion from "../pages/clinic/ManageClinicPromotion";
 import ForumModRequestsDetail from "../components/admin/ForumModRequestsDetail";
 import AdminSendEmail from "../pages/admin/AdminSendEmail";
 import PTAppointmentsPage from "../pages/pt/PTAppointmentsPage";
+import PTClinicAppointmentPage from "../pages/pt/PTClinicAppointmentPage";
+import PTClinicAppointmentDetailPage from "../pages/pt/PTClinicAppointmentDetailPage";
 import PTAppointmentDetailsPage from "../pages/pt/PTApointmentDetailsPage";
 import BookAppointment from "../pages/appointment/RequestAppointment";
 import MemberAppointmentsPage from "../pages/member/MemberAppointmentPage";
+import MemberClinicAppointmentsPage from "../pages/member/MemberClinicAppointmentsPage";
+import MemberClinicAppointmentDetailPage from "../pages/member/MemberClinicAppointmentDetailPage";
 import ClinicDetails from "../pages/clinic/ClinicDetails";
+import ClinicAppointmentRequest from "../pages/clinic/ClinicAppointmentRequest";
 
 export default function AppRoutes() {
   return (
@@ -85,6 +90,7 @@ export default function AppRoutes() {
 
       {/* Clinic Routes */}
       <Route path="/clinic/:clinicId" element={<ClinicDetails />} />
+      <Route path="/clinic/:clinicId/request-appointment" element={<ClinicAppointmentRequest />} />
 
 
       {/* Dashboard Routes */}
@@ -100,8 +106,12 @@ export default function AppRoutes() {
       {/* Appointment Routes */}
       <Route path="/appointments/book/:ptId" element={<BookAppointment />} />
       <Route path="/pt/:id/appointments" element={<PTAppointmentsPage />} />
+      <Route path="/pt/clinic-appointments" element={<PTClinicAppointmentPage />} />
+      <Route path="/pt/clinic-appointments/:id" element={<PTClinicAppointmentDetailPage />} />
       <Route path="/pt/appointments/:id" element={<PTAppointmentDetailsPage />} />
       <Route path="/appointments/member/:id" element={<MemberAppointmentsPage />} />
+      <Route path="/member/clinic-appointments" element={<MemberClinicAppointmentsPage />} />
+      <Route path="/member/clinic-appointments/:id" element={<MemberClinicAppointmentDetailPage />} />
 
 
       {/* Message Routes */ }      

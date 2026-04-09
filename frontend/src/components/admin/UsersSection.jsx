@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { Search, Filter } from "lucide-react";
 import { useTranslation } from 'react-i18next'
-import API from "../../api/axios";
 import CollapsibleSection from "./CollapsibleSection";
-import { API_URL } from "../../config/constants";
 import { Link } from "react-router";
 import { useDashboard } from "../../contexts/DashboardContext";
 

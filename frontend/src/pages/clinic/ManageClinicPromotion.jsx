@@ -314,7 +314,7 @@ export default function ManageClinicPromotion() {
             {/* Custom Title */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t("custom_title")} ({t("optional")})
+                {t("custom_title")} {t("optional")}
               </label>
               <input
                 type="text"
@@ -344,7 +344,7 @@ export default function ManageClinicPromotion() {
             {/* Image Upload */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t("promotion_image")} ({t("optional")})
+                {t("promotion_image")} {t("optional")}
               </label>
 
               <div className="mt-2">

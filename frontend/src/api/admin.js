@@ -7,13 +7,96 @@ export const fetchAllUsers = async () => {
   return data;
 };
 
+export const getAdminUserById = async (id) => {
+  const res = await API.get(`${API_URL}/admin/users/${id}`);
+  return res.data;
+};
+
+export const updateUserRole = async (id, data) => {
+  const res = await API.put(`${API_URL}/admin/users/${id}/role`, data);
+  return res.data;
+};
+
+export const updateUserLicense = async (id, data) => {
+  const res = await API.put(`${API_URL}/admin/users/${id}/license`, data);
+  return res.data;
+};
+
+export const sendEmailToUser = async (id, data) => {
+  const res = await API.post(`${API_URL}/admin/users/${id}/email`, data);
+  return res.data;
+};
+
+// Appointments managements
+
 export const fetchAdminAppointments = async () => {
   const { data } = await API.get(`${API_URL}/admin/appointments`);
   return data;
 };
 
+// PT Promotion Managements
 export const fetchAdminPromotions = async (params = {}) => {
   const res = await API.get(`${API_URL}/admin/promotions`, { params });
+  return res.data;
+};
+
+export const fetchClinicPromotions = async (params = {}) => {
+  const res = await API.get(`${API_URL}/admin/clinic-promotions`, { params });
+  return res.data;
+};
+
+export const getPromotionById = async (id) => {
+  const res = await API.get(`${API_URL}/admin/promotions/${id}`);
+  return res.data;
+};
+
+export const updatePromotion = async (id, data) => {
+  const res = await API.put(`${API_URL}/admin/promotions/${id}`, data);
+  return res.data;
+};
+
+export const deletePromotion = async (id) => {
+  const res = await API.delete(`${API_URL}/admin/promotions/${id}`);
+  return res.data;
+};
+
+// Clinic promotion  Management
+export const getClinicPromotionById = async (id) => {
+  const res = await API.get(`${API_URL}/admin/clinic-promotions/${id}`);
+  return res.data;
+};
+
+export const updateClinicPromotion = async (id, data) => {
+  const res = await API.put(`${API_URL}/admin/clinic-promotions/${id}`, data);
+  return res.data;
+};
+
+export const deleteClinicPromotion = async (id) => {
+  const res = await API.delete(`${API_URL}/admin/clinic-promotions/${id}`);
+  return res.data;
+};
+
+// Forum management
+export const getForumModRequestById = async (id) => {
+  const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
+  return res.data;
+};
+
+export const updateForumModRequestRole = async (id, data) => {
+  const res = await API.put(
+    `${API_URL}/admin/forum/mod-requests/${id}/role`,
+    data,
+  );
+  return res.data;
+};
+
+export const getAdminSubById = async (id) => {
+  const res = await API.get(`${API_URL}/admin/subs/${id}`);
+  return res.data;
+};
+
+export const updateSubInfo = async (id, data) => {
+  const res = await API.put(`${API_URL}/forum/subs/${id}`, data);
   return res.data;
 };
 

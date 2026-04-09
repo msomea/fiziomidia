@@ -1,9 +1,9 @@
 import React, { useState, useRef } from "react";
 import { Link } from "react-router";
 import { Heart, Trash2 } from "lucide-react";
-import { toggleSavePT } from "../../api/users";
+import { toggleSavePT } from "../../../api/users";
 import toast from "react-hot-toast";
-import avatarFallback from "../../assets/avatar.jpg";
+import avatarFallback from "../../../assets/avatar.jpg";
 import { useTranslation } from "react-i18next";
 
 const MemberSavedPTs = ({ savedPTs = [] }) => {

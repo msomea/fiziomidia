@@ -38,7 +38,7 @@ export default function CreateClinicPromotion() {
   useEffect(() => {
     const fetchClinics = async () => {
       try {
-        const response = await API.get(`${API_URL}/clinics/my-clinics`);
+        const response = await API.get(`${API_URL}/clinics/owned-by-pt/${user._id}`);
         setClinics(response.data || []);
       } catch (error) {
         console.error("Failed to fetch clinics:", error);

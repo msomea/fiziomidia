@@ -168,7 +168,7 @@ export const respondToPTRequest = async (req, res) => {
     // Add notification to clinic owner
     const clinicOwner = await User.findById(request.clinicId.ownerUserId)
       .select('notifications');
-      console.log("✅✅✅", clinicOwner)
+
   
 
     if (clinicOwner) {

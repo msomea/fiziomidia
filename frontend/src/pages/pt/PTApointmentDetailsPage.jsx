@@ -147,7 +147,7 @@ export default function PTAppointmentDetailsPage() {
 
           <button
             onClick={() => navigate(-1)}
-            className="w-full py-3 rounded-lg bg-gray-200 hover:bg-gray-300 font-medium transition"
+            className="w-full py-3 rounded-lg bg-gray-400 hover:bg-gray-700 font-medium transition"
           >
             {t("back")}
           </button>

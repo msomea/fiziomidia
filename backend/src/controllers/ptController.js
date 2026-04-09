@@ -28,7 +28,8 @@ export const getPTById = async (req, res) => {
     const ptId = req.params.id;
 
     const pt = await User.findById(ptId)
-      .select("-passwordHash")
+      .select("-passwordHash -refreshToken")
+      .populate("ptProfile.clinicIds", "name address contactPhone")
       .lean();
 
     if (!pt) {
@@ -65,7 +66,7 @@ export const updatePTProfile = async (req, res) => {
       return res.status(403).json({ error: "Forbidden" });
     const allowed = req.body;
     const pt = await User.findByIdAndUpdate(id, allowed, { new: true }).select(
-      "-passwordHash",
+      "-passwordHash -refreshToken",
     );
 
     // Invalidate PT profile cache due to profile update

@@ -233,22 +233,22 @@ const UserSchema = new Schema({
   },
   fullName: { type: String },
   savedPTs: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  phone: String,
-  profileImageUrl: String,
-  profileImagePublicId: String,
+  phone: { type: String },
+  profileImageUrl: { type: String },
+  profileImagePublicId: { type: String },
   clinicIds: [{ type: Schema.Types.ObjectId, ref: "Clinic" }], // NEW: For universal clinic access
   ptProfile: PtProfileSchema,
-  bio: String,
+  bio: { type: String },
   createdAt: { type: Date, default: Date.now },
-  lastLogin: Date,
+  lastLogin: { type: Date },
   isLoggedIn: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   isBanned: { type: Boolean, default: false },
-  verifyToken: String,
-  verifyTokenExpire: Date,
+  verifyToken: { type: String },
+  verifyTokenExpire: { type: Date },
   isVerified: { type: Boolean, default: false },
-  resetToken: String,
-  resetTokenExpire: Date,
+  resetToken: { type: String },
+  resetTokenExpire: { type: Date },
   language: {
     type: String,
     enum: ["en", "sw"],
@@ -257,8 +257,8 @@ const UserSchema = new Schema({
 
   refreshTokens: [
     {
-      token: String,
-      device: String,
+      token: { type: String },
+      device: { type: String },
       createdAt: { type: Date, default: Date.now },
     },
   ],
@@ -266,7 +266,7 @@ const UserSchema = new Schema({
   notifications: [
     {
       type: { type: String },
-      message: String,
+      message: { type: String },
       priority: {
         type: String,
         enum: ["critical", "important", "update", "information"],

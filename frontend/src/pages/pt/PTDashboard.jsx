@@ -5,11 +5,13 @@ import { useAuth } from "../../context/AuthContext";
 import { PTDashboardProvider, usePTDashboard } from "../../contexts/PTDashboardContext";
 import Statistics from "../../components/dashboard/pt/Statistics";
 import UpcomingAppointments from "../../components/dashboard/pt/UpcomingAppointments";
+import ClinicAppointmentManagement from "../../components/dashboard/pt/ClinicAppointmentManagement";
 import NotificationSection from "../../components/dashboard/NotificationSection";
 import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement";
 import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
 import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
 import ClinicInvitations from "../../components/dashboard/pt/ClinicInvitations";
+import { getClinicAppointments, getClinicAppointmentsForPT } from "../../api/clinicAppointments";
 
 import {
   Menu,
@@ -46,6 +48,44 @@ function PTDashboardContent() {
   } = usePTDashboard();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [clinicAppointments, setClinicAppointments] = useState([]);
+  const [clinicAppointmentsLoading, setClinicAppointmentsLoading] = useState(false);
+
+  // Fetch clinic appointments for PT's owned clinics only
+  const fetchClinicAppointments = async () => {
+
+    
+    if (!clinics || clinics.length === 0) return;
+    
+    setClinicAppointmentsLoading(true);
+    try {
+      // Get appointments only for clinics the PT owns
+      const allClinicAppointments = [];
+      for (const clinic of clinics) {
+        // Only fetch if the PT is the owner of this clinic (ownerUserId is an object with _id property)
+        if (clinic.ownerUserId?._id?.toString() === user._id?.toString()) {
+          try {
+            const response = await getClinicAppointments(clinic._id);
+            if (response.appointments) {
+              allClinicAppointments.push(...response.appointments);
+            }
+          } catch (error) {
+            console.error(`Failed to fetch appointments for clinic ${clinic._id}:`, error);
+          }
+        }
+      }
+      
+      // Sort by creation date (newest first) and limit to first 5 for dashboard
+      const sortedAppointments = allClinicAppointments
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+      setClinicAppointments(sortedAppointments);
+    } catch (error) {
+      console.error("Failed to fetch clinic appointments:", error);
+    } finally {
+      setClinicAppointmentsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || !_id || user._id === null) return;
@@ -68,6 +108,13 @@ function PTDashboardContent() {
       window.removeEventListener("clinicsUpdated", handleClinicsUpdated);
     };
   }, [user, _id, fetchPTDashboardData]);
+
+  // Fetch clinic appointments when clinics data is available
+  useEffect(() => {
+    if (clinics && clinics.length > 0) {
+      fetchClinicAppointments();
+    }
+  }, [clinics]);
 
   if (loading) {
     return (
@@ -102,7 +149,6 @@ function PTDashboardContent() {
     );
   }
 
-  
   return (
     <div className="relative min-h-screen bg-alice mt-10 text-black p-4 md:p-6">
       <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -116,11 +162,21 @@ function PTDashboardContent() {
           {/* Statistics Widget */}
           <Statistics stats={stats} />
 
-          {/* Upcoming Appointments */}
+          {/* Upcoming PT Appointments */}
           <UpcomingAppointments
             appointments={appointments}
             viewMore={`/pt/${user._id}/appointments`}
           />
+
+          {/* Upcoming Clinic Appointments */}
+          {clinics && clinics.length > 0 && clinics.some(clinic => clinic.ownerUserId?._id?.toString() === user._id?.toString()) && (
+            <ClinicAppointmentManagement
+              appointments={clinicAppointments}
+              clinicId={clinics.find(clinic => clinic.ownerUserId?._id?.toString() === user._id?.toString())?._id} // Use first owned clinic
+            />
+          )}
+          
+
 
           {/* Clinic Promotions */}
           <ClinicPromotionStatus />

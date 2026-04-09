@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { X, Loader2 } from "lucide-react";
-import API from "../../api/axios";
+import { getAdminUserById, updateUserRole, updateUserLicense } from "../../api/admin";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 import { useTranslation } from "react-i18next";
 
 export default function AdminUserDetails() {
@@ -25,9 +24,9 @@ export default function AdminUserDetails() {
   const loadUser = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`${API_URL}/admin/users/${id}`);
-      setUser(res.data.user);
-      setNewRole(res.data.user.role);
+      const data = await getAdminUserById(id);
+      setUser(data.user);
+      setNewRole(data.user.role);
     } catch (err) {
       toast.error(t("failed_load_user"));
     } finally {
@@ -38,7 +37,7 @@ export default function AdminUserDetails() {
   const updateRole = async () => {
     try {
       setUpdatingRole(true);
-      await API.put(`${API_URL}/admin/users/${id}/role`, { role: newRole });
+      await updateUserRole(id, { role: newRole });
       toast.success(t("role_updated"));
       loadUser();
     } catch (err) {
@@ -53,16 +52,13 @@ export default function AdminUserDetails() {
     try {
       setUpdatingLicense(true);
 
-      const response = await API.put(
-        `${API_URL}/admin/users/${id}/license`,
-        {
-          status,
-          notes: notes[idx] || "",
-          index: idx,
-        }
-      );
+      const response = await updateUserLicense(id, {
+        status,
+        notes: notes[idx] || "",
+        index: idx,
+      });
 
-      setUser(response.data.user);
+      setUser(response.user);
 
       toast.success(
         status === "approved"

@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 // api/appointments
 // Members can request appointments
-router.post("/", authenticate, requireRole("member"), requestAppointment);
+router.post("/", authenticate, requestAppointment);
 
 // Get appointments by member (MUST come before /:id)
 router.get("/member/:id", authenticate, requireRole("member", "admin"), getAppointmentsByMember);

@@ -1,12 +1,13 @@
 import express from "express";
 import {
   getAllClinics,
-  getClinicsByPT,
   getClinicsByUser,
   getClinicById,
   createClinic,
   updateClinic,
   deleteClinic,
+  getClinicsPTWork,
+  getClinicOwnedByPT,
 } from "../controllers/clinicController.js";
 import {
   createPTRequest,
@@ -26,14 +27,15 @@ router.get("/", getAllClinics);
 // Create a new clinic (protected)
 router.post("/", authenticate, upload.single("clinic"), createClinic);
 
-// Get my clinics (authenticated user)
-router.get("/my-clinics", authenticate, getClinicsByUser);
+// Get my clinics owned by PT
+router.get("/owned-by-pt/:ptId", authenticate, getClinicOwnedByPT);
 
 // Get my PT requests (PT only) - MUST come before /:clinicId/requests
 router.get("/my-requests", authenticate, getMyPTRequests);
 
-// Get clinics for a specific PT (MUST come before /:id)
-router.get("/pt/:ptId", getClinicsByPT);
+// Get clinics that specific PT works
+router.get("/pt-work/:ptId", getClinicsPTWork);
+
 
 // Get clinics for a specific user (universal) (MUST come before /:id)
 router.get("/user/:userId", getClinicsByUser);

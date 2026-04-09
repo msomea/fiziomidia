@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { requestAppointment } from "../../api/appointments";
 import { fetchPTById } from "../../api/pts";
+import { getClinicsPTWork} from "../../api/clinics";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
@@ -15,22 +16,33 @@ export default function BookAppointment() {
   const navigate = useNavigate();
 
   const [pt, setPt] = useState(null);
+  const [clinics, setClinics] = useState([]);
+  const [selectedClinic, setSelectedClinic] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const loadPT = async () => {
+    const loadData = async () => {
       try {
-        const ptData = await fetchPTById(ptId);
+        const [ptData, clinicsData] = await Promise.all([
+          fetchPTById(ptId),
+          getClinicsPTWork(ptId)
+        ]);
         setPt(ptData);
+        setClinics(clinicsData);
+        
+        // Auto-select first clinic if available
+        if (clinicsData.length > 0) {
+          setSelectedClinic(clinicsData[0]._id);
+        }
       } catch (error) {
         console.error(error);
         toast.error(t("failed_load_pt"));
       }
     };
-    loadPT();
+    loadData();
   }, [ptId, t]);
 
   const handleSubmit = async (e) => {
@@ -40,10 +52,15 @@ export default function BookAppointment() {
       return toast.error(t("select_date_time"));
     }
 
+    if (clinics.length > 0 && !selectedClinic) {
+      return toast.error(t("select_clinic"));
+    }
+
     setLoading(true);
     try {
       await requestAppointment({
         pt: ptId,
+        clinic: selectedClinic,
         date,
         time,
         notes,
@@ -78,6 +95,27 @@ console.log(pt)
       <p className="mb-6 text-gray-600">{pt.specialization}</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {clinics.length > 0 && (
+          <div>
+            <label className="block mb-1 font-medium">
+              {t("select_clinic")}
+            </label>
+            <select
+              className="w-full border p-2 rounded"
+              value={selectedClinic}
+              onChange={(e) => setSelectedClinic(e.target.value)}
+              required
+            >
+              <option value="">{t("choose_clinic")}</option>
+              {clinics.map((clinic) => (
+                <option key={clinic._id} value={clinic._id}>
+                  {clinic.name} - {clinic.address}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="block mb-1 font-medium">

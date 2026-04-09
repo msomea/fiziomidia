@@ -20,10 +20,15 @@ export const deleteClinic = async (id) => {
   return response.data;
 };
 
-export const getPTClinics = async (ptId) => {
-  const response = await API.get(`/clinics/pt/${ptId}`);
+export const getClinicsPTWork = async (ptId) => {
+  const response = await API.get(`/clinics/pt-work/${ptId}`);
   return response.data;
 };
+
+export const getClinicOwnedByPT = async(ptId) => {
+  const response = await API.get(`/clinics/owned-by-pt/${ptId}`);
+  return response.data;
+}
 
 export const getUserClinics = async (userId) => {
   const response = await API.get(`/clinics/user/${userId}`);
@@ -57,6 +62,11 @@ export const getMyPTRequests = async () => {
 };
 
 // PT Search function
+export const getClinicById = async (id) => {
+  const response = await API.get(`/clinics/${id}`);
+  return response.data;
+};
+
 export const searchPhysiotherapists = async (query) => {
   const response = await API.get(`/users/search/physiotherapists?q=${encodeURIComponent(query)}`);
   return response.data;

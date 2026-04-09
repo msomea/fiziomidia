@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const AppointmentSchema = new Schema(
   {
     requester: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    pt: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    pt: { type: Schema.Types.ObjectId, ref: "User" },
     clinic: { type: Schema.Types.ObjectId, ref: "Clinic" },
     requestedAt: { type: Date, default: Date.now },
     scheduledAt: { type: Date, required: true },

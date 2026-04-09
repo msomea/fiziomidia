@@ -31,13 +31,17 @@ const checkAppointmentConflict = async (
       appointmentStart.getTime() + durationMinutes * 60 * 1000,
     );
 
-    // Build query to find overlapping appointments
+    // Add 10-minute buffer for more flexible scheduling
+    const bufferedStart = new Date(appointmentStart.getTime() - 10 * 60 * 1000);
+    const bufferedEnd = new Date(appointmentEnd.getTime() + 10 * 60 * 1000);
+
+    // Build query to find potentially overlapping appointments within buffered time range
     const conflictQuery = {
       pt: new mongoose.Types.ObjectId(ptId),
       status: { $in: ["pending", "accepted"] }, // Only check active appointments
       scheduledAt: {
-        $gte: new Date(appointmentStart.toDateString()), // Start from beginning of day
-        $lt: new Date(appointmentEnd.toDateString() + "T23:59:59.999Z"), // End of day
+        $gte: new Date(bufferedStart.toISOString()), // Start from buffered start time
+        $lt: new Date(bufferedEnd.toISOString()), // End at buffered end time
       },
     };
 
@@ -54,19 +58,19 @@ const checkAppointmentConflict = async (
         conflictStart.getTime() + conflict.durationMinutes * 60 * 1000,
       );
 
-      // Check for time overlap
-      // Case 1: New appointment starts during existing appointment
-      if (appointmentStart >= conflictStart && appointmentStart < conflictEnd) {
+      // Check for time overlap with 10-minute buffer
+      // Case 1: New appointment (with buffer) starts during existing appointment
+      if (bufferedStart >= conflictStart && bufferedStart < conflictEnd) {
         return {
           hasConflict: true,
           conflict,
-          reason: "Time slot already booked",
+          reason: "Time slot too close to existing appointment",
           conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
         };
       }
 
-      // Case 2: New appointment ends during existing appointment
-      if (appointmentEnd > conflictStart && appointmentEnd <= conflictEnd) {
+      // Case 2: New appointment (with buffer) ends during existing appointment
+      if (bufferedEnd > conflictStart && bufferedEnd <= conflictEnd) {
         return {
           hasConflict: true,
           conflict,
@@ -75,8 +79,8 @@ const checkAppointmentConflict = async (
         };
       }
 
-      // Case 3: New appointment completely contains existing appointment
-      if (appointmentStart <= conflictStart && appointmentEnd >= conflictEnd) {
+      // Case 3: New appointment (with buffer) completely contains existing appointment
+      if (bufferedStart <= conflictStart && bufferedEnd >= conflictEnd) {
         return {
           hasConflict: true,
           conflict,
@@ -84,11 +88,23 @@ const checkAppointmentConflict = async (
           conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
         };
       }
+
+      // Case 4: Existing appointment starts during new appointment's buffered time
+      if (conflictStart >= bufferedStart && conflictStart < bufferedEnd) {
+        return {
+          hasConflict: true,
+          conflict,
+          reason: "Time slot too close to existing appointment",
+          conflictTime: `${conflictStart.toTimeString().slice(0, 5)} - ${conflictEnd.toTimeString().slice(0, 5)}`,
+        };
+      }
     }
 
     return { hasConflict: false };
   } catch (error) {
-    throw new Error(`Conflict check failed: ${error.message}`);
+    throw new Error(
+      `Change time, PT has existing appointment: ${error.message}`,
+    );
   }
 };
 
@@ -154,7 +170,7 @@ const validatePTAvailability = async (ptId, date, time) => {
 // Request a new appointment
 export const requestAppointment = async (req, res) => {
   try {
-    const { pt, date, time, notes, durationMinutes = 60 } = req.body; // pt = selected PT ID
+    const { pt, clinic, date, time, notes, durationMinutes = 60 } = req.body; // pt = selected PT ID, clinic = selected clinic ID
     const requesterId = req.user._id; // get logged-in member
 
     if (!pt) return res.status(400).json({ message: "PT is required" });
@@ -170,7 +186,7 @@ export const requestAppointment = async (req, res) => {
       availabilityResult = await validatePTAvailability(pt, date, time);
     } catch (validationError) {
       return res.status(400).json({
-        message: "Availability validation failed",
+        message: "Check PT Availability",
         error: validationError.message,
       });
     }
@@ -193,7 +209,7 @@ export const requestAppointment = async (req, res) => {
       }
     } catch (conflictError) {
       return res.status(500).json({
-        message: "Conflict check failed",
+        message: "Change time, PT has existing appointment",
         error: conflictError.message,
       });
     }
@@ -201,6 +217,7 @@ export const requestAppointment = async (req, res) => {
     const appointment = new Appointment({
       requester: new mongoose.Types.ObjectId(requesterId),
       pt: new mongoose.Types.ObjectId(pt),
+      clinic: clinic ? new mongoose.Types.ObjectId(clinic) : undefined,
       scheduledAt: scheduledAt,
       durationMinutes: durationMinutes,
       // Keep legacy fields for backward compatibility
@@ -292,7 +309,7 @@ export const getAppointments = async (req, res) => {
     }
 
     const appts = await Appointment.find(filter)
-      .populate("pt", "fullName email specialization")  
+      .populate("pt", "fullName email ptProfile.speciality")  
       .populate("requester", "fullName email")
       .populate("clinic")
       .sort({ createdAt: -1 })
@@ -367,7 +384,7 @@ export const updateAppointmentStatus = async (req, res) => {
         }
       } catch (conflictError) {
         return res.status(500).json({
-          message: "Conflict check failed",
+          message: "Change time, PT has existing appointment",
           error: conflictError.message,
         });
       }
@@ -402,10 +419,6 @@ export const updateAppointmentStatus = async (req, res) => {
 
           ptUser.notifications.push(setupNotification);
           await ptUser.save();
-
-          console.log(
-            `⚠️ Working hours reminder sent to PT ${ptUser.fullName}`,
-          );
         }
       }
     } catch (ptNotificationError) {
@@ -451,9 +464,6 @@ export const updateAppointmentStatus = async (req, res) => {
         patientUser.notifications.push(notification);
         await patientUser.save();
 
-        console.log(
-          `📱 Notification sent to patient ${patientUser.fullName} for appointment ${status} (Priority: update)`,
-        );
       }
     } catch (notificationError) {
       console.error(
@@ -507,9 +517,9 @@ export const getAppointmentsByMember = async (req, res) => {
     }
 
     const appts = await Appointment.find({ requester: memberId })
-      .populate("pt", "fullName email specialization")  
+      .populate("pt", "fullName email phone")
       .populate("requester", "fullName email")
-      .populate("clinic")
+      .populate("clinic", "address name contactPhone")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ appts });

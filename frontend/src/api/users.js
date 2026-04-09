@@ -37,3 +37,9 @@ export const getSavedPTsByMember = async (memberId) => {
   const res = await API.get(`${API_URL}/users/${memberId}/saved-pts`);
   return res.data;
 };
+
+// Update user language preference
+export const updateLanguage = async (language) => {
+  const res = await API.put("/users/update-language", { language });
+  return res.data;
+};

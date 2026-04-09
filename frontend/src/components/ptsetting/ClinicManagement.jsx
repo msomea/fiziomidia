@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X, Upload, Search, User, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Link } from "react-router";
-import { createClinic, updateClinic, deleteClinic, getPTClinics, searchPhysiotherapists, sendPTRequest, getPTRequests, respondToPTRequest } from "../../api/clinics";
+import { createClinic, updateClinic, deleteClinic, getClinicOwnedByPT, searchPhysiotherapists, sendPTRequest, getPTRequests, respondToPTRequest } from "../../api/clinics";
 import toast from "react-hot-toast";
 import LocationSelector from "../location/LocationSelector";
 
@@ -65,7 +65,7 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
     }
     
     try {
-      const data = await getPTClinics(user._id);
+      const data = await getClinicOwnedByPT(user._id);
       setClinics(data);
 
       // Only update formData if this is not the initial load
@@ -474,7 +474,10 @@ const ClinicManagement = ({ formData, setFormData, user, t }) => {
 
                     <div>
 
-                      <Link to={`/clinic/${clinic._id}`}>
+                      <Link 
+                        to={`/clinic/${clinic._id}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <h4 className="text-caribbean font-semibold">{clinic.name}</h4>
                       </Link>
 
