@@ -1,35 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { getAppointmentsByMember } from "../../../api/appointments";
-import { useAuth } from "../../../context/AuthContext";
-import { Loader2 } from "lucide-react";
+import React from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 
-const MemberAppointments = () => {
+const MemberAppointments = ({ appointments = [], userId }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      if (!user?._id) return;
-      setLoading(true);
-      try {
-        const data = await getAppointmentsByMember(user._id);
-        setAppointments(data);
-      } catch (err) {
-        console.error("Failed to fetch appointments:", err);
-        setError(t("appointments_load_error"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAppointments();
-  }, [user, t]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -47,14 +22,6 @@ const MemberAppointments = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-40">
-        <Loader2 className="animate-spin text-gray-500" size={40} />
-      </div>
-    );
-  }
-
   return (
     <section className="bg-white p-6 rounded-2xl shadow-md mt-6">
       <div className="flex justify-between items-center mb-5">
@@ -62,13 +29,11 @@ const MemberAppointments = () => {
           {t("upcoming_appointments")}
         </h2>
         <button
-          onClick={() => navigate(`/appointments/member/${user._id}`)}
+          onClick={() => navigate(`/appointments/member/${userId}`)}
           className="btn btn-sm p-1 bg-caribbean text-white hover:bg-tufts">
           {t("view_all")}
         </button>
       </div>
-
-      {error && <p className="text-red-500 mb-3">{error}</p>}
 
       {appointments.length > 0 ? (
         <ul className="space-y-4">

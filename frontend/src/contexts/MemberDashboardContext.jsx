@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import API from '../api/axios';
 import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
 import { API_URL } from '../config/constants';
@@ -10,6 +10,9 @@ const initialState = {
   appointments: [],
   savedPTs: [],
   notifications: [],
+  clinicAppointments: [],
+  clinics: [],
+  clinicPromotions: [],
   stats: {
     totalAppointments: 0,
     upcomingAppointments: 0,
@@ -31,6 +34,9 @@ const actionTypes = {
   UPDATE_SAVED_PTS: 'UPDATE_SAVED_PTS',
   UPDATE_STATS: 'UPDATE_STATS',
   UPDATE_NOTIFICATIONS: 'UPDATE_NOTIFICATIONS',
+  UPDATE_CLINIC_APPOINTMENTS: 'UPDATE_CLINIC_APPOINTMENTS',
+  UPDATE_CLINICS: 'UPDATE_CLINICS',
+  UPDATE_CLINIC_PROMOTIONS: 'UPDATE_CLINIC_PROMOTIONS',
   CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
@@ -59,6 +65,12 @@ const memberDashboardReducer = (state, action) => {
       return { ...state, stats: action.payload };
     case actionTypes.UPDATE_NOTIFICATIONS:
       return { ...state, notifications: action.payload };
+    case actionTypes.UPDATE_CLINIC_APPOINTMENTS:
+      return { ...state, clinicAppointments: action.payload };
+    case actionTypes.UPDATE_CLINICS:
+      return { ...state, clinics: action.payload };
+    case actionTypes.UPDATE_CLINIC_PROMOTIONS:
+      return { ...state, clinicPromotions: action.payload };
     case actionTypes.CLEAR_ERROR:
       return { ...state, error: null };
     default:
@@ -74,8 +86,18 @@ export const MemberDashboardProvider = ({ children }) => {
   const [state, dispatch] = useReducer(memberDashboardReducer, initialState);
 
   // Fetch all member dashboard data at once
-  const fetchMemberDashboardData = useCallback(async () => {
+  const fetchMemberDashboardData = useCallback(async (forceRefresh = false) => {
     try {
+      // Check if we have recent data (less than 30 seconds old) and skip fetch if not forced
+      const now = Date.now();
+      const lastFetched = state.lastFetched ? new Date(state.lastFetched).getTime() : 0;
+      const timeSinceLastFetch = now - lastFetched;
+      
+      if (!forceRefresh && state.memberProfile && timeSinceLastFetch < 30000) {
+        // Use cached data if it's recent
+        return state;
+      }
+
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       dispatch({ type: actionTypes.CLEAR_ERROR });
 
@@ -86,18 +108,6 @@ export const MemberDashboardProvider = ({ children }) => {
         payload: response.data,
       });
 
-      // Also fetch notifications separately
-      try {
-        const notifications = await getUserNotifications(response.data.memberProfile?._id);
-        dispatch({ 
-          type: actionTypes.UPDATE_NOTIFICATIONS, 
-          payload: notifications || [] 
-        });
-      } catch (notifError) {
-        console.error('Notifications fetch error:', notifError);
-        // Don't show toast for this, as it's not critical
-      }
-
       return response.data;
     } catch (error) {
       console.error('Member Dashboard data fetch error:', error);
@@ -106,7 +116,7 @@ export const MemberDashboardProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  }, []);
+  }, [state.memberProfile, state.lastFetched]);
 
   // Refresh specific data sections
   const refreshMemberProfile = useCallback(async () => {
@@ -191,10 +201,27 @@ export const MemberDashboardProvider = ({ children }) => {
     }
   }, [state.notifications]);
 
+  // Manual refresh function
+  const refreshDashboard = useCallback(async () => {
+    return await fetchMemberDashboardData(true);
+  }, [fetchMemberDashboardData]);
+
+  // Cache user data for AuthProvider to access
+  useEffect(() => {
+    if (state.memberProfile) {
+      const cachedUserElement = document.getElementById('cached-member-user');
+      if (cachedUserElement) {
+        cachedUserElement.textContent = JSON.stringify(state.memberProfile);
+        cachedUserElement.setAttribute('data-user-id', state.memberProfile._id);
+      }
+    }
+  }, [state.memberProfile]);
+
   // Context value
   const value = {
     ...state,
     fetchMemberDashboardData,
+    refreshDashboard,
     refreshMemberProfile,
     refreshAppointments,
     refreshSavedPTs,

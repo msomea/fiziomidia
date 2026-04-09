@@ -22,7 +22,6 @@ import {
 import MemberClinicAppointments from "../../components/dashboard/member/MemberClinicAppointments";
 import NotificationSection from "../../components/dashboard/NotificationSection";
 import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
-import { getMemberClinicAppointments } from "../../api/clinicAppointments";
 
 import avatar from "../../assets/avatar.jpg";
 import toast from "react-hot-toast";
@@ -58,38 +57,18 @@ function MemberDashboardContent() {
     appointments, 
     savedPTs, 
     notifications,
+    clinicAppointments,
+    clinics,
+    clinicPromotions,
     stats, 
     loading, 
     error, 
     fetchMemberDashboardData,
+    refreshDashboard,
     markNotificationRead 
   } = useMemberDashboard();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [clinicAppointments, setClinicAppointments] = useState([]);
-  const [clinicAppointmentsLoading, setClinicAppointmentsLoading] = useState(false);
-
-  // Fetch member's clinic appointments
-  const fetchClinicAppointments = async () => {
-    if (!authUser || authUser.role === "guest") return;
-    
-    setClinicAppointmentsLoading(true);
-    try {
-      const response = await getMemberClinicAppointments();
-      if (response.appointments) {
-        // Sort by creation date (newest first) and limit to first 5 for dashboard
-        const sortedAppointments = response.appointments
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5);
-        
-        setClinicAppointments(sortedAppointments);
-      }
-    } catch (error) {
-      console.error("Failed to fetch clinic appointments:", error);
-    } finally {
-      setClinicAppointmentsLoading(false);
-    }
-  };
 
   // Use authUser or guest as initial state
   const memberData = memberProfile || authUser || DEFAULT_USER;
@@ -107,19 +86,11 @@ function MemberDashboardContent() {
     const handleProfileUpdate = () => {
       if (authUser && authUser.role !== "guest") {
         fetchMemberDashboardData();
-        fetchClinicAppointments();
       }
     };
     window.addEventListener("profileUpdated", handleProfileUpdate);
     return () => window.removeEventListener("profileUpdated", handleProfileUpdate);
   }, [authUser, fetchMemberDashboardData]);
-
-  // Fetch clinic appointments when user data is available
-  useEffect(() => {
-    if (authUser && authUser.role !== "guest") {
-      fetchClinicAppointments();
-    }
-  }, [authUser]);
 
   if (loading) {
     return (
@@ -154,7 +125,8 @@ function MemberDashboardContent() {
       ? memberData.profileImageUrl
       : memberData.profileImageUrl
     : avatar;
-  console.log(memberData);
+
+    
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
       {/* Header Section */}
@@ -218,12 +190,12 @@ function MemberDashboardContent() {
         {memberData.role !== "guest" && (
           <div className="lg:col-span-2 space-y-6">
             <MemberDetails member={memberData} />
-            <MemberAppointments appointments={appointments} />
+            <MemberAppointments appointments={appointments} userId={memberData._id} />
             <MemberSavedPTs savedPTs={savedPTs} />
-            {memberData.clinicIds && memberData.clinicIds.length > 0 && (
-              <ClinicPromotionStatus />
+            {clinics && clinics.length > 0 && (
+              <ClinicPromotionStatus clinics={clinics} clinicPromotions={clinicPromotions} />
             )}
-            {memberData.clinicIds && memberData.clinicIds.length > 0 && (
+            {clinics && clinics.length > 0 && (
               <MemberClinicAppointments 
                 appointments={clinicAppointments}
                 viewMore={`/member/clinic-appointments`}

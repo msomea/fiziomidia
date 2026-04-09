@@ -101,8 +101,18 @@ export const PTDashboardProvider = ({ children }) => {
   const [state, dispatch] = useReducer(ptDashboardReducer, initialState);
 
   // Fetch all PT dashboard data at once
-  const fetchDashboardData = useCallback(async (ptId) => {
+  const fetchDashboardData = useCallback(async (ptId, forceRefresh = false) => {
     try {
+      // Check if we have recent data (less than 30 seconds old) and skip fetch if not forced
+      const now = Date.now();
+      const lastFetched = state.lastFetched ? new Date(state.lastFetched).getTime() : 0;
+      const timeSinceLastFetch = now - lastFetched;
+      
+      if (!forceRefresh && state.ptProfile && timeSinceLastFetch < 30000) {
+        // Use cached data if it's recent
+        return state;
+      }
+
       dispatch({ type: actionTypes.SET_LOADING, payload: true });
       dispatch({ type: actionTypes.CLEAR_ERROR });
 
@@ -135,7 +145,7 @@ export const PTDashboardProvider = ({ children }) => {
       toast.error(errorMessage);
       throw error;
     }
-  }, []);
+  }, [state.ptProfile, state.lastFetched]);
 
   // Refresh specific data sections
   const refreshPTProfile = useCallback(async (ptId) => {
@@ -188,7 +198,6 @@ export const PTDashboardProvider = ({ children }) => {
         today.setHours(0, 0, 0, 0); // Set to start of day for consistent calculation
         endDate.setHours(0, 0, 0, 0); // Set to start of day for consistent calculation
         const daysLeft = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-        console.log("days left in refresh promotion:", daysLeft)
         
         promotionData = {
           ...promotionData,
@@ -207,7 +216,6 @@ export const PTDashboardProvider = ({ children }) => {
     try {
       const stats = await fetchPTDashboardStats(ptId);
       dispatch({ type: actionTypes.UPDATE_STATS, payload: stats || {} });
-      console.log("Stat is dash context", stats)
     } catch (error) {
       console.error('Stats refresh error:', error);
       toast.error('Failed to refresh stats');
@@ -218,6 +226,11 @@ export const PTDashboardProvider = ({ children }) => {
   const clearError = () => {
     dispatch({ type: actionTypes.CLEAR_ERROR });
   };
+
+  // Manual refresh function
+  const refreshDashboard = useCallback(async (ptId) => {
+    return await fetchDashboardData(ptId, true);
+  }, [fetchDashboardData]);
 
   // Refresh notifications
   const refreshNotifications = useCallback(async (ptId) => {
@@ -250,6 +263,7 @@ export const PTDashboardProvider = ({ children }) => {
   const value = {
     ...state,
     fetchPTDashboardData: fetchDashboardData,
+    refreshDashboard,
     refreshPTProfile,
     refreshAppointments,
     refreshForumPosts,

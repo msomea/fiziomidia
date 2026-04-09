@@ -21,7 +21,6 @@ export default function PTClinicAppointmentPage() {
     const loadClinicAppointments = async () => {
       try {
         const data = await getMemberClinicAppointments();
-        console.log("Response", data)
         setAppointments(data.appointments || []);
       } catch (err) {
         toast.error(t("failed_load_appointments"));

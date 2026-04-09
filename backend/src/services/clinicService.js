@@ -163,3 +163,28 @@ export const getMyForumSubs = async (ptId) => {
     return [];
   }
 };
+
+/**
+ * Get member's clinic appointments (for clinics they own)
+ */
+export const getMemberClinicAppointments = async (userId) => {
+  try {
+    // First, find all clinics owned by this member
+    const ownedClinics = await Clinic.find({ ownerUserId: userId }).select('_id');
+    const ownedClinicIds = ownedClinics.map(clinic => clinic._id);
+    
+    // Get all clinic appointments where the clinic is owned by them
+    const appointments = await Appointment.find({ 
+      clinic: { $in: ownedClinicIds }
+    })
+      .populate("clinic", "name address contactPhone")
+      .populate("pt", "fullName email ptProfile.speciality")
+      .populate("requester", "fullName")
+      .sort({ createdAt: -1 });
+
+    return { appointments };
+  } catch (error) {
+    console.error("Error fetching member clinic appointments:", error);
+    return { appointments: [] };
+  }
+};

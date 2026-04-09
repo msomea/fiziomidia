@@ -17,6 +17,15 @@ export const DEFAULT_USER = {
   language: "sw",
 };
 
+// Clear user cache utility
+export const clearUserCache = () => {
+  const cachedUserElement = document.getElementById('cached-member-user');
+  if (cachedUserElement) {
+    cachedUserElement.textContent = '';
+    cachedUserElement.removeAttribute('data-user-id');
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(() => {
@@ -34,7 +43,31 @@ export const AuthProvider = ({ children }) => {
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed.accessToken) {
-            const data = await fetchCurrentUser();
+            // Check if we're on member dashboard page and have cached data
+            const isMemberDashboard = window.location.pathname.includes('/member/dashboard');
+            const cachedUserElement = document.getElementById('cached-member-user');
+            const cachedUserData = cachedUserElement ? JSON.parse(cachedUserElement.textContent) : null;
+            
+            let data;
+            if (isMemberDashboard && cachedUserData && cachedUserData._id === parsed._id) {
+              // Validate session: ensure cached user matches current stored user
+              const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+              if (storedUser._id === cachedUserData._id && storedUser.accessToken === cachedUserData.accessToken) {
+                // Use cached data from dashboard context instead of making API call
+                data = cachedUserData;
+                console.log('Using cached user data from member dashboard');
+              } else {
+                // Session mismatch - clear cache and fetch fresh data
+                console.log('Session mismatch, clearing cache and fetching fresh data');
+                clearUserCache();
+                data = await fetchCurrentUser();
+              }
+            } else {
+              // Make API call for other pages or if no cached data
+              data = await fetchCurrentUser();
+              console.log('Fetching fresh user data');
+            }
+            
             const updatedUser = { ...parsed, ...data };
             if (JSON.stringify(user) !== JSON.stringify(updatedUser)) {
               setUser(updatedUser);
@@ -54,6 +87,12 @@ export const AuthProvider = ({ children }) => {
           }
           setUser(DEFAULT_USER);
           localStorage.clear();
+          // Clear DOM cache for security
+          const cachedUserElement = document.getElementById('cached-member-user');
+          if (cachedUserElement) {
+            cachedUserElement.textContent = '';
+            cachedUserElement.removeAttribute('data-user-id');
+          }
         }
         console.warn("Failed to fetch user:", err);
       } finally {
@@ -111,8 +150,8 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(DEFAULT_USER); // reset to guest
       localStorage.clear();
+      clearUserCache(); // Clear DOM cache for security
       navigate("/");
-      
     }
   };
 

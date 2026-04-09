@@ -123,8 +123,6 @@ export default function AdminClinicPromotionDetail() {
 
   // Determine image: use promotion image if uploaded, otherwise clinic image
   const promoImage = promo.imageUrl || promo.clinic?.imageUrl;
-
-  console.log(promo);
   
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">

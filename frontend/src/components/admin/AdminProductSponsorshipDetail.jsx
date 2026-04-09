@@ -78,7 +78,6 @@ export default function AdminProductSponsorshipDetail() {
       // ✅ Only send isActive if approved
       if (product.status === "approved") {
         data.append("isActive", String(form.isActive));
-        console.log("Sending isActive:", form.isActive);
       }
 
       if (newImage) data.append("product", newImage);

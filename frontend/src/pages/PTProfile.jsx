@@ -103,7 +103,8 @@ const PTProfile = () => {
 
   const ptProfile = pt.ptProfile;
   const avatarSrc = pt.profileImageUrl || avatarFallback;
-console.log(pt)
+
+  
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 mt-14">
       <div className="relative bg-white shadow-md rounded-b-3xl">

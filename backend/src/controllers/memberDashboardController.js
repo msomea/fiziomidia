@@ -1,6 +1,13 @@
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
+import Clinic from "../models/Clinic.js";
+import ClinicPromotion from "../models/ClinicPromotion.js";
 import asyncHandler from "express-async-handler";
+import {
+  getUserNotifications,
+  getMemberClinicAppointments,
+  getClinicPromotionsForPT,
+} from "../services/clinicService.js";
 
 // ============================================
 // CONSOLIDATED MEMBER DASHBOARD API
@@ -14,7 +21,11 @@ export const getMemberDashboardData = async (req, res) => {
       memberProfile,
       appointments,
       savedPTs,
-      stats
+      stats,
+      clinicAppointmentsData,
+      clinics,
+      clinicPromotions,
+      notifications,
     ] = await Promise.all([
       // Member Profile query
       User.findById(userId).select("-passwordHash -refreshTokens"),
@@ -26,10 +37,27 @@ export const getMemberDashboardData = async (req, res) => {
         .sort({ scheduledDate: 1 }),
 
       // Saved PTs query
-      User.findById(userId).populate("savedPTs", "fullName profileImageUrl ptProfile"),
+      User.findById(userId).populate(
+        "savedPTs",
+        "fullName profileImageUrl ptProfile",
+      ),
 
       // Dashboard Stats
-      getMemberDashboardStats(userId)
+      getMemberDashboardStats(userId),
+
+      // Clinic Appointments (for clinics owned by member)
+      getMemberClinicAppointments(userId),
+
+      // Clinics owned by member
+      Clinic.find({ ownerUserId: userId })
+        .populate("ownerUserId", "fullName email phone")
+        .populate("physiotherapists", "fullName email phone"),
+
+      // Clinic Promotions for member's clinics
+      getClinicPromotionsForPT(userId),
+
+      // User Notifications
+      getUserNotifications(userId),
     ]);
 
     // Extract saved PTs from the populated user document
@@ -41,6 +69,10 @@ export const getMemberDashboardData = async (req, res) => {
       appointments,
       savedPTs: savedPTsList,
       stats,
+      clinicAppointments: clinicAppointmentsData.appointments || [],
+      clinics,
+      clinicPromotions,
+      notifications,
       lastFetched: new Date(),
     });
 
