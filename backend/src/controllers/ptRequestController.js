@@ -1,6 +1,7 @@
 import PTRequest from "../models/PTRequest.js";
 import Clinic from "../models/Clinic.js";
 import User from "../models/User.js";
+import { getPTRequestsForPT } from "../services/clinicService.js";
 import { CacheService } from "../utils/redis.js";
 
 export const createPTRequest = async (req, res) => {
@@ -205,14 +206,8 @@ export const respondToPTRequest = async (req, res) => {
 
 export const getMyPTRequests = async (req, res) => {
   try {
-    const requests = await PTRequest.find({ 
-      physiotherapistId: req.user._id,
-      status: "pending" 
-    })
-      .populate('clinicId', 'name address imageUrl ownerUserId')
-      .populate('requestedBy', 'fullName email phone')
-      .sort({ requestedAt: -1 });
-
+    // Use shared service to get PT requests
+    const requests = await getPTRequestsForPT(req.user._id);
     res.json(requests);
   } catch (error) {
     console.error("Error fetching PT requests:", error);

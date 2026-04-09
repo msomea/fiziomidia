@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
 import API from '../api/axios';
 import { API_URL } from '../config/constants';
-import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
+import { markNotificationAsRead } from '../api/notifications';
 import { fetchPromotions } from '../api/promotions';
 import { fetchPTDashboardData, fetchPTDashboardStats, fetchPTById } from '../api/pts';
 import dayjs from 'dayjs';
@@ -21,6 +21,11 @@ const initialState = {
     totalForumPosts: 0,
     promotionDaysLeft: 0,
   },
+  // NEW - Centralized clinic data
+  clinicAppointments: [],
+  clinicPromotions: [],
+  ptRequests: [],
+  forumSubs: [],
   loading: false,
   error: null,
   lastFetched: null,
@@ -37,6 +42,11 @@ const actionTypes = {
   UPDATE_PROMOTION: 'UPDATE_PROMOTION',
   UPDATE_STATS: 'UPDATE_STATS',
   UPDATE_NOTIFICATIONS: 'UPDATE_NOTIFICATIONS',
+  // NEW - Clinic data actions
+  UPDATE_CLINIC_APPOINTMENTS: 'UPDATE_CLINIC_APPOINTMENTS',
+  UPDATE_CLINIC_PROMOTIONS: 'UPDATE_CLINIC_PROMOTIONS',
+  UPDATE_PT_REQUESTS: 'UPDATE_PT_REQUESTS',
+  UPDATE_FORUM_SUBS: 'UPDATE_FORUM_SUBS',
   CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
@@ -67,6 +77,15 @@ const ptDashboardReducer = (state, action) => {
       return { ...state, stats: action.payload };
     case actionTypes.UPDATE_NOTIFICATIONS:
       return { ...state, notifications: action.payload };
+    // NEW - Clinic data reducer cases
+    case actionTypes.UPDATE_CLINIC_APPOINTMENTS:
+      return { ...state, clinicAppointments: action.payload };
+    case actionTypes.UPDATE_CLINIC_PROMOTIONS:
+      return { ...state, clinicPromotions: action.payload };
+    case actionTypes.UPDATE_PT_REQUESTS:
+      return { ...state, ptRequests: action.payload };
+    case actionTypes.UPDATE_FORUM_SUBS:
+      return { ...state, forumSubs: action.payload };
     case actionTypes.CLEAR_ERROR:
       return { ...state, error: null };
     default:
@@ -107,18 +126,6 @@ export const PTDashboardProvider = ({ children }) => {
         type: actionTypes.SET_DASHBOARD_DATA,
         payload: dashboardData,
       });
-
-      // Also fetch notifications separately
-      try {
-        const notifications = await getUserNotifications(ptId);
-        dispatch({ 
-          type: actionTypes.UPDATE_NOTIFICATIONS, 
-          payload: notifications || [] 
-        });
-      } catch (notifError) {
-        console.error('Notifications fetch error:', notifError);
-        // Don't show toast for this, as it's not critical
-      }
 
       return dashboardData;
     } catch (error) {

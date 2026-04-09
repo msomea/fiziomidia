@@ -436,7 +436,6 @@ export const getUserNotifications = async (req, res) => {
     // Try to get from cache first
     const cachedNotifications = await CacheService.get(cacheKey);
     if (cachedNotifications) {
-      console.log(`User notifications cache hit for user: ${id}`);
       return res.json(cachedNotifications);
     }
 

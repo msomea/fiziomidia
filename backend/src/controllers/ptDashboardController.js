@@ -3,8 +3,16 @@ import Appointment from "../models/Appointment.js";
 import Post from "../models/Post.js";
 import PTPromotion from "../models/PTPromotion.js";
 import Clinic from "../models/Clinic.js";
+import ClinicPromotion from "../models/ClinicPromotion.js";
 import asyncHandler from "express-async-handler";
 import dayjs from "dayjs";
+import {
+  getClinicAppointmentsForPT,
+  getClinicPromotionsForPT,
+  getPTRequestsForPT,
+  getUserNotifications,
+  getMyForumSubs,
+} from "../services/clinicService.js";
 
 // ============================================
 // CONSOLIDATED PT DASHBOARD API
@@ -14,35 +22,61 @@ export const getPTDashboardData = async (req, res) => {
     const { id: ptId } = req.params;
     const { limit = 3 } = req.query;
 
-    const [ptProfile, clinics, appointments, forumPosts, promotion, stats] =
-      await Promise.all([
-        // PT Profile
-        User.findById(ptId).select("-passwordHash -refreshTokens"),
+    const [
+      ptProfile,
+      clinics,
+      appointments,
+      forumPosts,
+      promotion,
+      stats,
+      clinicAppointments,
+      clinicPromotions,
+      ptRequests,
+      notifications,
+      forumSubs,
+    ] = await Promise.all([
+      // PT Profile
+      User.findById(ptId).select("-passwordHash -refreshTokens"),
 
-        // Clinics
-        Clinic.find({ ownerUserId: ptId })
-          .populate("ownerUserId", "fullName email phone")
-          .populate("physiotherapists", "fullName email phone"),
+      // Clinics
+      Clinic.find({ ownerUserId: ptId })
+        .populate("ownerUserId", "fullName email phone")
+        .populate("physiotherapists", "fullName email phone"),
 
-        // Appointments
-        Appointment.find({ pt: ptId })
-          .populate("requester", "fullName email phone")
-          .populate("clinic", "name location address")
-          .sort({ appointmentDate: 1 })
-          .limit(parseInt(limit)),
+      // Appointments
+      Appointment.find({ pt: ptId })
+        .populate("requester", "fullName email phone")
+        .populate("clinic", "name location address")
+        .sort({ appointmentDate: 1 })
+        .limit(parseInt(limit)),
 
-        // Forum Posts
-        Post.find({ createdBy: ptId })
-          .populate("sub", "title slug")
-          .sort({ createdAt: -1 })
-          .limit(parseInt(limit)),
+      // Forum Posts
+      Post.find({ createdBy: ptId })
+        .populate("sub", "title slug")
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit)),
 
-        // Latest promotion (any status)
-        PTPromotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
+      // Latest promotion (any status)
+      PTPromotion.findOne({ pt: ptId }).sort({ createdAt: -1 }),
 
-        // Stats
-        getPTDashboardStats(ptId),
-      ]);
+      // Stats
+      getPTDashboardStats(ptId),
+
+      // Clinic Appointments for PT's owned clinics
+      getClinicAppointmentsForPT(ptId),
+
+      // Clinic Promotions for PT's owned clinics
+      getClinicPromotionsForPT(ptId),
+
+      // PT Requests (Invitations) for PT
+      getPTRequestsForPT(ptId),
+
+      // User Notifications
+      getUserNotifications(ptId),
+
+      // Forum Subscriptions
+      getMyForumSubs(ptId),
+    ]);
 
     return res.json({
       success: true,
@@ -52,6 +86,11 @@ export const getPTDashboardData = async (req, res) => {
       forumPosts,
       promotion,
       stats,
+      clinicAppointments,
+      clinicPromotions,
+      ptRequests,
+      notifications,
+      forumSubs,
       lastFetched: new Date(),
     });
 
@@ -126,5 +165,6 @@ async function getPTDashboardStats(ptId) {
     };
   }
 }
+
 
 export { getPTDashboardStats };

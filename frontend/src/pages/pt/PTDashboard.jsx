@@ -11,7 +11,6 @@ import ForumSubManagement from "../../components/dashboard/pt/ForumSubManagement
 import ClinicPromotionStatus from "../../components/dashboard/ClinicPromotionStatus";
 import PromotionStatus from "../../components/dashboard/pt/PromotionStatus";
 import ClinicInvitations from "../../components/dashboard/pt/ClinicInvitations";
-import { getClinicAppointments, getClinicAppointmentsForPT } from "../../api/clinicAppointments";
 
 import {
   Menu,
@@ -40,7 +39,11 @@ function PTDashboardContent() {
     forumPosts, 
     promotion, 
     notifications,
-    stats, 
+    stats,
+    clinicAppointments,
+    clinicPromotions,
+    ptRequests,
+    forumSubs,
     loading, 
     error, 
     fetchPTDashboardData,
@@ -48,45 +51,8 @@ function PTDashboardContent() {
   } = usePTDashboard();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [clinicAppointments, setClinicAppointments] = useState([]);
-  const [clinicAppointmentsLoading, setClinicAppointmentsLoading] = useState(false);
 
-  // Fetch clinic appointments for PT's owned clinics only
-  const fetchClinicAppointments = async () => {
-
-    
-    if (!clinics || clinics.length === 0) return;
-    
-    setClinicAppointmentsLoading(true);
-    try {
-      // Get appointments only for clinics the PT owns
-      const allClinicAppointments = [];
-      for (const clinic of clinics) {
-        // Only fetch if the PT is the owner of this clinic (ownerUserId is an object with _id property)
-        if (clinic.ownerUserId?._id?.toString() === user._id?.toString()) {
-          try {
-            const response = await getClinicAppointments(clinic._id);
-            if (response.appointments) {
-              allClinicAppointments.push(...response.appointments);
-            }
-          } catch (error) {
-            console.error(`Failed to fetch appointments for clinic ${clinic._id}:`, error);
-          }
-        }
-      }
-      
-      // Sort by creation date (newest first) and limit to first 5 for dashboard
-      const sortedAppointments = allClinicAppointments
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
-      setClinicAppointments(sortedAppointments);
-    } catch (error) {
-      console.error("Failed to fetch clinic appointments:", error);
-    } finally {
-      setClinicAppointmentsLoading(false);
-    }
-  };
-
+  
   useEffect(() => {
     if (!user || !_id || user._id === null) return;
 
@@ -109,13 +75,7 @@ function PTDashboardContent() {
     };
   }, [user, _id, fetchPTDashboardData]);
 
-  // Fetch clinic appointments when clinics data is available
-  useEffect(() => {
-    if (clinics && clinics.length > 0) {
-      fetchClinicAppointments();
-    }
-  }, [clinics]);
-
+  
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-caribbean">
@@ -179,14 +139,14 @@ function PTDashboardContent() {
 
 
           {/* Clinic Promotions */}
-          <ClinicPromotionStatus />
+          <ClinicPromotionStatus clinics={clinics} clinicPromotions={clinicPromotions} />
 
           {/* Clinic Invitations */}
-          <ClinicInvitations t={t} />
+          <ClinicInvitations invitations={ptRequests} t={t} />
 
           {/* Forum & PT Promotion */}
           <div className="grid md:grid-cols-2 gap-4">
-            <ForumSubManagement />
+            <ForumSubManagement forumSubs={forumSubs} />
             <PromotionStatus
               promotion={promotion}
               extendLink={`/promotions/pt/${_id}`}

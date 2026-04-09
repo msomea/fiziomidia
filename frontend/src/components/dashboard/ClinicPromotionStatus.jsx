@@ -1,9 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../context/AuthContext";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
 import { 
   Building, 
   Clock, 
@@ -15,37 +12,11 @@ import {
   Plus
 } from "lucide-react";
 
-export default function ClinicPromotionStatus() {
+export default function ClinicPromotionStatus({ clinics = [], clinicPromotions = [] }) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const [clinics, setClinics] = useState([]);
-  const [promotions, setPromotions] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchClinicPromotions();
-  }, []);
-
-  const fetchClinicPromotions = async () => {
-    try {
-      // Fetch user's clinics
-      const clinicsResponse = await API.get(`${API_URL}/clinics/owned-by-pt/${user._id}`);
-      const userClinics = clinicsResponse.data || [];
-      setClinics(userClinics);
-
-      // Fetch user's clinic promotions
-      const promotionsResponse = await API.get(`${API_URL}/promotions/clinic/my-promotions`);
-      const userPromotions = promotionsResponse.data || [];
-      setPromotions(userPromotions);
-    } catch (error) {
-      console.error("Failed to fetch clinic promotions:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getPromotionForClinic = (clinicId) => {
-    return promotions.find(promo => promo.clinic._id === clinicId);
+    return clinicPromotions.find(promo => promo.clinic._id === clinicId);
   };
 
   const getStatusColor = (status) => {
@@ -89,21 +60,7 @@ export default function ClinicPromotionStatus() {
     return t("expires_in_days", { days: daysLeft });
   };
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded mb-4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  
   if (clinics.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-6 text-center">

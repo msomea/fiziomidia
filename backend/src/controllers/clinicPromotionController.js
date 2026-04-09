@@ -1,7 +1,12 @@
 import ClinicPromotion from "../models/ClinicPromotion.js";
-import { CacheService } from "../utils/redis.js";
 import Clinic from "../models/Clinic.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "../services/uploadService.js";
+import asyncHandler from "express-async-handler";
+import { getClinicPromotionsForPT } from "../services/clinicService.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../services/uploadService.js";
+import { CacheService } from "../utils/redis.js";
 
 /*
 ========================================
@@ -10,14 +15,8 @@ CREATE CLINIC PROMOTION
 */
 export const createClinicPromotion = async (req, res) => {
   try {
-    const {
-      clinicId,
-      title,
-      price,
-      duration,
-      customTitle,
-      customDescription,
-    } = req.body;
+    const { clinicId, title, price, duration, customTitle, customDescription } =
+      req.body;
 
     const clinic = await Clinic.findById(clinicId);
 
@@ -33,7 +32,7 @@ export const createClinicPromotion = async (req, res) => {
     // Upload image to Cloudinary if provided
     let imageUrl = null;
     let imagePublicId = null;
-    
+
     if (req.file) {
       const result = await uploadToCloudinary(req.file);
       imageUrl = result.secure_url;
@@ -87,8 +86,9 @@ GET SINGLE PROMOTION
 */
 export const getClinicPromotionById = async (req, res) => {
   try {
-    const promotion = await ClinicPromotion.findById(req.params.id)
-      .populate("clinic");
+    const promotion = await ClinicPromotion.findById(req.params.id).populate(
+      "clinic",
+    );
 
     if (!promotion) {
       return res.status(404).json({ message: "Promotion not found" });
@@ -107,17 +107,8 @@ GET MY CLINIC PROMOTIONS (OWNER)
 */
 export const getMyClinicPromotions = async (req, res) => {
   try {
-    // Find clinics owned by user
-    const clinics = await Clinic.find({ ownerUserId: req.user._id });
-
-    const clinicIds = clinics.map((c) => c._id);
-
-    const promotions = await ClinicPromotion.find({
-      clinic: { $in: clinicIds },
-    })
-      .populate("clinic")
-      .sort({ createdAt: -1 });
-
+    // Use shared service to get promotions for PT's owned clinics
+    const promotions = await getClinicPromotionsForPT(req.user._id);
     res.json(promotions);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -131,7 +122,9 @@ UPDATE PROMOTION
 */
 export const updateClinicPromotion = async (req, res) => {
   try {
-    const promotion = await ClinicPromotion.findById(req.params.id).populate("clinic");
+    const promotion = await ClinicPromotion.findById(req.params.id).populate(
+      "clinic",
+    );
 
     if (!promotion) {
       return res.status(404).json({ message: "Promotion not found" });

@@ -1,48 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ChevronDown, ChevronUp, Building, MapPin, Phone, CheckCircle, XCircle, Clock, ExternalLink, User } from "lucide-react";
 import { Link } from "react-router";
-import { getMyPTRequests, respondToPTRequest } from "../../../api/clinics";
+import { respondToPTRequest } from "../../../api/clinics";
 import toast from "react-hot-toast";
-import { useTranslation } from "react-i18next";
 
-const ClinicInvitations = () => {
-  const { t } = useTranslation();
+const ClinicInvitations = ({ invitations = [], t }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [invitations, setInvitations] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const fetchInvitations = async () => {
-    try {
-      setLoading(true);
-      const requests = await getMyPTRequests();
-      setInvitations(requests);
-    } catch (error) {
-      console.error("Error fetching invitations:", error);
-      toast.error(t("failed_to_load_invitations"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchInvitations();
-    }
-  }, [isOpen]);
 
   const handleResponse = async (requestId, action) => {
     try {
       await respondToPTRequest(requestId, action);
       toast.success(t(`invitation_${action}`));
       
-      // Update the local state to reflect the change
-      setInvitations(prev => 
-        prev.map(inv => 
-          inv._id === requestId 
-            ? { ...inv, status: action }
-            : inv
-        )
-      );
+      // Note: Since we're using props from centralized state, 
+      // the UI will update when the dashboard data is refreshed
     } catch (error) {
       console.error(`Error ${action} invitation:`, error);
       toast.error(t(`failed_to_${action}_invitation`));
@@ -82,13 +53,7 @@ const ClinicInvitations = () => {
       {/* Content */}
       {isOpen && (
         <div className="mt-4 space-y-4">
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-caribbean mx-auto"></div>
-              <p className="text-sm text-gray-500 mt-2">{t("loading")}</p>
-            </div>
-          ) : (
-            <>
+          <>
               {/* Pending Invitations */}
               {pendingInvitations.length > 0 && (
                 <div>
@@ -222,7 +187,6 @@ const ClinicInvitations = () => {
                 </div>
               )}
             </>
-          )}
         </div>
       )}
     </div>
