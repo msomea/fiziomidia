@@ -1,36 +1,4 @@
-import redis from 'redis';
-
-// Redis client configuration for cloud Redis
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL || process.env.REDIS_CLOUD_URL || 'redis://localhost:6379',
-  password: process.env.REDIS_PASSWORD || process.env.REDIS_CLOUD_PASSWORD,
-  socket: {
-    host: process.env.REDIS_HOST || process.env.REDIS_CLOUD_HOST || 'localhost',
-    port: parseInt(process.env.REDIS_PORT || process.env.REDIS_CLOUD_PORT) || 6379,
-    connectTimeout: 5000,
-    lazyConnect: true,
-  },
-  retryDelayOnFailover: 100,
-  enableReadyCheck: false,
-  maxRetriesPerRequest: 3,
-  commandTimeout: 2000,
-});
-
-// Redis connection events
-redisClient.on('connect', () => {
-  console.log('🔗 Redis connected successfully');
-});
-
-redisClient.on('error', (err) => {
-  console.error('❌ Redis connection error:', err);
-});
-
-redisClient.on('ready', () => {
-  console.log('🤖 Redis ready for commands');
-});
-
-// Connect to Redis
-redisClient.connect().catch(console.error);
+import { redisClient } from "../config/redis.js";
 
 // Cache utility functions
 export const CacheKeys = {
@@ -45,6 +13,9 @@ export const CacheKeys = {
   FORUM_POSTS: (subId, page = 1) => `forum:sub:${subId}:posts:page:${page}`,
   FORUM_POST: (id) => `forum:post:${id}`,
   FORUM_MANAGEMENT: (subId) => `forum:sub:${subId}:management`,
+  PT_PROMOTIONS: () => `home:pt-promotions`,
+  CLINIC_PROMOTIONS: () => `home:clinic-promotions`,
+  SPONSORED_PRODUCTS: () => `home:sponsored-products`,
 };
 
 // Cache TTL (Time To Live) in seconds
@@ -54,6 +25,8 @@ export const CacheTTL = {
   LONG: 2 * 60 * 60, // 2 hours - cool data
   VERY_LONG: 24 * 60 * 60, // 24 hours - static data
   NOTIFICATIONS: 10 * 60, // 10 minutes - notifications
+  PROMOTIONS: 15 * 60, // 15 minutes - promotional content
+  SPONSORED_PRODUCTS: 20 * 60, // 20 minutes - sponsored products
 };
 
 // Cache helper functions
@@ -64,7 +37,7 @@ export class CacheService {
       const data = await redisClient.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      console.error('Cache get error:', error);
+      console.error("Cache get error:", error);
       return null;
     }
   }
@@ -75,7 +48,7 @@ export class CacheService {
       await redisClient.setEx(key, ttl, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error('Cache set error:', error);
+      console.error("Cache set error:", error);
       return false;
     }
   }
@@ -86,7 +59,7 @@ export class CacheService {
       await redisClient.del(key);
       return true;
     } catch (error) {
-      console.error('Cache delete error:', error);
+      console.error("Cache delete error:", error);
       return false;
     }
   }
@@ -97,11 +70,13 @@ export class CacheService {
       const keys = await redisClient.keys(pattern);
       if (keys.length > 0) {
         await redisClient.del(keys);
-        console.log(`🗑️ Cache deleted ${keys.length} keys matching pattern: ${pattern}`);
+        console.log(
+          `🗑️ Cache deleted ${keys.length} keys matching pattern: ${pattern}`,
+        );
       }
       return keys.length;
     } catch (error) {
-      console.error('Cache delete pattern error:', error);
+      console.error("Cache delete pattern error:", error);
       return 0;
     }
   }
@@ -112,7 +87,7 @@ export class CacheService {
       const result = await redisClient.exists(key);
       return result === 1;
     } catch (error) {
-      console.error('Cache exists error:', error);
+      console.error("Cache exists error:", error);
       return false;
     }
   }
@@ -133,17 +108,17 @@ export class CacheService {
 
         // Override res.json to cache the response
         const originalJson = res.json;
-        res.json = function(data) {
+        res.json = function (data) {
           // Only cache successful responses
           if (res.statusCode === 200 && data.success !== false) {
-            this.set(cacheKey, data, ttl).catch(console.error);
+            CacheService.set(cacheKey, data, ttl).catch(console.error);
           }
           return originalJson.call(this, data);
-        }.bind(this);
+        };
 
         next();
       } catch (error) {
-        console.error('Cache middleware error:', error);
+        console.error("Cache middleware error:", error);
         next();
       }
     };
@@ -161,7 +136,7 @@ export class CacheService {
       }
       return await this.get(key);
     } catch (error) {
-      console.error('Cache warm error:', error);
+      console.error("Cache warm error:", error);
       return null;
     }
   }

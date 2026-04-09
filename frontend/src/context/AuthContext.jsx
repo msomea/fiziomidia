@@ -65,7 +65,6 @@ export const AuthProvider = ({ children }) => {
             } else {
               // Make API call for other pages or if no cached data
               data = await fetchCurrentUser();
-              console.log('Fetching fresh user data');
             }
             
             const updatedUser = { ...parsed, ...data };

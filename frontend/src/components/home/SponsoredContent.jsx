@@ -3,38 +3,17 @@ import {
   ArrowBigRightIcon,
   Loader2,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
-import toast from "react-hot-toast";
+import React, { useRef, useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
 import SkeletonSponsoredCard from "./SkeletonSponsoredCard";
 
-const SponsoredContent = () => {
+const SponsoredContent = ({ products = [] }) => {
   const { t } = useTranslation();
-  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
 
   const carouselRef = useRef(null);
-
-  /* ---------- Load products ---------- */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await API.get(`${API_URL}/sponsored-products`);
-        setProducts(res.data.products || []);
-      } catch (err) {
-        toast.error(t("failed_load_sponsored"));
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [t]);
 
   /* ---------- Detect items per page ---------- */
   useEffect(() => {
@@ -108,7 +87,7 @@ const SponsoredContent = () => {
           onMouseLeave={() => setPaused(false)}
         >
           {/* Left Arrow */}
-          {!loading && products.length > itemsPerPage && (
+          { products.length > itemsPerPage && (
             <button
               onClick={scrollLeft}
               aria-label="Previous"
@@ -123,7 +102,7 @@ const SponsoredContent = () => {
             ref={carouselRef}
             className="flex gap-4 overflow-x-hidden px-12 w-full scroll-smooth"
           >
-            {loading || products.length < 1 ? (
+            {products.length < 1 ? (
               Array.from({ length: itemsPerPage }).map((_, i) => (
               <SkeletonSponsoredCard key={i} />
             ))
@@ -174,7 +153,7 @@ const SponsoredContent = () => {
           </div>
 
           {/* Right Arrow */}
-          {!loading && products.length > itemsPerPage && (
+          { products.length > itemsPerPage && (
             <button
               onClick={scrollRight}
               aria-label="Next"
@@ -186,7 +165,7 @@ const SponsoredContent = () => {
         </div>
 
         {/* Pagination Dots */}
-        {!loading && totalPages > 1 && (
+        { totalPages > 1 && (
           <div className="flex justify-center gap-3 mt-6">
             {Array.from({ length: totalPages }).map((_, i) => (
               <button

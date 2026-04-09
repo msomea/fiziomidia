@@ -2,39 +2,19 @@ import {
   ArrowBigLeftIcon,
   ArrowBigRightIcon,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router";
-import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import avatar from "../../assets/avatar.jpg";
 import SkeletonProfessionalCard from "./SkeletonProfessionalCard";
-import { fetchPromotions } from "../../api/promotions";
 
-export default function FindProfessionals() {
+export default function FindProfessionals({ promotions = [] }) {
   const { t } = useTranslation();
-  const [promotions, setPromotions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
   const [paused, setPaused] = useState(false);
 
   const carouselRef = useRef(null);
-
-  /* ---------- Load promoted PTs ---------- */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchPromotions();
-        setPromotions(data);
-      } catch (err) {
-        toast.error(t("failed_load_professionals"));
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [t]);
 
   /* ---------- Responsive items per page ---------- */
   useEffect(() => {
@@ -94,7 +74,7 @@ export default function FindProfessionals() {
     return () => clearInterval(interval);
   }, [totalPages, paused]);
 
-  const showSkeletons = loading || promotions.length < 1;
+  const showSkeletons = promotions.length < 1;
   return (
     <section className="bg-white py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">

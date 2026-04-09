@@ -6,39 +6,19 @@ import {
   Calendar,
   ExternalLink,
 } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Link } from "react-router";
-import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import avatar from "../../assets/avatar.jpg";
 import SkeletonProfessionalCard from "./SkeletonProfessionalCard";
-import { fetchClinicPromotions } from "../../api/promotions";
 
-export default function FindClinics() {
+export default function FindClinics({ promotions = [] }) {
   const { t } = useTranslation();
-  const [promotions, setPromotions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(1);
   const [paused, setPaused] = useState(false);
 
   const carouselRef = useRef(null);
-
-  /* ---------- Load promoted Clinics ---------- */
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchClinicPromotions();
-        setPromotions(data);
-      } catch (err) {
-        toast.error(t("failed_load_clinics"));
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [t]);
 
   /* ---------- Responsive items per page ---------- */
   useEffect(() => {
@@ -98,7 +78,7 @@ export default function FindClinics() {
     return () => clearInterval(interval);
   }, [totalPages, paused]);
 
-  const showSkeletons = loading || promotions.length < 1;
+  const showSkeletons = promotions.length < 1;
   return (
     <section className="bg-gray-50 py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
