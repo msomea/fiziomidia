@@ -11,6 +11,7 @@ import {
   getLicenseTargetInfo,
   getEmailTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import { fetchUsers } from "../adminController.js";
 
 // -------------------------------------------
 // USERS CONTROLLER
@@ -20,34 +21,9 @@ export const listUsers = async (req, res) => {
   try {
     const { search, role, licenseStatus } = req.query;
 
-    const query = {};
+    // Use shared fetchUsers function
+    const users = await fetchUsers({ search, role, licenseStatus });
 
-    // Search by fullName or email
-    if (search) {
-      const esc = escapeRegExp(search);
-      query.$or = [
-        { fullName: { $regex: esc, $options: "i" } },
-        { email: { $regex: esc, $options: "i" } },
-        { phone: { $regex: esc, $options: "i" } },
-      ];
-    }
-
-    // Filter by role: e.g., physiotherapist
-    if (role) {
-      query.role = role;
-    }
-
-    // Filter by license verification status in ptProfile.licenses array
-    if (licenseStatus) {
-      // Match users that have at least one license with given verificationStatus
-      query["ptProfile.licenses"] = { $elemMatch: { verificationStatus: licenseStatus } };
-    }
-
-    // Limit / pagination could be added later
-    const users = await User.find(query)
-      .select("-passwordHash -refreshTokens")
-      .sort({ createdAt: -1 })
-      .lean();
     return res.json({ success: true, users });
   } catch (err) {
     console.error("List users error:", err);

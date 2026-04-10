@@ -13,6 +13,7 @@ const initialState = {
   modRequests: [],
   adminStats: null,
   activityLogs: [],
+  clinicPromotions: [],
   loading: false,
   error: null,
   lastFetched: null,
@@ -31,6 +32,7 @@ const actionTypes = {
   UPDATE_MOD_REQUESTS: 'UPDATE_MOD_REQUESTS',
   UPDATE_ADMIN_STATS: 'UPDATE_ADMIN_STATS',
   UPDATE_ACTIVITY_LOGS: 'UPDATE_ACTIVITY_LOGS',
+  UPDATE_CLINIC_PROMOTIONS: 'UPDATE_CLINIC_PROMOTIONS',
   CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
@@ -65,6 +67,8 @@ const dashboardReducer = (state, action) => {
       return { ...state, adminStats: action.payload };
     case actionTypes.UPDATE_ACTIVITY_LOGS:
       return { ...state, activityLogs: action.payload };
+    case actionTypes.UPDATE_CLINIC_PROMOTIONS:
+      return { ...state, clinicPromotions: action.payload };
     case actionTypes.CLEAR_ERROR:
       return { ...state, error: null };
     default:
@@ -102,8 +106,16 @@ export const DashboardProvider = ({ children }) => {
     }
   }, []);
 
-  // Refresh specific data sections
+  // Refresh specific data sections - only make API calls if filters are applied
   const refreshUsers = async (filters = {}) => {
+    // Only make individual API call if there are active filters
+    const hasFilters = filters.search || filters.role || filters.licenseStatus;
+    
+    if (!hasFilters) {
+      // Use centralized data when no filters
+      return { users: state.users };
+    }
+    
     try {
       const response = await API.get(`${API_URL}/admin/users`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_USERS, payload: response.data.users || [] });
@@ -115,6 +127,14 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const refreshAppointments = async (filters = {}) => {
+    // Only make individual API call if there are active filters
+    const hasFilters = filters.search || filters.clinic || filters.pt || filters.requester || filters.status;
+    
+    if (!hasFilters) {
+      // Use centralized data when no filters
+      return { appts: state.appointments };
+    }
+    
     try {
       const response = await API.get(`${API_URL}/admin/appointments`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_APPOINTMENTS, payload: response.data.appts || [] });
@@ -126,6 +146,14 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const refreshPromotions = async (filters = {}) => {
+    // Only make individual API call if there are active filters
+    const hasFilters = filters.search || filters.status;
+    
+    if (!hasFilters) {
+      // Use centralized data when no filters
+      return { promotions: state.promotions };
+    }
+    
     try {
       const response = await API.get(`${API_URL}/admin/promotions`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_PROMOTIONS, payload: response.data.promotions || [] });
@@ -137,6 +165,7 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const refreshSponsoredProducts = async (filters = {}) => {
+    // Always make API call for sponsored products since it has pagination
     try {
       const response = await API.get(`${API_URL}/admin/sponsored-products`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_SPONSORED_PRODUCTS, payload: response.data.products || [] });
@@ -148,6 +177,14 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const refreshModRequests = async (filters = {}) => {
+    // Only make individual API call if there are active filters
+    const hasFilters = filters.status || filters.search;
+    
+    if (!hasFilters) {
+      // Use centralized data when no filters
+      return { modRequests: state.modRequests };
+    }
+    
     try {
       const response = await API.get(`${API_URL}/admin/forum/mod-requests`, { params: filters });
       dispatch({ type: actionTypes.UPDATE_MOD_REQUESTS, payload: response.data.modRequests || [] });
@@ -159,12 +196,37 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const refreshAdminStats = async () => {
+    // Use adminStats from centralized data
+    if (state.adminStats) {
+      return state.adminStats;
+    }
+    
     try {
       const response = await API.get(`${API_URL}/admin/monitoring/stats`);
       dispatch({ type: actionTypes.UPDATE_ADMIN_STATS, payload: response.data });
+      return response.data;
     } catch (error) {
       console.error('Admin stats refresh error:', error);
       toast.error('Failed to refresh admin stats');
+    }
+  };
+
+  const refreshClinicPromotions = async (filters = {}) => {
+    // Only make individual API call if there are active filters
+    const hasFilters = filters.search || filters.status;
+    
+    if (!hasFilters) {
+      // Use centralized data when no filters
+      return { promotions: state.clinicPromotions };
+    }
+    
+    try {
+      const response = await API.get(`${API_URL}/admin/clinic-promotions`, { params: filters });
+      dispatch({ type: actionTypes.UPDATE_CLINIC_PROMOTIONS, payload: response.data || [] });
+      return response.data;
+    } catch (error) {
+      console.error('Clinic promotions refresh error:', error);
+      toast.error('Failed to refresh clinic promotions');
     }
   };
 
@@ -183,6 +245,7 @@ export const DashboardProvider = ({ children }) => {
     refreshSponsoredProducts,
     refreshModRequests,
     refreshAdminStats,
+    refreshClinicPromotions,
     clearError,
   };
 

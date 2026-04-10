@@ -152,7 +152,7 @@ export default function AdminProductSponsorshipDetail() {
       setSavingStatus(false);
     }
   };
-
+console.log(product)
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       {/* HEADER */}

@@ -4,10 +4,12 @@ import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import { useDashboard } from "../../contexts/DashboardContext";
 import { fetchClinicPromotions } from "../../api/admin";
 
 export default function ClinicPromotionSection() {
   const { t } = useTranslation();
+  const { clinicPromotions, refreshClinicPromotions, loading: dashboardLoading } = useDashboard();
 
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,18 +19,17 @@ export default function ClinicPromotionSection() {
   const [status, setStatus] = useState("");       // sort/filter by status
 
   useEffect(() => {
-    loadClinicPromotions();
+    // Only load promotions when filters change, not on initial mount
+    if (search || status) {
+      loadClinicPromotions();
+    }
   }, [search, status]);
 
   const loadClinicPromotions = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (search) params.search = search;
-      if (status) params.status = status;
-
-      const data = await fetchClinicPromotions(params);
-      setPromotions(data || []);
+      const response = await refreshClinicPromotions({ search, status });
+      setPromotions(response || []);
     } catch (error) {
       console.error(error);
       toast.error(t("failed_load_clinic_promotions"));
@@ -36,6 +37,12 @@ export default function ClinicPromotionSection() {
       setLoading(false);
     }
   };
+
+  // Use centralized data when no filters, otherwise use filtered data
+  const displayPromotions = (search || status) ? promotions : (clinicPromotions || []);
+  
+  // Use dashboard loading state for initial load, local loading for refreshes
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t("clinic_promotions_section_title")}>
@@ -69,10 +76,10 @@ export default function ClinicPromotionSection() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean"></div>
           <span className="ml-2 text-gray-500">Loading clinic promotions...</span>
         </div>
-      ) : promotions.length === 0 ? (
+      ) : displayPromotions.length === 0 ? (
         <p className="text-gray-500 text-sm mt-4">{t("no_clinic_promotions_found")}</p>
       ) : (
-        promotions.map((promo) => (
+        displayPromotions.map((promo) => (
           <div key={promo._id} className="mt-2 p-2 bg-gray-100 rounded text-tufts">
             <Link to={`/admin/clinic-promotions/${promo._id}`}>
               <h3 className="font-bold textarea-s text-caribbean">
@@ -82,7 +89,7 @@ export default function ClinicPromotionSection() {
             <div className="text-sm">
               <p><b>{t("clinic_label")}:</b> {promo.clinic?.name}</p>
               <p><b>{t("address_label")}:</b> {promo.clinic?.address}</p>
-              <p><b>{t("owner_label")}:</b> {promo.clinic?.ownerUserId?.fullName || promo.clinic?.ownerName}</p>
+              <p><b>{t("owner_label")}:</b> {promo.clinic?.ownerUserId?.fullName}</p>
               <p><b>{t("status_label")}:</b> {promo.status || t("unknown")}</p>
               <p><b>{t("tier_label")}:</b> {promo.title}</p>
               <p><b>{t("due_date_label")}:</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>

@@ -42,7 +42,7 @@ export const getDashboardData = async (req, res) => {
 
     console.log(`💨 Admin dashboard cache miss for user: ${userId}`);
 
-    // Build all queries in parallel for better performance
+    // Build all queries in parallel for better performance using shared functions
     const [
       users,
       appointments,
@@ -52,57 +52,36 @@ export const getDashboardData = async (req, res) => {
       modRequests,
       adminStats,
       recentActivityLogs,
+      clinicPromotions,
     ] = await Promise.all([
       // Users query
-      User.find(buildUserQuery({ search, role, licenseStatus }))
-        .select("-passwordHash -refreshTokens")
-        .sort({ createdAt: -1 })
-        .lean()
-        .limit(50), // Limit for dashboard preview
+      fetchUsers({ search, role, licenseStatus, limit: 50 }),
 
       // Appointments query
-      Appointment.find(
-        buildAppointmentQuery({
-          search,
-          clinic,
-          pt,
-          requester,
-          status: appointmentStatus,
-        }),
-      )
-        .populate("pt", "fullName email")
-        .populate("requester", "fullName email")
-        .populate("clinic", "name location")
-        .sort({ createdAt: -1 })
-        .limit(20),
+      fetchAppointments({
+        search,
+        clinic,
+        pt,
+        requester,
+        status: appointmentStatus,
+        limit: 20,
+      }),
 
       // Promotions query
-      PTPromotion.find(buildPromotionQuery({ search, status: promotionStatus }))
-        .populate("pt", "fullName email")
-        .sort({ createdAt: -1 })
-        .limit(20),
+      fetchPromotions({ search, status: promotionStatus, limit: 20 }),
 
       // Sponsored Products query
-      SponsoredProduct.find(
-        buildProductQuery({ search, status: productStatus }),
-      )
-        .populate("owner", "fullName")
-        .sort({ updatedAt: -1 })
-        .limit(parseInt(limit)),
+      fetchSponsoredProducts({
+        search,
+        status: productStatus,
+        limit: parseInt(limit),
+      }),
 
       // Forum Subs (all subs for sponsorship management)
-      ForumSub.find({})
-        .populate("createdBy", "fullName email")
-        .populate("moderators", "fullName email")
-        .sort({ createdAt: -1 })
-        .limit(20),
+      fetchForumSubs({ limit: 20 }),
 
       // Forum Moderator Requests
-      ForumSubModRequest.find({})
-        .populate("user", "fullName email role")
-        .populate("sub", "title slug")
-        .sort({ createdAt: -1 })
-        .limit(20),
+      fetchModRequests({ limit: 20 }),
 
       // Admin Stats
       getAdminStatsData(),
@@ -113,6 +92,9 @@ export const getDashboardData = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(10)
         .lean(),
+
+      // Clinic Promotions
+      fetchClinicPromotions({ limit: 20 }),
     ]);
 
     const responseData = {
@@ -125,6 +107,7 @@ export const getDashboardData = async (req, res) => {
       modRequests, // Forum moderator requests
       adminStats,
       activityLogs: recentActivityLogs,
+      clinicPromotions, // Clinic promotions for management
       lastFetched: new Date(),
     };
 
@@ -134,7 +117,7 @@ export const getDashboardData = async (req, res) => {
 
     return res.json(responseData);
   } catch (err) {
-    console.error("⚠️Dashboard data fetch error:", err);
+    console.error("⚠️ Dashboard data fetch error:", err);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch dashboard data",
@@ -151,6 +134,155 @@ async function invalidateAdminDashboardCache(adminId) {
     console.error('⚠️ Error invalidating admin dashboard cache:', error);
   }
 }
+
+// ============================================
+// SHARED DATA FETCHING FUNCTIONS
+// ============================================
+
+// Shared function to fetch users with filtering
+export const fetchUsers = async ({ search, role, licenseStatus, limit = null, skip = null }) => {
+  const query = buildUserQuery({ search, role, licenseStatus });
+  
+  let userQuery = User.find(query)
+    .select("-passwordHash -refreshTokens")
+    .sort({ createdAt: -1 })
+    .lean();
+  
+  if (limit) userQuery = userQuery.limit(parseInt(limit));
+  if (skip) userQuery = userQuery.skip(parseInt(skip));
+  
+  return await userQuery;
+};
+
+// Shared function to fetch appointments with filtering
+export const fetchAppointments = async ({ search, clinic, pt, requester, status, limit = null, skip = null }) => {
+  const query = await buildAppointmentQuery({ search, clinic, pt, requester, status });
+  
+  let apptQuery = Appointment.find(query)
+    .populate("pt", "fullName email")
+    .populate("requester", "fullName email")
+    .populate("clinic", "name location")
+    .sort({ createdAt: -1 });
+  
+  if (limit) apptQuery = apptQuery.limit(parseInt(limit));
+  if (skip) apptQuery = apptQuery.skip(parseInt(skip));
+  
+  return await apptQuery;
+};
+
+// Shared function to fetch promotions with filtering
+export const fetchPromotions = async ({ search, status, limit = null, skip = null }) => {
+  const query = await buildPromotionQuery({ search, status });
+  
+  let promoQuery = PTPromotion.find(query)
+    .populate("pt", "fullName email")
+    .sort({ createdAt: -1 });
+  
+  if (limit) promoQuery = promoQuery.limit(parseInt(limit));
+  if (skip) promoQuery = promoQuery.skip(parseInt(skip));
+  
+  return await promoQuery;
+};
+
+// Shared function to fetch sponsored products with filtering
+export const fetchSponsoredProducts = async ({ search, status, limit = null, skip = null }) => {
+  const query = buildProductQuery({ search, status });
+  
+  let productQuery = SponsoredProduct.find(query)
+    .populate("owner", "fullName")
+    .sort({ updatedAt: -1 });
+  
+  if (limit) productQuery = productQuery.limit(parseInt(limit));
+  if (skip) productQuery = productQuery.skip(parseInt(skip));
+  
+  return await productQuery;
+};
+
+// Shared function to fetch forum subs with filtering
+export const fetchForumSubs = async ({ limit = null, skip = null }) => {
+  let subQuery = ForumSub.find({})
+    .populate("createdBy", "fullName email")
+    .populate("moderators", "fullName email")
+    .sort({ createdAt: -1 });
+  
+  if (limit) subQuery = subQuery.limit(parseInt(limit));
+  if (skip) subQuery = subQuery.skip(parseInt(skip));
+  
+  return await subQuery;
+};
+
+// Shared function to fetch moderator requests with filtering
+export const fetchModRequests = async ({ status = null, search = "", limit = null, skip = null }) => {
+  const query = {};
+  if (status) query.status = status;
+  if (search) {
+    query.$or = [
+      { "user.fullName": { $regex: search, $options: "i" } },
+      { "user.email": { $regex: search, $options: "i" } },
+      { "sub.title": { $regex: search, $options: "i" } },
+    ];
+  }
+  
+  let modQuery = ForumSubModRequest.find(query)
+    .populate("user", "fullName email role")
+    .populate("sub", "title slug")
+    .sort({ createdAt: -1 });
+  
+  if (limit) modQuery = modQuery.limit(parseInt(limit));
+  if (skip) modQuery = modQuery.skip(parseInt(skip));
+  
+  return await modQuery;
+};
+
+// Shared function to fetch clinic promotions with filtering
+export const fetchClinicPromotions = async ({ search = "", status = "", limit = null, skip = null }) => {
+  // Import here to avoid circular dependency
+  const { default: ClinicPromotion } = await import("../models/ClinicPromotion.js");
+  const { default: Clinic } = await import("../models/Clinic.js");
+  
+  const query = {};
+  
+  // Search by clinic name or address
+  if (search) {
+    const esc = escapeRegExp(search);
+    // Get clinic IDs that match the search
+    const clinicMatches = await Clinic.find({
+      $or: [
+        { name: { $regex: esc, $options: "i" } },
+        { address: { $regex: esc, $options: "i" } },
+      ],
+    }).select("_id");
+    
+    if (clinicMatches.length > 0) {
+      query.clinic = { $in: clinicMatches.map((c) => c._id) };
+    } else {
+      // If no clinics match, return empty result
+      query.clinic = { $in: [] };
+    }
+  }
+  
+  // Filter by status
+  if (status) {
+    query.status = status;
+  }
+  
+  let promoQuery = ClinicPromotion.find(query)
+    .populate({
+      path: "clinic",
+      select: "name address ownerUserId",
+      populate: {
+        path: "ownerUserId",
+        select: "fullName email phone",
+        model: "User"
+      }
+    })
+    .sort({ createdAt: -1 });
+  
+  if (limit) promoQuery = promoQuery.limit(parseInt(limit));
+  if (skip) promoQuery = promoQuery.skip(parseInt(skip));
+  
+  return await promoQuery;
+};
 
 // Helper functions for building queries
 function buildUserQuery({ search, role, licenseStatus }) {
@@ -178,7 +310,13 @@ function buildUserQuery({ search, role, licenseStatus }) {
   return query;
 }
 
-function buildAppointmentQuery({ search, clinic, pt, requester, status }) {
+async function buildAppointmentQuery({
+  search,
+  clinic,
+  pt,
+  requester,
+  status,
+}) {
   const query = {};
 
   if (search) {
@@ -193,28 +331,66 @@ function buildAppointmentQuery({ search, clinic, pt, requester, status }) {
     query.status = status;
   }
 
-  // Note: For clinic, pt, and requester filters, we'd need to do name lookups
-  // For dashboard preview, we'll keep it simple and not include these complex filters
+  // Filter by clinic NAME
+  if (clinic) {
+    const escClinic = escapeRegExp(clinic);
+    const clinicMatches = await Clinic.find({
+      name: new RegExp(escClinic, "i"),
+    }).select("_id");
+    query.clinic = { $in: clinicMatches.map((c) => c._id) };
+  }
+
+  // Filter by PT NAME
+  if (pt) {
+    const escPt = escapeRegExp(pt);
+    const ptMatches = await User.find({
+      fullName: new RegExp(escPt, "i"),
+    }).select("_id");
+    query.pt = { $in: ptMatches.map((u) => u._id) };
+  }
+
+  // Filter Requester NAME
+  if (requester) {
+    const escReq = escapeRegExp(requester);
+    const reqMatches = await User.find({
+      fullName: new RegExp(escReq, "i"),
+    }).select("_id");
+    query.requester = { $in: reqMatches.map((u) => u._id) };
+  }
 
   return query;
 }
 
-function buildPromotionQuery({ search, status }) {
+async function buildPromotionQuery({ search, status }) {
   const query = {};
 
   if (status) {
     query.status = status;
   }
 
-  // For search, we'd need to lookup PT names - keeping simple for dashboard
+  // Handle PT name search
   if (search) {
-    // Could implement PT name search here if needed
+    const esc = escapeRegExp(search);
+    const pts = await User.find({
+      role: "physiotherapist",
+      $or: [
+        { fullName: { $regex: esc, $options: "i" } },
+        { email: { $regex: esc, $options: "i" } },
+      ],
+    }).select("_id");
+
+    if (pts.length > 0) {
+      query.pt = { $in: pts.map((p) => p._id) };
+    } else {
+      // If no PTs match, return empty result
+      query.pt = { $in: [] };
+    }
   }
 
   return query;
 }
 
-function buildProductQuery({ search, status }) {
+export function buildProductQuery({ search, status }) {
   const query = {};
 
   if (search) {

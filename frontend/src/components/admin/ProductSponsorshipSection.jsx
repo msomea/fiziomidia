@@ -17,15 +17,11 @@ export default function ProductSponsorshipSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadSponsoredProducts();
-  }, [search, status, page]);
-
-  useEffect(() => {
-    // Initial load when component mounts
-    if (sponsoredProducts.length === 0) {
+    // Only load sponsored products when filters change or page changes (not on initial mount)
+    if (search || status || page > 1) {
       loadSponsoredProducts();
     }
-  }, []);
+  }, [search, status, page]);
 
   const loadSponsoredProducts = async () => {
     try {

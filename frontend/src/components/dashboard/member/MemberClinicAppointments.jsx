@@ -107,7 +107,7 @@ export default function MemberClinicAppointments({ appointments, viewMore }) {
 
                 <td className="space-x-1">
                   <button
-                    onClick={() => navigate(`/member/appointments/${appt._id}`)}
+                    onClick={() => navigate(`/member/clinic-appointments/${appt._id}`)}
                     className="btn btn-xs btn-outline btn-info">
                     {t("view_details")}
                   </button>

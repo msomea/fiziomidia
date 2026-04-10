@@ -14,15 +14,11 @@ export default function ForumModRequestsSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadRequests();
-  }, [status]);
-
-  useEffect(() => {
-    // Initial load when component mounts
-    if (modRequests.length === 0) {
+    // Only load requests when filters change, not on initial mount
+    if (status) {
       loadRequests();
     }
-  }, []);
+  }, [status]);
 
   const loadRequests = async () => {
     try {

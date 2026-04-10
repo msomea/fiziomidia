@@ -26,7 +26,7 @@ export default function SystemNotificationsSection() {
   const [priority, setPriority] = useState("information");
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserSearch, setShowUserSearch] = useState(false);
-  const [roleFilter, setRoleFilter] = useState("all"); // "all", "member", "physiotherapist"
+  const [roleFilter, setRoleFilter] = useState("all"); // "all", "member", "physiotherapist", "specific"
 
   // Priority configurations matching NotificationSection
   const priorityConfig = {
@@ -71,10 +71,10 @@ export default function SystemNotificationsSection() {
   };
 
   useEffect(() => {
-    if (showUserSearch && users.length === 0) {
+    if ((showUserSearch || roleFilter === "specific") && users.length === 0) {
       fetchUsers();
     }
-  }, [showUserSearch, users.length]);
+  }, [showUserSearch, roleFilter, users.length]);
 
   // Filter users based on search term and role
   const filteredUsers = users.filter(user => {
@@ -82,7 +82,8 @@ export default function SystemNotificationsSection() {
       user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    // When selecting specific users, show all users (no role filter)
+    const matchesRole = roleFilter === "all" || roleFilter === "specific" || user.role === roleFilter;
     
     return matchesSearch && matchesRole;
   });
@@ -105,7 +106,7 @@ export default function SystemNotificationsSection() {
       return;
     }
 
-    if (!sendToAll && selectedUsers.length === 0 && roleFilter !== "member" && roleFilter !== "physiotherapist") {
+    if (!sendToAll && roleFilter === "specific" && selectedUsers.length === 0) {
       toast.error(t('select_at_least_one_user'));
       return;
     }
@@ -117,7 +118,7 @@ export default function SystemNotificationsSection() {
         message: message.trim(),
         priority,
         sendToAll,
-        targetUserIds: sendToAll ? [] : selectedUsers,
+        targetUserIds: (!sendToAll && roleFilter === "specific" && selectedUsers.length > 0) ? selectedUsers : [],
         targetRole: !sendToAll && (roleFilter === "member" || roleFilter === "physiotherapist") ? roleFilter : null,
         type: 'system_announcement'
       };
@@ -130,6 +131,7 @@ export default function SystemNotificationsSection() {
       setSelectedUsers([]);
       setSendToAll(true);
       setSearchTerm("");
+      setShowUserSearch(false);
     } catch (error) {
       console.error('Error sending notification:', error);
       toast.error(error.response?.data?.error || t('failed_to_send_notification'));
@@ -245,6 +247,22 @@ export default function SystemNotificationsSection() {
               <UserCheck className="w-4 h-4 mr-1" />
               {t('all_pts')}
             </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="target"
+                checked={!sendToAll && roleFilter === "specific"}
+                onChange={() => {
+                  setSendToAll(false);
+                  setRoleFilter("specific");
+                  setSelectedUsers([]);
+                  setShowUserSearch(true);
+                }}
+                className="mr-2"
+              />
+              <UserCheck className="w-4 h-4 mr-1" />
+              {t('specific_users')}
+            </label>
           </div>
 
           {/* User Selection for specific users */}
@@ -252,67 +270,66 @@ export default function SystemNotificationsSection() {
             <div>
               <div className="mb-2 text-sm text-gray-700">
                 {t('currently_filtering')} <span className="font-medium">
-                  {roleFilter === "member" ? t('all_members') : roleFilter === "physiotherapist" ? t('all_pts') : t('all_users')}
+                  {roleFilter === "member" ? t('all_members') : 
+                   roleFilter === "physiotherapist" ? t('all_pts') : 
+                   roleFilter === "specific" ? t('specific_users') : 
+                   t('all_users')}
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowUserSearch(!showUserSearch)}
-                className="px-3 py-2 text-sm border text-gray-700 border-gray-400 rounded-lg hover:bg-gray-50"
-              >
-                {showUserSearch ? t('hide_user_selection') : t('select_users')}
-              </button>
-
-              {selectedUsers.length > 0 && (
-                <div className="mt-2 text-sm text-gray-700">
-                  {selectedUsers.length} {t('users_selected')}
-                </div>
-              )}
-
-              {showUserSearch && (
-                <div className="mt-3 border border-gray-400 rounded-lg p-3 max-h-48 overflow-y-auto">
-                  {usersLoading ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-caribbean"></div>
-                      <span className="ml-2 text-sm text-gray-700">{t('loading_users')}</span>
+              
+              {roleFilter === "specific" && (
+                <>
+                  {selectedUsers.length > 0 && (
+                    <div className="mt-2 text-sm text-gray-700">
+                      {selectedUsers.length} {t('users_selected')}
                     </div>
-                  ) : (
-                    <>
-                      <input
-                        type="text"
-                        placeholder={t('search_users_placeholder')}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-400 rounded-lg mb-3"
-                      />
-                      
-                      <div className="space-y-2">
-                        {filteredUsers.slice(0, 10).map(user => (
-                          <label
-                            key={user._id}
-                            className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedUsers.includes(user._id)}
-                              onChange={() => toggleUserSelection(user._id)}
-                              className="mr-3"
-                            />
-                            <div>
-                              <div className="text-sm text-tufts font-medium">{user.fullName}</div>
-                              <div className="text-xs text-gray-700">{user.email}</div>
-                            </div>
-                          </label>
-                        ))}
-                        {filteredUsers.length === 0 && (
-                          <div className="text-center text-gray-700 py-4">
-                            {t('no_users_found')}
-                          </div>
-                        )}
-                      </div>
-                    </>
                   )}
-                </div>
+
+                  <div className="mt-3 border border-gray-400 rounded-lg p-3 max-h-48 overflow-y-auto">
+                    {usersLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-caribbean"></div>
+                        <span className="ml-2 text-sm text-gray-700">{t('loading_users')}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          placeholder={t('search_users_placeholder')}
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-400 rounded-lg mb-3"
+                        />
+                        
+                        <div className="space-y-2">
+                          {filteredUsers.slice(0, 10).map(user => (
+                            <label
+                              key={user._id}
+                              className="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedUsers.includes(user._id)}
+                                onChange={() => toggleUserSelection(user._id)}
+                                className="mr-3"
+                              />
+                              <div>
+                                <div className="text-sm text-tufts font-medium">{user.fullName}</div>
+                                <div className="text-xs text-gray-700">{user.email}</div>
+                                <div className="text-xs text-blue-600">{user.role}</div>
+                              </div>
+                            </label>
+                          ))}
+                          {filteredUsers.length === 0 && (
+                            <div className="text-center text-gray-700 py-4">
+                              {t('no_users_found')}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -321,7 +338,7 @@ export default function SystemNotificationsSection() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={loading || !message.trim()}
+          disabled={loading || !message.trim() || (!sendToAll && roleFilter === "specific" && selectedUsers.length === 0)}
           className="w-full flex items-center justify-center gap-2 px-4 py-2 
                    bg-caribbean text-white rounded-lg font-medium 
                    hover:bg-caribbean-dark disabled:opacity-50 

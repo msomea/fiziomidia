@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
 import { Link } from "react-router";
 import { useDashboard } from "../../contexts/DashboardContext";
+import toast from "react-hot-toast";
 
 export default function AdminUsers() {
   const { t } = useTranslation()
@@ -14,15 +15,11 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadUsers();
-  }, [roleFilter, licenseFilter]);
-
-  useEffect(() => {
-    // Initial load when component mounts
-    if (users.length === 0) {
+    // Only load users when filters change, not on initial mount
+    if (roleFilter || licenseFilter || search) {
       loadUsers();
     }
-  }, []);
+  }, [roleFilter, licenseFilter, search]);
 
   const loadUsers = async () => {
     try {

@@ -5,18 +5,28 @@ import Comment from "../models/Comment.js";
 import User from "../models/User.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../services/uploadService.js";
-import { CacheService } from "../utils/redis.js";
-
+import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 // ===== SUBS =====
 // List all forum subs with pagination and totalPosts dynamically calculated
 export const listSubs = async (req, res) => {
   try {
-    
     const search = req.query.search || "";
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.min(parseInt(req.query.limit) || 20, 100); // limit max to 100
     const skip = (page - 1) * limit;
+
+    // Create cache key based on search and pagination
+    const cacheKey = `${CacheKeys.FORUM_SUBS()}:page:${page}:limit:${limit}:search:${search}`;
+
+    // Try to get from cache first
+    const cachedData = await CacheService.get(cacheKey);
+    if (cachedData) {
+      console.log(`🎯 Forum subs cache hit: ${cacheKey}`);
+      return res.json(cachedData);
+    }
+
+    console.log(`💨 Forum subs cache miss: ${cacheKey}`);
 
     // Build search filter
     const match = search
@@ -35,13 +45,13 @@ export const listSubs = async (req, res) => {
       .skip(skip)
       .limit(limit)
       .select(
-        "title slug description totalPosts isSponsored sponsorName sponsorLogo sponsorWebsite sponsorTitle startDate endDate createdAt"
+        "title slug description totalPosts isSponsored sponsorName sponsorLogo sponsorWebsite sponsorTitle startDate endDate createdAt",
       ); // only select needed fields
 
     // Total count for pagination
     const totalCount = await ForumSub.countDocuments(match);
 
-    res.json({
+    const responseData = {
       subs,
       pagination: {
         total: totalCount,
@@ -49,7 +59,13 @@ export const listSubs = async (req, res) => {
         limit,
         totalPages: Math.ceil(totalCount / limit),
       },
-    });
+    };
+
+    // Cache the response for 15 minutes (forum subs change moderately)
+    await CacheService.set(cacheKey, responseData, CacheTTL.MEDIUM);
+    console.log(`💾 Forum subs cached: ${cacheKey}`);
+
+    res.json(responseData);
   } catch (err) {
     console.error("Error fetching forum subs:", err);
     res.status(500).json({ error: "Failed to fetch subs" });
@@ -608,78 +624,6 @@ export const deletePost = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to delete post" });
-  }
-};
-
-// ===== SUB SPONSORSHIP  =====
-
-// 🔹 Update or Add Sponsorship
-export const updateSubSponsorship = async (req, res) => {
-  const { id } = req.params;
-  const {
-    sponsorName,
-    sponsorLogo,
-    sponsorMessage,
-    sponsorWebsite,
-    startDate,
-    endDate,
-  } = req.body;
-
-  try {
-    const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ error: "Forum sub not found" });
-
-    sub.isSponsored = true;
-    sub.sponsorName = sponsorName || "";
-    sub.sponsorLogo = sponsorLogo || "";
-    sub.sponsorMessage = sponsorMessage || "";
-    sub.sponsorWebsite = sponsorWebsite || "";
-    sub.startDate = startDate ? new Date(startDate) : undefined;
-    sub.endDate = endDate ? new Date(endDate) : undefined;
-
-    await sub.save();
-
-    // Invalidate cache for this subforum to reflect sponsorship changes
-    await CacheService.delPattern(`forum:sub:${sub._id}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sponsorship update`,
-    );
-
-    res.json({ message: "Sponsorship updated successfully", sub });
-  } catch (err) {
-    console.error("Error updating sponsorship:", err);
-    res.status(500).json({ error: "Failed to update sponsorship" });
-  }
-};
-
-// 🔹 Remove Sponsorship
-export const removeSubSponsorship = async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const sub = await ForumSub.findById(id);
-    if (!sub) return res.status(404).json({ error: "Forum sub not found" });
-
-    sub.isSponsored = false;
-    sub.sponsorName = "";
-    sub.sponsorLogo = "";
-    sub.sponsorMessage = "";
-    sub.sponsorWebsite = "";
-    sub.startDate = undefined;
-    sub.endDate = undefined;
-
-    await sub.save();
-
-    // Invalidate cache for this subforum to reflect sponsorship removal
-    await CacheService.delPattern(`forum:sub:${sub._id}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sponsorship removal`,
-    );
-
-    res.json({ message: "Sponsorship removed successfully", sub });
-  } catch (err) {
-    console.error("Error removing sponsorship:", err);
-    res.status(500).json({ error: "Failed to remove sponsorship" });
   }
 };
 

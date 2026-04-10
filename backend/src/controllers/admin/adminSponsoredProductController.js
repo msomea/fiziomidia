@@ -9,6 +9,10 @@ import {
   uploadToCloudinary,
   deleteFromCloudinary,
 } from "../../services/uploadService.js";
+import {
+  fetchSponsoredProducts,
+  buildProductQuery,
+} from "../adminController.js";
 
 // -----------------------------------------
 // PROMOTED PRODUCTS
@@ -86,37 +90,20 @@ export const getAllSponsoredProducts = async (req, res) => {
   try {
     const { search = "", status = "", page = 1 } = req.query;
 
-    const filter = {};
-
-    // Search by product name
-    if (search) {
-      const esc = escapeRegExp(search);
-      filter.name = { $regex: esc, $options: "i" };
-    }
-
-    // Filter by active / inactive
-    if (status === "active") {
-      filter.isActive = true;
-    } else if (status === "inactive") {
-      filter.isActive = false;
-    } else if (status === "approved") {
-      filter.status = "approved"
-    } else if (status === "pending") {
-      filter.status = "pending"
-    } else if (status === "rejected") {
-      filter.status = "rejected"
-    }
-
     const limit = 10;
     const skip = (page - 1) * limit;
 
-    const products = await SponsoredProduct.find(filter)
-      .populate("owner", "fullName")
-      .sort({ updatedAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    // Use shared fetchSponsoredProducts function
+    const products = await fetchSponsoredProducts({
+      search,
+      status,
+      limit,
+      skip,
+    });
 
-    const totalCount = await SponsoredProduct.countDocuments(filter);
+    // Get total count for pagination
+    const query = buildProductQuery({ search, status });
+    const totalCount = await SponsoredProduct.countDocuments(query);
 
     res.json({
       success: true,
@@ -129,11 +116,15 @@ export const getAllSponsoredProducts = async (req, res) => {
   }
 };
 
+
 // Get single product
 export const getSponsoredProductById = async (req, res) => {
   try {
     const product = await SponsoredProduct.findById(req.params.id)
-    .populate("owner", "fullName");
+    .populate({
+      path: "owner",
+      select: "fullName",
+    })
     if (!product) return res.status(404).json({ error: "Not found" });
 
     res.json(product);

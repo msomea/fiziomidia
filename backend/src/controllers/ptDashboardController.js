@@ -13,6 +13,7 @@ import {
   getUserNotifications,
   getMyForumSubs,
 } from "../services/clinicService.js";
+import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 // ============================================
 // CONSOLIDATED PT DASHBOARD API
@@ -21,6 +22,19 @@ export const getPTDashboardData = async (req, res) => {
   try {
     const { id: ptId } = req.params;
     const { limit = 3 } = req.query;
+
+    // Generate cache key
+    const cacheKey = CacheKeys.DASHBOARD_PT(ptId);
+
+    // Try to get data from cache first
+    const cachedData = await CacheService.get(cacheKey);
+
+    if (cachedData) {
+      console.log(`🎯 Cache hit for PT dashboard: ${cacheKey}`);
+      return res.json(cachedData);
+    }
+
+    console.log(`💨 Cache miss for PT dashboard: ${cacheKey}`);
 
     const [
       ptProfile,
@@ -78,7 +92,7 @@ export const getPTDashboardData = async (req, res) => {
       getMyForumSubs(ptId),
     ]);
 
-    return res.json({
+    const responseData = {
       success: true,
       ptProfile,
       clinics,
@@ -92,8 +106,13 @@ export const getPTDashboardData = async (req, res) => {
       notifications,
       forumSubs,
       lastFetched: new Date(),
-    });
+    };
 
+    // Cache the response data with short TTL since dashboard data changes frequently
+    await CacheService.set(cacheKey, responseData, CacheTTL.SHORT);
+    console.log(`💾 Cached PT dashboard data: ${cacheKey}`);
+
+    return res.json(responseData);
   } catch (err) {
     console.error("PT Dashboard data fetch error:", err);
     return res.status(500).json({

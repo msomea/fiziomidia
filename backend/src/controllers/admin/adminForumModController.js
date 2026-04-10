@@ -5,6 +5,7 @@ import {
   logAdminActivity,
   getModRequestTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import { fetchModRequests } from "../adminController.js";
 
 // ------------------------------------
 // LIST ALL MODERATOR REQUESTS
@@ -14,20 +15,8 @@ export const listModRequests = async (req, res) => {
     const statusFilter = req.query.status; // "pending", "approved", "rejected"
     const search = req.query.search || "";
 
-    const query = {};
-    if (statusFilter) query.status = statusFilter;
-    if (search) {
-      query.$or = [
-        { "user.fullName": { $regex: search, $options: "i" } },
-        { "user.email": { $regex: search, $options: "i" } },
-        { "sub.title": { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const requests = await ForumSubModRequest.find(query)
-      .populate("user", "fullName email role")
-      .populate("sub", "title slug")
-      .sort({ createdAt: -1 });
+    // Use shared fetchModRequests function
+    const requests = await fetchModRequests({ status: statusFilter, search });
 
     res.json({ modRequests: requests });
   } catch (err) {

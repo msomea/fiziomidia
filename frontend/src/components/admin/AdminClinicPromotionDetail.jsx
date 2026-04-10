@@ -123,7 +123,7 @@ export default function AdminClinicPromotionDetail() {
 
   // Determine image: use promotion image if uploaded, otherwise clinic image
   const promoImage = promo.imageUrl || promo.clinic?.imageUrl;
-  
+
   return (
     <div className="border rounded-lg shadow bg-gray-50 p-4 mt-20 max-w-3xl mx-auto">
       <div className="flex justify-between mb-3">
@@ -159,7 +159,7 @@ export default function AdminClinicPromotionDetail() {
               <p><b>{t('contact_label')}:</b> {promo.clinic?.contactPhone}</p>
             </div>
             <div>
-              <p><b>{t('owner_label')}:</b> {promo.clinic?.ownerUserId?.fullName || promo.clinic?.ownerName}</p>
+              <p><b>{t('owner_label')}:</b> {promo.clinic?.ownerUserId?.fullName}</p>
               <p><b>{t('owner_email')}:</b> {promo.clinic?.ownerUserId?.email}</p>
               <p><b>{t('services_label')}:</b> {promo.clinic?.services?.join(", ") || t("no_services")}</p>
             </div>

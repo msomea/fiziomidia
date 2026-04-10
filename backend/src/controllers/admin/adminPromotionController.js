@@ -7,6 +7,7 @@ import {
   getPromotionTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
 import { deleteFromCloudinary } from "../../services/uploadService.js";
+import { fetchPromotions } from "../adminController.js";
 
 // -----------------------------------------
 // PT PROMOTIONS CONTROLLER
@@ -16,34 +17,8 @@ export const getAllPromotions = async (req, res) => {
   try {
     const { search, status } = req.query;
 
-    let ptIds = [];
-
-    if (search) {
-      const esc = escapeRegExp(search);
-      const pts = await User.find({
-        role: "physiotherapist",
-        $or: [
-          { fullName: { $regex: esc, $options: "i" } },
-          { email: { $regex: esc, $options: "i" } },
-        ],
-      }).select("_id");
-      ptIds = pts.map((p) => p._id);
-    }
-
-    // Main promotion query
-    const query = {};
-
-    if (ptIds.length > 0) {
-      query.pt = { $in: ptIds };
-    }
-
-    if (status) {
-      query.status = status;
-    }
-
-    const promotions = await PTPromotion.find(query)
-      .populate("pt", "fullName email")
-      .sort({ createdAt: -1 });
+    // Use shared fetchPromotions function
+    const promotions = await fetchPromotions({ search, status });
 
     res.json({ promotions });
   } catch (err) {

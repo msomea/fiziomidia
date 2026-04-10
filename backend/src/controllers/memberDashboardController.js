@@ -8,6 +8,7 @@ import {
   getMemberClinicAppointments,
   getClinicPromotionsForPT,
 } from "../services/clinicService.js";
+import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 // ============================================
 // CONSOLIDATED MEMBER DASHBOARD API
@@ -15,6 +16,19 @@ import {
 export const getMemberDashboardData = async (req, res) => {
   try {
     const userId = req.user._id;
+
+    // Generate cache key
+    const cacheKey = CacheKeys.DASHBOARD_MEMBER(userId);
+
+    // Try to get data from cache first
+    const cachedData = await CacheService.get(cacheKey);
+
+    if (cachedData) {
+      console.log(`🎯 Cache hit for member dashboard: ${cacheKey}`);
+      return res.json(cachedData);
+    }
+
+    console.log(`💨 Cache miss for member dashboard: ${cacheKey}`);
 
     // Build all queries in parallel for better performance
     const [
@@ -63,7 +77,7 @@ export const getMemberDashboardData = async (req, res) => {
     // Extract saved PTs from the populated user document
     const savedPTsList = savedPTs?.savedPTs || [];
 
-    return res.json({
+    const responseData = {
       success: true,
       memberProfile,
       appointments,
@@ -74,8 +88,13 @@ export const getMemberDashboardData = async (req, res) => {
       clinicPromotions,
       notifications,
       lastFetched: new Date(),
-    });
+    };
 
+    // Cache the response data with short TTL since dashboard data changes frequently
+    await CacheService.set(cacheKey, responseData, CacheTTL.SHORT);
+    console.log(`Cached member dashboard data: ${cacheKey}`);
+
+    return res.json(responseData);
   } catch (err) {
     console.error("Member Dashboard data fetch error:", err);
     return res.status(500).json({ 

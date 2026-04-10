@@ -8,66 +8,29 @@ import {
   logAdminActivity,
   getAppointmentTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import { fetchAppointments } from "../adminController.js";
 
 // APPOINTMENTS CONTROLLER
 // ============================================
 
 export const getAllAppointments = async (req, res) => {
   try {
-    const { search = "", clinic = "", pt = "", requester = "", status = "" } = req.query;
+    const {
+      search = "",
+      clinic = "",
+      pt = "",
+      requester = "",
+      status = "",
+    } = req.query;
 
-    // Build dynamic query
-    let query = {};
-
-    // global search
-    if (search) {
-      const escSearch = escapeRegExp(search);
-      query.$or = [
-        { notes: new RegExp(escSearch, "i") },
-        { adminNotes: new RegExp(escSearch, "i") },
-      ];
-    }
-
-    // Filter by clinic NAME
-    if (clinic) {
-      const escClinic = escapeRegExp(clinic);
-      const clinicMatches = await Clinic.find({
-        name: new RegExp(escClinic, "i"),
-      }).select("_id");
-
-      query.clinic = { $in: clinicMatches.map((c) => c._id) };
-    }
-
-    // Filter by PT NAME
-    if (pt) {
-      const escPt = escapeRegExp(pt);
-      const ptMatches = await User.find({
-        fullName: new RegExp(escPt, "i"),
-      }).select("_id");
-
-      query.pt = { $in: ptMatches.map((u) => u._id) };
-    }
-
-    // Filter Requester NAME
-    if (requester) {
-      const escReq = escapeRegExp(requester);
-      const reqMatches = await User.find({
-        fullName: new RegExp(escReq, "i"),
-      }).select("_id");
-
-      query.requester = { $in: reqMatches.map((u) => u._id) };
-    }
-
-    // Filter by status
-    if (status) {
-      query.status = status;
-    }
-
-    const appts = await Appointment.find(query)
-      .populate("pt", "fullName email")
-      .populate("requester", "fullName email")
-      .populate("clinic", "name location")
-      .sort({ createdAt: -1 });
+    // Use shared fetchAppointments function
+    const appts = await fetchAppointments({
+      search,
+      clinic,
+      pt,
+      requester,
+      status,
+    });
 
     res.json({ appts });
   } catch (err) {

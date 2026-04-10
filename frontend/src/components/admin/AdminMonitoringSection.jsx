@@ -36,14 +36,11 @@ export default function AdminMonitoringSection() {
   }, [search]);
 
   useEffect(() => {
-    loadLogs();
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (activityLogs.length === 0) {
+    // Only load logs when pagination changes, not on initial mount
+    if (currentPage > 1) {
       loadLogs();
     }
-  }, []);
+  }, [currentPage]);
 
   const loadLogs = async () => {
     try {

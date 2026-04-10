@@ -11,10 +11,32 @@ import {
   getSponsorshipTargetInfo,
   getForumSubTargetInfo,
 } from "../../middlewares/adminActivityLogger.js";
+import { fetchForumSubs } from "../adminController.js";
 
 // -----------------------------------------
 // SUB & SPONSORSHIP CONTROLLER
 // -----------------------------------------
+
+//GET ALL FORUM SUBS
+export const getAllForumSubs = async (req, res) => {
+  try {
+    // Use shared fetchForumSubs function
+    const subs = await fetchForumSubs();
+
+    res.json({ 
+      success: true,
+      subs,
+      message: "Forum subs fetched successfully"
+    });
+  } catch (error) {
+    console.error("Error fetching forum subs:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch forum subs",
+      error: error.message,
+    });
+  }
+};
 
 //GET SINGLE FORUM SUBS
 export const getSingleForumSub = async (req, res) => {
