@@ -244,3 +244,34 @@ export const fetchDashboardData = async (filters = {}) => {
     throw err;
   }
 };
+
+// Unified Search API
+export const performUnifiedSearch = async (params = {}) => {
+  try {
+    const {
+      types = [],
+      search = "",
+      filters = {},
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc"
+    } = params;
+
+    const searchParams = {
+      types: Array.isArray(types) ? types.join(',') : types,
+      search,
+      filters: JSON.stringify(filters),
+      page,
+      limit,
+      sortBy,
+      sortOrder
+    };
+
+    const { data } = await API.get(`${API_URL}/admin/search`, { params: searchParams });
+    return data;
+  } catch (err) {
+    console.error("Failed to perform unified search:", err);
+    throw err;
+  }
+};

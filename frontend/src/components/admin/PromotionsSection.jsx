@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { performUnifiedSearch } from "../../api/admin";
 
 export default function PromotionsSection() {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ export default function PromotionsSection() {
   const [search, setSearch] = useState("");       // search PT name or email
   const [status, setStatus] = useState("");       // sort/filter by status
   const [loading, setLoading] = useState(false);
+  const [filteredPromotions, setFilteredPromotions] = useState([]);
 
   useEffect(() => {
     // Load promotions when filters change
@@ -30,10 +32,17 @@ export default function PromotionsSection() {
   const loadPromotions = async () => {
     try {
       setLoading(true);
-      await refreshPromotions({ search, status });
+      const result = await performUnifiedSearch({
+        types: ['promotions'],
+        search,
+        filters: { status },
+        limit: 20
+      });
+      console.log('Promotions loaded via unified search:', result);
+      setFilteredPromotions(result.promotions || []);
     } catch (error) {
-      console.error(error);
-      toast.error(t("failed_load_promotion"));
+      console.error('Failed to load promotions via unified search:', error);
+      toast.error(t("failed_load_promotions"));
     } finally {
       setLoading(false);
     }

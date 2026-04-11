@@ -449,7 +449,7 @@ async function getAdminStatsData() {
       lastUpdated: new Date(),
     };
   } catch (error) {
-    console.error("⚠️ Error getting admin stats:", error);
+    console.error("Error getting admin stats:", error);
     return {
       userCount: 0,
       appointmentCount: 0,
@@ -463,3 +463,189 @@ async function getAdminStatsData() {
   }
 }
 
+// ============================================
+// UNIFIED SEARCH API
+// ============================================
+export const unifiedSearch = async (req, res) => {
+  try {
+    const {
+      types = "", // comma-separated: users,appointments,promotions,clinic-promotions,sponsored-products,forum-mods,activity-logs
+      search = "",
+      filters = "{}", // JSON string of filters
+      page = 1,
+      limit = 20,
+      sortBy = "createdAt",
+      sortOrder = "desc"
+    } = req.query;
+
+    // Parse filters
+    let parsedFilters = {};
+    try {
+      parsedFilters = typeof filters === "string" ? JSON.parse(filters) : filters;
+    } catch (e) {
+      console.warn("Invalid filters JSON, using empty filters");
+    }
+
+    // Parse types
+    const searchTypes = types.split(",").map(t => t.trim()).filter(t => t);
+    
+    if (searchTypes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one search type must be specified"
+      });
+    }
+
+    // Generate cache key
+    const userId = req.user?._id || "anonymous";
+    const cacheKey = `search:admin:${userId}:${JSON.stringify({ types, search, filters, page, limit, sortBy, sortOrder })}`;
+
+    // Try cache first
+    const cachedData = await CacheService.get(cacheKey);
+    if (cachedData) {
+      console.log(`Unified search cache hit for user: ${userId}`);
+      return res.json(cachedData);
+    }
+
+    console.log(`Unified search cache miss for user: ${userId}`);
+
+    // Build search promises for each type
+    const searchPromises = [];
+    const searchResults = {};
+
+    // Users search
+    if (searchTypes.includes("users")) {
+      searchPromises.push(
+        fetchUsers({
+          search,
+          role: parsedFilters.role,
+          licenseStatus: parsedFilters.licenseStatus,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ users: results }))
+      );
+    }
+
+    // Appointments search
+    if (searchTypes.includes("appointments")) {
+      searchPromises.push(
+        fetchAppointments({
+          search,
+          clinic: parsedFilters.clinic,
+          pt: parsedFilters.pt,
+          requester: parsedFilters.requester,
+          status: parsedFilters.status,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ appointments: results }))
+      );
+    }
+
+    // PT Promotions search
+    if (searchTypes.includes("promotions")) {
+      searchPromises.push(
+        fetchPromotions({
+          search,
+          status: parsedFilters.status,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ promotions: results }))
+      );
+    }
+
+    // Clinic Promotions search
+    if (searchTypes.includes("clinic-promotions")) {
+      searchPromises.push(
+        fetchClinicPromotions({
+          search,
+          status: parsedFilters.status,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ clinicPromotions: results }))
+      );
+    }
+
+    // Sponsored Products search
+    if (searchTypes.includes("sponsored-products")) {
+      searchPromises.push(
+        fetchSponsoredProducts({
+          search,
+          status: parsedFilters.status,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ sponsoredProducts: results }))
+      );
+    }
+
+    // Forum Moderator Requests search
+    if (searchTypes.includes("forum-mods")) {
+      searchPromises.push(
+        fetchModRequests({
+          search,
+          status: parsedFilters.status,
+          limit: parseInt(limit),
+          skip: (parseInt(page) - 1) * parseInt(limit)
+        }).then(results => ({ modRequests: results }))
+      );
+    }
+
+    // Activity Logs search
+    if (searchTypes.includes("activity-logs")) {
+      searchPromises.push(
+        AdminActivityLog.find({
+          ...(search && {
+            $or: [
+              { action: { $regex: search, $options: "i" } },
+              { "targetType": { $regex: search, $options: "i" } },
+              { "targetId": { $regex: search, $options: "i" } }
+            ]
+          }),
+          ...(parsedFilters.admin && { admin: parsedFilters.admin }),
+          ...(parsedFilters.action && { action: parsedFilters.action }),
+          ...(parsedFilters.targetType && { targetType: parsedFilters.targetType })
+        })
+        .populate("admin", "fullName email")
+        .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit))
+        .lean()
+        .then(results => ({ activityLogs: results }))
+      );
+    }
+
+    // Execute all searches in parallel
+    const results = await Promise.all(searchPromises);
+    
+    // Combine results
+    results.forEach(result => {
+      Object.assign(searchResults, result);
+    });
+
+    const responseData = {
+      success: true,
+      ...searchResults,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        types: searchTypes
+      },
+      filters: parsedFilters,
+      search,
+      lastFetched: new Date()
+    };
+
+    // Cache results for 2 minutes (search data changes frequently)
+    await CacheService.set(cacheKey, responseData, 120);
+    console.log(`Unified search cached for user: ${userId}`);
+
+    return res.json(responseData);
+
+  } catch (err) {
+    console.error("Unified search error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to perform unified search",
+      error: err.message
+    });
+  }
+};

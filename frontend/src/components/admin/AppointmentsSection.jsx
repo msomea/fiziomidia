@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import CollapsibleSection from "./CollapsibleSection";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { performUnifiedSearch } from "../../api/admin";
 
 export default function AdminAppointments() {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ export default function AdminAppointments() {
   const [requester, setRequester] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
 
   useEffect(() => {
     // Load appointments when filters change
@@ -34,10 +36,22 @@ export default function AdminAppointments() {
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      const result = await refreshAppointments({ search, clinic, pt, requester, status });
-      console.log('Appointments refreshed:', result);
+      const result = await performUnifiedSearch({
+        types: ['appointments'],
+        search,
+        filters: {
+          clinic,
+          pt,
+          requester,
+          status
+        },
+        limit: 20
+      });
+      console.log('Appointments loaded via unified search:', result);
+      // Update local state with filtered results
+      setFilteredAppointments(result.appointments || []);
     } catch (error) {
-      console.error('Failed to refresh appointments:', error);
+      console.error('Failed to load appointments via unified search:', error);
       toast.error(t("failed_fetch_appointments"));
     } finally {
       setLoading(false);

@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
-import { fetchClinicPromotions } from "../../api/admin";
+import { performUnifiedSearch } from "../../api/admin";
 
 export default function ClinicPromotionSection() {
   const { t } = useTranslation();
@@ -35,11 +35,16 @@ export default function ClinicPromotionSection() {
   const loadClinicPromotions = async () => {
     try {
       setLoading(true);
-      const response = await refreshClinicPromotions({ search, status });
-      console.log(response)
-      setPromotions(response);
+      const result = await performUnifiedSearch({
+        types: ['clinic-promotions'],
+        search,
+        filters: { status },
+        limit: 20
+      });
+      console.log('Clinic promotions loaded via unified search:', result);
+      setPromotions(result.clinicPromotions || []);
     } catch (error) {
-      console.error(error);
+      console.error('Failed to load clinic promotions via unified search:', error);
       toast.error(t("failed_load_clinic_promotions"));
     } finally {
       setLoading(false);

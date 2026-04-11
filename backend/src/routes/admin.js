@@ -10,7 +10,10 @@ import * as modReq from "../controllers/admin/adminForumModController.js";
 import * as clinicPromo from "../controllers/admin/adminClinicPromotionController.js";
 
 import { upload } from "../services/uploadService.js";
-import { getDashboardData } from "../controllers/adminController.js";
+import {
+  getDashboardData,
+  unifiedSearch,
+} from "../controllers/adminController.js";
 import {
   getRateLimitStats,
   clearRateLimitData,
@@ -102,6 +105,9 @@ router.get("/monitoring/stats", monitoringController.getAdminStats);
 
 // Consolidated Dashboard Route
 router.get("/dashboard", getDashboardData);
+
+// Unified Search Route
+router.get("/search", unifiedSearch);
 
 // Rate Limit Monitoring
 router.get("/rate-limits/stats", async (req, res) => {

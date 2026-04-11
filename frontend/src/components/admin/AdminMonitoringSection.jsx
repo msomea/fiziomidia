@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
 import dayjs from "dayjs";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { performUnifiedSearch } from "../../api/admin";
 
 export default function AdminMonitoringSection() {
   const { t } = useTranslation()
@@ -25,6 +26,7 @@ export default function AdminMonitoringSection() {
   const postsPerPage = 10;
 
   const [showStats, setShowStats] = useState(false);
+  const [searchedLogs, setSearchedLogs] = useState([]);
 
   // 🔥 Debounce search (performance boost)
   useEffect(() => {
@@ -36,18 +38,32 @@ export default function AdminMonitoringSection() {
   }, [search]);
 
   useEffect(() => {
-    // Only load logs when pagination changes, not on initial mount
-    if (currentPage > 1) {
-      loadLogs();
+    // Load logs when filters change
+    if (debouncedSearch || adminFilter || actionFilter || targetFilter || startDate || endDate) {
+      loadActivityLogs();
     }
-  }, [currentPage]);
+  }, [currentPage, debouncedSearch, adminFilter, actionFilter, targetFilter, startDate, endDate]);
 
-  const loadLogs = async () => {
+  const loadActivityLogs = async () => {
     try {
       setLoading(true);
-      await refreshActivityLogs();
+      const result = await performUnifiedSearch({
+        types: ['activity-logs'],
+        search: debouncedSearch,
+        filters: {
+          admin: adminFilter,
+          action: actionFilter,
+          targetType: targetFilter
+        },
+        page: currentPage,
+        limit: postsPerPage,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      });
+      console.log('Activity logs loaded via unified search:', result);
+      setSearchedLogs(result.activityLogs || []);
     } catch (error) {
-      console.error("Failed to load admin logs:", error);
+      console.error('Failed to load activity logs via unified search:', error);
     } finally {
       setLoading(false);
     }

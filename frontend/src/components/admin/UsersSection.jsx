@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
 import { Link } from "react-router";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { performUnifiedSearch } from "../../api/admin";
 import toast from "react-hot-toast";
 
 export default function AdminUsers() {
@@ -16,7 +17,7 @@ export default function AdminUsers() {
   const debounceTimeoutRef = useRef(null);
   const [allUsers, setAllUsers] = useState([]);
 
-  // Debounced search function
+  // Debounced search function using unified search
   const debouncedLoadUsers = useCallback((filters) => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -25,17 +26,26 @@ export default function AdminUsers() {
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
         setLoading(true);
-        console.log('Loading users with filters:', filters);
-        const result = await refreshUsers(filters);
-        console.log('Users loaded successfully:', result);
+        console.log('Loading users with unified search:', filters);
+        const result = await performUnifiedSearch({
+          types: ['users'],
+          search: filters.search,
+          filters: {
+            role: filters.role,
+            licenseStatus: filters.licenseStatus
+          },
+          limit: 50
+        });
+        console.log('Users loaded successfully via unified search:', result);
+        setAllUsers(result.users || []);
       } catch (error) {
-        console.error('Failed to load users:', error);
+        console.error('Failed to load users via unified search:', error);
         toast.error(t("failed_load_users"));
       } finally {
         setLoading(false);
       }
     }, 300); // 300ms debounce delay
-  }, [refreshUsers, t]);
+  }, [t]);
 
   // Load users function for manual refresh
   const loadUsers = useCallback(async () => {
