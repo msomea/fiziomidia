@@ -45,20 +45,36 @@ GET ALL PROMOTIONS (ADMIN VIEW)
 */
 export const getAllClinicPromotionsAdmin = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, search } = req.query;
 
     const filter = {};
     if (status) filter.status = status;
 
-    const promotions = await ClinicPromotion.find(filter)
+    // Add search functionality for clinic name or address
+    let searchFilter = {};
+    if (search) {
+      searchFilter = {
+        $or: [
+          { "clinic.name": { $regex: search, $options: "i" } },
+          { "clinic.address": { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const finalFilter =
+      Object.keys(searchFilter).length > 0
+        ? { ...filter, ...searchFilter }
+        : filter;
+
+    const promotions = await ClinicPromotion.find(finalFilter)
       .populate({
         path: "clinic",
         select: "name address ownerUserId",
         populate: {
           path: "ownerUserId",
           select: "fullName email phone",
-          model: "User"
-        }
+          model: "User",
+        },
       })
       .sort({ createdAt: -1 });
 

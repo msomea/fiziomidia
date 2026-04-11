@@ -19,17 +19,25 @@ export default function ClinicPromotionSection() {
   const [status, setStatus] = useState("");       // sort/filter by status
 
   useEffect(() => {
-    // Only load promotions when filters change, not on initial mount
+    // Load promotions when filters change
     if (search || status) {
       loadClinicPromotions();
     }
   }, [search, status]);
 
+  // Initial data load if clinicPromotions is empty
+  useEffect(() => {
+    if (!clinicPromotions || clinicPromotions.length === 0) {
+      loadClinicPromotions();
+    }
+  }, []);
+
   const loadClinicPromotions = async () => {
     try {
       setLoading(true);
       const response = await refreshClinicPromotions({ search, status });
-      setPromotions(response || []);
+      console.log(response)
+      setPromotions(response);
     } catch (error) {
       console.error(error);
       toast.error(t("failed_load_clinic_promotions"));
@@ -39,7 +47,7 @@ export default function ClinicPromotionSection() {
   };
 
   // Use centralized data when no filters, otherwise use filtered data
-  const displayPromotions = (search || status) ? promotions : (clinicPromotions || []);
+  const displayPromotions = (search || status) ? (Array.isArray(promotions) ? promotions : []) : (Array.isArray(clinicPromotions) ? clinicPromotions : []);
   
   // Use dashboard loading state for initial load, local loading for refreshes
   const isLoading = dashboardLoading || loading;

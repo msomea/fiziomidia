@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Search, Filter, RotateCcw } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
 import { Link } from "react-router";
@@ -13,55 +13,144 @@ export default function AdminUsers() {
   const [roleFilter, setRoleFilter] = useState("");
   const [licenseFilter, setLicenseFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const debounceTimeoutRef = useRef(null);
+  const [allUsers, setAllUsers] = useState([]);
 
-  useEffect(() => {
-    // Only load users when filters change, not on initial mount
-    if (roleFilter || licenseFilter || search) {
-      loadUsers();
+  // Debounced search function
+  const debouncedLoadUsers = useCallback((filters) => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
-  }, [roleFilter, licenseFilter, search]);
 
-  const loadUsers = async () => {
+    debounceTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLoading(true);
+        console.log('Loading users with filters:', filters);
+        const result = await refreshUsers(filters);
+        console.log('Users loaded successfully:', result);
+      } catch (error) {
+        console.error('Failed to load users:', error);
+        toast.error(t("failed_load_users"));
+      } finally {
+        setLoading(false);
+      }
+    }, 300); // 300ms debounce delay
+  }, [refreshUsers, t]);
+
+  // Load users function for manual refresh
+  const loadUsers = useCallback(async () => {
+    const filters = {
+      search,
+      role: roleFilter,
+      licenseStatus: licenseFilter,
+    };
+    
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
     try {
       setLoading(true);
-      await refreshUsers({
-        search,
-        role: roleFilter,
-        licenseStatus: licenseFilter,
-      });
+      console.log('Manual refresh users with filters:', filters);
+      const result = await refreshUsers(filters);
+      console.log('Users refreshed successfully:', result);
     } catch (error) {
-      console.error(error);
+      console.error('Failed to refresh users:', error);
       toast.error(t("failed_load_users"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, roleFilter, licenseFilter, refreshUsers, t]);
+
+  // Store all users when they change
+  useEffect(() => {
+    if (users && users.length > 0) {
+      setAllUsers(users);
+    }
+  }, [users]);
+
+  // Real-time search effect
+  useEffect(() => {
+    const filters = {
+      search,
+      role: roleFilter,
+      licenseStatus: licenseFilter,
+    };
+    
+    // Trigger server-side search with debounce
+    debouncedLoadUsers(filters);
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [search, roleFilter, licenseFilter, debouncedLoadUsers]);
+
+  // Initial load
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  // Client-side filtering function
+  const filteredUsers = allUsers.filter((user) => {
+    // Search filter (case-insensitive search on fullName and email)
+    const matchesSearch = !search || 
+      user.fullName?.toLowerCase().includes(search.toLowerCase()) ||
+      user.email?.toLowerCase().includes(search.toLowerCase());
+    
+    // Role filter
+    const matchesRole = !roleFilter || user.role === roleFilter;
+    
+    // License filter
+    const license = user?.ptProfile?.licenses?.[0];
+    const matchesLicense = !licenseFilter || 
+      (license?.verificationStatus === licenseFilter);
+    
+    return matchesSearch && matchesRole && matchesLicense;
+  });
 
   // Use dashboard loading state for initial load, local loading for refreshes
   const isLoading = dashboardLoading || loading;
+  const displayUsers = filteredUsers;
 
   return (
     <CollapsibleSection title={t('users_management')}>
       {/* Search + Filters */}
-      <div className="flex items-center gap-3 mb-5">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder={t('search_placeholder_users')}
-            className="w-full border rounded pl-8 p-2"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && loadUsers()}
-          />
-        </div>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder={t('search_placeholder_users')}
+              className="w-full border rounded pl-8 p-2"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-        <button
-          onClick={loadUsers}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          {t('search_button')}
-        </button>
+          <button
+            onClick={loadUsers}
+            disabled={loading}
+            className="px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean/80 disabled:opacity-50 flex items-center gap-2"
+          >
+            <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+
+          <button
+            onClick={() => {
+              setSearch("");
+              setRoleFilter("");
+              setLicenseFilter("");
+            }}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Clear Filters
+          </button>
+        </div>
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-gray-500" />
@@ -112,12 +201,14 @@ export default function AdminUsers() {
               <tr>
                 <td className="p-4 text-center" colSpan="6">Loading...</td>
               </tr>
-            ) : users.length === 0 ? (
+            ) : displayUsers.length === 0 ? (
               <tr>
-                <td className="p-4 text-center" colSpan="6">{t('no_users_found')}</td>
+                <td className="p-4 text-center" colSpan="6">
+                  {allUsers.length === 0 ? t('no_users_found') : t('no_users_match_filters')}
+                </td>
               </tr>
             ) : (
-              users.map((u) => {
+              displayUsers.map((u) => {
                 const license = u?.ptProfile?.licenses?.[0];
                 return (
                   <tr key={u._id} className="border-t">

@@ -16,11 +16,16 @@ export default function PromotionsSection() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only load promotions when filters change, not on initial mount
-    if (search || status) {
+    // Load promotions when filters change
+    loadPromotions();
+  }, [search, status]);
+
+  // Initial load if promotions is empty
+  useEffect(() => {
+    if (!promotions || promotions.length === 0) {
       loadPromotions();
     }
-  }, [search, status]);
+  }, []);
 
   const loadPromotions = async () => {
     try {

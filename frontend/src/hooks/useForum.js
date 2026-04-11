@@ -3,16 +3,15 @@ import { useApiData } from './useApiData';
 import toast from 'react-hot-toast';
 import API from '../api/axios';
 import { API_URL } from '../config/constants';
-import { 
-  fetchForumSubs, 
-  fetchSubById, 
+import {
+  fetchForumSubs,
+  fetchSubById,
   fetchPostsInSub,
   votePost,
   createPost,
   addComment,
-  deleteComment
-} from '../api/forum';
-import { getUserNotifications } from '../api/notifications';
+  deleteComment,
+} from "../api/forum";
 
 /**
  * Hook for forum data management

@@ -3,8 +3,7 @@ import { useApiData } from './useApiData';
 import toast from 'react-hot-toast';
 import API from '../api/axios';
 import { API_URL } from '../config/constants';
-import { fetchPTDashboardData, fetchPTDashboardStats } from '../api/pts';
-import { getUserNotifications } from '../api/notifications';
+import { fetchPTDashboardData, fetchPTDashboardStats } from "../api/pts";
 
 /**
  * Hook for PT dashboard data management

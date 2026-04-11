@@ -3,8 +3,7 @@ import { useApiData } from './useApiData';
 import toast from 'react-hot-toast';
 import API from '../api/axios';
 import { API_URL } from '../config/constants';
-import { getProfile, getAppointmentsByMember } from '../api/users';
-import { getUserNotifications } from '../api/notifications';
+import { getProfile, getAppointmentsByMember } from "../api/users";
 
 /**
  * Hook for member dashboard data management
@@ -15,18 +14,20 @@ export const useMemberDashboard = (memberId) => {
   const [error, setError] = useState(null);
 
   // Fetch all member dashboard data at once
-  const fetchDashboardData = useCallback(async () => {
+  const fetchDashboardData = useCallback(async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await API.get(`${API_URL}/users/dashboard`);
-      
+      const response = await API.get(
+        `${API_URL}/users/dashboard${forceRefresh ? "?forceRefresh=true" : ""}`,
+      );
+
       setData(response.data);
       return response.data;
     } catch (err) {
       setError(err);
-      toast.error('Failed to load dashboard data');
+      toast.error("Failed to load dashboard data");
       throw err;
     } finally {
       setLoading(false);

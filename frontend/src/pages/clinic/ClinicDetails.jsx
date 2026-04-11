@@ -15,7 +15,13 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import API from "../../api/axios";
+import { 
+  getClinicReviews, 
+  createReview, 
+  updateReview, 
+  deleteReview 
+} from "../../api/reviews";
+import { getClinicById } from "../../api/clinics";
 import StarRating from "../../components/StarRating";
 import dayjs from "dayjs";
 
@@ -48,8 +54,8 @@ const ClinicDetails = () => {
 
   const fetchClinicDetails = async () => {
     try {
-      const response = await API.get(`/clinics/${clinicId}`);
-      setClinic(response.data);
+      const response = await getClinicById(clinicId);
+      setClinic(response);
     } catch (error) {
       console.error("Error fetching clinic details:", error);
       toast.error("Failed to load clinic details");
@@ -61,12 +67,12 @@ const ClinicDetails = () => {
   const fetchReviews = async () => {
     try {
       setReviewsLoading(true);
-      const response = await API.get(`/reviews/clinic/${clinicId}`);
-      setReviews(response.data);
+      const response = await getClinicReviews(clinicId);
+      setReviews(response);
       
       // Check if current user has already reviewed
       if (user) {
-        const existingReview = response.data.find(
+        const existingReview = response.find(
           review => review.reviewer._id === user._id
         );
         setUserReview(existingReview);
@@ -95,7 +101,7 @@ const ClinicDetails = () => {
         comment: reviewForm.comment
       };
 
-      const response = await API.post("/reviews", reviewData);
+      const response = await createReview(reviewData);
       
       toast.success("Review submitted successfully!");
       setShowReviewForm(false);
@@ -127,7 +133,7 @@ const ClinicDetails = () => {
         comment: reviewForm.comment
       };
 
-      await API.put(`/reviews/${userReview._id}`, updateData);
+      await updateReview(userReview._id, updateData);
       
       toast.success("Review updated successfully!");
       setShowReviewForm(false);
@@ -148,7 +154,7 @@ const ClinicDetails = () => {
     }
 
     try {
-      await API.delete(`/reviews/${userReview._id}`);
+      await deleteReview(userReview._id);
       toast.success("Review deleted successfully!");
       setUserReview(null);
       fetchReviews();

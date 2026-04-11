@@ -7,7 +7,7 @@ import { useDashboard } from "../../contexts/DashboardContext";
 
 export default function AdminMonitoringSection() {
   const { t } = useTranslation()
-  const { activityLogs, adminStats, refreshAdminStats, loading: dashboardLoading } = useDashboard();
+  const { activityLogs, adminStats, refreshAdminStats, refreshActivityLogs, loading: dashboardLoading } = useDashboard();
 
   const [loading, setLoading] = useState(false);
 
@@ -45,7 +45,7 @@ export default function AdminMonitoringSection() {
   const loadLogs = async () => {
     try {
       setLoading(true);
-      await refreshAdminStats();
+      await refreshActivityLogs();
     } catch (error) {
       console.error("Failed to load admin logs:", error);
     } finally {
@@ -57,11 +57,13 @@ export default function AdminMonitoringSection() {
   const adminOptions = useMemo(() => {
     const map = new Map();
 
-    activityLogs.forEach((log) => {
-      if (log.admin?._id) {
-        map.set(log.admin._id, log.admin.fullName);
-      }
-    });
+    if (Array.isArray(activityLogs)) {
+      activityLogs.forEach((log) => {
+        if (log.admin?._id) {
+          map.set(log.admin._id, log.admin.fullName);
+        }
+      });
+    }
 
     return Array.from(map.entries()).map(([id, name]) => ({
       id,
@@ -71,6 +73,9 @@ export default function AdminMonitoringSection() {
 
   // 🔥 Optimized filtering
   const filteredLogs = useMemo(() => {
+    if (!Array.isArray(activityLogs)) {
+      return [];
+    }
     return activityLogs.filter((log) => {
       const matchesSearch =
         debouncedSearch === "" ||

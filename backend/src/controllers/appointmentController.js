@@ -291,7 +291,7 @@ export const requestAppointment = async (req, res) => {
 // Get appointments
 export const getAppointments = async (req, res) => {
   try {
-    const { ptId, limit } = req.query;
+    const { ptId, limit, search, clinic, pt, requester, status } = req.query;
     // Ensure req.user exists
     if (!req.user) {
       return res.status(401).json({ error: "User not authenticated" });
@@ -302,22 +302,68 @@ export const getAppointments = async (req, res) => {
       filter.pt = req.user._id;
     } else if (req.user.role === "member") {
       filter.requester = req.user._id;
-    } else if (req.user.role === "admin" && ptId) {
-      filter.pt = ptId;
+    } else if (req.user.role === "admin") {
+      // For admin, apply additional filters if provided
+      if (ptId) filter.pt = ptId;
+      if (pt) filter.pt = pt;
+      if (requester) filter.requester = requester;
+      if (status) filter.status = status;
+      if (clinic) filter.clinic = clinic;
+
+      // Handle search functionality - search across clinic name, PT name, and requester name
+      if (search) {
+        // Find clinics that match the search term
+        const clinics = await Clinic.find({
+          name: { $regex: search, $options: "i" },
+        }).select("_id");
+
+        // Find PTs that match the search term
+        const pts = await User.find({
+          fullName: { $regex: search, $options: "i" },
+          role: "physiotherapist",
+        }).select("_id");
+
+        // Find requesters that match the search term
+        const requesters = await User.find({
+          fullName: { $regex: search, $options: "i" },
+        }).select("_id");
+
+        // Build OR condition for search
+        const searchConditions = [];
+        if (clinics.length > 0) {
+          searchConditions.push({ clinic: { $in: clinics.map((c) => c._id) } });
+        }
+        if (pts.length > 0) {
+          searchConditions.push({ pt: { $in: pts.map((p) => p._id) } });
+        }
+        if (requesters.length > 0) {
+          searchConditions.push({
+            requester: { $in: requesters.map((r) => r._id) },
+          });
+        }
+
+        // If we found any matches, add to filter
+        if (searchConditions.length > 0) {
+          filter.$or = searchConditions;
+        } else {
+          // If no matches found, return empty result
+          return res.json({ appointments: [] });
+        }
+      }
     } else if (req.user.role !== "admin") {
       return res.status(403).json({ error: "Forbidden" });
     }
 
     const appts = await Appointment.find(filter)
-      .populate("pt", "fullName email ptProfile.speciality")  
+      .populate("pt", "fullName email ptProfile.speciality")
       .populate("requester", "fullName email")
-      .populate("clinic")
+      .populate("clinic", "name address")
       .sort({ createdAt: -1 })
-      .limit(Number(limit) || 3);
+      .limit(Number(limit) || 50); // Increased limit for admin
 
     res.json({ appointments: appts });
   } catch (err) {
-    console.error("❌ Appointments API error:", err.message, err.stack);
+    console.error("Appointments API error:", err.message, err.stack);
     res.status(500).json({ error: "Failed to fetch appointments" });
   }
 };

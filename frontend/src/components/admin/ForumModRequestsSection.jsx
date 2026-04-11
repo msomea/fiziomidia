@@ -64,7 +64,7 @@ export default function ForumModRequestsSection() {
               {t("loading_mod_requests")}
             </p>
           </div>
-        ) : modRequests.length === 0 ? (
+        ) : !Array.isArray(modRequests) || modRequests.length === 0 ? (
           <p className="text-gray-500 text-sm mt-10">
             {t("no_mod_requests")}
           </p>

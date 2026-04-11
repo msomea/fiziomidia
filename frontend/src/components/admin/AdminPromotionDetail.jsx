@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getPromotionById, updatePromotion as updatePromotionApi, deletePromotion } from "../../api/admin";
+import { getPromotionById, updatePromotion as updatePromotionApi, updatePromotionWithCacheInvalidation, deletePromotion } from "../../api/admin";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
+import { useHomePage } from "../../contexts/HomePageContext";
 
 export default function AdminPromotionDetail() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function AdminPromotionDetail() {
   const [endAt, setEndAt] = useState("");
   const [saving, setSaving] = useState(false);
   const { t } = useTranslation()
+  const { forceRefreshHomePage } = useHomePage();
 
   useEffect(() => {
     loadPromotion();
@@ -40,10 +42,10 @@ export default function AdminPromotionDetail() {
   const updatePromotion = async () => {
     try {
       setSaving(true);
-      await updatePromotionApi(id, {
+      await updatePromotionWithCacheInvalidation(id, {
         status,
         endAt,
-      });
+      }, forceRefreshHomePage);
 
       toast.success(t('promotion_updated'));
       loadPromotion();

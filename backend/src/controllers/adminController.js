@@ -5,6 +5,7 @@ import PTPromotion from "../models/PTPromotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
 import AdminActivityLog from "../models/AdminActivityLog.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
+import Clinic from "../models/Clinic.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 

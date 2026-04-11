@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 import { useMemberDashboard as useMemberDashboardData } from '../hooks/useMemberDashboard';
-import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
+import { getUserNotifications, markNotificationRead } from '../api/notifications';
 import toast from 'react-hot-toast';
 
 // Context
@@ -16,6 +16,7 @@ export const MemberDashboardProvider = ({ children }) => {
     try {
       const notificationsData = await getUserNotifications(memberId);
       setNotifications(notificationsData || []);
+      console.log("Notification in dash Context", notificationsData);
     } catch (error) {
       console.error('Notifications refresh error:', error);
       toast.error('Failed to refresh notifications');
@@ -23,17 +24,27 @@ export const MemberDashboardProvider = ({ children }) => {
   }, []);
 
   // Mark notification as read
-  const markNotificationRead = useCallback(async (memberId, notificationId) => {
+  const markNotificationReadHandler = useCallback(async (memberId, notificationId) => {
     try {
-      await markNotificationAsRead(memberId, notificationId);
+      await markNotificationRead(memberId, notificationId);
       
-      // Update local state to remove the read notification
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      // The backend will handle deletion, we need to trigger a refresh
+      // to get the updated notifications list
+      if (memberId) {
+        refreshNotifications(memberId);
+      }
     } catch (error) {
       console.error('Mark notification as read error:', error);
       toast.error('Failed to mark notification as read');
     }
-  }, []);
+  }, [refreshNotifications]);
+
+  // Refresh notifications when dashboard data changes
+  useEffect(() => {
+    if (dashboardData.data?.profile?._id) {
+      refreshNotifications(dashboardData.data.profile._id);
+    }
+  }, [dashboardData.data?.profile?._id, refreshNotifications]);
 
   // Cache user data for AuthProvider to access
   useEffect(() => {
@@ -46,15 +57,45 @@ export const MemberDashboardProvider = ({ children }) => {
     }
   }, [dashboardData.data?.profile]);
 
+  // Extract data properties for easier access
+  const {
+    data: dashboardInfo,
+    loading,
+    error,
+    fetchDashboardData,
+    refreshMemberProfile,
+    refreshAppointments,
+    refreshSavedPTs,
+    refreshStats
+  } = dashboardData;
+
+  // Extract notifications from backend response properly
+  const notificationsFromBackend = dashboardInfo?.notifications || [];
+
   // Context value
   const value = {
-    ...dashboardData,
-    notifications,
+    // Extract individual properties from data
+    memberProfile: dashboardInfo?.profile,
+    appointments: dashboardInfo?.appointments || [],
+    savedPTs: dashboardInfo?.savedPTs || [],
+    clinicAppointments: dashboardInfo?.clinicAppointments || [],
+    clinics: dashboardInfo?.clinics || [],
+    clinicPromotions: dashboardInfo?.clinicPromotions || [],
+    stats: dashboardInfo?.stats || {},
+    // Include original data and functions
+    data: dashboardInfo,
+    loading,
+    error,
+    notifications: notificationsFromBackend, // Directly use backend notifications
     refreshNotifications,
-    markNotificationRead,
+    markNotificationRead: markNotificationReadHandler,
     clearError: () => {}, // Keep for backward compatibility
-    fetchMemberDashboardData: dashboardData.fetchDashboardData,
-    refreshDashboard: dashboardData.fetchDashboardData,
+    fetchMemberDashboardData: fetchDashboardData,
+    refreshDashboard: fetchDashboardData,
+    refreshMemberProfile,
+    refreshAppointments,
+    refreshSavedPTs,
+    refreshStats
   };
 
   return (

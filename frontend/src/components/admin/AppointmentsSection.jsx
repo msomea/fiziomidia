@@ -20,17 +20,24 @@ export default function AdminAppointments() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Only load appointments when filters change, not on initial mount
-    if (search || clinic || pt || requester || status) {
+    // Load appointments when filters change
+    loadAppointments();
+  }, [search, clinic, pt, requester, status]);
+
+  // Initial load if appointments is empty
+  useEffect(() => {
+    if (!appointments || appointments.length === 0) {
       loadAppointments();
     }
-  }, [search, clinic, pt, requester, status]);
+  }, []);
 
   const loadAppointments = async () => {
     try {
       setLoading(true);
-      await refreshAppointments({ search, clinic, pt, requester, status });
+      const result = await refreshAppointments({ search, clinic, pt, requester, status });
+      console.log('Appointments refreshed:', result);
     } catch (error) {
+      console.error('Failed to refresh appointments:', error);
       toast.error(t("failed_fetch_appointments"));
     } finally {
       setLoading(false);
@@ -67,7 +74,7 @@ export default function AdminAppointments() {
     <CollapsibleSection title={t("appointments_management")}>
       <div className="space-y-4">
         {/* FILTERS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <input
             type="text"
             placeholder={t("clinic_name")}
@@ -101,6 +108,29 @@ export default function AdminAppointments() {
             <option value="cancelled">{t("status_cancelled")}</option>
             <option value="completed">{t("status_completed")}</option>
           </select>
+        </div>
+
+        {/* ACTIONS */}
+        <div className="flex gap-2 mt-3">
+          <button
+            onClick={loadAppointments}
+            disabled={loading}
+            className="px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean/80 disabled:opacity-50"
+          >
+            {loading ? "Refreshing..." : "Refresh Appointments"}
+          </button>
+          <button
+            onClick={() => {
+              setSearch("");
+              setClinic("");
+              setPt("");
+              setRequester("");
+              setStatus("");
+            }}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Clear Filters
+          </button>
         </div>
 
         {/* RESULTS */}

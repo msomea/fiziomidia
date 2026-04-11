@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getSponsoredProductById, updateSponsoredProduct, deleteSponsoredProduct } from "../../api/admin";
+import { getSponsoredProductById, updateSponsoredProduct, updateSponsoredProductWithCacheInvalidation, deleteSponsoredProduct } from "../../api/admin";
 
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
+import { useHomePage } from "../../contexts/HomePageContext";
 
 const CATEGORIES = ["equipment", "digital", "services", "others"];
 
@@ -31,6 +32,7 @@ export default function AdminProductSponsorshipDetail() {
 
   const [newImage, setNewImage] = useState(null);
   const { t } = useTranslation()
+  const { forceRefreshHomePage } = useHomePage();
 
   useEffect(() => {
     loadProduct();
@@ -86,7 +88,7 @@ export default function AdminProductSponsorshipDetail() {
         return toast.error(t("image_size_limit"));
       }
 
-      await updateSponsoredProduct(id, data);
+      await updateSponsoredProductWithCacheInvalidation(id, data, forceRefreshHomePage);
 
       toast.success(t('product_updated'));
       loadProduct();
@@ -143,7 +145,7 @@ export default function AdminProductSponsorshipDetail() {
   const updateStatus = async (status) => {
     try {
       setSavingStatus(true);
-      await updateSponsoredProduct(id, { status });
+      await updateSponsoredProductWithCacheInvalidation(id, { status }, forceRefreshHomePage);
       toast.success(`Product ${status}`);
       loadProduct();
     } catch (err) {

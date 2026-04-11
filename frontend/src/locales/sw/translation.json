@@ -1008,5 +1008,8 @@
   "reassign_pt": "Panga PT upya",
   "no_appointments_found_for_filter": "Hakuna Miadi imepatikana",
   "login_to_book": "Ingia kuweka miadi",
-  "login_to_call": "Ingia kupiga"
+  "login_to_call": "Ingia kupiga",
+  "dashboard_refreshed":  "Dashibodi Imepakiwa",
+  "refresh_dashboard": "Sasisha",
+  "no_users_match_filters": "Hakuna Mtumiaji"
 }

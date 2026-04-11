@@ -20,7 +20,6 @@ import { useTranslation } from "react-i18next";
 export default function NotificationSection({ notifications, markNotificationRead, userId }) {
   const { t } = useTranslation();
 
-
   // Notification level configurations
   const notificationLevels = {
     critical: {

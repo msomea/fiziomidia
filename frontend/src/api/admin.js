@@ -2,8 +2,8 @@ import API from "./axios";
 import { API_URL } from "../config/constants";
 
 //User Management
-export const fetchAllUsers = async () => {
-  const { data } = await API.get(`${API_URL}/admin/users`);
+export const fetchAllUsers = async (params = {}) => {
+  const { data } = await API.get(`${API_URL}/admin/users`, { params });
   return data;
 };
 
@@ -29,13 +29,13 @@ export const sendEmailToUser = async (id, data) => {
 
 // Appointments managements
 
-export const fetchAdminAppointments = async () => {
-  const { data } = await API.get(`${API_URL}/admin/appointments`);
+export const fetchAdminAppointments = async (params = {}) => {
+  const { data } = await API.get(`${API_URL}/admin/appointments`, { params });
   return data;
 };
 
 // PT Promotion Managements
-export const fetchAdminPromotions = async (params = {}) => {
+export const fetchAdminPTPromotions = async (params = {}) => {
   const res = await API.get(`${API_URL}/admin/promotions`, { params });
   return res.data;
 };
@@ -55,6 +55,22 @@ export const updatePromotion = async (id, data) => {
   return res.data;
 };
 
+export const updatePromotionWithCacheInvalidation = async (
+  id,
+  data,
+  invalidateCache = null,
+) => {
+  const result = await updatePromotion(id, data);
+  if (invalidateCache) {
+    try {
+      await invalidateCache();
+    } catch (error) {
+      console.warn("Failed to invalidate cache:", error);
+    }
+  }
+  return result;
+};
+
 export const deletePromotion = async (id) => {
   const res = await API.delete(`${API_URL}/admin/promotions/${id}`);
   return res.data;
@@ -71,12 +87,40 @@ export const updateClinicPromotion = async (id, data) => {
   return res.data;
 };
 
+export const updateClinicPromotionWithCacheInvalidation = async (
+  id,
+  data,
+  invalidateCache = null,
+) => {
+  const result = await updateClinicPromotion(id, data);
+  if (invalidateCache) {
+    try {
+      await invalidateCache();
+    } catch (error) {
+      console.warn("Failed to invalidate cache:", error);
+    }
+  }
+  return result;
+};
+
 export const deleteClinicPromotion = async (id) => {
   const res = await API.delete(`${API_URL}/admin/clinic-promotions/${id}`);
   return res.data;
 };
 
 // Forum management
+export const getForumModRequests = async (params = {}) => {
+  try {
+    const res = await API.get(`${API_URL}/admin/forum/mod-requests`, {
+      params,
+    });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch forum mod requests:", err);
+    throw err;
+  }
+};
+
 export const getForumModRequestById = async (id) => {
   const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
   return res.data;
@@ -139,6 +183,22 @@ export const createSponsoredProduct = (data) =>
 export const updateSponsoredProduct = (id, data) =>
   API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
 
+export const updateSponsoredProductWithCacheInvalidation = async (
+  id,
+  data,
+  invalidateCache = null,
+) => {
+  const result = await updateSponsoredProduct(id, data);
+  if (invalidateCache) {
+    try {
+      await invalidateCache();
+    } catch (error) {
+      console.warn("Failed to invalidate cache:", error);
+    }
+  }
+  return result;
+};
+
 export const deleteSponsoredProduct = (id) =>
   API.delete(`${API_URL}/admin/sponsored-products/${id}`);
 
@@ -170,6 +230,17 @@ export const sendSystemNotification = async (payload) => {
     return data;
   } catch (err) {
     console.error("Failed to send system notification:", err);
+    throw err;
+  }
+};
+
+// Consolidated Dashboard API
+export const fetchDashboardData = async (filters = {}) => {
+  try {
+    const { data } = await API.get(`${API_URL}/admin/dashboard`, { params: filters });
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch dashboard data:", err);
     throw err;
   }
 };

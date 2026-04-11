@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { usePTDashboard as usePTDashboardData } from '../hooks/usePTDashboard';
-import { markNotificationAsRead, getUserNotifications } from '../api/notifications';
+import { markNotificationRead, getUserNotifications } from '../api/notifications';
 import { fetchPromotions } from '../api/promotions';
 import { fetchPTById } from '../api/pts';
 import dayjs from 'dayjs';
@@ -26,9 +26,9 @@ export const PTDashboardProvider = ({ children, ptId }) => {
   }, []);
 
   // Mark notification as read
-  const markNotificationRead = useCallback(async (ptId, notificationId) => {
+  const markNotificationReadHandler = useCallback(async (ptId, notificationId) => {
     try {
-      await markNotificationAsRead(ptId, notificationId);
+      await markNotificationRead(ptId, notificationId);
       
       // Update local state to remove the read notification
       setNotifications(prev => prev.filter(n => n._id !== notificationId));
@@ -49,16 +49,46 @@ export const PTDashboardProvider = ({ children, ptId }) => {
     }
   }, [dashboardData.data?.ptProfile]);
 
+  // Extract data properties for easier access
+  const {
+    data: dashboardInfo,
+    loading,
+    error,
+    fetchDashboardData,
+    refreshAppointments,
+    refreshForumPosts,
+    refreshPromotion,
+    refreshStats
+  } = dashboardData;
+
   // Context value
   const value = {
-    ...dashboardData,
+    // Extract individual properties from data
+    ptProfile: dashboardInfo?.ptProfile,
+    appointments: dashboardInfo?.appointments || [],
+    forumPosts: dashboardInfo?.forumPosts || [],
+    promotion: dashboardInfo?.promotion,
+    stats: dashboardInfo?.stats || {},
+    clinics: dashboardInfo?.clinics || [],
+    clinicAppointments: dashboardInfo?.clinicAppointments || [],
+    clinicPromotions: dashboardInfo?.clinicPromotions || [],
+    ptRequests: dashboardInfo?.ptRequests || [],
+    forumSubs: dashboardInfo?.forumSubs || [],
+    // Include original data and functions
+    data: dashboardInfo,
+    loading,
+    error,
     notifications,
     refreshNotifications,
-    markNotificationRead,
+    markNotificationRead: markNotificationReadHandler,
     clearError: () => {}, // Keep for backward compatibility
-    fetchDashboardData: dashboardData.fetchDashboardData,
-    refreshDashboard: dashboardData.fetchDashboardData,
-    refreshPTProfile: () => {}, // Simplified for now
+    fetchDashboardData: fetchDashboardData,
+    refreshDashboard: fetchDashboardData,
+    refreshAppointments,
+    refreshForumPosts,
+    refreshPromotion,
+    refreshStats,
+    refreshPTProfile: () => {} // Simplified for now
   };
 
   return (

@@ -16,14 +16,21 @@ import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 export const getMemberDashboardData = async (req, res) => {
   try {
     const userId = req.user._id;
+    const forceRefresh = req.query.forceRefresh === "true";
 
     // Generate cache key
     const cacheKey = CacheKeys.DASHBOARD_MEMBER(userId);
 
+    // If force refresh, delete cache first
+    if (forceRefresh) {
+      await CacheService.del(cacheKey);
+      console.log(`🗑️ Force refresh - cache deleted: ${cacheKey}`);
+    }
+
     // Try to get data from cache first
     const cachedData = await CacheService.get(cacheKey);
 
-    if (cachedData) {
+    if (cachedData && !forceRefresh) {
       console.log(`🎯 Cache hit for member dashboard: ${cacheKey}`);
       return res.json(cachedData);
     }

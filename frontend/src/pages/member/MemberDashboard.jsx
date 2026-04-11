@@ -11,6 +11,7 @@ import {
   LogOut,
   Menu,
   X,
+  RefreshCw,
 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 
@@ -69,9 +70,31 @@ function MemberDashboardContent() {
   } = useMemberDashboard();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Use authUser or guest as initial state
   const memberData = memberProfile || authUser || DEFAULT_USER;
+
+  // Handle refresh with cache invalidation
+  const handleRefreshDashboard = async () => {
+    if (!authUser || authUser.role === "guest") {
+      return;
+    }
+
+    try {
+      setIsRefreshing(true);
+      
+      // Force refresh all dashboard data with cache bypass
+      await refreshDashboard(true);
+      
+      toast.success(t('dashboard_refreshed'));
+    } catch (error) {
+      console.error('Dashboard refresh error:', error);
+      toast.error(t('dashboard_refresh_failed'));
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (!authUser || authUser.role === "guest") {
@@ -155,6 +178,15 @@ function MemberDashboardContent() {
             <div className="mt-4 flex flex-wrap gap-3">
               {memberData.role !== "guest" && (
                 <>
+                  <button
+                    onClick={handleRefreshDashboard}
+                    disabled={isRefreshing}
+                    className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? t('refreshing') : t('refresh_dashboard')}
+                  </button>
+
                   <Link
                     to={`/settings/member/${memberData._id}`}
                     className="bg-caribbean text-white px-4 py-2 rounded-lg hover:bg-[#03bb74]"

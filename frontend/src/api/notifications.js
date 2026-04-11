@@ -7,7 +7,7 @@ export const getNotifications = async (params = {}) => {
   return res.data.notifications || []; // Extract notifications array from response
 };
 
-// Legacy function for backward compatibility
+// Get user notifications (alias for consistency)
 export const getUserNotifications = async (userId) => {
   const res = await API.get(`${API_URL}/notifications`);
   return res.data.notifications || []; // Extract notifications array from response
@@ -19,18 +19,12 @@ export const getUnreadCount = async () => {
   return res.data;
 };
 
-// Mark notification as read (legacy function for backward compatibility)
-export const markNotificationRead = async (notificationId) => {
-  const res = await API.patch(`${API_URL}/notifications/${notificationId}/read`);
-  return res.data;
-};
-
-// Mark notification as read and delete from database
-export const markNotificationAsRead = async (userId, notificationId) => {
+// Mark notification as read (standardized function)
+export const markNotificationRead = async (userId, notificationId) => {
   const response = await API.put(
     `${API_URL}/notifications/${notificationId}/read`,
     {
-      deleteAfterRead: true, // Add flag to delete notification after marking as read
+      deleteAfterRead: true, // Delete notification after marking as read
     },
   );
   return response.data;

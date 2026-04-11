@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ForumProvider } from "./contexts/ForumContext";
+import { HomePageProvider } from "./contexts/HomePageContext";
 import { setLogoutHandler } from "./api/axios";
 import { useEffect } from "react";
 import dayjs from "dayjs";
@@ -37,7 +38,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ForumProvider>
-          <AppContent />
+          <HomePageProvider>
+            <AppContent />
+          </HomePageProvider>
         </ForumProvider>
       </AuthProvider>
     </BrowserRouter>

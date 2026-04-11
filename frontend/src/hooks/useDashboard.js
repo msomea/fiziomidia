@@ -1,14 +1,17 @@
 import { useState, useCallback } from 'react';
 import { useApiData } from './useApiData';
 import toast from 'react-hot-toast';
-import { 
-  fetchAllUsers, 
-  fetchAdminAppointments, 
-  fetchAdminPromotions,
+import {
+  fetchDashboardData as fetchDashboardDataAPI,
+  fetchAllUsers,
+  fetchAdminAppointments,
+  fetchAdminPTPromotions,
   getSponsoredProducts,
   getAdminStats,
-  fetchAdminPromotions as fetchClinicPromotions
-} from '../api/admin';
+  fetchClinicPromotions,
+  getAdminActivityLogs,
+  getForumModRequests,
+} from "../api/admin";
 import { fetchForumSubs } from '../api/forum';
 
 /**
@@ -19,47 +22,20 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch all dashboard data at once
+  // Fetch all dashboard data at once using consolidated API
   const fetchDashboardData = useCallback(async (filters = {}) => {
     try {
       setLoading(true);
       setError(null);
 
-      // This would ideally be a single API call, but for now we'll use existing pattern
-      const [
-        usersData,
-        appointmentsData, 
-        promotionsData,
-        forumSubsData,
-        sponsoredProductsData,
-        adminStatsData,
-        clinicPromotionsData
-      ] = await Promise.all([
-        fetchAllUsers().catch(() => ({ users: [] })),
-        fetchAdminAppointments().catch(() => ({ appts: [] })),
-        fetchAdminPromotions().catch(() => ({ promotions: [] })),
-        fetchForumSubs().catch(() => ({ subs: [] })),
-        getSponsoredProducts({ page: 1, limit: 10 }).catch(() => ({ products: [] })),
-        getAdminStats().catch(() => null),
-        fetchClinicPromotions().catch(() => [])
-      ]);
-
-      const dashboardData = {
-        users: usersData.users || [],
-        appointments: appointmentsData.appts || [],
-        promotions: promotionsData.promotions || [],
-        forumSubs: forumSubsData.subs || [],
-        sponsoredProducts: sponsoredProductsData.products || [],
-        adminStats: adminStatsData,
-        clinicPromotions: clinicPromotionsData || [],
-        lastFetched: new Date()
-      };
+      // Use the consolidated dashboard API
+      const dashboardData = await fetchDashboardDataAPI(filters);
 
       setData(dashboardData);
       return dashboardData;
     } catch (err) {
       setError(err);
-      toast.error('Failed to load dashboard data');
+      toast.error("Failed to load dashboard data");
       throw err;
     } finally {
       setLoading(false);
@@ -69,33 +45,35 @@ export const useDashboardData = () => {
   // Refresh specific data sections
   const refreshUsers = useCallback(async (filters = {}) => {
     try {
-      const result = await fetchAllUsers();
-      setData(prev => ({ ...prev, users: result.users || [] }));
+      const result = await fetchAllUsers(filters);
+      setData((prev) => ({ ...prev, users: result.users || [] }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh users');
+      toast.error("Failed to refresh users");
       throw err;
     }
   }, []);
 
   const refreshAppointments = useCallback(async (filters = {}) => {
     try {
-      const result = await fetchAdminAppointments();
-      setData(prev => ({ ...prev, appointments: result.appts || [] }));
+      const result = await fetchAdminAppointments(filters);
+      console.log("API response from fetchAdminAppointments:", result);
+      setData((prev) => ({ ...prev, appointments: result.appts || [] }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh appointments');
+      console.error("Error in refreshAppointments:", err);
+      toast.error("Failed to refresh appointments");
       throw err;
     }
   }, []);
 
   const refreshPromotions = useCallback(async (filters = {}) => {
     try {
-      const result = await fetchAdminPromotions();
-      setData(prev => ({ ...prev, promotions: result.promotions || [] }));
+      const result = await fetchAdminPTPromotions(filters);
+      setData((prev) => ({ ...prev, promotions: result.promotions || [] }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh promotions');
+      toast.error("Failed to refresh promotions");
       throw err;
     }
   }, []);
@@ -103,10 +81,13 @@ export const useDashboardData = () => {
   const refreshSponsoredProducts = useCallback(async (filters = {}) => {
     try {
       const result = await getSponsoredProducts(filters);
-      setData(prev => ({ ...prev, sponsoredProducts: result.products || [] }));
+      setData((prev) => ({
+        ...prev,
+        sponsoredProducts: result.products || [],
+      }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh sponsored products');
+      toast.error("Failed to refresh sponsored products");
       throw err;
     }
   }, []);
@@ -114,21 +95,43 @@ export const useDashboardData = () => {
   const refreshAdminStats = useCallback(async () => {
     try {
       const result = await getAdminStats();
-      setData(prev => ({ ...prev, adminStats: result }));
+      setData((prev) => ({ ...prev, adminStats: result }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh admin stats');
+      toast.error("Failed to refresh admin stats");
       throw err;
     }
   }, []);
 
   const refreshClinicPromotions = useCallback(async (filters = {}) => {
     try {
-      const result = await fetchClinicPromotions();
-      setData(prev => ({ ...prev, clinicPromotions: result || [] }));
+      const result = await fetchClinicPromotions(filters);
+      setData((prev) => ({ ...prev, clinicPromotions: result || [] }));
       return result;
     } catch (err) {
-      toast.error('Failed to refresh clinic promotions');
+      toast.error("Failed to refresh clinic promotions");
+      throw err;
+    }
+  }, []);
+
+  const refreshActivityLogs = useCallback(async (params = {}) => {
+    try {
+      const result = await getAdminActivityLogs(params);
+      setData((prev) => ({ ...prev, activityLogs: result.logs || [] }));
+      return result;
+    } catch (err) {
+      toast.error("Failed to refresh activity logs");
+      throw err;
+    }
+  }, []);
+
+  const refreshModRequests = useCallback(async (params = {}) => {
+    try {
+      const result = await getForumModRequests(params);
+      setData((prev) => ({ ...prev, modRequests: result.modRequests || [] }));
+      return result;
+    } catch (err) {
+      toast.error("Failed to refresh mod requests");
       throw err;
     }
   }, []);
@@ -143,6 +146,18 @@ export const useDashboardData = () => {
     refreshPromotions,
     refreshSponsoredProducts,
     refreshAdminStats,
-    refreshClinicPromotions
+    refreshClinicPromotions,
+    refreshActivityLogs,
+    refreshModRequests,
+    // Direct access to data properties for convenience
+    users: data?.users || [],
+    appointments: data?.appointments || [],
+    promotions: data?.promotions || [],
+    forumSubs: data?.forumSubs || [],
+    sponsoredProducts: data?.sponsoredProducts || [],
+    adminStats: data?.adminStats,
+    clinicPromotions: data?.clinicPromotions || [],
+    activityLogs: data?.activityLogs || [],
+    modRequests: data?.modRequests || [],
   };
-};
+};;

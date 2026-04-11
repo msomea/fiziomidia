@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getClinicPromotionById, updateClinicPromotion, deleteClinicPromotion } from "../../api/admin";
+import { getClinicPromotionById, updateClinicPromotion, updateClinicPromotionWithCacheInvalidation, deleteClinicPromotion } from "../../api/admin";
 import { X, Loader2, Building, MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
+import { useHomePage } from "../../contexts/HomePageContext";
 
 export default function AdminClinicPromotionDetail() {
   const { id } = useParams();
@@ -16,6 +17,7 @@ export default function AdminClinicPromotionDetail() {
   const [endAt, setEndAt] = useState("");
   const [saving, setSaving] = useState(false);
   const { t } = useTranslation()
+  const { forceRefreshHomePage } = useHomePage();
 
   useEffect(() => {
     loadClinicPromotion();
@@ -40,10 +42,10 @@ export default function AdminClinicPromotionDetail() {
   const updatePromotion = async () => {
     try {
       setSaving(true);
-      await updateClinicPromotion(id, {
+      await updateClinicPromotionWithCacheInvalidation(id, {
         status,
         endAt,
-      });
+      }, forceRefreshHomePage);
 
       toast.success(t('clinic_promotion_updated'));
       loadClinicPromotion();

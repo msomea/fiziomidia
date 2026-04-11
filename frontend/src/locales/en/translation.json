@@ -52,8 +52,8 @@
   "edit_clinic": "Edit Clinic",
   "clinic_not_found": "Clinic not found",
   "go_back": "Go back",
-  "review": "review",
-  "reviews": "reviews",
+  "review": "Review",
+  "reviews": "Reviews",
   "services": "Services",
   "physiotherapists": "Physiotherapists",
   "write_a_review": "Write a Review",
@@ -1004,5 +1004,8 @@
   "reassign_pt": "Reassign PT",
   "no_appointments_found_for_filter": "No appointment found",
   "login_to_book": "Login to book",
-  "login_to_call": "Login to call"
+  "login_to_call": "Login to call",
+  "dashboard_refreshed":  "Dashboard Refreshed",
+  "refresh_dashboard": "Refresh",
+  "no_users_match_filters": "No user found"
 }

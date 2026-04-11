@@ -43,6 +43,12 @@ export const getSavedPTsByMember = async (memberId) => {
   return res.data;
 };
 
+// Get appointments for a specific member
+export const getAppointmentsByMember = async (memberId) => {
+  const res = await API.get(`${API_URL}/appointments/member/${memberId}`);
+  return res.data;
+};
+
 // Update user language preference
 export const updateLanguage = async (language) => {
   const res = await API.put("/users/update-language", { language });

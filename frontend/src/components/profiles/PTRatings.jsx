@@ -10,7 +10,13 @@ import {
   Edit,
   Trash2
 } from "lucide-react";
-import API from "../../api/axios";
+import { 
+  getPTReviews, 
+  createReview, 
+  updateReview, 
+  deleteReview 
+} from "../../api/reviews";
+import { fetchPTById } from "../../api/pts";
 import StarRating from "../StarRating";
 import dayjs from "dayjs";
 
@@ -46,8 +52,8 @@ const PTRatings = ({ ptId, isOwner = false }) => {
 
   const fetchPTRatings = async () => {
     try {
-      const response = await API.get(`/pts/${physiotherapistId}`);
-      setPtData(response.data);
+      const response = await fetchPTById(physiotherapistId);
+      setPtData({ ptProfile: response });
     } catch (error) {
       console.error("Error fetching PT ratings:", error);
     } finally {
@@ -58,21 +64,18 @@ const PTRatings = ({ ptId, isOwner = false }) => {
   const fetchPTReviews = async () => {
     try {
       setReviewsLoading(true);
-      // We need to create a new endpoint for PT reviews or modify existing one
-      // For now, let's assume there's an endpoint for PT reviews
-      const response = await API.get(`/reviews/physiotherapist/${physiotherapistId}`);
-      setReviews(response.data);
+      const response = await getPTReviews(physiotherapistId);
+      setReviews(response);
       
       // Check if current user has already reviewed this PT
       if (user) {
-        const existingReview = response.data.find(
+        const existingReview = response.find(
           review => review.reviewer._id === user._id
         );
         setUserReview(existingReview);
       }
     } catch (error) {
       console.error("Error fetching PT reviews:", error);
-      // If endpoint doesn't exist yet, we'll handle it gracefully
       setReviews([]);
     } finally {
       setReviewsLoading(false);
@@ -96,7 +99,7 @@ const PTRatings = ({ ptId, isOwner = false }) => {
         comment: reviewForm.comment
       };
 
-      const response = await API.post("/reviews", reviewData);
+      const response = await createReview(reviewData);
       
       toast.success(t('review_submitted_successfully'));
       setShowReviewForm(false);
@@ -128,7 +131,7 @@ const PTRatings = ({ ptId, isOwner = false }) => {
         comment: reviewForm.comment
       };
 
-      await API.put(`/reviews/${userReview._id}`, updateData);
+      await updateReview(userReview._id, updateData);
       
       toast.success(t('review_updated_successfully'));
       setShowReviewForm(false);
@@ -149,7 +152,7 @@ const PTRatings = ({ ptId, isOwner = false }) => {
     }
 
     try {
-      await API.delete(`/reviews/${userReview._id}`);
+      await deleteReview(userReview._id);
       toast.success(t('review_deleted_successfully'));
       setUserReview(null);
       fetchPTReviews();

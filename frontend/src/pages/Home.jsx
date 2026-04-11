@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { HomePageProvider, useHomePage } from "../contexts/HomePageContext";
+import { useHomePage } from "../contexts/HomePageContext";
 import HeroSection from "../components/home/HeroSection";
 import ServiceCards from "../components/home/ServiceCards";
 import CallToAction from "../components/home/CallToAction";
@@ -45,9 +45,5 @@ function HomeContent() {
 }
 
 export default function Home() {
-  return (
-    <HomePageProvider>
-      <HomeContent />
-    </HomePageProvider>
-  );
+  return <HomeContent />;
 }
