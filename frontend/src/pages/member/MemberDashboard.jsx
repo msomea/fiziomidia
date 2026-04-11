@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { MemberDashboardProvider, useMemberDashboard } from "../../contexts/MemberDashboardContext";
 import {
   Home,

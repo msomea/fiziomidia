@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { fetchForumSubs, updateSponsorship, removeSponsorship } from "../../api/admin";
+import { fetchForumSubs } from "../../api/forum";
+import { updateSponsorship, removeSponsorship } from "../../api/admin";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

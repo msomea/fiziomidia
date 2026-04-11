@@ -3,7 +3,7 @@ import { ChevronDown, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const DefaultLanguageSection = () => {
   const { t, i18n } = useTranslation();

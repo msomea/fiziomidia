@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
 export default function Signup() {

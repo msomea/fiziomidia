@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
-import { updateProfile } from "../../api/profile";
+import { useAuth } from "../../contexts/AuthContext";
+import { updateProfile } from "../../api/users";
 import LocationSelector from "../../components/location/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";

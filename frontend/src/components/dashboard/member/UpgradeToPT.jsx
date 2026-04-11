@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import API from "../../../api/axios";
 import { API_URL } from "../../../config/constants";
 import toast from "react-hot-toast";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 

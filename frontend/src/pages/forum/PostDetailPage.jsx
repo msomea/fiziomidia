@@ -1,8 +1,8 @@
 // src/pages/forum/PostDetailPage.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { useForum } from "../../context/ForumContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useForum } from "../../contexts/ForumContext";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";

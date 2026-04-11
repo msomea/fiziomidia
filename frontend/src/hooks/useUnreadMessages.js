@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import API from "../api/axios";
 import { API_URL } from "../config/constants";
 import { getSocket } from "../socket";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * Hook to manage and track total unread message count

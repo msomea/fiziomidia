@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
-import { useForum } from "../../context/ForumContext";
+import { useForum } from "../../contexts/ForumContext";
 import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import CommentItem from "./CommentItem";

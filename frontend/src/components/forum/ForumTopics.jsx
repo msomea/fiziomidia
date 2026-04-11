@@ -31,7 +31,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
   });
   const [subSaving, setSubSaving] = useState(false);
 
-  const fetchSubs = async (pageNum = 1, limit) => {
+  const fetchPaginatedSubs = async (pageNum = 1, limit) => {
     try {
       const res = await API.get(
         `${API_URL}/forum/subs?page=${pageNum}&limit=${limit}`
@@ -53,14 +53,14 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
   };
 
   useEffect(() => {
-    fetchSubs(page, limit);
+    fetchPaginatedSubs(page, limit);
   }, [page]);
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("post:created", () => fetchSubs(page, limit));
-    socket.on("post:deleted", () => fetchSubs(page, limit));
+    socket.on("post:created", () => fetchPaginatedSubs(page, limit));
+    socket.on("post:deleted", () => fetchPaginatedSubs(page, limit));
 
     return () => {
       socket.off("post:created");
@@ -138,7 +138,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
           description: { en: "", sw: "" },
           rules: [{ en: "", sw: "" }],
         });
-        fetchSubs(page, limit);
+        fetchPaginatedSubs(page, limit);
       }
     } catch (err) {
       console.error(err);

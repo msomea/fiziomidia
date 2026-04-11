@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { getMemberClinicAppointments } from "../../api/clinicAppointments";
 import toast from "react-hot-toast";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { Loader2, X } from "lucide-react";
 
 export default function MemberClinicAppointmentsPage() {

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router";
 import { requestAppointment } from "../../api/appointments";
 import { fetchPTById } from "../../api/pts";
 import { getClinicsPTWork} from "../../api/clinics";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

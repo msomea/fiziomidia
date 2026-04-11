@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ProfileHeader = ({ formData, handleChange, handleImageChange, location }) => {
   const user = useAuth();

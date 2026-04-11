@@ -102,10 +102,7 @@ export const updateSubInfo = async (id, data) => {
 
 
 // Forum Sub Sponsorship
-export const fetchForumSubs = async () => {
-  const { data } = await API.get(`${API_URL}/forum/subs`);
-  return data;
-};
+// Note: fetchForumSubs is now available from ../api/forum.js
 
 export const updateSponsorship = async (id, payload) => {
   const { data } = await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, payload);

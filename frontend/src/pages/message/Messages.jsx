@@ -3,7 +3,7 @@ import { useNavigate } from "react-router";
 import { MessageSquare, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/avatar.jpg";
 import { API_URL } from "../../config/constants";
 import { getSocket } from "../../socket";

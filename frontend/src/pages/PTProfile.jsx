@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { fetchPTById } from "../api/pts";
 import { useNavigate } from "react-router";
 import { Loader2, Heart } from "lucide-react";

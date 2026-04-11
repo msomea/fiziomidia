@@ -9,8 +9,13 @@ export const getProfile = async () => {
 
 // Update current user profile
 export const updateProfile = async (data) => {
-  const res = await API.put(`${API_URL}/users/profile`, data);
-  return res.data;
+  // If sending FormData let the browser set the Content-Type (with boundary).
+  const config = {};
+  if (!(data instanceof FormData)) {
+    config.headers = { "Content-Type": "application/json" };
+  }
+  const res = await API.put(`${API_URL}/users/profile`, data, config);
+  return res.data.user; // Return just the user object from the response
 };
 
 // Fetch any user's profile by ID (for public profile pages)

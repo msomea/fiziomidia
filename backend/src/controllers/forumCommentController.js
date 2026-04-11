@@ -69,9 +69,6 @@ export const addComment = async (req, res) => {
     // Invalidate cache for this subforum due to new comment
     if (post) {
       await CacheService.delPattern(`forum:sub:${post.sub}*`);
-      console.log(
-        `🗑️ Forum cache invalidated for sub: ${post.sub} due to new comment`,
-      );
     }
 
     // Populate for frontend
@@ -124,9 +121,6 @@ export const updateComment = async (req, res) => {
     const post = await Comment.findById(commentId).populate("post");
     if (post && post.post) {
       await CacheService.delPattern(`forum:sub:${post.post.sub}*`);
-      console.log(
-        `🗑️ Forum cache invalidated for sub: ${post.post.sub} due to comment update`,
-      );
     }
 
     const updatedComment = await Comment.findById(commentId)
@@ -187,9 +181,6 @@ export const deleteComment = async (req, res) => {
     // Invalidate cache for this subforum due to comment deletion
     if (post) {
       await CacheService.delPattern(`forum:sub:${post.sub}*`);
-      console.log(
-        `🗑️ Forum cache invalidated for sub: ${post.sub} due to comment deletion`,
-      );
     }
 
     if (req.io) {

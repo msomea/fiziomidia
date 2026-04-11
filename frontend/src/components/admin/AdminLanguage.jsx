@@ -3,7 +3,7 @@ import { ChevronDown } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { updateLanguage } from "../../api/users";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const AdminLanguage = () => {
   const { t, i18n } = useTranslation();

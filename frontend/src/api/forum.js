@@ -3,7 +3,7 @@ import { API_URL } from "../config/constants";
 
 // --- Subs ---
 // Fetch all subs
-export const fetchSubs = async () => {
+export const fetchForumSubs = async () => {
   const res = await API.get(`${API_URL}/forum/subs`);
   return res.data;
 };

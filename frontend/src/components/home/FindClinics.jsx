@@ -11,6 +11,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import avatar from "../../assets/avatar.jpg";
 import SkeletonProfessionalCard from "./SkeletonProfessionalCard";
+import { formatClinicAddress } from "../../utils/clinicAddressHelper.js";
 
 export default function FindClinics({ promotions = [] }) {
   const { t } = useTranslation();
@@ -79,6 +80,8 @@ export default function FindClinics({ promotions = [] }) {
   }, [totalPages, paused]);
 
   const showSkeletons = promotions.length < 1;
+
+
   return (
     <section className="bg-gray-50 py-16 min-h-[25vh] flex items-center">
       <div className="max-w-6xl mx-auto px-4 w-full relative">
@@ -141,7 +144,7 @@ export default function FindClinics({ promotions = [] }) {
                   <div className="flex items-center justify-center gap-1 text-sm text-gray-600 mb-2">
                     <MapPin className="w-3 h-3 flex-shrink-0" />
                     <span className="line-clamp-1 text-center">
-                      {promotion.clinic?.address || t("no_address_available")}
+                      {formatClinicAddress(promotion.clinic)}
                     </span>
                   </div>
                   

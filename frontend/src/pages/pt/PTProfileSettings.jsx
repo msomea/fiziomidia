@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
-import { useAuth } from "../../context/AuthContext";
-import { getProfile, updateProfile } from "../../api/profile";
+import { useAuth } from "../../contexts/AuthContext";
+import { getProfile, updateProfile } from "../../api/users";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import ProfileHeader from "../../components/ptsetting/ProfileHeader";

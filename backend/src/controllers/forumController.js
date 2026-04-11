@@ -225,9 +225,6 @@ export const editSub = async (req, res) => {
 
     // Invalidate cache for this subforum to reflect updated details
     await CacheService.delPattern(`forum:sub:${sub._id}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${sub._id} due to sub update`,
-    );
 
     res.json({
       success: true,
@@ -308,9 +305,6 @@ export const updateModRequestRoleByOwner = async (req, res) => {
 
     // Invalidate cache for this subforum to reflect moderator changes
     await CacheService.delPattern(`forum:sub:${sub}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${sub} due to moderator changes`,
-    );
 
     res.json({ success: true, sub, request });
   } catch (err) {
@@ -360,7 +354,6 @@ export const createPost = async (req, res) => {
 
     // 4️⃣ Invalidate cache for this subforum
     await CacheService.delPattern(`forum:sub:${sub}*`);
-    console.log(`🗑️ Forum cache invalidated for sub: ${sub}`);
 
     res.status(201).json({ post, sub: updatedSub });
   } catch (err) {
@@ -439,9 +432,6 @@ export const votePost = async (req, res) => {
 
     // Invalidate cache for this subforum to reflect vote changes
     await CacheService.delPattern(`forum:sub:${post.sub}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${post.sub} due to vote change`,
-    );
 
     res.json({
   message: "Vote recorded",
@@ -478,9 +468,6 @@ export const updatePost = async (req, res) => {
 
     // Invalidate cache for this subforum to reflect post update
     await CacheService.delPattern(`forum:sub:${post.sub}*`);
-    console.log(
-      `🗑️ Forum cache invalidated for sub: ${post.sub} due to post update`,
-    );
 
     res.json({ post });
   } catch (err) {
@@ -618,7 +605,6 @@ export const deletePost = async (req, res) => {
 
     // Invalidate cache for this subforum
     await CacheService.delPattern(`forum:sub:${post.sub}*`);
-    console.log(`🗑️ Forum cache invalidated for sub: ${post.sub}`);
 
     res.json({ message: "Post deleted successfully" });
   } catch (err) {
@@ -670,7 +656,6 @@ export const togglePinPost = async (req, res) => {
 
     // Invalidate cache for this subforum
     await CacheService.delPattern(`forum:sub:${post.sub}*`);
-    console.log(`🗑️ Forum cache invalidated for sub: ${post.sub}`);
 
     res.json({
       success: true,

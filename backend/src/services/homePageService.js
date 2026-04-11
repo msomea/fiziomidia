@@ -3,6 +3,7 @@ import redisClient from "../utils/redis.js";
 import PTPromotion from "../models/PTPromotion.js";
 import ClinicPromotion from "../models/ClinicPromotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
+import Clinic from "../models/Clinic.js";
 
 /**
  * Get PT promotions for home page (without caching - for controller-level caching)
@@ -28,9 +29,8 @@ export const fetchClinicPromotionsWithoutCache = async () => {
   try {
     // Fetch from database directly
     const promotions = await ClinicPromotion.find({ status: "active" })
-      .populate("clinic", "name location contactPhone")
+      .populate("clinic", "name location contactPhone address")
       .sort({ createdAt: -1 });
-    
     return promotions;
   } catch (error) {
     console.error("Error fetching clinic promotions:", error);

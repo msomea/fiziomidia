@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import API from "../../api/axios";
 import { API_URL } from "../../config/constants";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { getSocket } from "../../socket";
 import { useTranslation } from "react-i18next";

@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import { Link } from "react-router";
 import { useTranslation } from 'react-i18next'
 import API from "../api/axios";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { MessageSquare, Loader2 } from "lucide-react";
 import avatar from "../assets/avatar.jpg";
 import { API_URL, ASSET_URL } from "../config/constants";

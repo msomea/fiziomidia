@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import toast from "react-hot-toast";
 import logo from "../assets/fm-bg.svg";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useUnreadMessages } from "../hooks/useUnreadMessages";
 
 export default function Navbar() {

@@ -116,7 +116,6 @@ export const getForumPageData = async (req, res) => {
 async function invalidateForumCache(subId) {
   try {
     await CacheService.delPattern(`forum:sub:${subId}*`);
-    console.log(`🗑️ Forum cache invalidated for sub: ${subId}`);
   } catch (error) {
     console.error('Error invalidating forum cache:', error);
   }

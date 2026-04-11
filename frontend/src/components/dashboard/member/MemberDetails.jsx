@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getUserById } from "../../../api/profile";
-import { useAuth } from "../../../context/AuthContext";
+import { getUserById } from "../../../api/users";
+import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { ChevronsRight } from "lucide-react";
 

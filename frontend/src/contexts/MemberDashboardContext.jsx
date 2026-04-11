@@ -1,184 +1,21 @@
-import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
-import API from '../api/axios';
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import { useMemberDashboard as useMemberDashboardData } from '../hooks/useMemberDashboard';
 import { getUserNotifications, markNotificationAsRead } from '../api/notifications';
-import { API_URL } from '../config/constants';
 import toast from 'react-hot-toast';
-
-// Initial state
-const initialState = {
-  memberProfile: null,
-  appointments: [],
-  savedPTs: [],
-  notifications: [],
-  clinicAppointments: [],
-  clinics: [],
-  clinicPromotions: [],
-  stats: {
-    totalAppointments: 0,
-    upcomingAppointments: 0,
-    completedAppointments: 0,
-    savedPTsCount: 0,
-  },
-  loading: false,
-  error: null,
-  lastFetched: null,
-};
-
-// Action types
-const actionTypes = {
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
-  SET_DASHBOARD_DATA: 'SET_DASHBOARD_DATA',
-  UPDATE_MEMBER_PROFILE: 'UPDATE_MEMBER_PROFILE',
-  UPDATE_APPOINTMENTS: 'UPDATE_APPOINTMENTS',
-  UPDATE_SAVED_PTS: 'UPDATE_SAVED_PTS',
-  UPDATE_STATS: 'UPDATE_STATS',
-  UPDATE_NOTIFICATIONS: 'UPDATE_NOTIFICATIONS',
-  UPDATE_CLINIC_APPOINTMENTS: 'UPDATE_CLINIC_APPOINTMENTS',
-  UPDATE_CLINICS: 'UPDATE_CLINICS',
-  UPDATE_CLINIC_PROMOTIONS: 'UPDATE_CLINIC_PROMOTIONS',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-};
-
-// Reducer
-const memberDashboardReducer = (state, action) => {
-  switch (action.type) {
-    case actionTypes.SET_LOADING:
-      return { ...state, loading: action.payload };
-    case actionTypes.SET_ERROR:
-      return { ...state, error: action.payload, loading: false };
-    case actionTypes.SET_DASHBOARD_DATA:
-      return {
-        ...state,
-        ...action.payload,
-        loading: false,
-        error: null,
-        lastFetched: new Date(),
-      };
-    case actionTypes.UPDATE_MEMBER_PROFILE:
-      return { ...state, memberProfile: action.payload };
-    case actionTypes.UPDATE_APPOINTMENTS:
-      return { ...state, appointments: action.payload };
-    case actionTypes.UPDATE_SAVED_PTS:
-      return { ...state, savedPTs: action.payload };
-    case actionTypes.UPDATE_STATS:
-      return { ...state, stats: action.payload };
-    case actionTypes.UPDATE_NOTIFICATIONS:
-      return { ...state, notifications: action.payload };
-    case actionTypes.UPDATE_CLINIC_APPOINTMENTS:
-      return { ...state, clinicAppointments: action.payload };
-    case actionTypes.UPDATE_CLINICS:
-      return { ...state, clinics: action.payload };
-    case actionTypes.UPDATE_CLINIC_PROMOTIONS:
-      return { ...state, clinicPromotions: action.payload };
-    case actionTypes.CLEAR_ERROR:
-      return { ...state, error: null };
-    default:
-      return state;
-  }
-};
 
 // Context
 const MemberDashboardContext = createContext();
 
 // Provider component
 export const MemberDashboardProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(memberDashboardReducer, initialState);
-
-  // Fetch all member dashboard data at once
-  const fetchMemberDashboardData = useCallback(async (forceRefresh = false) => {
-    try {
-      // Check if we have recent data (less than 30 seconds old) and skip fetch if not forced
-      const now = Date.now();
-      const lastFetched = state.lastFetched ? new Date(state.lastFetched).getTime() : 0;
-      const timeSinceLastFetch = now - lastFetched;
-      
-      if (!forceRefresh && state.memberProfile && timeSinceLastFetch < 30000) {
-        // Use cached data if it's recent
-        return state;
-      }
-
-      dispatch({ type: actionTypes.SET_LOADING, payload: true });
-      dispatch({ type: actionTypes.CLEAR_ERROR });
-
-      const response = await API.get(`${API_URL}/users/dashboard`);
-      
-      dispatch({
-        type: actionTypes.SET_DASHBOARD_DATA,
-        payload: response.data,
-      });
-
-      return response.data;
-    } catch (error) {
-      console.error('Member Dashboard data fetch error:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to load member dashboard data';
-      dispatch({ type: actionTypes.SET_ERROR, payload: errorMessage });
-      toast.error(errorMessage);
-      throw error;
-    }
-  }, [state.memberProfile, state.lastFetched]);
-
-  // Refresh specific data sections
-  const refreshMemberProfile = useCallback(async () => {
-    try {
-      const response = await API.get(`${API_URL}/users/profile`);
-      
-      // Add timestamp to profile image URL to prevent caching
-      const fullUserData = response.data;
-      const timestamp = new Date().getTime();
-      if (fullUserData.profileImageUrl) {
-        fullUserData.profileImageUrl = fullUserData.profileImageUrl.includes("?")
-          ? `${fullUserData.profileImageUrl}&t=${timestamp}`
-          : `${fullUserData.profileImageUrl}?t=${timestamp}`;
-      }
-      
-      dispatch({ type: actionTypes.UPDATE_MEMBER_PROFILE, payload: fullUserData });
-    } catch (error) {
-      console.error('Member profile refresh error:', error);
-      toast.error('Failed to refresh profile');
-    }
-  }, []);
-
-  const refreshAppointments = useCallback(async (memberId) => {
-    try {
-      const response = await API.get(`${API_URL}/appointments/member/${memberId}`);
-      dispatch({ type: actionTypes.UPDATE_APPOINTMENTS, payload: response.data || [] });
-    } catch (error) {
-      console.error('Appointments refresh error:', error);
-      toast.error('Failed to refresh appointments');
-    }
-  }, []);
-
-  const refreshSavedPTs = useCallback(async (memberId) => {
-    try {
-      const response = await API.get(`${API_URL}/users/${memberId}/saved-pts`);
-      dispatch({ type: actionTypes.UPDATE_SAVED_PTS, payload: response.data || [] });
-    } catch (error) {
-      console.error('Saved PTs refresh error:', error);
-      toast.error('Failed to refresh saved PTs');
-    }
-  }, []);
-
-  const refreshStats = useCallback(async (memberId) => {
-    try {
-      const response = await API.get(`${API_URL}/users/${memberId}/dashboard-stats`);
-      dispatch({ type: actionTypes.UPDATE_STATS, payload: response.data || {} });
-    } catch (error) {
-      console.error('Stats refresh error:', error);
-      toast.error('Failed to refresh stats');
-    }
-  }, []);
-
-  // Clear error
-  const clearError = () => {
-    dispatch({ type: actionTypes.CLEAR_ERROR });
-  };
+  const [notifications, setNotifications] = useState([]);
+  const dashboardData = useMemberDashboardData();
 
   // Refresh notifications
   const refreshNotifications = useCallback(async (memberId) => {
     try {
-      const notifications = await getUserNotifications(memberId);
-      dispatch({ type: actionTypes.UPDATE_NOTIFICATIONS, payload: notifications || [] });
+      const notificationsData = await getUserNotifications(memberId);
+      setNotifications(notificationsData || []);
     } catch (error) {
       console.error('Notifications refresh error:', error);
       toast.error('Failed to refresh notifications');
@@ -191,44 +28,33 @@ export const MemberDashboardProvider = ({ children }) => {
       await markNotificationAsRead(memberId, notificationId);
       
       // Update local state to remove the read notification
-      dispatch({ 
-        type: actionTypes.UPDATE_NOTIFICATIONS, 
-        payload: state.notifications.filter(n => n._id !== notificationId)
-      });
+      setNotifications(prev => prev.filter(n => n._id !== notificationId));
     } catch (error) {
       console.error('Mark notification as read error:', error);
       toast.error('Failed to mark notification as read');
     }
-  }, [state.notifications]);
-
-  // Manual refresh function
-  const refreshDashboard = useCallback(async () => {
-    return await fetchMemberDashboardData(true);
-  }, [fetchMemberDashboardData]);
+  }, []);
 
   // Cache user data for AuthProvider to access
   useEffect(() => {
-    if (state.memberProfile) {
+    if (dashboardData.data?.profile) {
       const cachedUserElement = document.getElementById('cached-member-user');
       if (cachedUserElement) {
-        cachedUserElement.textContent = JSON.stringify(state.memberProfile);
-        cachedUserElement.setAttribute('data-user-id', state.memberProfile._id);
+        cachedUserElement.textContent = JSON.stringify(dashboardData.data.profile);
+        cachedUserElement.setAttribute('data-user-id', dashboardData.data.profile._id);
       }
     }
-  }, [state.memberProfile]);
+  }, [dashboardData.data?.profile]);
 
   // Context value
   const value = {
-    ...state,
-    fetchMemberDashboardData,
-    refreshDashboard,
-    refreshMemberProfile,
-    refreshAppointments,
-    refreshSavedPTs,
-    refreshStats,
+    ...dashboardData,
+    notifications,
     refreshNotifications,
     markNotificationRead,
-    clearError,
+    clearError: () => {}, // Keep for backward compatibility
+    fetchMemberDashboardData: dashboardData.fetchDashboardData,
+    refreshDashboard: dashboardData.fetchDashboardData,
   };
 
   return (

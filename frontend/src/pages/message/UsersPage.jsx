@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { getSocket } from "../../socket";
 import { API_URL } from "../../config/constants";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/avatar.jpg";
 import { Search } from "lucide-react";
 import API from "../../api/axios";
