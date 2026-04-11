@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { registerUser } from "../../api/auth";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +22,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      await API.post(`${API_URL}/auth/register`, {
+      await registerUser({
         fullName: name,
         email,
         password,

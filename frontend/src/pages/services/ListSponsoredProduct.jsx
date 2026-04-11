@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import API from "../../api/axios";
+import { getSponsoredProducts } from "../../api/promotions";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
 import { useTranslation } from "react-i18next";
 import SkeletonSponsoredCard from "../../components/home/SkeletonSponsoredCard";
 
@@ -20,8 +19,8 @@ export default function SponsoredProductList() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await API.get(`${API_URL}/sponsored-products`);
-        setProducts(res.data.products || []);
+        const data = await getSponsoredProducts();
+        setProducts(data.products || []);
       } catch (err) {
         console.error(t("failed_load_sponsored"), err);
       } finally {

@@ -36,3 +36,39 @@ export const createPromotionCheckout = async (data) => {
   );
   return res.data;
 };
+
+// --- Sponsored Products ---
+// Create sponsored product (requires authentication)
+export const createSponsoredProduct = async (formData) => {
+  const res = await API.post(`${API_URL}/sponsored-products`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// Get all sponsored products
+export const getSponsoredProducts = async () => {
+  const res = await API.get(`${API_URL}/sponsored-products`);
+  return res.data;
+};
+
+// Get sponsored products by category
+export const getSponsoredProductsByCategory = async (category) => {
+  const res = await API.get(`${API_URL}/sponsored-products?category=${category}`);
+  return res.data;
+};
+
+// --- Clinic Promotions ---
+// Create clinic promotion (requires authentication)
+export const createClinicPromotion = async (formData) => {
+  const res = await API.post(`${API_URL}/promotions/clinic`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// Get clinics owned by PT
+export const getOwnedClinics = async (ptId) => {
+  const res = await API.get(`${API_URL}/clinics/owned-by-pt/${ptId}`);
+  return res.data;
+};

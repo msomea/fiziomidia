@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useParams, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { resetPassword } from "../../api/auth";
 import toast from "react-hot-toast";
 
 export default function ResetPassword() {
@@ -31,9 +30,7 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
-      await API.post(`${API_URL}/auth/reset-password/${token}`, {
-        newPassword: password,
-      });
+      await resetPassword(token, password);
 
       setSuccess(true);
       toast.success(t("password_reset_success"));

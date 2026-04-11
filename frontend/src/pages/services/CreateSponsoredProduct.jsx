@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import API from "../../api/axios";
+import { createSponsoredProduct } from "../../api/promotions";
 import { toast } from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -32,9 +31,44 @@ const CreateSponsoredProduct = () => {
     setPreview(URL.createObjectURL(file));
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    if (!formData.name.trim()) {
+      errors.push(t("product_name_required"));
+    }
+
+    if (!formData.category) {
+      errors.push(t("category_required"));
+    }
+
+    if (!formData.description.trim()) {
+      errors.push(t("product_description_required"));
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      errors.push(t("price_required"));
+    }
+
+    if (!formData.duration || formData.duration <= 0) {
+      errors.push(t("duration_required"));
+    }
+
+    if (!image) {
+      errors.push(t("upload_product_image_error"));
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!image) return toast.error(t("upload_product_image_error"));
+    
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => toast.error(error));
+      return;
+    }
 
     const data = new FormData();
     Object.keys(formData).forEach((key) => data.append(key, formData[key]));
@@ -42,11 +76,9 @@ const CreateSponsoredProduct = () => {
 
     try {
       setLoading(true);
-      const res = await API.post(`${API_URL}/sponsored-products`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const result = await createSponsoredProduct(data);
 
-      if (res.data.success) {
+      if (result.success) {
         toast.success(t("sponsored_product_created_success"));
         setFormData({
           name: "",

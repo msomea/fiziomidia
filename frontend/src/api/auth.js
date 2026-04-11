@@ -56,3 +56,29 @@ export const fetchCurrentUser = async () => {
   // Combine the data, preferring profile data for overlapping fields
   return { ...authData.data, ...profileData.data };
 };
+
+// ---------------------------
+// Forgot password
+// ---------------------------
+export const forgotPassword = async (email) => {
+  const res = await API.post(`${API_URL}/auth/forgot-password`, { email });
+  return res.data;
+};
+
+// ---------------------------
+// Reset password
+// ---------------------------
+export const resetPassword = async (token, newPassword) => {
+  const res = await API.post(`${API_URL}/auth/reset-password/${token}`, {
+    newPassword,
+  });
+  return res.data;
+};
+
+// ---------------------------
+// Verify email
+// ---------------------------
+export const verifyEmail = async (token) => {
+  const res = await API.get(`${API_URL}/auth/verify-email/${token}`);
+  return res.data;
+};

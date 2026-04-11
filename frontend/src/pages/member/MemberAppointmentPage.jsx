@@ -2,8 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { getAppointmentsByMember } from "../../api/appointments";
 import toast from "react-hot-toast";
 import { Loader2, X, Trash2 } from "lucide-react";
 
@@ -19,8 +18,8 @@ export default function MemberAppointmentsPage() {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
-        const { data } = await API.get(`${API_URL}/appointments/member/${id}`);
-        setAppointments(data.appts);
+        const appointments = await getAppointmentsByMember(id);
+        setAppointments(appointments);
       } catch (err) {
         toast.error(t("failed_load_appointments"));
       } finally {

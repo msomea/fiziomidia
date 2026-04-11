@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { Link } from "react-router";
 import { useTranslation } from 'react-i18next'
-import API from "../api/axios";
+import { getUserById } from "../api/users";
 import { useAuth } from "../contexts/AuthContext";
 import { MessageSquare, Loader2 } from "lucide-react";
 import avatar from "../assets/avatar.jpg";
-import { API_URL, ASSET_URL } from "../config/constants";
+import { ASSET_URL } from "../config/constants";
 
 const MemberProfile = () => {
   const { id } = useParams();
@@ -18,8 +18,8 @@ const MemberProfile = () => {
   useEffect(() => {
     const fetchMember = async () => {
       try {
-        const response = await API.get(`${API_URL}/users/${id}`);
-        setMember(response.data.user);
+        const response = await getUserById(id);
+        setMember(response.user);
       } catch (error) {
         console.error("Error fetching member profile:", error);
       } finally {

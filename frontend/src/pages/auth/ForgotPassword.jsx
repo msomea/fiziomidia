@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { forgotPassword } from "../../api/auth";
 import AuthForm from "../../components/auth/AuthForm";
 import toast from "react-hot-toast";
 
@@ -16,9 +15,7 @@ export default function ForgotPassword() {
     setLoading(true); // ✅ Start sending
 
     try {
-      await API.post(`${API_URL}/auth/forgot-password`, {
-        email: data.email,
-      });
+      await forgotPassword(data.email);
 
       setSent(true);
       toast.success(t("reset_link_sent"));

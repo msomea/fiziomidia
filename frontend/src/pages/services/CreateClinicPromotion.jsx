@@ -4,8 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { getOwnedClinics, createClinicPromotion } from "../../api/promotions";
 
 export default function CreateClinicPromotion() {
   const { t } = useTranslation();
@@ -38,8 +37,8 @@ export default function CreateClinicPromotion() {
   useEffect(() => {
     const fetchClinics = async () => {
       try {
-        const response = await API.get(`${API_URL}/clinics/owned-by-pt/${user._id}`);
-        setClinics(response.data || []);
+        const data = await getOwnedClinics(user._id);
+        setClinics(data || []);
       } catch (error) {
         console.error("Failed to fetch clinics:", error);
         toast.error(t("failed_load_clinics"));
@@ -92,7 +91,7 @@ export default function CreateClinicPromotion() {
       if (form.customDescription) fd.append("customDescription", form.customDescription);
       if (image) fd.append("clinicPromotion", image);
 
-      await API.post(`${API_URL}/promotions/clinic`, fd);
+      await createClinicPromotion(fd);
 
       toast.success(t("clinic_promotion_created_success"));
       navigate("/services");

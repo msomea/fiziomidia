@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowBigLeftIcon, ArrowBigRightIcon, MapPin, Star, Clock } from "lucide-react";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchClinicPromotions } from "../../api/promotions";
 
 const ITEMS_PER_PAGE = 6;
 const AUTO_PLAY_INTERVAL = 6000;
@@ -19,17 +18,17 @@ export default function ListClinicPromotions() {
   const itemsRef = useRef(null);
 
   useEffect(() => {
-    const fetchClinicPromotions = async () => {
+    const fetchClinicPromotionsData = async () => {
       try {
-        const response = await API.get(`${API_URL}/promotions/clinic`);
-        setPromotions(response.data || []);
+        const data = await fetchClinicPromotions();
+        setPromotions(data || []);
       } catch (err) {
         console.error(t("failed_load_clinic_promotions"), err);
       } finally {
         setLoading(false);
       }
     };
-    fetchClinicPromotions();
+    fetchClinicPromotionsData();
   }, [t]);
 
   const totalPages = Math.ceil(promotions.length / ITEMS_PER_PAGE);

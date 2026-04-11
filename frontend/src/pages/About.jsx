@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
-import API from "../api/axios";
-import { API_URL } from "../config/constants";
+import { sendContactMessage } from "../api/contact";
 
 const About = () => {
   const { t } = useTranslation();
@@ -31,8 +30,7 @@ const About = () => {
     
     setLoading(true);
     try {
-      // Send form data to backend - adjust endpoint as needed
-      await API.post(`${API_URL}/contact`, formData);
+      await sendContactMessage(formData);
       toast.success(t("message_sent_success"));
       setFormData({ name: "", email: "", message: "" });
     } catch (err) {

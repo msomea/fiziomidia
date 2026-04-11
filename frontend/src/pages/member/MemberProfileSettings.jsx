@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { updateProfile } from "../../api/users";
+import { updateProfile, updateLanguage } from "../../api/users";
 import LocationSelector from "../../components/location/LocationSelector";
 import InputField from "../../components/form/InputField";
 import TextAreaField from "../../components/form/TextAreaField";
 import AvatarUpload from "../../components/form/AvatarUpload";
 import ClinicManagement from "../../components/membersetting/ClinicManagement";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
 
 export default function MemberProfileSettings() {
   const { t, i18n } = useTranslation();
@@ -173,9 +172,7 @@ export default function MemberProfileSettings() {
 
     setLanguageLoading(true);
     try {
-      const { data } = await API.put("/users/update-language", {
-        language: selectedLanguage,
-      });
+      const data = await updateLanguage(selectedLanguage);
 
       if (data.success) {
         const updatedUser = { ...user, language: data.language };
