@@ -1,8 +1,7 @@
 import { useParams, useNavigate } from "react-router";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { getConversationByUser, deleteMessage } from "../../api/messages";
 import { useAuth } from "../../contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { getSocket } from "../../socket";
@@ -78,11 +77,11 @@ export default function ConversationPage() {
     const loadConversation = async () => {
       setLoading(true);
       try {
-        const res = await API.get(`${API_URL}/conversations/user/${otherUserId}`);
-        setConversation(res.data);
+        const conversationData = await getConversationByUser(otherUserId);
+        setConversation(conversationData);
 
         // Normalize messages
-        const normalizedMessages = (res.data.messages || []).map((m) => ({
+        const normalizedMessages = (conversationData.messages || []).map((m) => ({
           ...m,
           status:
             String(m.receiver?._id || m.receiver) === String(loggedInUser._id)
@@ -93,7 +92,7 @@ export default function ConversationPage() {
 
         // Notify server that conversation is open
         socket.emit("conversation:open", {
-          conversationId: res.data._id,
+          conversationId: conversationData._id,
           userId: loggedInUser._id,
         });
 
@@ -232,7 +231,7 @@ export default function ConversationPage() {
 
     setTimeout(async () => {
       try {
-        await API.delete(`${API_URL}/messages/${messageId}`);
+        await deleteMessage(messageId);
       } catch (error) {
         setMessages(backup);
         toast.error(t("failed_delete_message"));

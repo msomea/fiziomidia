@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchPostById, updatePost } from "../../api/forum";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -20,10 +19,10 @@ const EditPostPage = () => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const res = await API.get(`${API_URL}/forum/posts/${postId}`);
-        setPost(res.data);
-        setTitle(res.data.title);
-        setBody(res.data.body);
+        const post = await fetchPostById(postId);
+        setPost(post);
+        setTitle(post.title);
+        setBody(post.body);
       } catch (err) {
         console.error("Error fetching post:", err);
         toast.error(t("failed_load_post"));
@@ -38,7 +37,7 @@ const EditPostPage = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await API.put(`${API_URL}/forum/posts/${postId}`, { title, body });
+      await updatePost(postId, { title, body });
       toast.success(t("post_updated_successfully"));
       navigate(`/forum/pt/posts/${ptId}`);
     } catch (err) {

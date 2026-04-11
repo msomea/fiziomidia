@@ -4,8 +4,7 @@ import ForumList from "../../components/forum/ForumList";
 import { useNavigate, Link } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useForum } from "../../contexts/ForumContext";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { updateSub, togglePostPin, getModRequestStatus, requestModeratorStatus } from "../../api/forum";
 import toast from "react-hot-toast";
 import CollapsibleSection from "../../components/admin/CollapsibleSection";
 import { Plus, Trash2 } from "lucide-react";
@@ -94,11 +93,11 @@ const Forum = () => {
       .filter((r) => r.en || r.sw); // remove empty rules
 
     try {
-      const res = await API.put(`${API_URL}/forum/subs/${selectedSub._id}`, {
+      const res = await updateSub(selectedSub._id, {
         rules: cleanedRules,
       });
 
-      if (!res?.data.success) throw new Error(t("update_failed"));
+      if (!res?.success) throw new Error(t("update_failed"));
 
       setSelectedSub((prev) => ({ ...prev, rules: cleanedRules }));
       toast.success(t("rules_updated"));
@@ -116,11 +115,11 @@ const Forum = () => {
     if (!user || !user._id || user.role !== "physiotherapist") return;
 
     try {
-      const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
+      const data = await getModRequestStatus(subId);
       // Set hasRequested to true if user has pending request OR is already a mod
-      setHasRequested(res.data.requested || res.data.alreadyMod || false);
-      setAlreadyMod(res.data.alreadyMod || false);
-      setIsOwnerFromAPI(res.data.isOwner || false);
+      setHasRequested(data.requested || data.alreadyMod || false);
+      setAlreadyMod(data.alreadyMod || false);
+      setIsOwnerFromAPI(data.isOwner || false);
     } catch (err) {
       console.error("Failed to check mod request:", err);
     }
@@ -131,9 +130,9 @@ const Forum = () => {
     setRequesting(true);
 
     try {
-      const res = await API.post(`${API_URL}/forum/subs/${selectedSub._id}/mod-requests`);
+      const data = await requestModeratorStatus(selectedSub._id);
 
-      if (res.data.success) {
+      if (data.success) {
         toast.success(t("moderator_request_sent"));
         setHasRequested(true);
         // Refresh the forum page data to get updated permissions
@@ -141,7 +140,7 @@ const Forum = () => {
         // Also check mod status to be thorough
         await checkModRequestStatus(selectedSub._id);
       } else {
-        toast.error(res.data.error || t("request_failed"));
+        toast.error(data.error || t("request_failed"));
       }
     } catch (err) {
       console.error(err);
@@ -168,16 +167,14 @@ const Forum = () => {
   /* ------------------ Pin Logic ------------------ */
   const togglePin = async (postId, pinned) => {
     try {
-      const res = await API.put(`${API_URL}/forum/posts/${postId}/pin`, {
-        pinned: !pinned,
-      });
+      const res = await togglePostPin(postId, pinned);
 
-      if (res.data.success) {
+      if (res.success) {
         toast.success(!pinned ? t("post_pinned") : t("post_unpinned"));
         // Refresh posts to get updated pinned status
         await refreshPosts(selectedSub._id);
       } else {
-        toast.error(res.data.error || t("update_failed"));
+        toast.error(res.error || t("update_failed"));
       }
     } catch (err) {
       console.error(err);

@@ -23,8 +23,8 @@ export const usePTDashboard = (ptId) => {
 
       const response = await fetchPTDashboardData(ptId);
       
-      setData(response.data);
-      return response.data;
+      setData(response);
+      return response;
     } catch (err) {
       setError(err);
       toast.error('Failed to load dashboard data');

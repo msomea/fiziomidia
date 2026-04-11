@@ -3,8 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useForum } from "../../contexts/ForumContext";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchPostById, updatePost } from "../../api/forum";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
@@ -50,8 +49,7 @@ const PostDetailPage = () => {
   const fetchPost = async () => {
     setLoading(true);
     try {
-      const res = await API.get(`${API_URL}/forum/posts/${id}`);
-      const p = res.data;
+      const p = await fetchPostById(id);
 
       const nestedComments = buildCommentTree(p.comments || []);
       const normalizedPost = { ...p, comments: nestedComments };
@@ -85,14 +83,14 @@ const PostDetailPage = () => {
 
   const handleEditSave = async () => {
     try {
-      const res = await API.put(`${API_URL}/forum/posts/${id}`, {
+      const updatedPostData = await updatePost(id, {
         title: editTitle,
         body: editBody,
       });
 
       const updatedPost = {
-        ...res.data.post,
-        comments: buildCommentTree(res.data.post.comments || []),
+        ...updatedPostData.post,
+        comments: buildCommentTree(updatedPostData.post.comments || []),
       };
 
       setPost(updatedPost);

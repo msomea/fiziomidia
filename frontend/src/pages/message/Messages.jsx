@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { MessageSquare, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios";
+import { getConversations, markConversationAsRead, deleteConversation } from "../../api/messages";
 import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/avatar.jpg";
-import { API_URL } from "../../config/constants";
 import { getSocket } from "../../socket";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -34,8 +33,8 @@ const MessagesPage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
-        const res = await API.get(`${API_URL}/conversations`);
-        setConversations(res.data);
+        const data = await getConversations();
+        setConversations(data);
       } catch (err) {
         console.error("Error fetching conversations:", err);
         toast.error(t("failed_load_conversations"));
@@ -106,7 +105,7 @@ const MessagesPage = () => {
 
   const handleOpenConversation = async (convId, otherId) => {
     try {
-      await API.put(`${API_URL}/conversations/${convId}/mark-read`);
+      await markConversationAsRead(convId);
       setConversations((prev) => prev.map((c) => (c._id === convId ? { ...c, unread: 0 } : c)));
       navigate(`/messages/${otherId}`);
     } catch (error) {
@@ -138,7 +137,7 @@ const MessagesPage = () => {
 
     setTimeout(async () => {
       try {
-        await API.delete(`${API_URL}/conversations/${convId}`);
+        await deleteConversation(convId);
       } catch (error) {
         setConversations(backup);
         toast.error(t("failed_delete_conversation"));

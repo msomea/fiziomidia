@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchForumSubsPaginated, createPost } from "../../api/forum";
 import { X, Loader2, Search, ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -34,11 +33,9 @@ const CreatePost = () => {
   const fetchTopics = async (pageNum = 1, searchTerm = "") => {
     setLoading(true);
     try {
-      const res = await API.get(
-        `${API_URL}/forum/subs?page=${pageNum}&limit=${limit}&search=${searchTerm}`
-      );
-      setTopics(res.data.subs || []);
-      setTotalPages(res.data.pagination.totalPages || 1);
+      const data = await fetchForumSubsPaginated(pageNum, limit, searchTerm);
+      setTopics(data.subs || []);
+      setTotalPages(data.pagination.totalPages || 1);
     } catch (err) {
       console.error("Error fetching topics:", err);
       toast.error(t("failed_load_topics"));
@@ -84,7 +81,7 @@ const CreatePost = () => {
         formData.append("post", image);
       }
 
-      await API.post(`${API_URL}/forum/posts`, formData);
+      await createPost(formData);
 
       toast.success(t("post_created_success"));
       navigate("/forum");

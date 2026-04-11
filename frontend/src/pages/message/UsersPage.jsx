@@ -1,11 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { getSocket } from "../../socket";
-import { API_URL } from "../../config/constants";
 import { useAuth } from "../../contexts/AuthContext";
 import avatar from "../../assets/avatar.jpg";
 import { Search } from "lucide-react";
-import API from "../../api/axios";
+import { getUsers } from "../../api/messages";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import ProfileBadge from "../../components/Badge";
@@ -25,7 +24,7 @@ export default function UsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const { data } = await API.get(`${API_URL}/users`);
+        const data = await getUsers();
         setUsers(data);
       } catch (err) {
         toast.error(t("failed_load_users"));

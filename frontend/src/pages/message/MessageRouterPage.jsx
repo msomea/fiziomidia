@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { getConversationByUser, createConversation } from "../../api/messages";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -14,17 +13,14 @@ export default function MessageRouterPage() {
     const loadConversation = async () => {
       try {
         // 1. Try fetch existing conversation with this user
-        const res = await API.get(`${API_URL}/conversations/user/${receiverId}`);
-        const conversation = res.data;
+        const conversation = await getConversationByUser(receiverId);
         // Navigate using receiverId (otherUserId), not conversation._id
         return navigate(`/messages/${receiverId}`);
       } catch (err) {
         if (err.response?.status === 404) {
           // 2. Create new conversation
           try {
-            const createRes = await API.post(`${API_URL}/conversations`, {
-              receiver: receiverId,
-            });
+            await createConversation(receiverId);
             // Navigate using receiverId (otherUserId), not conversation._id
             return navigate(`/messages/${receiverId}`);
           } catch (createErr) {

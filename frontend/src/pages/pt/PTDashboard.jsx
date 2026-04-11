@@ -46,7 +46,7 @@ function PTDashboardContent() {
     forumSubs,
     loading, 
     error, 
-    fetchPTDashboardData,
+    fetchDashboardData,
     refreshDashboard,
     markNotificationRead 
   } = usePTDashboard();
@@ -58,8 +58,8 @@ function PTDashboardContent() {
     if (!user || !_id || user._id === null) return;
 
     // Fetch all dashboard data at once
-    fetchPTDashboardData(_id);
-  }, [user, _id, fetchPTDashboardData]);
+    fetchDashboardData(_id);
+  }, [user, _id, fetchDashboardData]);
 
   // Listen for clinic updates from settings
   useEffect(() => {
@@ -92,7 +92,7 @@ function PTDashboardContent() {
         <div className="text-center">
           <p className="mb-4">{t("dashboard_load_error")}</p>
           <button 
-            onClick={() => fetchPTDashboardData(_id)}
+            onClick={() => fetchDashboardData(_id)}
             className="btn btn-primary"
           >
             {t("retry")}
@@ -218,8 +218,10 @@ function PTDashboardContent() {
 }
 
 export default function PTDashboard() {
+  const { _id } = useParams();
+  
   return (
-    <PTDashboardProvider>
+    <PTDashboardProvider ptId={_id}>
       <PTDashboardContent />
     </PTDashboardProvider>
   );

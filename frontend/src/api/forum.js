@@ -67,3 +67,40 @@ export const deleteComment = async (commentId) => {
   const res = await API.delete(`${API_URL}/forum/comments/${commentId}`);
   return res.data;
 };
+
+// --- Additional Forum Operations ---
+// Fetch forum subs with pagination and search
+export const fetchForumSubsPaginated = async (page = 1, limit = 10, search = "") => {
+  const res = await API.get(`${API_URL}/forum/subs?page=${page}&limit=${limit}&search=${search}`);
+  return res.data;
+};
+
+// Update post by ID
+export const updatePost = async (postId, data) => {
+  const res = await API.put(`${API_URL}/forum/posts/${postId}`, data);
+  return res.data;
+};
+
+// Update sub by ID
+export const updateSub = async (subId, data) => {
+  const res = await API.put(`${API_URL}/forum/subs/${subId}`, data);
+  return res.data;
+};
+
+// Pin/unpin post
+export const togglePostPin = async (postId, pinned) => {
+  const res = await API.put(`${API_URL}/forum/posts/${postId}/pin`, { pinned });
+  return res.data;
+};
+
+// Get moderator request status for a sub
+export const getModRequestStatus = async (subId) => {
+  const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
+  return res.data;
+};
+
+// Request moderator status for a sub
+export const requestModeratorStatus = async (subId) => {
+  const res = await API.post(`${API_URL}/forum/subs/${subId}/mod-requests`);
+  return res.data;
+};

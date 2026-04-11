@@ -6,7 +6,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
 import { performUnifiedSearch } from "../../api/admin";
-
+ 
 export default function PromotionsSection() {
   const { t } = useTranslation();
   const { promotions, refreshPromotions, loading: dashboardLoading } = useDashboard();
