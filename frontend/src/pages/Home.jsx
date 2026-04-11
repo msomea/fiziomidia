@@ -12,8 +12,6 @@ function HomeContent() {
     ptPromotions, 
     clinicPromotions, 
     sponsoredProducts, 
-    loading, 
-    error, 
     fetchHomePageData,
     forceRefreshHomePage 
   } = useHomePage();
@@ -21,24 +19,6 @@ function HomeContent() {
   useEffect(() => {
     fetchHomePageData();
   }, []); // Empty dependency array - only run once on mount
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-caribbean"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500 text-center">
-          <p>Error loading home page: {error}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>

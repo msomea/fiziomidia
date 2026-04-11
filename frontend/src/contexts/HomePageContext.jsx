@@ -8,35 +8,24 @@ const initialState = {
   ptPromotions: [],
   clinicPromotions: [],
   sponsoredProducts: [],
-  loading: false,
-  error: null,
   lastFetched: null,
 };
 
 // Action types
 const actionTypes = {
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
   SET_HOME_PAGE_DATA: 'SET_HOME_PAGE_DATA',
   UPDATE_PT_PROMOTIONS: 'UPDATE_PT_PROMOTIONS',
   UPDATE_CLINIC_PROMOTIONS: 'UPDATE_CLINIC_PROMOTIONS',
   UPDATE_SPONSORED_PRODUCTS: 'UPDATE_SPONSORED_PRODUCTS',
-  CLEAR_ERROR: 'CLEAR_ERROR',
 };
 
 // Reducer
 const homePageReducer = (state, action) => {
   switch (action.type) {
-    case actionTypes.SET_LOADING:
-      return { ...state, loading: action.payload };
-    case actionTypes.SET_ERROR:
-      return { ...state, error: action.payload, loading: false };
     case actionTypes.SET_HOME_PAGE_DATA:
       return {
         ...state,
         ...action.payload,
-        loading: false,
-        error: null,
         lastFetched: new Date(),
       };
     case actionTypes.UPDATE_PT_PROMOTIONS:
@@ -45,8 +34,6 @@ const homePageReducer = (state, action) => {
       return { ...state, clinicPromotions: action.payload };
     case actionTypes.UPDATE_SPONSORED_PRODUCTS:
       return { ...state, sponsoredProducts: action.payload };
-    case actionTypes.CLEAR_ERROR:
-      return { ...state, error: null };
     default:
       return state;
   }
@@ -62,9 +49,6 @@ export const HomePageProvider = ({ children }) => {
   // Fetch all home page data at once
   const fetchHomePageData = useCallback(async (forceRefresh = false) => {
     try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true });
-      dispatch({ type: actionTypes.CLEAR_ERROR });
-
       const response = await API.get(`${API_URL}/home-page/data`);
       
       dispatch({
@@ -76,7 +60,6 @@ export const HomePageProvider = ({ children }) => {
     } catch (error) {
       console.error('Home Page data fetch error:', error);
       const errorMessage = error.response?.data?.message || 'Failed to load home page data';
-      dispatch({ type: actionTypes.SET_ERROR, payload: errorMessage });
       toast.error(errorMessage);
       throw error;
     }
