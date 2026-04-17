@@ -61,7 +61,12 @@ export const initSocket = (server) => {
           conversation: conversationId,
         });
 
-        const conversation = await Conversation.findById(conversationId);
+        const conversation = await Conversation.findById(
+          conversationId,
+        ).populate(
+          "participants",
+          "fullName _id isLoggedIn profileImageUrl phone role",
+        );
         if (!conversation) return;
 
         conversation.messages.push(message._id);
@@ -83,6 +88,7 @@ export const initSocket = (server) => {
           status: message.status,
           updatedAt: conversation.updatedAt,
           unread: unreadCount,
+          participants: conversation.participants, // Include participant data
         };
 
         // Send to receiver
@@ -152,6 +158,18 @@ export const initSocket = (server) => {
           status: "read",
           conversationId: msg.conversation?.toString(),
         });
+
+        // Update unread count for the reader
+        const unreadCount = await Message.countDocuments({
+          conversation: msg.conversation,
+          receiver: userId,
+          status: { $ne: "read" },
+        });
+
+        io.to(userId).emit("conversation:read", {
+          conversationId: msg.conversation?.toString(),
+          unread: unreadCount,
+        });
       }
     });
 
@@ -176,6 +194,7 @@ export const initSocket = (server) => {
         });
       }
 
+      // Emit conversation:read with 0 unread since all messages are now read
       io.to(userId).emit("conversation:read", {
         conversationId,
         unread: 0,

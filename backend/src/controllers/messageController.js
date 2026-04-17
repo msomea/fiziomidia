@@ -1,6 +1,7 @@
 import Message from "../models/Message.js";
 import { CacheService } from "../utils/redis.js";
 import Conversation from "../models/Conversation.js";
+import { io } from "../config/socket.js";
 
 // Send message
 export const sendMessage = async (req, res) => {
@@ -41,6 +42,55 @@ export const sendMessage = async (req, res) => {
     conversation.lastMessage = message._id;
 
     await conversation.save();
+
+    // Calculate unread count for receiver
+    const unreadCount = await Message.countDocuments({
+      conversation: conversationId,
+      receiver,
+      status: { $ne: "read" },
+    });
+
+    const payload = {
+      conversationId,
+      sender,
+      receiver,
+      content: message.content,
+      messageId: message._id,
+      status: message.status,
+      updatedAt: conversation.updatedAt,
+      unread: unreadCount,
+    };
+
+    // Emit socket events for real-time updates
+    try {
+      if (io) {
+        // Send to receiver
+        io.to(receiver.toString()).emit("message:new", payload);
+
+        // Confirmation to sender (unread: 0 for their own message)
+        io.to(sender.toString()).emit("message:new", {
+          ...payload,
+          unread: 0,
+        });
+
+        // Update chat list preview in real time
+        io.to(receiver.toString()).emit("conversation:updatePreview", {
+          conversationId,
+          userId: sender,
+          lastMessage: content,
+          updatedAt: conversation.updatedAt,
+        });
+
+        io.to(sender.toString()).emit("conversation:updatePreview", {
+          conversationId,
+          userId: receiver,
+          lastMessage: content,
+          updatedAt: conversation.updatedAt,
+        });
+      }
+    } catch (socketErr) {
+      console.warn("Failed to emit socket events in sendMessage:", socketErr);
+    }
 
     res.status(201).json({ message });
   } catch (err) {

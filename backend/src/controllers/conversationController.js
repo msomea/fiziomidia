@@ -14,7 +14,12 @@ export const createConversation = async (req, res) => {
 
     let convo = await Conversation.findOne({
       participants: { $all: [sender, receiver] },
-    }).lean();
+    })
+      .populate(
+        "participants",
+        "fullName _id isLoggedIn profileImageUrl phone role",
+      )
+      .lean();
 
     if (convo) return res.json(convo);
 
@@ -26,14 +31,20 @@ export const createConversation = async (req, res) => {
       },
     });
 
+    // Populate participant data for the response
+    const populatedConvo = await Conversation.findById(newConvo._id).populate(
+      "participants",
+      "fullName _id isLoggedIn profileImageUrl phone role",
+    );
+
     // Invalidate user profile caches due to new conversation
     await CacheService.del(`user:${sender}:profile`);
     await CacheService.del(`user:${receiver}:profile`);
     console.log(
-      `🗑️ User profile cache invalidated for users: ${sender}, ${receiver} due to new conversation`,
+      `?? User profile cache invalidated for users: ${sender}, ${receiver} due to new conversation`,
     );
 
-    res.status(201).json(newConvo.toObject());
+    res.status(201).json(populatedConvo.toObject());
   } catch (err) {
     console.error("Create conversation error:", err);
     res.status(500).json({ message: "Failed to create conversation" });

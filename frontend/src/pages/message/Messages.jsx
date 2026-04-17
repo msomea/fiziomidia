@@ -23,10 +23,54 @@ const MessagesPage = () => {
 
     socket.emit("joinRoom", loggedInUser._id);
 
+    // Handle conversation read events for individual conversation counters
+    const handleConversationRead = ({ conversationId, unread }) => {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv._id === conversationId ? { ...conv, unread: unread || 0 } : conv
+        )
+      );
+    };
+
+    // Handle conversation preview updates (last message, timestamps)
+    const handleConversationUpdate = ({ conversationId, lastMessage, updatedAt }) => {
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv._id === conversationId
+            ? { ...conv, lastMessage: { content: lastMessage }, updatedAt }
+            : conv
+        )
+      );
+    };
+
+    // Handle new messages for individual conversation counters only
+    const handleNewMessage = (msg) => {
+      setConversations((prev) =>
+        prev.map((conv) => {
+          if (conv._id === msg.conversationId) {
+            const isFromOther = msg.sender !== loggedInUser._id;
+            const currentUnread = conv.unread || 0;
+            
+            return {
+              ...conv,
+              lastMessage: { content: msg.content, createdAt: msg.createdAt },
+              updatedAt: msg.updatedAt || new Date().toISOString(),
+              unread: isFromOther ? currentUnread + 1 : 0,
+            };
+          }
+          return conv;
+        })
+      );
+    };
+
+    socket.on("message:new", handleNewMessage);
+    socket.on("conversation:read", handleConversationRead);
+    socket.on("conversation:updatePreview", handleConversationUpdate);
+
     return () => {
-      socket.off("message:new");
-      socket.off("messageReceived");
-      socket.off("conversation:read");
+      socket.off("message:new", handleNewMessage);
+      socket.off("conversation:read", handleConversationRead);
+      socket.off("conversation:updatePreview", handleConversationUpdate);
     };
   }, [loggedInUser]);
 
@@ -46,62 +90,8 @@ const MessagesPage = () => {
     fetchConversations();
   }, [t]);
 
-  useEffect(() => {
-    const handleMessage = (msg) => {
-      if (!msg || typeof msg !== 'object') return;
-
-      const conversationId = msg.conversationId || msg.conversation;
-      const sender = msg.sender || msg.from;
-      const receiver = msg.receiver || msg.to;
-      const content = msg.content || msg.body || "";
-
-      if (!conversationId || !sender) return;
-
-      setConversations((prev) => {
-        const existing = prev.find((c) => String(c._id) === String(conversationId));
-
-        if (existing) {
-          return prev.map((c) => {
-            if (String(c._id) !== String(conversationId)) return c;
-            const isFromOther = sender !== loggedInUser._id;
-            return {
-              ...c,
-              lastMessage: { content, sender, conversation: conversationId, updatedAt: msg.updatedAt || new Date().toISOString() },
-              unread: isFromOther ? (c.unread || 0) + 1 : c.unread,
-              updatedAt: msg.updatedAt || new Date().toISOString(),
-            };
-          });
-        }
-
-        if (prev.some((c) => String(c._id) === String(conversationId))) return prev;
-
-        return [
-          {
-            _id: conversationId,
-            participants: [{ _id: sender }, { _id: receiver }],
-            unread: sender !== loggedInUser._id ? 1 : 0,
-            lastMessage: { content, sender, conversation: conversationId, updatedAt: msg.updatedAt || new Date().toISOString() },
-            updatedAt: msg.updatedAt || new Date().toISOString(),
-          },
-          ...prev,
-        ];
-      });
-    };
-
-    const handleConversationRead = ({ conversationId, unread }) => {
-      setConversations((prev) => prev.map((c) => (c._id === conversationId ? { ...c, unread: unread || 0 } : c)));
-    };
-
-    socket.on("message:new", handleMessage);
-    socket.on("messageReceived", handleMessage);
-    socket.on("conversation:read", handleConversationRead);
-
-    return () => {
-      socket.off("message:new", handleMessage);
-      socket.off("messageReceived", handleMessage);
-      socket.off("conversation:read", handleConversationRead);
-    };
-  }, [loggedInUser]);
+  // Socket event handling is now managed by useUnreadMessages hook globally
+// Messages.jsx will need to fetch conversations periodically or when user navigates back
 
   const handleOpenConversation = async (convId, otherId) => {
     try {
@@ -207,6 +197,10 @@ const MessagesPage = () => {
       <div className="bg-base-200 rounded-lg shadow-md divide-y divide-base-300">
         {conversations.map((conv) => {
           const other = conv.participants.find((p) => p._id !== loggedInUser._id);
+
+          if (!other) {
+            return null;
+          }
 
           return (
             <div key={conv._id} className="flex w-full items-center gap-4 p-4 hover:bg-base-300 transition">

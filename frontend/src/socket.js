@@ -12,6 +12,8 @@ export const getSocket = () => {
       SOCKET_URL = SOCKET_URL.slice(0, -4); // Remove last 4 chars (/api)
     }
 
+    console.log("?? Creating socket connection to:", SOCKET_URL);
+
     socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"], // Add polling as fallback
       withCredentials: true,
@@ -22,13 +24,22 @@ export const getSocket = () => {
       timeout: 10000, // Increase timeout to 10 seconds
     });
 
+    // Connection monitoring
+    socket.on("connect", () => {
+      console.log("?? Socket connected successfully:", socket.id);
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("?? Socket disconnected:", reason);
+    });
+
     // Error handling
     socket.on("connect_error", (error) => {
-      console.error("❌ Socket connection error:", error);
+      console.error("?? Socket connection error:", error);
     });
 
     socket.on("error", (error) => {
-      console.error("❌ Socket error:", error);
+      console.error("?? Socket error:", error);
     });
   }
   return socket;

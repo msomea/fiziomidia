@@ -34,34 +34,57 @@ export default function ConversationPage() {
   // JOIN ROOM & REGISTER SOCKET
   // ===========================
   useEffect(() => {
+    console.log("Socket effect triggered:", { loggedInUser: loggedInUser?._id, socket: !!socket, socketConnected: socket?.connected });
     if (!loggedInUser?._id || !socket) return;
 
     // Join personal room
-    const joinRoom = () => socket.emit("joinRoom", loggedInUser._id);
+    const joinRoom = () => {
+      console.log("Joining room:", loggedInUser._id, "Socket connected:", socket.connected);
+      socket.emit("joinRoom", loggedInUser._id);
+    };
     if (socket.connected) joinRoom();
     else socket.once("connect", joinRoom);
 
     // ===========================
     // ONLINE USERS EVENTS
     // ===========================
-    const handleOnlineUsers = (userIds) => setOnlineUsers(userIds || []);
+    const handleOnlineUsers = (userIds) => {
+      console.log("Online users received:", userIds);
+      setOnlineUsers(userIds || []);
+    };
     const handleUserOnline = ({ userId }) => {
+      console.log("User went online:", userId);
       setOnlineUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
     };
     const handleUserOffline = ({ userId }) => {
+      console.log("User went offline:", userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     };
 
+    // Monitor socket connection
+    const handleConnect = () => {
+      console.log("Socket connected in Conversation component");
+      joinRoom();
+    };
+    
+    const handleDisconnect = () => {
+      console.log("Socket disconnected in Conversation component");
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
     socket.on("onlineUsers", handleOnlineUsers);
     socket.on("userWentOnline", handleUserOnline);
     socket.on("userWentOffline", handleUserOffline);
 
     return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
       socket.off("onlineUsers", handleOnlineUsers);
       socket.off("userWentOnline", handleUserOnline);
       socket.off("userWentOffline", handleUserOffline);
     };
-  }, [loggedInUser, socket]);
+  }, [loggedInUser]);
 
   // Update other user online status whenever onlineUsers change
   useEffect(() => {
@@ -172,7 +195,7 @@ export default function ConversationPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleConversationRead = ({ conversationId }) => {
+    const handleConversationRead = ({ conversationId, unread }) => {
       if (conversationId !== conversation?._id) return;
 
       setMessages((prev) =>
@@ -257,7 +280,7 @@ export default function ConversationPage() {
       <ConversationHeader
         otherUser={otherUser}
         isOtherUserOnline={isOtherUserOnline}
-        navigateBack={() => navigate(-1)}
+        navigateBack={() => navigate("/messages")}
       />
 
       <ConversationMessages
