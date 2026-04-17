@@ -82,18 +82,10 @@ export const useUnreadMessages = () => {
      * New message handler
      */
     const handleNewMessage = (msg) => {
-      console.log("useUnreadMessages: Message event received", msg);
-
       const conversationId = msg.conversationId || msg.conversation;
       const sender = msg.sender || msg.from;
 
       if (!conversationId) return;
-
-      console.log("useUnreadMessages: Processing message", {
-        conversationId,
-        sender,
-        isFromOther: sender !== user._id,
-      });
 
       // Only count messages from other users
       if (sender !== user._id) {
@@ -107,7 +99,6 @@ export const useUnreadMessages = () => {
           0,
         );
 
-        console.log("useUnreadMessages: Updated unread count", total);
         setUnreadCount(total);
       }
     };
@@ -151,25 +142,16 @@ export const useUnreadMessages = () => {
     /**
      * Register listeners
      */
-    console.log("useUnreadMessages: Registering socket event listeners");
-    console.log("useUnreadMessages: Socket state:", {
-      connected: socket.connected,
-      id: socket.id,
-    });
-
     // Register for message events - these should work alongside Messages.jsx
     socket.on("message:new", (msg) => {
-      console.log("useUnreadMessages: message:new event received", msg);
       handleNewMessage(msg);
     });
 
     socket.on("message:status", (data) => {
-      console.log("useUnreadMessages: message:status event received", data);
       handleMessageStatus(data);
     });
 
     socket.on("conversation:read", (data) => {
-      console.log("useUnreadMessages: conversation:read event received", data);
       handleConversationRead(data);
     });
 
