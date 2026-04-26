@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Eye, EyeOff, Key } from "lucide-react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { changePassword } from "../../api/auth";
 import { useTranslation } from "react-i18next";
 
 const PasswordChangeSection = () => {
@@ -61,10 +60,7 @@ const PasswordChangeSection = () => {
 
     setLoading(true);
     try {
-      await API.post(`${API_URL}/auth/change-password`, {
-        oldPassword: formData.oldPassword,
-        newPassword: formData.newPassword,
-      });
+      await changePassword(formData.oldPassword, formData.newPassword);
 
       toast.success(t("password_changed_success"));
       setFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });

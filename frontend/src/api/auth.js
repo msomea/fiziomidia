@@ -82,3 +82,14 @@ export const verifyEmail = async (token) => {
   const res = await API.get(`${API_URL}/auth/verify-email/${token}`);
   return res.data;
 };
+
+// ---------------------------
+// Change password
+// ---------------------------
+export const changePassword = async (oldPassword, newPassword) => {
+  const res = await API.post(`${API_URL}/auth/change-password`, {
+    oldPassword,
+    newPassword,
+  });
+  return res.data;
+};

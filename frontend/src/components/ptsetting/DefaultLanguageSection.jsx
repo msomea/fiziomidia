@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, Globe } from "lucide-react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios";
+import { updateLanguage } from "../../api/users";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -26,9 +26,7 @@ const DefaultLanguageSection = () => {
 
     setLoading(true);
     try {
-      const { data } = await API.put("/users/update-language", {
-        language: selectedLanguage,
-      });
+      const data = await updateLanguage(selectedLanguage);
 
       if (data.success) {
         const updatedUser = { ...user, language: data.language };
