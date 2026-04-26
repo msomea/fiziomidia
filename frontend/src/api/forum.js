@@ -104,3 +104,32 @@ export const requestModeratorStatus = async (subId) => {
   const res = await API.post(`${API_URL}/forum/subs/${subId}/mod-requests`);
   return res.data;
 };
+
+// Delete a post by ID (auth required, owner or admin)
+export const deletePost = async (postId) => {
+  const res = await API.delete(`${API_URL}/forum/posts/${postId}`);
+  return res.data;
+};
+
+// Update a comment by ID (auth required, owner or admin)
+export const updateComment = async (postId, commentId, content) => {
+  const res = await API.put(`${API_URL}/forum/posts/${postId}/comments/${commentId}`, {
+    content,
+  });
+  return res.data;
+};
+
+// Delete a comment by ID (auth required, owner or admin)
+export const deleteCommentFromPost = async (postId, commentId) => {
+  const res = await API.delete(`${API_URL}/forum/posts/${postId}/comments/${commentId}`);
+  return res.data;
+};
+
+// Add reply to a comment (auth required)
+export const addReplyToComment = async (postId, content, parentCommentId) => {
+  const res = await API.post(`${API_URL}/forum/posts/${postId}/comments`, {
+    content,
+    parentComment: parentCommentId,
+  });
+  return res.data;
+};

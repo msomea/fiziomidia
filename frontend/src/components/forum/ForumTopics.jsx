@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import API from "../../api/axios";
+import { fetchForumSubsPaginated, createSub } from "../../api/forum";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import toast from "react-hot-toast";
-import { API_URL } from "../../config/constants";
 import CollapsibleSection from "../admin/CollapsibleSection";
 import { useTranslation } from "react-i18next";
 
@@ -33,10 +32,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
 
   const fetchPaginatedSubs = async (pageNum = 1, limit) => {
     try {
-      const res = await API.get(
-        `${API_URL}/forum/subs?page=${pageNum}&limit=${limit}`
-      );
-      const data = res.data;
+      const data = await fetchForumSubsPaginated(pageNum, limit);
 
       setTopics(data.subs || []);
       setTotalPages(data.pagination?.totalPages || 1);
@@ -128,8 +124,8 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
 
     setSubSaving(true);
     try {
-      const res = await API.post(`${API_URL}/forum/subs`, newSub);
-      if (res.data.sub) {
+      const res = await createSub(newSub);
+      if (res.sub) {
         toast.success(t("topic_created_success"));
         setShowAddSub(false);
         setNewSub({

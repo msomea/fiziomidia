@@ -1,9 +1,8 @@
 // src/components/forum/CommentsSection.jsx
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import API from "../../api/axios";
+import { addComment, addReplyToComment, deleteCommentFromPost, updateComment } from "../../api/forum";
 import { useForum } from "../../contexts/ForumContext";
-import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import CommentItem from "./CommentItem";
 import { useTranslation } from "react-i18next";
@@ -48,14 +47,12 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
     try {
       setAdding(true);
-      const res = await API.post(`${API_URL}/forum/posts/${post.postId}/comments`, {
-        content: newComment.trim(),
-      });
+      const res = await addComment(post.postId, newComment.trim());
 
       toast.success(t("comment_added"));
       setNewComment("");
       setDisplayedCount(COMMENTS_PER_PAGE);
-      updatePostComments(post.postId, res.data.comments);
+      updatePostComments(post.postId, res.comments);
       fetchPost();
     } catch (err) {
       console.error(err);
@@ -70,12 +67,9 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
 
   try {
-    const res = await API.post(
-      `${API_URL}/forum/posts/${post.postId}/comments`,
-      { content, parentComment: parentId }
-    );
+    const res = await addReplyToComment(post.postId, content, parentId);
 
-    updatePostComments(post.postId, res.data.comments);
+    updatePostComments(post.postId, res.comments);
     fetchPost();
   } catch (err) {
     console.error(err);
@@ -113,12 +107,10 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
       if (undoClicked) return;
 
       try {
-        const res = await API.delete(
-          `${API_URL}/forum/posts/${post.postId}/comments/${commentId}`
-        );
+        const res = await deleteCommentFromPost(post.postId, commentId);
 
         setDisplayedCount(COMMENTS_PER_PAGE);
-        updatePostComments(post.postId, res.data.comments);
+        updatePostComments(post.postId, res.comments);
         fetchPost();
       } catch (err) {
         console.error(err);
@@ -147,14 +139,11 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
     }
 
     try {
-      const res = await API.put(
-        `${API_URL}/forum/posts/${post.postId}/comments/${commentId}`,
-        { content: editingContent.trim() }
-      );
+      const res = await updateComment(post.postId, commentId, editingContent.trim());
 
       toast.success(t("comment_updated"));
       cancelEdit();
-      updatePostComments(post.postId, res.data.comments);
+      updatePostComments(post.postId, res.comments);
       fetchPost();
     } catch (err) {
       console.error(err);

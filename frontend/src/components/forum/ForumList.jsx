@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
-import API from "../../api/axios";
+import { votePost, deletePost as deletePostApi } from "../../api/forum";
 import { toast } from "react-hot-toast";
-import { API_URL, ASSET_URL } from "../../config/constants";
+import { ASSET_URL } from "../../config/constants";
 import { PostSkeleton } from "../../components/forum/PostSkeleton";
 import { useTranslation } from "react-i18next";
 import ProfileBadge from "../Badge";
@@ -81,7 +81,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     );
 
     try {
-      await API.post(`${API_URL}/forum/posts/${postId}/vote`, { vote: voteValue });
+      await votePost(postId, voteValue);
     } catch (err) {
       console.error(err);
       toast.error(t("failed_vote"));
@@ -117,7 +117,7 @@ const ForumList = ({ posts = [], loading, user, currentTopic, onTogglePin }) => 
     setTimeout(async () => {
       if (undoClicked) return;
       try {
-        await API.delete(`${API_URL}/forum/posts/${postId}`);
+        await deletePostApi(postId);
         toast.success(t("post_permanently_deleted"));
       } catch (err) {
         console.error(err);
