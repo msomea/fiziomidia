@@ -1,0 +1,384 @@
+.
+├── backend
+│   ├── Dockerfile
+│   ├── examples
+│   │   └── notificationPriorityExamples.js
+│   ├── forumSubs.seed.json
+│   ├── node_modules.zip
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── public
+│   │   ├── fiziomidia_logo.png
+│   │   ├── fiziomidia_logo_trans.png
+│   │   └── logo.png
+│   ├── REDIS_SETUP.md
+│   ├── server_debug.log
+│   ├── server_run.log
+│   ├── src
+│   │   ├── app.js
+│   │   ├── config
+│   │   │   ├── db.js
+│   │   │   ├── env.js
+│   │   │   ├── index.js
+│   │   │   ├── redis.js
+│   │   │   └── socket.js
+│   │   ├── controllers
+│   │   │   ├── admin
+│   │   │   │   ├── adminAppointmentController.js
+│   │   │   │   ├── adminClinicPromotionController.js
+│   │   │   │   ├── adminForumModController.js
+│   │   │   │   ├── adminMonitoringController.js
+│   │   │   │   ├── adminPromotionController.js
+│   │   │   │   ├── adminSponsoredProductController.js
+│   │   │   │   ├── adminSponsorshipController.js
+│   │   │   │   └── adminUserController.js
+│   │   │   ├── adminController.js
+│   │   │   ├── appointmentController.js
+│   │   │   ├── authController.js
+│   │   │   ├── clinicAppointmentController.js
+│   │   │   ├── clinicController.js
+│   │   │   ├── clinicPromotionController.js
+│   │   │   ├── contactController.js
+│   │   │   ├── conversationController.js
+│   │   │   ├── forum
+│   │   │   ├── forumCommentController.js
+│   │   │   ├── forumController.js
+│   │   │   ├── forumPageController.js
+│   │   │   ├── homePageController.js
+│   │   │   ├── locationController.js
+│   │   │   ├── memberDashboardController.js
+│   │   │   ├── messageController.js
+│   │   │   ├── modReqController.js
+│   │   │   ├── notificationController.js
+│   │   │   ├── ptController.js
+│   │   │   ├── ptDashboardController.js
+│   │   │   ├── ptPromotionController.js
+│   │   │   ├── ptRequestController.js
+│   │   │   ├── ptSubmanagementController.js
+│   │   │   ├── reviewController.js
+│   │   │   ├── sponsoredProductController.js
+│   │   │   └── userController.js
+│   │   ├── cron
+│   │   │   ├── expiredClinicPromotions.js
+│   │   │   ├── expiredPTPromotions.js
+│   │   │   └── expiredSponsoredProducts.js
+│   │   ├── middlewares
+│   │   │   ├── adminActivityLogger.js
+│   │   │   ├── auth.js
+│   │   │   ├── errorHandler.js
+│   │   │   ├── forumPermissions.js
+│   │   │   ├── isSubModerator.js
+│   │   │   └── roles.js
+│   │   ├── models
+│   │   │   ├── AdminActivityLog.js
+│   │   │   ├── Appointment.js
+│   │   │   ├── Clinic.js
+│   │   │   ├── ClinicPromotion.js
+│   │   │   ├── Comment.js
+│   │   │   ├── Conversation.js
+│   │   │   ├── ForumSub.js
+│   │   │   ├── ForumSubModRequest.js
+│   │   │   ├── Location.js
+│   │   │   ├── Message.js
+│   │   │   ├── Post.js
+│   │   │   ├── PTPromotion.js
+│   │   │   ├── PTRequest.js
+│   │   │   ├── Review.js
+│   │   │   ├── SponsoredProduct.js
+│   │   │   └── User.js
+│   │   ├── routes
+│   │   │   ├── admin.js
+│   │   │   ├── appointments.js
+│   │   │   ├── auth.js
+│   │   │   ├── clinicAppointments.js
+│   │   │   ├── clinics.js
+│   │   │   ├── contact.js
+│   │   │   ├── conversation.js
+│   │   │   ├── forum.js
+│   │   │   ├── homePage.js
+│   │   │   ├── location.js
+│   │   │   ├── message.js
+│   │   │   ├── notifications.js
+│   │   │   ├── promotions.js
+│   │   │   ├── pts.js
+│   │   │   ├── reviews.js
+│   │   │   ├── sponsoredProduct.js
+│   │   │   ├── users.js
+│   │   │   └── webhook.js
+│   │   ├── server.js
+│   │   ├── services
+│   │   │   ├── clinicService.js
+│   │   │   ├── homePageService.js
+│   │   │   ├── paymentService.js
+│   │   │   ├── sendEmailService.js
+│   │   │   ├── tokenService.js
+│   │   │   └── uploadService.js
+│   │   ├── templates
+│   │   │   └── emailHelper.js
+│   │   └── utils
+│   │       ├── comments.js
+│   │       ├── escapeRegExp.js
+│   │       ├── forumPermissions.js
+│   │       ├── forumRoles.js
+│   │       ├── rateLimiter.js
+│   │       ├── rateLimitMonitor.js
+│   │       ├── redis.js
+│   │       └── tokens.js
+│   └── uploads
+│       ├── avatars/
+│       ├── licenses/
+│       ├── posts/
+│       ├── products/
+│       └── sponsor_logos/
+├── developer_context.md
+├── frontend
+│   ├── dist
+│   │   ├── assets
+│   │   │   ├── about_pt-C_g1prVV.jpg
+│   │   │   ├── avatar-CaoKAAnI.jpg
+│   │   │   ├── fm-bg-DTu0M0wT.svg
+│   │   │   ├── hero_pt-B9l_01Ig.jpg
+│   │   │   ├── index-DMwtRqf8.js
+│   │   │   └── index-ZtECQIBz.css
+│   │   ├── fm-bg.svg
+│   │   ├── fm-logo.png
+│   │   ├── fm-trans.svg
+│   │   ├── index.html
+│   │   └── vite.svg
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── node_modules.zip
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.js
+│   ├── public
+│   │   ├── fm-bg.svg
+│   │   ├── fm-logo.png
+│   │   ├── fm-trans.svg
+│   │   └── vite.svg
+│   ├── README.md
+│   ├── src
+│   │   ├── api
+│   │   │   ├── admin.js
+│   │   │   ├── appointments.js
+│   │   │   ├── auth.js
+│   │   │   ├── axios.js
+│   │   │   ├── clinicAppointments.js
+│   │   │   ├── clinics.js
+│   │   │   ├── contact.js
+│   │   │   ├── forum.js
+│   │   │   ├── messages.js
+│   │   │   ├── notifications.js
+│   │   │   ├── promotions.js
+│   │   │   ├── pts.js
+│   │   │   ├── reviews.js
+│   │   │   ├── useAuth.js
+│   │   │   └── users.js
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   ├── about_pt.jpg
+│   │   │   ├── avatar.jpg
+│   │   │   ├── fiziomidia-bg.svg
+│   │   │   ├── fiziomidia-trans.svg
+│   │   │   ├── fm-bg.svg
+│   │   │   ├── fm-trans.svg
+│   │   │   ├── hero_pt.jpg
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── admin
+│   │   │   │   ├── AdminAppointmentDetails.jsx
+│   │   │   │   ├── AdminClinicPromotionDetail.jsx
+│   │   │   │   ├── AdminLanguage.jsx
+│   │   │   │   ├── AdminMonitoringSection.jsx
+│   │   │   │   ├── AdminProductSponsorshipDetail.jsx
+│   │   │   │   ├── AdminPromotionDetail.jsx
+│   │   │   │   ├── AdminSubSponsorshipDetail.jsx
+│   │   │   │   ├── AdminUserDetails.jsx
+│   │   │   │   ├── AppointmentsSection.jsx
+│   │   │   │   ├── ClinicPromotionSection.jsx
+│   │   │   │   ├── CollapsibleSection.jsx
+│   │   │   │   ├── ForumModRequestsDetail.jsx
+│   │   │   │   ├── ForumModRequestsSection.jsx
+│   │   │   │   ├── ProductSponsorshipSection.jsx
+│   │   │   │   ├── PromotionsSection.jsx
+│   │   │   │   ├── SubSponsorshipSection.jsx
+│   │   │   │   ├── SystemNotificationsSection.jsx
+│   │   │   │   └── UsersSection.jsx
+│   │   │   ├── auth
+│   │   │   │   └── AuthForm.jsx
+│   │   │   ├── Badge.jsx
+│   │   │   ├── clinic
+│   │   │   │   └── ClinicAppointmentForm.jsx
+│   │   │   ├── dashboard
+│   │   │   │   ├── ClinicPromotionStatus.jsx
+│   │   │   │   ├── member
+│   │   │   │   │   ├── MemberAppointments.jsx
+│   │   │   │   │   ├── MemberClinicAppointments.jsx
+│   │   │   │   │   ├── MemberDetails.jsx
+│   │   │   │   │   ├── MemberSavedPTs.jsx
+│   │   │   │   │   └── UpgradeToPT.jsx
+│   │   │   │   ├── NotificationSection.jsx
+│   │   │   │   └── pt
+│   │   │   │       ├── ClinicAppointmentManagement.jsx
+│   │   │   │       ├── ClinicInvitations.jsx
+│   │   │   │       ├── ForumSubManagement.jsx
+│   │   │   │       ├── PromotionStatus.jsx
+│   │   │   │       ├── StatCard.jsx
+│   │   │   │       ├── Statistics.jsx
+│   │   │   │       └── UpcomingAppointments.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── form
+│   │   │   │   ├── AvatarUpload.jsx
+│   │   │   │   ├── InputField.jsx
+│   │   │   │   └── TextAreaField.jsx
+│   │   │   ├── forum
+│   │   │   │   ├── CommentItem.jsx
+│   │   │   │   ├── CommentsSection.jsx
+│   │   │   │   ├── ForumList.jsx
+│   │   │   │   ├── ForumTopics.jsx
+│   │   │   │   ├── PostSkeleton.jsx
+│   │   │   │   └── PostVote.jsx
+│   │   │   ├── home
+│   │   │   │   ├── CallToAction.jsx
+│   │   │   │   ├── FindClinics.jsx
+│   │   │   │   ├── FindProfessionals.jsx
+│   │   │   │   ├── HeroSection.jsx
+│   │   │   │   ├── ServiceCards.jsx
+│   │   │   │   ├── SkeletonProfessionalCard.jsx
+│   │   │   │   ├── SkeletonSponsoredCard.jsx
+│   │   │   │   └── SponsoredContent.jsx
+│   │   │   ├── LanguageSwitcher.jsx
+│   │   │   ├── location
+│   │   │   │   └── LocationSelector.jsx
+│   │   │   ├── membersetting
+│   │   │   │   └── ClinicManagement.jsx
+│   │   │   ├── message
+│   │   │   │   ├── ConversationHeader.jsx
+│   │   │   │   ├── ConversationInput.jsx
+│   │   │   │   └── ConversationMessages.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── profiles
+│   │   │   │   ├── index.js
+│   │   │   │   ├── PTAvailability.jsx
+│   │   │   │   ├── PTClinics.jsx
+│   │   │   │   ├── PTEducation.jsx
+│   │   │   │   ├── PTExperience.jsx
+│   │   │   │   ├── PTGallery.jsx
+│   │   │   │   ├── PTOverview.jsx
+│   │   │   │   ├── PTRatings.jsx
+│   │   │   │   └── PTServices.jsx
+│   │   │   ├── ptsetting
+│   │   │   │   ├── AvailabilitySection.jsx
+│   │   │   │   ├── ClinicManagement.jsx
+│   │   │   │   ├── DefaultLanguageSection.jsx
+│   │   │   │   ├── Documents.jsx
+│   │   │   │   ├── Education.jsx
+│   │   │   │   ├── Experience.jsx
+│   │   │   │   ├── GallerySection.jsx
+│   │   │   │   ├── Languages.jsx
+│   │   │   │   ├── LicenseInfo.jsx
+│   │   │   │   ├── LocationSelector.jsx
+│   │   │   │   ├── OverviewSection.jsx
+│   │   │   │   ├── PasswordChangeSection.jsx
+│   │   │   │   ├── ProfessionalMemberships.jsx
+│   │   │   │   ├── ProfileHeader.jsx
+│   │   │   │   ├── SaveButton.jsx
+│   │   │   │   ├── Services.jsx
+│   │   │   │   └── WorkingHours.jsx
+│   │   │   ├── StarRating.jsx
+│   │   │   └── ToastNotification.jsx
+│   │   ├── config
+│   │   │   └── constants.js
+│   │   ├── contexts
+│   │   │   ├── AuthContext.jsx
+│   │   │   ├── DashboardContext.jsx
+│   │   │   ├── ForumContext.jsx
+│   │   │   ├── HomePageContext.jsx
+│   │   │   ├── MemberDashboardContext.jsx
+│   │   │   ├── PTDashboardContext.jsx
+│   │   │   └── PTSubmanagementContext.jsx
+│   │   ├── hooks
+│   │   │   ├── index.js
+│   │   │   ├── useApiData.js
+│   │   │   ├── useDashboard.js
+│   │   │   ├── useForum.js
+│   │   │   ├── useForumPermissions.js
+│   │   │   ├── useMemberDashboard.js
+│   │   │   ├── usePTDashboard.js
+│   │   │   └── useUnreadMessages.js
+│   │   ├── i18n.js
+│   │   ├── index.css
+│   │   ├── locales
+│   │   │   ├── en
+│   │   │   │   └── translation.json
+│   │   │   └── sw
+│   │   │       └── translation.json
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── About.jsx
+│   │   │   ├── admin
+│   │   │   │   ├── AdminDashboard.jsx
+│   │   │   │   ├── AdminProfileSetting.jsx
+│   │   │   │   ├── AdminSendEmail.jsx
+│   │   │   │   └── AdminSponsorships.jsx
+│   │   │   ├── appointment
+│   │   │   │   └── RequestAppointment.jsx
+│   │   │   ├── auth
+│   │   │   │   ├── ForgotPassword.jsx
+│   │   │   │   ├── Login.jsx
+│   │   │   │   ├── ResetPassword.jsx
+│   │   │   │   ├── Signup.jsx
+│   │   │   │   └── VerifyEmail.jsx
+│   │   │   ├── clinic
+│   │   │   │   ├── ClinicAppointmentRequest.jsx
+│   │   │   │   ├── ClinicDetails.jsx
+│   │   │   │   └── ManageClinicPromotion.jsx
+│   │   │   ├── Education.jsx
+│   │   │   ├── forum
+│   │   │   │   ├── CreatePostPage.jsx
+│   │   │   │   ├── EditPostPage.jsx
+│   │   │   │   ├── Forum.jsx
+│   │   │   │   └── PostDetailPage.jsx
+│   │   │   ├── Home.jsx
+│   │   │   ├── member
+│   │   │   │   ├── MemberAppointmentPage.jsx
+│   │   │   │   ├── MemberClinicAppointmentDetailPage.jsx
+│   │   │   │   ├── MemberClinicAppointmentsPage.jsx
+│   │   │   │   ├── MemberDashboard.jsx
+│   │   │   │   └── MemberProfileSettings.jsx
+│   │   │   ├── MemberProfile.jsx
+│   │   │   ├── message
+│   │   │   │   ├── Conversation.jsx
+│   │   │   │   ├── MessageRouterPage.jsx
+│   │   │   │   ├── Messages.jsx
+│   │   │   │   └── UsersPage.jsx
+│   │   │   ├── pt
+│   │   │   │   ├── PTApointmentDetailsPage.jsx
+│   │   │   │   ├── PTAppointmentsPage.jsx
+│   │   │   │   ├── PTClinicAppointmentDetailPage.jsx
+│   │   │   │   ├── PTClinicAppointmentPage.jsx
+│   │   │   │   ├── PTDashboard.jsx
+│   │   │   │   ├── PTProfileSettings.jsx
+│   │   │   │   └── PTSubmanagementPage.jsx
+│   │   │   ├── PTProfile.jsx
+│   │   │   └── services
+│   │   │       ├── CreateClinicPromotion.jsx
+│   │   │       ├── CreatePromotion.jsx
+│   │   │       ├── CreateSponsoredProduct.jsx
+│   │   │       ├── ListClinicPromotions.jsx
+│   │   │       ├── ListPromotions.jsx
+│   │   │       ├── ListSponsoredProduct.jsx
+│   │   │       └── Services.jsx
+│   │   ├── routes
+│   │   │   └── AppRoutes.jsx
+│   │   ├── socket.js
+│   │   └── utils
+│   │       └── clinicAddressHelper.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── hint.js
+├── importLocation.js
+├── location-files/
+├── README.md
+├── structure.txt
+└── welcome-message-examples.md

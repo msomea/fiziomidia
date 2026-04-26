@@ -7,6 +7,8 @@ frontend/node_modules/
 /frontend/.env
 /backend/.env.me
 /frontend/.env.me
+/documentation/.env.me
+/documentation/.env
 *.env
 *.env.example
 *hint.js
