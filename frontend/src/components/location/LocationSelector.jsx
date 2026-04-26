@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchRegions, fetchDistrictsByRegion, fetchWardsByDistrict, fetchStreetsByWard } from "../../api/locations";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
@@ -23,15 +22,15 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
   // 1. FETCH REGIONS
   // ==========================================
   useEffect(() => {
-    const fetchRegions = async () => {
+    const loadRegions = async () => {
       try {
         setLoading(true);
-        const res = await API.get(`${API_URL}/locations/regions`);
-        if (!Array.isArray(res.data)) {
+        const data = await fetchRegions();
+        if (!Array.isArray(data)) {
           toast.error(t("invalid_region_response"));
           return;
         }
-        setRegions(res.data);
+        setRegions(data);
       } catch (err) {
         console.error(err);
         toast.error(t("failed_load_regions"));
@@ -39,7 +38,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         setLoading(false);
       }
     };
-    fetchRegions();
+    loadRegions();
   }, [t]);
 
   // ==========================================
@@ -50,8 +49,8 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedRegion) return setDistricts([]);
       try {
         setLoading(true);
-        const res = await API.get(`${API_URL}/locations/districts/${selectedRegion}`);
-        setDistricts(Array.isArray(res.data) ? res.data : []);
+        const data = await fetchDistrictsByRegion(selectedRegion);
+        setDistricts(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
         toast.error(t("failed_load_districts"));
@@ -71,8 +70,8 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedDistrict) return setWards([]);
       try {
         setLoading(true);
-        const res = await API.get(`${API_URL}/locations/wards/${selectedDistrict}`);
-        setWards(Array.isArray(res.data) ? res.data : []);
+        const data = await fetchWardsByDistrict(selectedDistrict);
+        setWards(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
         toast.error(t("failed_load_wards"));
@@ -92,8 +91,8 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       if (!selectedWard) return setStreets([]);
       try {
         setLoading(true);
-        const res = await API.get(`${API_URL}/locations/streets/${selectedWard}`);
-        setStreets(Array.isArray(res.data) ? res.data : []);
+        const data = await fetchStreetsByWard(selectedWard);
+        setStreets(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
         toast.error(t("failed_load_streets"));

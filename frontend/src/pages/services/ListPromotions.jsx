@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import API from "../../api/axios";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
-import { API_URL } from "../../config/constants";
 import avatar from "../../assets/avatar.jpg";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";

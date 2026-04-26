@@ -3,56 +3,106 @@ import { API_URL } from "../config/constants";
 
 //User Management
 export const fetchAllUsers = async (params = {}) => {
-  const { data } = await API.get(`${API_URL}/admin/users`, { params });
-  return data;
+  try {
+    const { data } = await API.get(`${API_URL}/admin/users`, { params });
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch all users:", err);
+    throw err;
+  }
 };
 
 export const getAdminUserById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/users/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/users/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get admin user by ID:", err);
+    throw err;
+  }
 };
 
 export const updateUserRole = async (id, data) => {
-  const res = await API.put(`${API_URL}/admin/users/${id}/role`, data);
-  return res.data;
+  try {
+    const res = await API.put(`${API_URL}/admin/users/${id}/role`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update user role:", err);
+    throw err;
+  }
 };
 
 export const updateUserLicense = async (id, data) => {
-  const res = await API.put(`${API_URL}/admin/users/${id}/license`, data);
-  return res.data;
+  try {
+    const res = await API.put(`${API_URL}/admin/users/${id}/license`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update user license:", err);
+    throw err;
+  }
 };
 
 export const sendEmailToUser = async (id, data) => {
-  const res = await API.post(`${API_URL}/admin/users/${id}/email`, data);
-  return res.data;
+  try {
+    const res = await API.post(`${API_URL}/admin/users/${id}/email`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to send email to user:", err);
+    throw err;
+  }
 };
 
 // Appointments managements
 
 export const fetchAdminAppointments = async (params = {}) => {
-  const { data } = await API.get(`${API_URL}/admin/appointments`, { params });
-  return data;
+  try {
+    const { data } = await API.get(`${API_URL}/admin/appointments`, { params });
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch admin appointments:", err);
+    throw err;
+  }
 };
 
 // PT Promotion Managements
 export const fetchAdminPTPromotions = async (params = {}) => {
-  const res = await API.get(`${API_URL}/admin/promotions`, { params });
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/promotions`, { params });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch admin PT promotions:", err);
+    throw err;
+  }
 };
 
 export const fetchClinicPromotions = async (params = {}) => {
-  const res = await API.get(`${API_URL}/admin/clinic-promotions`, { params });
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/clinic-promotions`, { params });
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch clinic promotions:", err);
+    throw err;
+  }
 };
 
 export const getPromotionById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/promotions/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/promotions/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get promotion by ID:", err);
+    throw err;
+  }
 };
 
 export const updatePromotion = async (id, data) => {
-  const res = await API.put(`${API_URL}/admin/promotions/${id}`, data);
-  return res.data;
+  try {
+    const res = await API.put(`${API_URL}/admin/promotions/${id}`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update promotion:", err);
+    throw err;
+  }
 };
 
 export const updatePromotionWithCacheInvalidation = async (
@@ -72,19 +122,34 @@ export const updatePromotionWithCacheInvalidation = async (
 };
 
 export const deletePromotion = async (id) => {
-  const res = await API.delete(`${API_URL}/admin/promotions/${id}`);
-  return res.data;
+  try {
+    const res = await API.delete(`${API_URL}/admin/promotions/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to delete promotion:", err);
+    throw err;
+  }
 };
 
 // Clinic promotion  Management
 export const getClinicPromotionById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/clinic-promotions/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/clinic-promotions/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get clinic promotion by ID:", err);
+    throw err;
+  }
 };
 
 export const updateClinicPromotion = async (id, data) => {
-  const res = await API.put(`${API_URL}/admin/clinic-promotions/${id}`, data);
-  return res.data;
+  try {
+    const res = await API.put(`${API_URL}/admin/clinic-promotions/${id}`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update clinic promotion:", err);
+    throw err;
+  }
 };
 
 export const updateClinicPromotionWithCacheInvalidation = async (
@@ -104,8 +169,13 @@ export const updateClinicPromotionWithCacheInvalidation = async (
 };
 
 export const deleteClinicPromotion = async (id) => {
-  const res = await API.delete(`${API_URL}/admin/clinic-promotions/${id}`);
-  return res.data;
+  try {
+    const res = await API.delete(`${API_URL}/admin/clinic-promotions/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to delete clinic promotion:", err);
+    throw err;
+  }
 };
 
 // Forum management
@@ -122,26 +192,46 @@ export const getForumModRequests = async (params = {}) => {
 };
 
 export const getForumModRequestById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/forum/mod-requests/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get forum mod request by ID:", err);
+    throw err;
+  }
 };
 
 export const updateForumModRequestRole = async (id, data) => {
-  const res = await API.put(
-    `${API_URL}/admin/forum/mod-requests/${id}/role`,
-    data,
-  );
-  return res.data;
+  try {
+    const res = await API.put(
+      `${API_URL}/admin/forum/mod-requests/${id}/role`,
+      data,
+    );
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update forum mod request role:", err);
+    throw err;
+  }
 };
 
 export const getAdminSubById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/subs/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/subs/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get admin sub by ID:", err);
+    throw err;
+  }
 };
 
 export const updateSubInfo = async (id, data) => {
-  const res = await API.put(`${API_URL}/forum/subs/${id}`, data);
-  return res.data;
+  try {
+    const res = await API.put(`${API_URL}/forum/subs/${id}`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update sub info:", err);
+    throw err;
+  }
 };
 
 
@@ -149,13 +239,28 @@ export const updateSubInfo = async (id, data) => {
 // Note: fetchForumSubs is now available from ../api/forum.js
 
 export const updateSponsorship = async (id, payload) => {
-  const { data } = await API.put(`${API_URL}/admin/subs/${id}/sponsorship`, payload);
-  return data;
+  try {
+    const { data } = await API.put(
+      `${API_URL}/admin/subs/${id}/sponsorship`,
+      payload,
+    );
+    return data;
+  } catch (err) {
+    console.error("Failed to update sponsorship:", err);
+    throw err;
+  }
 };
 
 export const removeSponsorship = async (id) => {
-  const { data } = await API.put(`${API_URL}/admin/subs/${id}/sponsorship/remove`);
-  return data;
+  try {
+    const { data } = await API.put(
+      `${API_URL}/admin/subs/${id}/sponsorship/remove`,
+    );
+    return data;
+  } catch (err) {
+    console.error("Failed to remove sponsorship:", err);
+    throw err;
+  }
 };
 
 // Sponsored Products
@@ -173,15 +278,37 @@ export const getSponsoredProducts = async ({ page = 1, ...filters } = {}) => {
 };
 
 export const getSponsoredProductById = async (id) => {
-  const res = await API.get(`${API_URL}/admin/sponsored-products/${id}`);
-  return res.data;
+  try {
+    const res = await API.get(`${API_URL}/admin/sponsored-products/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to get sponsored product by ID:", err);
+    throw err;
+  }
 };
 
-export const createSponsoredProduct = (data) =>
-  API.post(`${API_URL}/admin/sponsored-products`, data);
+export const createSponsoredProduct = async (data) => {
+  try {
+    const res = await API.post(`${API_URL}/admin/sponsored-products`, data);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to create sponsored product:", err);
+    throw err;
+  }
+};
 
-export const updateSponsoredProduct = (id, data) =>
-  API.put(`${API_URL}/admin/sponsored-products/${id}`, data);
+export const updateSponsoredProduct = async (id, data) => {
+  try {
+    const res = await API.put(
+      `${API_URL}/admin/sponsored-products/${id}`,
+      data,
+    );
+    return res.data;
+  } catch (err) {
+    console.error("Failed to update sponsored product:", err);
+    throw err;
+  }
+};
 
 export const updateSponsoredProductWithCacheInvalidation = async (
   id,
@@ -199,8 +326,15 @@ export const updateSponsoredProductWithCacheInvalidation = async (
   return result;
 };
 
-export const deleteSponsoredProduct = (id) =>
-  API.delete(`${API_URL}/admin/sponsored-products/${id}`);
+export const deleteSponsoredProduct = async (id) => {
+  try {
+    const res = await API.delete(`${API_URL}/admin/sponsored-products/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to delete sponsored product:", err);
+    throw err;
+  }
+};
 
 // Admin Monitoring APIs
 export const getAdminActivityLogs = async (params = {}) => {

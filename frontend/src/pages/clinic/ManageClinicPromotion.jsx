@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
-import API from "../../api/axios";
-import { API_URL } from "../../config/constants";
+import { fetchClinicPromotionById, updateClinicPromotion, deleteClinicPromotion } from "../../api/promotions";
 import { 
   Building, 
   Calendar, 
@@ -47,8 +46,7 @@ export default function ManageClinicPromotion() {
 
   const fetchPromotion = async () => {
     try {
-      const response = await API.get(`${API_URL}/promotions/clinic/${promotionId}`);
-      const promoData = response.data;
+      const promoData = await fetchClinicPromotionById(promotionId);
       
       // Check if user owns this promotion
       if (promoData.clinic.ownerUserId !== user._id) {
@@ -93,7 +91,7 @@ export default function ManageClinicPromotion() {
       if (formData.customDescription) formDataToSend.append("customDescription", formData.customDescription);
       if (image) formDataToSend.append("clinicPromotion", image);
 
-      await API.put(`${API_URL}/promotions/clinic/${promotionId}`, formDataToSend);
+      await updateClinicPromotion(promotionId, formDataToSend);
       
       toast.success(t("promotion_updated_success"));
       setEditing(false);
@@ -135,7 +133,7 @@ export default function ManageClinicPromotion() {
       if (deleteCancelled) return;
       
       try {
-        await API.delete(`${API_URL}/promotions/clinic/${promotionId}`);
+        await deleteClinicPromotion(promotionId);
         toast.success(t("promotion_deleted_success"));
         navigate("/dashboard");
       } catch (error) {

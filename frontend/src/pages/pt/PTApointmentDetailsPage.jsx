@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-import API from "../../api/axios";
+import { fetchAppointmentById, updateAppointmentStatus } from "../../api/appointments";
 import { Loader2, X } from "lucide-react";
-import { API_URL } from "../../config/constants";
 import toast from "react-hot-toast";
 
 export default function PTAppointmentDetailsPage() {
@@ -18,7 +17,7 @@ export default function PTAppointmentDetailsPage() {
   useEffect(() => {
     const fetchAppointment = async () => {
       try {
-        const { data } = await API.get(`${API_URL}/appointments/${id}`);
+        const data = await fetchAppointmentById(id);
         setAppointment(data.appointment);
       } catch (err) {
         toast.error(t("failed_load_appointment"));
@@ -34,9 +33,7 @@ export default function PTAppointmentDetailsPage() {
     try {
       setUpdating(true);
 
-      await API.patch(`${API_URL}/appointments/${id}/status`, {
-        status,
-      });
+      await updateAppointmentStatus(id, status);
 
       setAppointment((prev) => ({ ...prev, status }));
       toast.success(t("status_updated"));

@@ -91,6 +91,34 @@ The backend follows RESTful principles with the following main endpoint categori
 ├── locales/             # Internationalization files
 └── routes/              # Route definitions
 ```
+# CACHE IMPLEMENTATION
+| Cache Type          | Cache Key Pattern                 | TTL      | Purpose                              | Used In |
+| ------------------- | ---------------------------------- | ------- | ------------------------------------ | ------------------------ |
+| User Profile        | `user:{id}:profile`                | MEDIUM  | Store user profile data              | `userController.js`      |
+| PT Profile          | `pt:{id}:profile`                  | MEDIUM  | Store physiotherapist profiles       | `redis.js`               |
+| Admin Dashboard     | `dashboard:admin:{id}:filters`     | SHORT   | Store filtered admin dashboard data  | `adminController.js`     |
+| PT Dashboard        | `dashboard:pt:{id}`                | SHORT   | Store physiotherapist dashboard data | `redis.js`               |
+| Member Dashboard    | `dashboard:member:{id}`            | SHORT   | Store member dashboard data          | `redis.js`               |
+| Forum Subs List     | `forum:subs:list`                  | MEDIUM  | Store forum subcategories list       | `redis.js`               |
+| Forum Sub Details   | `forum:sub:{id}`                   | MEDIUM  | Store individual subforum details    | `redis.js`               |
+| Forum Posts (Paged) | `forum:sub:{id}:posts:page:{page}` | MEDIUM  | Store paginated forum posts          | `forumPageController.js` |
+| Forum Post          | `forum:post:{id}`                  | MEDIUM  | Store single forum post              | `redis.js`               |
+| Forum Management    | `forum:sub:{id}:management`        | MEDIUM  | Store moderation & management data   | `redis.js`               |
+
+# TTL Categories
+| **Category** | **Duration** | **Best For**                                            |
+| ------------ | ------------ | ------------------------------------------------------- |
+| SHORT        | 5 minutes    | Frequently changing data (e.g., dashboards, live stats) |
+| MEDIUM       | 30 minutes   | Moderately dynamic data (e.g., profiles, forum content) |
+| LONG         | 2 hours      | Rarely updated data                                     |
+| VERY_LONG    | 24 hours     | Static or reference data                                |
+
+# Cache Invalidation Strategy
+
+- User Updates: Automatically invalidate `user:{id}:profile` cache
+- Forum Changes: Invalidate all `forum:sub:{id}*` related caches  
+- Dashboard Updates: Invalidate `dashboard:admin:{id}*` caches
+
 
 # CURRENT WORKING FEATURES
 

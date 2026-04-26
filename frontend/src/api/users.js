@@ -15,7 +15,7 @@ export const updateProfile = async (data) => {
     config.headers = { "Content-Type": "application/json" };
   }
   const res = await API.put(`${API_URL}/users/profile`, data, config);
-  return res.data.user; // Return just the user object from the response
+  return res.data;
 };
 
 // Fetch any user's profile by ID (for public profile pages)

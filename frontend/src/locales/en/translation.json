@@ -412,7 +412,7 @@
   "short_bio": "Short Bio",
   "upload_license": "Upload License Document",
   "accepted_file_types": "Accepted: PDF, JPG, JPEG, PNG",
-  "accepted_image_types": "Inakubaliwa: JPG, JPEG, PNG, WEBP",
+  "accepted_image_types": "Accepted: JPG, JPEG, PNG, WEBP",
   "upload_license_required": "Please upload your license document",
   "upgrade_request_submitted": "Your request has been submitted. Await admin approval.",
   "upgrade_request_failed": "Failed to submit upgrade request",

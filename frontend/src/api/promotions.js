@@ -67,8 +67,23 @@ export const createClinicPromotion = async (formData) => {
   return res.data;
 };
 
-// Get clinics owned by PT
-export const getOwnedClinics = async (ptId) => {
-  const res = await API.get(`${API_URL}/clinics/owned-by-pt/${ptId}`);
+
+// Fetch a single clinic promotion by ID
+export const fetchClinicPromotionById = async (id) => {
+  const res = await API.get(`${API_URL}/promotions/clinic/${id}`);
+  return res.data;
+};
+
+// Update clinic promotion
+export const updateClinicPromotion = async (id, formData) => {
+  const res = await API.put(`${API_URL}/promotions/clinic/${id}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+};
+
+// Delete clinic promotion
+export const deleteClinicPromotion = async (id) => {
+  const res = await API.delete(`${API_URL}/promotions/clinic/${id}`);
   return res.data;
 };

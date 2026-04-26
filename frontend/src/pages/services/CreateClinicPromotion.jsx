@@ -4,7 +4,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { getOwnedClinics, createClinicPromotion } from "../../api/promotions";
+import { getClinicOwnedByPT } from "../../api/clinics";
+import { createClinicPromotion } from "../../api/promotions";
 
 export default function CreateClinicPromotion() {
   const { t } = useTranslation();
@@ -37,7 +38,7 @@ export default function CreateClinicPromotion() {
   useEffect(() => {
     const fetchClinics = async () => {
       try {
-        const data = await getOwnedClinics(user._id);
+        const data = await getClinicOwnedByPT(user._id);
         setClinics(data || []);
       } catch (error) {
         console.error("Failed to fetch clinics:", error);

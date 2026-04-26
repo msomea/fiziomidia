@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { usePTDashboard as usePTDashboardData } from '../hooks/usePTDashboard';
-import { markNotificationRead, getUserNotifications } from '../api/notifications';
+import { markNotificationRead, getNotifications } from '../api/notifications';
 import { fetchPromotions } from '../api/promotions';
 import { fetchPTById } from '../api/pts';
 import dayjs from 'dayjs';
@@ -17,7 +17,7 @@ export const PTDashboardProvider = ({ children, ptId }) => {
   // Refresh notifications
   const refreshNotifications = useCallback(async (ptId) => {
     try {
-      const notificationsData = await getUserNotifications(ptId);
+      const notificationsData = await getNotifications();
       setNotifications(notificationsData || []);
     } catch (error) {
       console.error('Notifications refresh error:', error);

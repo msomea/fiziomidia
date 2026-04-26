@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
 import { useMemberDashboard as useMemberDashboardData } from '../hooks/useMemberDashboard';
-import { getUserNotifications, markNotificationRead } from '../api/notifications';
+import { getNotifications, markNotificationRead } from '../api/notifications';
 import toast from 'react-hot-toast';
 
 // Context
@@ -14,7 +14,7 @@ export const MemberDashboardProvider = ({ children }) => {
   // Refresh notifications
   const refreshNotifications = useCallback(async (memberId) => {
     try {
-      const notificationsData = await getUserNotifications(memberId);
+      const notificationsData = await getNotifications();
       setNotifications(notificationsData || []);
       console.log("Notification in dash Context", notificationsData);
     } catch (error) {

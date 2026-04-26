@@ -7,11 +7,6 @@ export const getNotifications = async (params = {}) => {
   return res.data.notifications || []; // Extract notifications array from response
 };
 
-// Get user notifications (alias for consistency)
-export const getUserNotifications = async (userId) => {
-  const res = await API.get(`${API_URL}/notifications`);
-  return res.data.notifications || []; // Extract notifications array from response
-};
 
 // Get unread notification count
 export const getUnreadCount = async () => {
