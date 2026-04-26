@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import API from "../../../api/axios";
-import { API_URL } from "../../../config/constants";
+import { updateProfile } from "../../../api/users";
 import toast from "react-hot-toast";
 import { useAuth } from "../../../contexts/AuthContext";
 import { Loader2 } from "lucide-react";
@@ -59,11 +58,7 @@ const UpgradeToPT = () => {
         return;
       }
 
-      const response = await API.put(`${API_URL}/users/profile`, body, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const updatedUser = response.data.user;
+      const updatedUser = await updateProfile(body);
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
 

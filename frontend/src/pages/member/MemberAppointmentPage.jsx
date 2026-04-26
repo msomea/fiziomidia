@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
-import { getAppointmentsByMember } from "../../api/appointments";
+import { getAppointmentsByMember, deleteAppointment } from "../../api/appointments";
 import toast from "react-hot-toast";
 import { Loader2, X, Trash2 } from "lucide-react";
 
@@ -74,7 +74,7 @@ export default function MemberAppointmentsPage() {
     // Set timeout for actual deletion
     const timeoutId = setTimeout(async () => {
       try {
-        await API.delete(`${API_URL}/appointments/${appt._id}`);
+        await deleteAppointment(appt._id);
         // Clean up the timeout reference
         delete undoTimeouts.current[toastId];
       } catch (error) {
