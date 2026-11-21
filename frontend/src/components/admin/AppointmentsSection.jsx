@@ -47,7 +47,7 @@ export default function AdminAppointments() {
         },
         limit: 20
       });
-      console.log('Appointments loaded via unified search:', result);
+
       // Update local state with filtered results
       setFilteredAppointments(result.appointments || []);
     } catch (error) {

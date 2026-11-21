@@ -34,12 +34,10 @@ export default function ConversationPage() {
   // JOIN ROOM & REGISTER SOCKET
   // ===========================
   useEffect(() => {
-    console.log("Socket effect triggered:", { loggedInUser: loggedInUser?._id, socket: !!socket, socketConnected: socket?.connected });
     if (!loggedInUser?._id || !socket) return;
 
     // Join personal room
     const joinRoom = () => {
-      console.log("Joining room:", loggedInUser._id, "Socket connected:", socket.connected);
       socket.emit("joinRoom", loggedInUser._id);
     };
     if (socket.connected) joinRoom();
@@ -49,26 +47,21 @@ export default function ConversationPage() {
     // ONLINE USERS EVENTS
     // ===========================
     const handleOnlineUsers = (userIds) => {
-      console.log("Online users received:", userIds);
       setOnlineUsers(userIds || []);
     };
     const handleUserOnline = ({ userId }) => {
-      console.log("User went online:", userId);
       setOnlineUsers((prev) => (prev.includes(userId) ? prev : [...prev, userId]));
     };
     const handleUserOffline = ({ userId }) => {
-      console.log("User went offline:", userId);
       setOnlineUsers((prev) => prev.filter((id) => id !== userId));
     };
 
     // Monitor socket connection
     const handleConnect = () => {
-      console.log("Socket connected in Conversation component");
       joinRoom();
     };
     
     const handleDisconnect = () => {
-      console.log("Socket disconnected in Conversation component");
     };
 
     socket.on("connect", handleConnect);

@@ -16,7 +16,6 @@ export const MemberDashboardProvider = ({ children }) => {
     try {
       const notificationsData = await getNotifications();
       setNotifications(notificationsData || []);
-      console.log("Notification in dash Context", notificationsData);
     } catch (error) {
       console.error('Notifications refresh error:', error);
       toast.error('Failed to refresh notifications');

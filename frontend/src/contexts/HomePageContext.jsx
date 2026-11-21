@@ -75,7 +75,6 @@ export const HomePageProvider = ({ children }) => {
     try {
       // Clear backend cache
       await API.delete(`${API_URL}/home-page/cache`);
-      console.log('🗑️ Backend cache cleared');
       
       // Force refresh frontend data
       return await refreshHomePage();

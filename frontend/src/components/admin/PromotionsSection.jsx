@@ -38,7 +38,6 @@ export default function PromotionsSection() {
         filters: { status },
         limit: 20
       });
-      console.log('Promotions loaded via unified search:', result);
       setFilteredPromotions(result.promotions || []);
     } catch (error) {
       console.error('Failed to load promotions via unified search:', error);

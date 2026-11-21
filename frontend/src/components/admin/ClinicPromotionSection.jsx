@@ -41,7 +41,6 @@ export default function ClinicPromotionSection() {
         filters: { status },
         limit: 20
       });
-      console.log('Clinic promotions loaded via unified search:', result);
       setPromotions(result.clinicPromotions || []);
     } catch (error) {
       console.error('Failed to load clinic promotions via unified search:', error);

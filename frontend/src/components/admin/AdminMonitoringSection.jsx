@@ -60,7 +60,7 @@ export default function AdminMonitoringSection() {
         sortBy: 'createdAt',
         sortOrder: 'desc'
       });
-      console.log('Activity logs loaded via unified search:', result);
+
       setSearchedLogs(result.activityLogs || []);
     } catch (error) {
       console.error('Failed to load activity logs via unified search:', error);

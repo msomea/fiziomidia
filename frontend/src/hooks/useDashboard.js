@@ -57,7 +57,7 @@ export const useDashboardData = () => {
   const refreshAppointments = useCallback(async (filters = {}) => {
     try {
       const result = await fetchAdminAppointments(filters);
-      console.log("API response from fetchAdminAppointments:", result);
+
       setData((prev) => ({ ...prev, appointments: result.appts || [] }));
       return result;
     } catch (err) {

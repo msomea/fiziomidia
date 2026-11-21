@@ -55,10 +55,8 @@ export const AuthProvider = ({ children }) => {
               if (storedUser._id === cachedUserData._id && storedUser.accessToken === cachedUserData.accessToken) {
                 // Use cached data from dashboard context instead of making API call
                 data = cachedUserData;
-                console.log('Using cached user data from member dashboard');
               } else {
                 // Session mismatch - clear cache and fetch fresh data
-                console.log('Session mismatch, clearing cache and fetching fresh data');
                 clearUserCache();
                 data = await fetchCurrentUser();
               }

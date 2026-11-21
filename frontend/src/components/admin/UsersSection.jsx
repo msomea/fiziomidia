@@ -26,7 +26,6 @@ export default function AdminUsers() {
     debounceTimeoutRef.current = setTimeout(async () => {
       try {
         setLoading(true);
-        console.log('Loading users with unified search:', filters);
         const result = await performUnifiedSearch({
           types: ['users'],
           search: filters.search,
@@ -36,7 +35,6 @@ export default function AdminUsers() {
           },
           limit: 50
         });
-        console.log('Users loaded successfully via unified search:', result);
         setAllUsers(result.users || []);
       } catch (error) {
         console.error('Failed to load users via unified search:', error);
@@ -61,9 +59,7 @@ export default function AdminUsers() {
 
     try {
       setLoading(true);
-      console.log('Manual refresh users with filters:', filters);
       const result = await refreshUsers(filters);
-      console.log('Users refreshed successfully:', result);
     } catch (error) {
       console.error('Failed to refresh users:', error);
       toast.error(t("failed_load_users"));
