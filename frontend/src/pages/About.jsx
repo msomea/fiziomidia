@@ -72,6 +72,43 @@ const About = () => {
           </div>
         </section>
 
+        {/* Get Involved / Support Section (moved from Education page) */}
+        <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-caribbean">{t("education_title")}</h2>
+            <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto">
+              {t("education_desc")}
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {[
+              { title: t("supporter"), description: t("supporter_desc"), color: "#1ABC9C" },
+              { title: t("investor"), description: t("investor_desc"), color: "#3498DB" },
+              { title: t("collaborator"), description: t("collaborator_desc"), color: "#F39C12" },
+            ].map((role) => (
+              <div
+                key={role.title}
+                className="role-card rounded-2xl shadow-lg p-8 flex flex-col justify-between hover:scale-105 transition-transform duration-300"
+                style={{ borderTop: `6px solid ${role.color}`, background: "white" }}
+              >
+                <div>
+                  <h3 className="text-2xl md:text-3xl font-semibold mb-4" style={{ color: role.color }}>
+                    {role.title}
+                  </h3>
+                  <p className="text-gray-700 text-base md:text-lg">{role.description}</p>
+                </div>
+                <button
+                  className="mt-6 px-6 py-3 rounded-full font-semibold text-white"
+                  style={{ backgroundColor: role.color }}
+                  onClick={() => toast.success(`${t("thank_you_interest")} ${role.title}!`)}
+                >
+                  {t("join_now")}
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Contact Section */}
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
           <h2 className="text-3xl font-bold text-caribbean mb-6">{t("contact_us")}</h2>

@@ -53,6 +53,11 @@ import MemberClinicAppointmentsPage from "../pages/member/MemberClinicAppointmen
 import MemberClinicAppointmentDetailPage from "../pages/member/MemberClinicAppointmentDetailPage";
 import ClinicDetails from "../pages/clinic/ClinicDetails";
 import ClinicAppointmentRequest from "../pages/clinic/ClinicAppointmentRequest";
+import ResourceLibrary from "../pages/education/ResourceLibrary";
+import ResourceDetails from "../pages/education/ResourceDetails";
+import UploadResource from "../pages/education/UploadResource";
+import ResourceRequests from "../pages/education/ResourceRequests";
+import MyResources from "../pages/education/MyResources";
 
 export default function AppRoutes() {
   return (
@@ -65,6 +70,11 @@ export default function AppRoutes() {
       <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
       {/* Public Pages Routes */}
+      <Route path="/education/library" element={<ResourceLibrary />} />
+      <Route path="/education/resources/:id" element={<ResourceDetails />} />
+      <Route path="/education/upload" element={<UploadResource />} />
+      <Route path="/education/requests" element={<ResourceRequests />} />
+      <Route path="/education/my-uploads" element={<MyResources />} />
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/forum" element={<Forum />} />

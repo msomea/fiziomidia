@@ -2,14 +2,18 @@ import mongoose from "mongoose";
 import EducationResource from "../../models/EducationResource.js";
 import ResourceRequest from "../../models/ResourceRequest.js";
 import CopyrightReport from "../../models/CopyrightReport.js";
+import User from "../../models/User.js";
 import {
   RESOURCE_STATUSES,
   REQUEST_STATUSES,
-  isValidStatusTransition,
+  EDUCATION_LIMITS,
 } from "../../constants/education.js";
-import { buildResourceSort, isValidSort } from "../../utils/educationHelpers.js";
+import {
+  buildResourceSort,
+  isValidSort,
+  isValidStatusTransition,
+} from "../../utils/educationHelpers.js";
 import { deleteEducationFile } from "../../services/educationStorage.js";
-import { EDUCATION_LIMITS } from "../../constants/education.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -108,7 +112,35 @@ export const adminReviewResource = async (req, res) => {
     }
 
     await resource.save();
+// Notify uploader of moderation decision (in-app notification array).
+    if (["approved", "rejected", "suspended", "removed"].includes(resource.status)) {
+      const messages = {
+        approved: "Your resource was approved and is now available in the library.",
+        rejected: `Your resource was rejected.${resource.rejectionReason ? ` Reason: ${resource.rejectionReason}` : ""}`,
+        suspended: "Your resource was suspended.",
+        removed: "Your resource was removed.",
+      };
+      await User.updateOne(
+        { _id: resource.uploadedBy },
+        {
+          $push: {
+            notifications: {
+              $each: [
+                {
+                  type: "education_resource",
+                  message: messages[resource.status],
+                  priority: resource.status === "approved" ? "update" : "important",
+                  read: false,
+                },
+              ],
+              $slice: -50,
+            },
+          },
+        },
+      ).catch((e) => console.error("uploader notification failed:", e));
+    }
 
+    // 
     // If removed, delete the storage object (best-effort, audited).
     if (resource.status === "removed" && resource.storageKey) {
       try {

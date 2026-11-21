@@ -14,6 +14,7 @@ import ClinicPromotionSection from "../../components/admin/ClinicPromotionSectio
 import ForumModRequestsSection from "../../components/admin/ForumModRequestsSection";
 import AdminMonitoringSection from "../../components/admin/AdminMonitoringSection";
 import SystemNotificationsSection from "../../components/admin/SystemNotificationsSection";
+import EducationSection from "../../components/admin/EducationSection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -91,6 +92,7 @@ function AdminDashboardContent() {
         <SponsorshipSection />
         <ForumModRequestsSection />
         <SponsoredProductsSection />
+        <EducationSection />
       </div>
       <div className="flex justify-center items-center mt-4">
         <button
