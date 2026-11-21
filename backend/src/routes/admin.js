@@ -102,6 +102,10 @@ router.patch("/clinic-promotions/:id/priority", clinicPromo.setClinicPromotionPr
 // Education Resources moderation
 router.get("/education/stats", educationAdmin.adminEducationStats);
 router.get("/education/resources", educationAdmin.adminListResources);
+router.get(
+  "/education/resources/:id/download",
+  educationAdmin.adminGetResourceDownload,
+);
 router.patch(
   "/education/resources/:id/review",
   educationAdmin.adminReviewResource,

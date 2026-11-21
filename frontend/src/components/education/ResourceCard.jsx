@@ -44,6 +44,11 @@ export default function ResourceCard({ resource, showStatus = false }) {
             {r.status}
           </span>
         )}
+        {r.downloadHold && (
+          <span className="badge badge-sm badge-info">
+            {t("edu_under_review")}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center justify-between mt-4 text-xs text-gray-400">

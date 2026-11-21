@@ -56,6 +56,9 @@ export const adminFetchResources = (params = {}) =>
 export const adminReviewResource = (id, payload) =>
   API.patch(`/admin/education/resources/${id}/review`, payload);
 
+export const adminFetchDownloadUrl = (id) =>
+  API.get(`/admin/education/resources/${id}/download`);
+
 export const adminFetchReports = (params = {}) =>
   API.get("/admin/education/reports", { params });
 

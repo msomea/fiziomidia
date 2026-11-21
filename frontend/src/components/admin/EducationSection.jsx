@@ -9,10 +9,13 @@ import {
   adminUpdateReport,
   adminFetchRequests,
   adminUpdateRequest,
+  adminFetchDownloadUrl,
 } from "../../api/education";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
 import ResourceSkeleton from "../education/ResourceSkeleton";
-import { CheckCircle, XCircle, PauseCircle, PlayCircle, Trash2, RefreshCw } from "lucide-react";
+import { REPORT_REASONS } from "../../constants/education";
+import CollapsibleSection from "./CollapsibleSection";
+import { CheckCircle, XCircle, PauseCircle, PlayCircle, Trash2, RefreshCw, Eye } from "lucide-react";
 
 const TABS = ["resources", "reports", "requests"];
 
@@ -91,6 +94,18 @@ export default function EducationSection() {
     }
   };
 
+  const preview = async (id) => {
+    setBusy(id);
+    try {
+      const res = await adminFetchDownloadUrl(id);
+      window.open(res.data.downloadUrl, "_blank");
+    } catch (err) {
+      toast.error(err.response?.data?.error || t("edu_download_failed"));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const updateRequest = async (id, payload) => {
     setBusy(id);
     try {
@@ -106,10 +121,9 @@ export default function EducationSection() {
   };
 
   return (
-    <div className="bg-white shadow-md rounded-2xl p-4 col-span-full">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold text-caribbean">{t("edu_admin_title")}</h2>
-        <button onClick={() => { loadStats(); loadTab(); }} className="btn btn-xs btn-ghost">
+    <CollapsibleSection title={t("edu_admin_title")}>
+      <div className="flex justify-end mb-3">
+        <button onClick={() => { loadStats(); loadTab(); }} className="btn btn-xs btn-ghost text-caribbean">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
@@ -139,7 +153,7 @@ export default function EducationSection() {
           <button
             key={tb}
             onClick={() => setTab(tb)}
-            className={`btn btn-xs ${tab === tb ? "bg-caribbean text-white border-none" : "btn-ghost"}`}
+            className={`btn btn-xs ${tab === tb ? "bg-caribbean text-white border-none" : "bg-tufts text-white border-none hover:bg-caribbean"}`}
           >
             {t(`edu_admin_tab_${tb}`)}
           </button>
@@ -177,29 +191,38 @@ export default function EducationSection() {
                 <ResourceStatusBadge status={r.status} />
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
+                {r.status !== "removed" && (
+                  <button
+                    disabled={busy === r._id}
+                    onClick={() => preview(r._id)}
+                    className="btn btn-xs btn-outline border-caribbean text-caribbean hover:bg-caribbean hover:text-white"
+                  >
+                    <Eye className="w-3 h-3" /> {t("edu_admin_preview")}
+                  </button>
+                )}
                 {r.status === "pending" && (
                   <>
-                    <button disabled={busy === r._id} onClick={() => review(r._id, "approved")} className="btn btn-xs btn-success btn-outline"><CheckCircle className="w-3 h-3" /> {t("edu_admin_approve")}</button>
-                    <button disabled={busy === r._id} onClick={() => { const reason = window.prompt(t("edu_admin_reject_reason_prompt")); if (reason !== null) review(r._id, "rejected", reason); }} className="btn btn-xs btn-error btn-outline"><XCircle className="w-3 h-3" /> {t("edu_admin_reject")}</button>
+                    <button disabled={busy === r._id} onClick={() => review(r._id, "approved")} className="btn btn-xs btn-outline border-green-600 text-green-700 hover:bg-green-600 hover:text-white"><CheckCircle className="w-3 h-3" /> {t("edu_admin_approve")}</button>
+                    <button disabled={busy === r._id} onClick={() => { const reason = window.prompt(t("edu_admin_reject_reason_prompt")); if (reason !== null) review(r._id, "rejected", reason); }} className="btn btn-xs btn-outline border-red-500 text-red-600 hover:bg-red-500 hover:text-white"><XCircle className="w-3 h-3" /> {t("edu_admin_reject")}</button>
                   </>
                 )}
                 {r.status === "approved" && (
                   <>
-                    <button disabled={busy === r._id} onClick={() => review(r._id, "suspended")} className="btn btn-xs btn-warning btn-outline"><PauseCircle className="w-3 h-3" /> {t("edu_admin_suspend")}</button>
-                    <button disabled={busy === r._id} onClick={() => review(r._id, "removed")} className="btn btn-xs btn-error btn-outline"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove")}</button>
+                    <button disabled={busy === r._id} onClick={() => review(r._id, "suspended")} className="btn btn-xs btn-outline border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white"><PauseCircle className="w-3 h-3" /> {t("edu_admin_suspend")}</button>
+                    <button disabled={busy === r._id} onClick={() => review(r._id, "removed")} className="btn btn-xs btn-outline border-red-500 text-red-600 hover:bg-red-500 hover:text-white"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove")}</button>
                   </>
                 )}
                 {r.status === "suspended" && (
                   <>
-                    <button disabled={busy === r._id} onClick={() => review(r._id, "approved")} className="btn btn-xs btn-success btn-outline"><PlayCircle className="w-3 h-3" /> {t("edu_admin_restore")}</button>
-                    <button disabled={busy === r._id} onClick={() => review(r._id, "removed")} className="btn btn-xs btn-error btn-outline"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove")}</button>
+                    <button disabled={busy === r._id} onClick={() => review(r._id, "approved")} className="btn btn-xs btn-outline border-green-600 text-green-700 hover:bg-green-600 hover:text-white"><PlayCircle className="w-3 h-3" /> {t("edu_admin_restore")}</button>
+                    <button disabled={busy === r._id} onClick={() => review(r._id, "removed")} className="btn btn-xs btn-outline border-red-500 text-red-600 hover:bg-red-500 hover:text-white"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove")}</button>
                   </>
                 )}
                 {r.status !== "removed" && (
                   <button
                     disabled={busy === r._id}
                     onClick={() => review(r._id, undefined, undefined, !r.downloadHold)}
-                    className={`btn btn-xs btn-outline ${r.downloadHold ? "btn-warning" : "btn-ghost"}`}
+                    className={`btn btn-xs border ${r.downloadHold ? "border-amber-500 text-amber-600 hover:bg-amber-500 hover:text-white" : "border-gray-400 text-gray-600 hover:bg-gray-500 hover:text-white"}`}
                   >
                     {r.downloadHold ? t("edu_admin_release_hold") : t("edu_admin_hold")}
                   </button>
@@ -225,14 +248,14 @@ export default function EducationSection() {
               </div>
               <div className="flex flex-wrap gap-1 mt-2">
                 {r.status === "pending" && (
-                  <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "under_review" })} className="btn btn-xs btn-outline">{t("edu_admin_under_review")}</button>
+                  <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "under_review" })} className="btn btn-xs btn-outline border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white">{t("edu_admin_under_review")}</button>
                 )}
                 {r.status !== "resolved" && r.status !== "rejected" && (
                   <>
-                    <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "resolved", actionTaken: "no_action" })} className="btn btn-xs btn-success btn-outline">{t("edu_admin_resolve")}</button>
-                    <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "rejected" })} className="btn btn-xs btn-error btn-outline">{t("edu_admin_reject_report")}</button>
+                    <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "resolved", actionTaken: "no_action" })} className="btn btn-xs btn-outline border-green-600 text-green-700 hover:bg-green-600 hover:text-white">{t("edu_admin_resolve")}</button>
+                    <button disabled={busy === r._id} onClick={() => updateReport(r._id, { status: "rejected" })} className="btn btn-xs btn-outline border-red-500 text-red-600 hover:bg-red-500 hover:text-white">{t("edu_admin_reject_report")}</button>
                     {r.resource && r.resource.status !== "removed" && (
-                      <button disabled={busy === r._id} onClick={() => review(r.resource._id, "removed")} className="btn btn-xs btn-error btn-outline"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove_resource")}</button>
+                      <button disabled={busy === r._id} onClick={() => review(r.resource._id, "removed")} className="btn btn-xs btn-outline border-red-500 text-red-600 hover:bg-red-500 hover:text-white"><Trash2 className="w-3 h-3" /> {t("edu_admin_remove_resource")}</button>
                     )}
                   </>
                 )}
@@ -254,14 +277,14 @@ export default function EducationSection() {
               </div>
               {r.status === "open" && (
                 <div className="flex gap-1 mt-2">
-                  <button disabled={busy === r._id} onClick={() => updateRequest(r._id, { status: "closed" })} className="btn btn-xs btn-ghost">{t("edu_admin_close_request")}</button>
-                  <button disabled={busy === r._id} onClick={() => updateRequest(r._id, { status: "rejected" })} className="btn btn-xs btn-error btn-outline">{t("edu_admin_reject")}</button>
+                  <button disabled={busy === r._id} onClick={() => updateRequest(r._id, { status: "closed" })} className="btn btn-xs btn-outline border-gray-400 text-gray-600 hover:bg-gray-500 hover:text-white">{t("edu_admin_close_request")}</button>
+                  <button disabled={busy === r._id} onClick={() => updateRequest(r._id, { status: "rejected" })} className="btn btn-xs btn-outline border-red-600 text-red-600 hover:bg-red-600 hover:text-white">{t("edu_admin_reject")}</button>
                 </div>
               )}
             </div>
           ))}
         </div>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

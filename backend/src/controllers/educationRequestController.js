@@ -19,15 +19,25 @@ export const listRequests = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const limit = Math.min(
-      Math.max(parseInt(req.query.limit, 10) || EDUCATION_LIMITS.defaultPageSize(), 1),
+      Math.max(
+        parseInt(req.query.limit, 10) || EDUCATION_LIMITS.defaultPageSize(),
+        1,
+      ),
       EDUCATION_LIMITS.maxPageSize(),
     );
-    const status = REQUEST_STATUSES.includes(req.query.status)
-      ? req.query.status
-      : "open";
+    // Guests (unauthenticated) can only browse open requests.
+    const status =
+      !req.user && req.query.status !== "open"
+        ? "open"
+        : REQUEST_STATUSES.includes(req.query.status)
+          ? req.query.status
+          : "open";
 
     const filter = { status };
-    if (req.query.category && EDUCATION_CATEGORIES.includes(req.query.category)) {
+    if (
+      req.query.category &&
+      EDUCATION_CATEGORIES.includes(req.query.category)
+    ) {
       filter.category = req.query.category;
     }
 

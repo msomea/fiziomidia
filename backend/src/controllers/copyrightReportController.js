@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import CopyrightReport from "../models/CopyrightReport.js";
 import EducationResource from "../models/EducationResource.js";
+import AdminActivityLog from "../models/AdminActivityLog.js";
 import {
   REPORT_REASONS,
   REPORT_STATUSES,
@@ -171,6 +172,55 @@ export const adminUpdateReport = async (req, res) => {
     report.reviewedBy = req.user._id;
 
     await report.save();
+
+    // Sync download hold on the reported resource with the report status.
+    if (
+      report.resource &&
+      (status === "under_review" ||
+        status === "resolved" ||
+        status === "rejected")
+    ) {
+      try {
+        const resource = await EducationResource.findById(report.resource);
+        if (resource && resource.status !== "removed") {
+          const shouldHold = status === "under_review";
+          if (resource.downloadHold !== shouldHold) {
+            resource.downloadHold = shouldHold;
+            resource.moderationHistory.push({
+              action: shouldHold
+                ? "download_hold_set"
+                : "download_hold_released",
+              actor: req.user._id,
+              reason: `Copyright report ${report._id} ${status}`,
+            });
+            await resource.save();
+          }
+          if (status === "under_review" && !actionTaken) {
+            report.actionTaken = "download_hold";
+            await report.save();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to sync download hold for report:", e.message);
+      }
+    }
+
+    AdminActivityLog.create({
+      admin: req.user._id,
+      action: "EDUCATION_REPORT_UPDATED",
+      targetId: report._id,
+      targetType: "CopyrightReport",
+      description: `Copyright report for "${report.resource?.title || report.resource}" updated to ${report.status}`,
+      details: {
+        status: report.status,
+        actionTaken: report.actionTaken,
+        method: req.method,
+        endpoint: req.originalUrl,
+      },
+      ipAddress: req.ip || req.connection?.remoteAddress,
+      userAgent: req.get("User-Agent"),
+    }).catch((e) => console.error("education report log failed:", e.message));
+
     res.json({ report });
   } catch (err) {
     console.error("Error updating report:", err);

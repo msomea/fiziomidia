@@ -67,7 +67,7 @@ export const listResources = async (req, res) => {
       EDUCATION_LIMITS.maxPageSize(),
     );
 
-    const filter = { status: "approved", downloadHold: false };
+    const filter = { status: "approved" };
 
     if (search && typeof search === "string" && search.trim()) {
       const term = escapeRegExp(search.trim().slice(0, 100));
@@ -123,7 +123,6 @@ export const listRecentResources = async (req, res) => {
     );
     const resources = await EducationResource.find({
       status: "approved",
-      downloadHold: false,
     })
       .select(PUBLIC_RESOURCE_FIELDS)
       .sort({ approvedAt: -1, createdAt: -1 })
@@ -148,7 +147,6 @@ export const getResource = async (req, res) => {
     const resource = await EducationResource.findOne({
       _id: id,
       status: "approved",
-      downloadHold: false,
     })
       .select(PUBLIC_RESOURCE_FIELDS)
       .populate("uploadedBy", "fullName profileImageUrl");

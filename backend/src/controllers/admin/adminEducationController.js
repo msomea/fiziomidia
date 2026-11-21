@@ -3,6 +3,7 @@ import EducationResource from "../../models/EducationResource.js";
 import ResourceRequest from "../../models/ResourceRequest.js";
 import CopyrightReport from "../../models/CopyrightReport.js";
 import User from "../../models/User.js";
+import AdminActivityLog from "../../models/AdminActivityLog.js";
 import {
   RESOURCE_STATUSES,
   REQUEST_STATUSES,
@@ -13,9 +14,35 @@ import {
   isValidSort,
   isValidStatusTransition,
 } from "../../utils/educationHelpers.js";
-import { deleteEducationFile } from "../../services/educationStorage.js";
+import {
+  deleteEducationFile,
+  getSignedDownloadUrl,
+  educationFileExists,
+} from "../../services/educationStorage.js";
+import config from "../../config/index.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// Fire-and-forget admin activity log for education moderation actions.
+const logEduActivity = (req, action, targetId, targetType, description, details = {}) => {
+  AdminActivityLog.create({
+    admin: req.user._id,
+    action,
+    targetId,
+    targetType,
+    description,
+    details: { ...details, method: req.method, endpoint: req.originalUrl },
+    ipAddress: req.ip || req.connection?.remoteAddress,
+    userAgent: req.get("User-Agent"),
+  }).catch((e) => console.error("education activity log failed:", e.message));
+};
+
+const STATUS_ACTION_MAP = {
+  approved: "EDUCATION_RESOURCE_APPROVED",
+  rejected: "EDUCATION_RESOURCE_REJECTED",
+  suspended: "EDUCATION_RESOURCE_SUSPENDED",
+  removed: "EDUCATION_RESOURCE_REMOVED",
+};
 
 const ADMIN_RESOURCE_FIELDS =
   "title description category subCategory language fileName fileType fileSize storageProvider storageBucket storageKey uploadedBy uploaderRoleAtUpload licenseType licenseUrl licenseNotes copyrightDeclaration status downloadHold downloadCount approvedBy approvedAt reviewedAt rejectionReason removedAt moderationHistory createdAt updatedAt";
@@ -72,12 +99,25 @@ export const adminReviewResource = async (req, res) => {
 
     // Handle download hold toggle independently of status transitions.
     if (downloadHold !== undefined) {
+      const prevHold = resource.downloadHold;
       resource.downloadHold = !!downloadHold;
       resource.moderationHistory.push({
         action: resource.downloadHold ? "download_hold_set" : "download_hold_released",
         actor: req.user._id,
         reason: reason || undefined,
       });
+      if (resource.downloadHold !== prevHold) {
+        logEduActivity(
+          req,
+          resource.downloadHold
+            ? "EDUCATION_DOWNLOAD_HOLD_SET"
+            : "EDUCATION_DOWNLOAD_HOLD_RELEASED",
+          resource._id,
+          "EducationResource",
+          `Download ${resource.downloadHold ? "hold set" : "hold released"} for resource "${resource.title}"`,
+          { title: resource.title, reason: reason || undefined },
+        );
+      }
     }
 
     if (action !== undefined) {
@@ -91,6 +131,7 @@ export const adminReviewResource = async (req, res) => {
         });
       }
 
+      const prevStatus = resource.status;
       resource.status = targetStatus;
       resource.reviewedAt = new Date();
 
@@ -109,6 +150,24 @@ export const adminReviewResource = async (req, res) => {
         actor: req.user._id,
         reason: reason || undefined,
       });
+
+      const finalAction =
+        targetStatus === "approved" && prevStatus === "suspended"
+          ? "EDUCATION_RESOURCE_RESTORED"
+          : STATUS_ACTION_MAP[targetStatus];
+      logEduActivity(
+        req,
+        finalAction,
+        resource._id,
+        "EducationResource",
+        `Education resource "${resource.title}" ${targetStatus}`,
+        {
+          title: resource.title,
+          from: prevStatus,
+          to: targetStatus,
+          reason: reason || undefined,
+        },
+      );
     }
 
     await resource.save();
@@ -242,6 +301,14 @@ export const adminUpdateRequest = async (req, res) => {
     }
 
     await request.save();
+    logEduActivity(
+      req,
+      "EDUCATION_REQUEST_UPDATED",
+      request._id,
+      "ResourceRequest",
+      `Education resource request "${request.title}" updated to ${request.status}`,
+      { title: request.title, status: request.status },
+    );
     res.json({ request });
   } catch (err) {
     console.error("Error updating request:", err);
@@ -285,5 +352,38 @@ export const adminEducationStats = async (req, res) => {
   } catch (err) {
     console.error("Error fetching education stats:", err);
     res.status(500).json({ error: "Failed to fetch stats" });
+  }
+};
+
+// GET /api/admin/education/resources/:id/download — admin preview signed URL
+// Admins can preview files in any status (except removed) for moderation.
+export const adminGetResourceDownload = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "Invalid resource ID" });
+    }
+
+    const resource = await EducationResource.findById(id);
+    if (!resource || resource.status === "removed" || !resource.storageKey) {
+      return res.status(404).json({ error: "Resource file is unavailable" });
+    }
+
+    const exists = await educationFileExists({ key: resource.storageKey });
+    if (!exists) {
+      return res.status(404).json({ error: "Resource file is unavailable" });
+    }
+
+    const url = await getSignedDownloadUrl({ key: resource.storageKey });
+
+    res.json({
+      downloadUrl: url,
+      fileName: resource.fileName,
+      fileType: resource.fileType,
+      expiresIn: config.education.downloadUrlTtlSeconds,
+    });
+  } catch (err) {
+    console.error("Error generating admin download URL:", err);
+    res.status(500).json({ error: "Failed to generate download link" });
   }
 };

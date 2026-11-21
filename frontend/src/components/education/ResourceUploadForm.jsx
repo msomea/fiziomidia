@@ -76,7 +76,6 @@ export default function ResourceUploadForm() {
       Object.entries(form).forEach(([k, v]) => {
         if (v !== "" && v !== false) fd.append(k, v === true ? "true" : v);
       });
-      fd.append("copyrightDeclaration", "true");
 
       await uploadResource(fd, (evt) => {
         if (evt.total) setProgress(Math.round((evt.loaded / evt.total) * 100));
@@ -98,7 +97,7 @@ export default function ResourceUploadForm() {
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-6 space-y-5">
       {/* File dropzone */}
       <div>
-        <label className="label"><span className="label-text font-medium">{t("edu_upload_file")}</span></label>
+        <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_file")}</span></label>
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -110,7 +109,7 @@ export default function ResourceUploadForm() {
           {file ? (
             <div className="flex items-center justify-center gap-3">
               <Upload className="w-5 h-5 text-caribbean" />
-              <span className="font-medium text-gray-700">{file.name}</span>
+              <span className="font-medium text-tufts">{file.name}</span>
               <span className="text-sm text-gray-400">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
               <button type="button" onClick={() => setFile(null)} className="btn btn-ghost btn-xs">
                 <X className="w-4 h-4" />
@@ -130,7 +129,7 @@ export default function ResourceUploadForm() {
                 id="edu-file-input"
                 onChange={(e) => handleFile(e.target.files?.[0])}
               />
-              <label htmlFor="edu-file-input" className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts mt-3">
+              <label htmlFor="edu-file-input" className="btn btn-sm bg-tufts text-white border-none hover:bg-caribbean mt-3">
                 {t("edu_upload_choose_file")}
               </label>
             </>
@@ -143,15 +142,15 @@ export default function ResourceUploadForm() {
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
-          <label className="label"><span className="label-text font-medium">{t("edu_form_title")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_form_title")}</span></label>
           <input type="text" className="input input-bordered w-full" value={form.title} onChange={set("title")} maxLength={200} required />
         </div>
         <div className="md:col-span-2">
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_description")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_description")}</span></label>
           <textarea className="textarea textarea-bordered w-full" rows={3} value={form.description} onChange={set("description")} maxLength={5000} />
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_category")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_category")}</span></label>
           <select className="select select-bordered w-full" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: "" }))} required>
             <option value="">{t("edu_select_category")}</option>
             {EDUCATION_CATEGORIES.map((c) => (
@@ -161,7 +160,7 @@ export default function ResourceUploadForm() {
         </div>
         {subOptions.length > 0 && (
           <div>
-            <label className="label"><span className="label-text font-medium">{t("edu_upload_subcategory")}</span></label>
+            <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_subcategory")}</span></label>
             <select className="select select-bordered w-full" value={form.subCategory} onChange={set("subCategory")}>
               <option value="">{t("edu_select_subcategory")}</option>
               {subOptions.map((s) => (
@@ -171,7 +170,7 @@ export default function ResourceUploadForm() {
           </div>
         )}
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_language")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_language")}</span></label>
           <select className="select select-bordered w-full" value={form.language} onChange={set("language")}>
             {EDUCATION_LANGUAGES.map((l) => (
               <option key={l.value} value={l.value}>{l.label}</option>
@@ -179,7 +178,7 @@ export default function ResourceUploadForm() {
           </select>
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_license")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_license")}</span></label>
           <select className="select select-bordered w-full" value={form.licenseType} onChange={set("licenseType")} required>
             <option value="">{t("edu_select_license")}</option>
             {EDUCATION_LICENSE_TYPES.map((l) => (
@@ -188,11 +187,11 @@ export default function ResourceUploadForm() {
           </select>
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_license_url")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_license_url")}</span></label>
           <input type="url" className="input input-bordered w-full" value={form.licenseUrl} onChange={set("licenseUrl")} placeholder="https://" />
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_license_notes")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_license_notes")}</span></label>
           <input type="text" className="input input-bordered w-full" value={form.licenseNotes} onChange={set("licenseNotes")} maxLength={2000} />
         </div>
       </div>
@@ -200,7 +199,7 @@ export default function ResourceUploadForm() {
       <div className="form-control">
         <label className="label cursor-pointer justify-start gap-3">
           <input type="checkbox" className="checkbox checkbox-primary" checked={form.copyrightDeclaration} onChange={set("copyrightDeclaration")} />
-          <span className="label-text text-sm">{t("edu_upload_declaration")}</span>
+          <span className="label-text text-sm text-tufts">{t("edu_upload_declaration")}</span>
         </label>
       </div>
 

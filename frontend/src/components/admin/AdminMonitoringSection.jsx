@@ -88,11 +88,18 @@ export default function AdminMonitoringSection() {
   }, [activityLogs]);
 
   // 🔥 Optimized filtering
+  // When any filter/search is active, use server-side unified search results;
+  // otherwise fall back to the dashboard's initial activityLogs.
+  const hasActiveFilters = Boolean(
+    debouncedSearch || adminFilter || actionFilter || targetFilter || startDate || endDate
+  );
+
   const filteredLogs = useMemo(() => {
-    if (!Array.isArray(activityLogs)) {
+    const sourceLogs = hasActiveFilters ? searchedLogs : activityLogs;
+    if (!Array.isArray(sourceLogs)) {
       return [];
     }
-    return activityLogs.filter((log) => {
+    return sourceLogs.filter((log) => {
       const matchesSearch =
         debouncedSearch === "" ||
         log.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -126,6 +133,8 @@ export default function AdminMonitoringSection() {
     });
   }, [
     activityLogs,
+    searchedLogs,
+    hasActiveFilters,
     debouncedSearch,
     actionFilter,
     adminFilter,
@@ -156,6 +165,15 @@ export default function AdminMonitoringSection() {
       'PRODUCT_UPDATED': <TrendingUp className="w-4 h-4 text-blue-600" />,
       'PRODUCT_DELETED': <TrendingUp className="w-4 h-4 text-red-600" />,
       'EMAIL_SENT': <Activity className="w-4 h-4 text-indigo-600" />,
+      'EDUCATION_RESOURCE_APPROVED': <Activity className="w-4 h-4 text-green-600" />,
+      'EDUCATION_RESOURCE_REJECTED': <Activity className="w-4 h-4 text-red-600" />,
+      'EDUCATION_RESOURCE_SUSPENDED': <Activity className="w-4 h-4 text-amber-600" />,
+      'EDUCATION_RESOURCE_REMOVED': <Activity className="w-4 h-4 text-red-700" />,
+      'EDUCATION_RESOURCE_RESTORED': <Activity className="w-4 h-4 text-green-600" />,
+      'EDUCATION_DOWNLOAD_HOLD_SET': <Activity className="w-4 h-4 text-amber-600" />,
+      'EDUCATION_DOWNLOAD_HOLD_RELEASED': <Activity className="w-4 h-4 text-blue-600" />,
+      'EDUCATION_REPORT_UPDATED': <Activity className="w-4 h-4 text-purple-600" />,
+      'EDUCATION_REQUEST_UPDATED': <Activity className="w-4 h-4 text-teal-600" />,
     };
     return iconMap[action] || <Activity className="w-4 h-4" />;
   };
@@ -174,6 +192,15 @@ export default function AdminMonitoringSection() {
       'PRODUCT_UPDATED': 'text-blue-600',
       'PRODUCT_DELETED': 'text-red-600',
       'EMAIL_SENT': 'text-indigo-600',
+      'EDUCATION_RESOURCE_APPROVED': 'text-green-600',
+      'EDUCATION_RESOURCE_REJECTED': 'text-red-600',
+      'EDUCATION_RESOURCE_SUSPENDED': 'text-amber-600',
+      'EDUCATION_RESOURCE_REMOVED': 'text-red-700',
+      'EDUCATION_RESOURCE_RESTORED': 'text-green-600',
+      'EDUCATION_DOWNLOAD_HOLD_SET': 'text-amber-600',
+      'EDUCATION_DOWNLOAD_HOLD_RELEASED': 'text-blue-600',
+      'EDUCATION_REPORT_UPDATED': 'text-purple-600',
+      'EDUCATION_REQUEST_UPDATED': 'text-teal-600',
     };
     return colorMap[action] || 'text-gray-600';
   };
@@ -290,6 +317,15 @@ export default function AdminMonitoringSection() {
             <option value="PROMOTION_UPDATED">{t('promotion_updates')}</option>
             <option value="PRODUCT_CREATED">{t('product_created')}</option>
             <option value="EMAIL_SENT">{t('emails_sent')}</option>
+            <option value="EDUCATION_RESOURCE_APPROVED">{t('education_resource_approved')}</option>
+            <option value="EDUCATION_RESOURCE_REJECTED">{t('education_resource_rejected')}</option>
+            <option value="EDUCATION_RESOURCE_SUSPENDED">{t('education_resource_suspended')}</option>
+            <option value="EDUCATION_RESOURCE_REMOVED">{t('education_resource_removed')}</option>
+            <option value="EDUCATION_RESOURCE_RESTORED">{t('education_resource_restored')}</option>
+            <option value="EDUCATION_DOWNLOAD_HOLD_SET">{t('education_download_hold_set')}</option>
+            <option value="EDUCATION_DOWNLOAD_HOLD_RELEASED">{t('education_download_hold_released')}</option>
+            <option value="EDUCATION_REPORT_UPDATED">{t('education_report_updated')}</option>
+            <option value="EDUCATION_REQUEST_UPDATED">{t('education_request_updated')}</option>
           </select>
 
           {/* Target Filter */}
@@ -303,6 +339,9 @@ export default function AdminMonitoringSection() {
             <option value="Appointment">{t('appointments')}</option>
             <option value="Promotion">{t('promotions')}</option>
             <option value="SponsoredProduct">{t('products')}</option>
+            <option value="EducationResource">{t('education_resources')}</option>
+            <option value="CopyrightReport">{t('copyright_reports')}</option>
+            <option value="ResourceRequest">{t('resource_requests')}</option>
           </select>
 
           {/* Dates */}

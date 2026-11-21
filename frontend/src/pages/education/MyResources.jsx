@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
+import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyResources, deleteResource } from "../../api/education";
 import ResourceCard from "../../components/education/ResourceCard";
 import ResourceSkeleton from "../../components/education/ResourceSkeleton";
@@ -9,6 +11,9 @@ import { Trash2 } from "lucide-react";
 
 export default function MyResources() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const isGuest = !user || user.role === "guest";
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [withdrawing, setWithdrawing] = useState(null);
@@ -25,7 +30,14 @@ export default function MyResources() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (isGuest) {
+      navigate("/login");
+      return;
+    }
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGuest]);
 
   const handleWithdraw = async (id) => {
     if (!window.confirm(t("edu_withdraw_confirm"))) return;

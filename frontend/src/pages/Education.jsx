@@ -66,6 +66,15 @@ const Education = () => {
       auth: true,
     },
     {
+      icon: BookOpen,
+      title: t("edu_needs_card_title"),
+      desc: t("edu_needs_card_desc"),
+      path: "/education/needs",
+      color: "text-caribbean",
+      bg: "bg-alice",
+      auth: false,
+    },
+    {
       icon: FileQuestion,
       title: t("edu_request_resource"),
       desc: t("edu_request_resource_desc"),
@@ -82,8 +91,11 @@ const Education = () => {
       color: "text-tufts",
       bg: "bg-blue-50",
       auth: true,
+      hideForGuest: true,
     },
   ];
+
+  const visibleActions = actions.filter((a) => !a.hideForGuest || !isGuest);
 
   const handleAction = (a) => {
     if (a.auth && isGuest) {
@@ -125,7 +137,7 @@ const Education = () => {
         {/* Action cards */}
         <section>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {actions.map((a) => (
+            {visibleActions.map((a) => (
               <button
                 key={a.title}
                 onClick={() => handleAction(a)}

@@ -88,7 +88,7 @@ export const isValidSort = (sort) =>
 
 // Fields safe to expose on public resource payloads.
 export const PUBLIC_RESOURCE_FIELDS =
-  "title description category subCategory language fileName fileType fileSize licenseType licenseUrl licenseNotes uploadedBy createdAt downloadCount";
+  "title description category subCategory language fileName fileType fileSize licenseType licenseUrl licenseNotes uploadedBy createdAt downloadCount downloadHold";
 
 // Fields safe for owners viewing their own uploads (adds private fields).
 export const OWNER_RESOURCE_FIELDS =

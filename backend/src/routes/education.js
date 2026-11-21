@@ -1,5 +1,5 @@
 import express from "express";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, authenticateOptional } from "../middlewares/auth.js";
 import { educationUploadSingle } from "../middlewares/educationUpload.js";
 import { limiters } from "../utils/rateLimiter.js";
 import {
@@ -48,7 +48,7 @@ router.get("/resources/:id/download", authenticate, getDownloadUrl);
 router.delete("/resources/:id", authenticate, deleteResource);
 
 // Resource requests
-router.get("/requests", authenticate, listRequests);
+router.get("/requests", authenticateOptional, listRequests);
 router.post(
   "/requests",
   authenticate,

@@ -44,16 +44,16 @@ export default function ResourceRequestForm({ onCreated }) {
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow p-6 space-y-4">
       <div>
-        <label className="label"><span className="label-text font-medium">{t("edu_request_title")}</span></label>
+        <label className="label"><span className="label-text font-medium text-tufts">{t("edu_request_title")}</span></label>
         <input type="text" className="input input-bordered w-full" value={form.title} onChange={set("title")} maxLength={200} required />
       </div>
       <div>
-        <label className="label"><span className="label-text font-medium">{t("edu_request_description")}</span></label>
+        <label className="label"><span className="label-text font-medium text-tufts">{t("edu_request_description")}</span></label>
         <textarea className="textarea textarea-bordered w-full" rows={3} value={form.description} onChange={set("description")} maxLength={2000} />
       </div>
       <div className="grid md:grid-cols-3 gap-4">
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_category")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_category")}</span></label>
           <select className="select select-bordered w-full" value={form.category} onChange={set("category")} required>
             <option value="">{t("edu_select_category")}</option>
             {EDUCATION_CATEGORIES.map((c) => (
@@ -62,7 +62,7 @@ export default function ResourceRequestForm({ onCreated }) {
           </select>
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_request_preferred_format")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_request_preferred_format")}</span></label>
           <select className="select select-bordered w-full" value={form.preferredFormat} onChange={set("preferredFormat")}>
             <option value="">{t("edu_any_format")}</option>
             {EDUCATION_FILE_TYPES.map((f) => (
@@ -71,7 +71,7 @@ export default function ResourceRequestForm({ onCreated }) {
           </select>
         </div>
         <div>
-          <label className="label"><span className="label-text font-medium">{t("edu_upload_language")}</span></label>
+          <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_language")}</span></label>
           <select className="select select-bordered w-full" value={form.language} onChange={set("language")}>
             <option value="">{t("edu_any_language")}</option>
             {EDUCATION_LANGUAGES.map((l) => (

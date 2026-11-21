@@ -131,6 +131,12 @@ export default function ResourceDetails() {
             </div>
           </div>
 
+          {resource.downloadHold && (
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+              {t("edu_under_review_notice")}
+            </div>
+          )}
+
           <div className="mt-6 p-4 bg-alice rounded-xl">
             <h3 className="font-semibold text-gray-800 mb-1">{t("edu_license_info")}</h3>
             <p className="text-sm text-gray-600">
@@ -147,14 +153,25 @@ export default function ResourceDetails() {
           </div>
 
           <div className="flex flex-wrap gap-3 mt-8">
-            <button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="btn bg-caribbean text-white border-none hover:bg-tufts"
-            >
-              <Download className="w-4 h-4" />
-              {downloading ? t("edu_preparing_download") : t("edu_download")}
-            </button>
+            {resource.downloadHold ? (
+              <button
+                disabled
+                className="btn bg-gray-300 text-gray-500 border-none cursor-not-allowed"
+                title={t("edu_download_unavailable")}
+              >
+                <Download className="w-4 h-4" />
+                {t("edu_download_unavailable")}
+              </button>
+            ) : (
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="btn bg-caribbean text-white border-none hover:bg-tufts"
+              >
+                <Download className="w-4 h-4" />
+                {downloading ? t("edu_preparing_download") : t("edu_download")}
+              </button>
+            )}
             <button
               onClick={() => setShowReport(true)}
               className="btn btn-outline border-caribbean text-caribbean hover:bg-caribbean hover:text-white"

@@ -52,7 +52,7 @@ export default function CopyrightReportModal({ resourceId, onClose }) {
         <h3 className="text-xl font-bold text-caribbean mb-4">{t("edu_report_title")}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label"><span className="label-text font-medium">{t("edu_report_reason")}</span></label>
+            <label className="label"><span className="label-text font-medium text-tufts">{t("edu_report_reason")}</span></label>
             <select className="select select-bordered w-full" value={form.reason} onChange={set("reason")} required>
               <option value="">{t("edu_select_reason")}</option>
               {REPORT_REASONS.map((r) => (
@@ -61,27 +61,27 @@ export default function CopyrightReportModal({ resourceId, onClose }) {
             </select>
           </div>
           <div>
-            <label className="label"><span className="label-text font-medium">{t("edu_report_explanation")}</span></label>
+            <label className="label"><span className="label-text font-medium text-tufts">{t("edu_report_explanation")}</span></label>
             <textarea className="textarea textarea-bordered w-full" rows={4} value={form.explanation} onChange={set("explanation")} maxLength={5000} required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label"><span className="label-text font-medium">{t("edu_report_name")}</span></label>
+              <label className="label"><span className="label-text font-medium text-tufts">{t("edu_report_name")}</span></label>
               <input type="text" className="input input-bordered w-full" value={form.complainantName} onChange={set("complainantName")} required />
             </div>
             <div>
-              <label className="label"><span className="label-text font-medium">{t("edu_report_email")}</span></label>
+              <label className="label"><span className="label-text font-medium text-tufts">{t("edu_report_email")}</span></label>
               <input type="email" className="input input-bordered w-full" value={form.contactEmail} onChange={set("contactEmail")} required />
             </div>
           </div>
           <div>
-            <label className="label"><span className="label-text font-medium">{t("edu_report_evidence_url")}</span></label>
+            <label className="label"><span className="label-text font-medium text-tufts">{t("edu_report_evidence_url")}</span></label>
             <input type="url" className="input input-bordered w-full" value={form.evidenceUrl} onChange={set("evidenceUrl")} placeholder="https://" />
           </div>
           <div className="form-control">
             <label className="label cursor-pointer justify-start gap-3">
               <input type="checkbox" className="checkbox checkbox-primary" checked={form.declaration} onChange={set("declaration")} />
-              <span className="label-text text-sm">{t("edu_report_declaration")}</span>
+              <span className="label-text text-sm text-tufts">{t("edu_report_declaration")}</span>
             </label>
           </div>
           <div className="flex justify-end gap-3">
