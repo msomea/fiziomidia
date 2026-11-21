@@ -85,5 +85,20 @@ export const ENV = {
   REDIS_PORT: process.env.REDIS_PORT,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_URL: process.env.REDIS_URL,
+
+  // Cloudflare R2 (Education Resources storage)
+  R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+  R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+  R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
+  R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
+  R2_ENDPOINT: process.env.R2_ENDPOINT,
+  R2_REGION: process.env.R2_REGION || "auto",
+
+  // Education Resources
+  EDUCATION_MAX_FILE_SIZE_MB: process.env.EDUCATION_MAX_FILE_SIZE_MB,
+  EDUCATION_DOWNLOAD_URL_TTL_SECONDS:
+    process.env.EDUCATION_DOWNLOAD_URL_TTL_SECONDS,
+  EDUCATION_DEFAULT_PAGE_SIZE: process.env.EDUCATION_DEFAULT_PAGE_SIZE,
+  EDUCATION_MAX_PAGE_SIZE: process.env.EDUCATION_MAX_PAGE_SIZE,
 };
 

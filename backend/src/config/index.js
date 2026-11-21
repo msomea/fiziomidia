@@ -39,8 +39,7 @@ export default {
     // When an access token has less than this many seconds remaining,
     // the server may issue a refreshed access token on activity (sliding session).
     // Default: 300 seconds (5 minutes)
-    renewThresholdSeconds:
-      process.env.ACCESS_TOKEN_RENEW_THRESHOLD_SECONDS,
+    renewThresholdSeconds: process.env.ACCESS_TOKEN_RENEW_THRESHOLD_SECONDS,
   },
 
   // Stripe
@@ -58,12 +57,31 @@ export default {
   mailUser: process.env.MAIL_USER,
   mailPass: process.env.MAIL_PASS,
 
-  
   // Cloudinary
   cloudinaryUrl: process.env.CLOUDINARY_URL,
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+
+  // Cloudflare R2 (Education Resources storage)
+  r2: {
+    accountId: process.env.R2_ACCOUNT_ID,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    bucketName: process.env.R2_BUCKET_NAME,
+    endpoint: process.env.R2_ENDPOINT,
+    region: process.env.R2_REGION || "auto",
+  },
+
+  // Education Resources
+  education: {
+    maxFileSizeMb: parseInt(process.env.EDUCATION_MAX_FILE_SIZE_MB, 10) || 15,
+    downloadUrlTtlSeconds:
+      parseInt(process.env.EDUCATION_DOWNLOAD_URL_TTL_SECONDS, 10) || 300,
+    defaultPageSize:
+      parseInt(process.env.EDUCATION_DEFAULT_PAGE_SIZE, 10) || 20,
+    maxPageSize: parseInt(process.env.EDUCATION_MAX_PAGE_SIZE, 10) || 50,
+  },
 
   // Upload Directory
   uploadDir: process.env.UPLOAD_DIR || "uploads/",

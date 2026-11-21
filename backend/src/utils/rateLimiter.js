@@ -105,16 +105,14 @@ export const limiters = {
     windowMs: 15 * 60 * 1000,
     max: 5,
     code: "RATE_LIMIT_REGISTER",
-    message:
-      "Too many registration attempts, please try again later.",
+    message: "Too many registration attempts, please try again later.",
   }),
 
   passwordReset: createLimiter({
     windowMs: 15 * 60 * 1000,
     max: 3,
     code: "RATE_LIMIT_RESET",
-    message:
-      "Too many password reset attempts, please try again later.",
+    message: "Too many password reset attempts, please try again later.",
   }),
 
   /*
@@ -141,8 +139,7 @@ export const limiters = {
     windowMs: 10 * 60 * 1000,
     max: 2,
     code: "RATE_LIMIT_CONTACT",
-    message:
-      "Too many contact form submissions, please try again later.",
+    message: "Too many contact form submissions, please try again later.",
   }),
 
   /*
@@ -180,6 +177,33 @@ export const limiters = {
     max: 15,
     keyGenerator: getUserKey,
     code: "RATE_LIMIT_FORUM_COMMENT",
+  }),
+
+  /*
+  Education Resources
+  */
+  educationUpload: createLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    keyGenerator: getUserKey,
+    code: "RATE_LIMIT_EDUCATION_UPLOAD",
+    message: "Too many resource uploads, please try again later.",
+  }),
+
+  educationRequest: createLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    keyGenerator: getUserKey,
+    code: "RATE_LIMIT_EDUCATION_REQUEST",
+    message: "Too many resource requests, please try again later.",
+  }),
+
+  educationReport: createLimiter({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    keyGenerator: getUserKey,
+    code: "RATE_LIMIT_EDUCATION_REPORT",
+    message: "Too many reports submitted, please try again later.",
   }),
 };
 

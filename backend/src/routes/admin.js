@@ -8,6 +8,11 @@ import * as productController from "../controllers/admin/adminSponsoredProductCo
 import * as monitoringController from "../controllers/admin/adminMonitoringController.js";
 import * as modReq from "../controllers/admin/adminForumModController.js";
 import * as clinicPromo from "../controllers/admin/adminClinicPromotionController.js";
+import * as educationAdmin from "../controllers/admin/adminEducationController.js";
+import {
+  adminListReports,
+  adminUpdateReport,
+} from "../controllers/copyrightReportController.js";
 
 import { upload } from "../services/uploadService.js";
 import {
@@ -94,6 +99,18 @@ router.patch("/clinic-promotions/:id/reject", clinicPromo.rejectClinicPromotion)
 router.patch("/clinic-promotions/:id/expire", clinicPromo.expireClinicPromotion);
 router.patch("/clinic-promotions/:id/approve", clinicPromo.approveClinicPromotion);
 router.patch("/clinic-promotions/:id/priority", clinicPromo.setClinicPromotionPriority);
+// Education Resources moderation
+router.get("/education/stats", educationAdmin.adminEducationStats);
+router.get("/education/resources", educationAdmin.adminListResources);
+router.patch(
+  "/education/resources/:id/review",
+  educationAdmin.adminReviewResource,
+);
+router.get("/education/reports", adminListReports);
+router.patch("/education/reports/:id", adminUpdateReport);
+router.get("/education/requests", educationAdmin.adminListRequests);
+router.patch("/education/requests/:id", educationAdmin.adminUpdateRequest);
+
 router.get("/clinic-promotions/:id/analytics", clinicPromo.getClinicPromotionAnalytics);
 router.post("/clinic-promotions/:id/click", clinicPromo.trackClinicPromotionClickAdmin);
 router.post("/clinic-promotions/:id/impression", clinicPromo.trackClinicPromotionImpressionAdmin);
