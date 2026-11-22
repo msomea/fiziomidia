@@ -38,6 +38,13 @@ export const PTDashboardProvider = ({ children, ptId }) => {
     }
   }, []);
 
+  // Refresh notifications when PT profile loads
+  useEffect(() => {
+    if (dashboardData.data?.ptProfile?._id) {
+      refreshNotifications(dashboardData.data.ptProfile._id);
+    }
+  }, [dashboardData.data?.ptProfile?._id, refreshNotifications]);
+
   // Cache user data for AuthProvider to access
   useEffect(() => {
     if (dashboardData.data?.ptProfile) {
