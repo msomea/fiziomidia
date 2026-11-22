@@ -140,15 +140,14 @@ export const REPORT_ACTIONS = [
 
 export const EDUCATION_LIMITS = {
   maxFileSizeBytes: () =>
-    (parseInt(process.env.EDUCATION_MAX_FILE_SIZE_MB, 10) || 15) *
-    1024 *
-    1024,
+    (parseInt(process.env.EDUCATION_MAX_FILE_SIZE_MB, 10) || 15) * 1024 * 1024,
   downloadUrlTtlSeconds: () =>
     parseInt(process.env.EDUCATION_DOWNLOAD_URL_TTL_SECONDS, 10) || 300,
   defaultPageSize: () =>
     parseInt(process.env.EDUCATION_DEFAULT_PAGE_SIZE, 10) || 20,
-  maxPageSize: () =>
-    parseInt(process.env.EDUCATION_MAX_PAGE_SIZE, 10) || 50,
+  maxPageSize: () => parseInt(process.env.EDUCATION_MAX_PAGE_SIZE, 10) || 50,
+  dailyDownloadLimit: () =>
+    parseInt(process.env.EDUCATION_DAILY_DOWNLOAD_LIMIT, 10) || 20,
 };
 
 export const RESOURCE_SORT_FIELDS = ["newest", "title", "downloads"];

@@ -1239,5 +1239,7 @@
   "edu_cat_urology": "Urology",
   "edu_cat_cardio_respiratory": "Cardio Respiratory",
   "edu_cat_pediatric": "Pediatric",
-  "edu_cat_radiology": "Radiology"
+  "edu_cat_radiology": "Radiology",
+  "edu_downloads_remaining": "{{remaining}} of {{limit}} downloads left today",
+  "edu_daily_limit_reached": "Daily download limit reached. Try again tomorrow."
 }

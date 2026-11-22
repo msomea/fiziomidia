@@ -1242,5 +1242,7 @@
   "edu_cat_urology": "Urologia",
   "edu_cat_cardio_respiratory": "Moyo na Upumuo",
   "edu_cat_pediatric": "Watoto",
-  "edu_cat_radiology": "Rediolojia"
+  "edu_cat_radiology": "Rediolojia",
+  "edu_downloads_remaining": "Upakuaji {{remaining}} kati ya {{limit}} umebaki leo",
+  "edu_daily_limit_reached": "Kikomo cha upakuaji cha kila siku kimefikiwa. Jaribu tena kesho."
 }

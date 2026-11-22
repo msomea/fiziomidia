@@ -11,6 +11,10 @@ import {
   isValidSort,
   PUBLIC_RESOURCE_FIELDS,
   OWNER_RESOURCE_FIELDS,
+  getDownloadQuota,
+  getDailyDownloadCount,
+  recordDownload,
+  dailyDownloadLimit,
 } from "../utils/educationHelpers.js";
 import {
   EDUCATION_CATEGORIES,
@@ -155,7 +159,14 @@ export const getResource = async (req, res) => {
       return res.status(404).json({ error: "Resource not found" });
     }
 
-    res.json({ resource: publicResource(resource) });
+    const payload = { resource: publicResource(resource) };
+
+    // Attach the caller's remaining daily download quota (authenticated only).
+    if (req.user && req.user.role !== "admin") {
+      payload.downloadQuota = await getDownloadQuota(req.user._id);
+    }
+
+    res.json(payload);
   } catch (err) {
     console.error("Error fetching resource:", err);
     res.status(500).json({ error: "Failed to fetch resource" });
@@ -352,12 +363,29 @@ export const getDownloadUrl = async (req, res) => {
       !!resource.storageKey;
 
     if (!eligible) {
-      return res.status(403).json({ error: "Resource is not available for download" });
+      return res
+        .status(403)
+        .json({ error: "Resource is not available for download" });
     }
 
     const exists = await educationFileExists({ key: resource.storageKey });
     if (!exists) {
       return res.status(404).json({ error: "Resource file is unavailable" });
+    }
+
+    // Enforce the daily download quota for non-admin users.
+    const isAdmin = req.user.role === "admin";
+    if (!isAdmin) {
+      const used = await getDailyDownloadCount(req.user._id);
+      const limit = dailyDownloadLimit();
+      if (used >= limit) {
+        return res.status(429).json({
+          error: "daily_download_limit_reached",
+          limit,
+          used,
+          remaining: 0,
+        });
+      }
     }
 
     const url = await getSignedDownloadUrl({ key: resource.storageKey });
@@ -367,6 +395,11 @@ export const getDownloadUrl = async (req, res) => {
       { _id: resource._id },
       { $inc: { downloadCount: 1 } },
     ).catch((e) => console.error("downloadCount update failed:", e));
+
+    // Consume one unit of the user's daily quota.
+    if (!isAdmin) {
+      await recordDownload(req.user._id, resource._id);
+    }
 
     res.json({
       downloadUrl: url,

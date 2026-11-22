@@ -21,6 +21,7 @@ export default function ResourceDetails() {
   const { user } = useAuth();
 
   const [resource, setResource] = useState(null);
+  const [quota, setQuota] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -31,6 +32,7 @@ export default function ResourceDetails() {
       try {
         const res = await fetchResource(id);
         setResource(res.data.resource);
+        setQuota(res.data.downloadQuota || null);
       } catch (err) {
         if (err.response?.status === 404) setNotFound(true);
         else toast.error(t("edu_details_load_failed"));
@@ -50,12 +52,21 @@ export default function ResourceDetails() {
     setDownloading(true);
     try {
       const res = await fetchDownloadUrl(id);
-      const { downloadUrl, fileName } = res.data;
+      const { downloadUrl } = res.data;
       // Open signed URL in new tab
       window.open(downloadUrl, "_blank");
       toast.success(t("edu_download_started"));
+      // Consume one unit of the daily quota locally
+      setQuota((q) =>
+        q ? { ...q, used: q.used + 1, remaining: Math.max(0, q.remaining - 1) } : q
+      );
     } catch (err) {
-      toast.error(err.response?.data?.error || t("edu_download_failed"));
+      if (err.response?.status === 429) {
+        toast.error(t("edu_daily_limit_reached"));
+        setQuota((q) => (q ? { ...q, remaining: 0 } : q));
+      } else {
+        toast.error(err.response?.data?.error || t("edu_download_failed"));
+      }
     } finally {
       setDownloading(false);
     }
@@ -131,6 +142,15 @@ export default function ResourceDetails() {
             </div>
           </div>
 
+          {quota && user?.role !== "admin" && (
+            <p className="text-xs text-gray-500 mt-2">
+              {t("edu_downloads_remaining", {
+                remaining: quota.remaining,
+                limit: quota.limit,
+              })}
+            </p>
+          )}
+
           {resource.downloadHold && (
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
               {t("edu_under_review_notice")}
@@ -158,6 +178,15 @@ export default function ResourceDetails() {
                 disabled
                 className="btn bg-gray-300 text-gray-500 border-none cursor-not-allowed"
                 title={t("edu_download_unavailable")}
+              >
+                <Download className="w-4 h-4" />
+                {t("edu_download_unavailable")}
+              </button>
+            ) : quota && quota.remaining === 0 ? (
+              <button
+                disabled
+                className="btn bg-gray-300 text-gray-500 border-none cursor-not-allowed"
+                title={t("edu_daily_limit_reached")}
               >
                 <Download className="w-4 h-4" />
                 {t("edu_download_unavailable")}

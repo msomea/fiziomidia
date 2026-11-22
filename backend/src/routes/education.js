@@ -27,7 +27,7 @@ const router = express.Router();
 // Public library (approved resources only)
 router.get("/resources", listResources);
 router.get("/resources/recent", listRecentResources);
-router.get("/resources/:id", getResource);
+router.get("/resources/:id", authenticateOptional, getResource);
 
 // Authenticated: upload
 router.post(

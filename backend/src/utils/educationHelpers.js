@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import DownloadLog from "../models/DownloadLog.js";
+import { EDUCATION_LIMITS } from "../constants/education.js";
 import {
   EDUCATION_FILE_EXTENSIONS,
   EDUCATION_FILE_TYPE_MIMES,
@@ -93,3 +95,38 @@ export const PUBLIC_RESOURCE_FIELDS =
 // Fields safe for owners viewing their own uploads (adds private fields).
 export const OWNER_RESOURCE_FIELDS =
   `${PUBLIC_RESOURCE_FIELDS} status downloadHold rejectionReason reviewedAt approvedAt removedAt`;
+
+// ---- Daily download quota ----
+
+// UTC day key, e.g. "2026-11-22".
+export const todayKey = () => new Date().toISOString().slice(0, 10);
+
+export const dailyDownloadLimit = () => EDUCATION_LIMITS.dailyDownloadLimit();
+
+// Count how many downloads a user has used today (UTC).
+export const getDailyDownloadCount = async (userId) => {
+  if (!userId) return 0;
+  return DownloadLog.countDocuments({ user: userId, date: todayKey() });
+};
+
+// Quota snapshot for a user: { limit, used, remaining }.
+export const getDownloadQuota = async (userId) => {
+  const limit = dailyDownloadLimit();
+  const used = await getDailyDownloadCount(userId);
+  return { limit, used, remaining: Math.max(0, limit - used) };
+};
+
+// Record a successful authorized download against today's quota.
+export const recordDownload = async (userId, resourceId) => {
+  if (!userId || !resourceId) return;
+  try {
+    await DownloadLog.create({
+      user: userId,
+      resource: resourceId,
+      date: todayKey(),
+    });
+  } catch (err) {
+    // Quota logging must never break the download flow.
+    console.error("DownloadLog create failed:", err);
+  }
+};
