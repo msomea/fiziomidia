@@ -1241,5 +1241,7 @@
   "edu_cat_pediatric": "Pediatric",
   "edu_cat_radiology": "Radiology",
   "edu_downloads_remaining": "{{remaining}} of {{limit}} downloads left today",
-  "edu_daily_limit_reached": "Daily download limit reached. Try again tomorrow."
+  "edu_daily_limit_reached": "Daily download limit reached. Try again tomorrow.",
+  "edu_cat_patient_guidelines": "Patient Guidelines",
+  "edu_cat_publications": "Publications"
 }

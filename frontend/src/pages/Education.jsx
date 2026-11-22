@@ -16,7 +16,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { fetchRecentResources } from "../api/education";
 import ResourceCard from "../components/education/ResourceCard";
 import ResourceSkeleton from "../components/education/ResourceSkeleton";
-import { EDUCATION_CATEGORIES } from "../constants/education";
+import { getSortedCategories } from "../constants/education";
 
 const Education = () => {
   const { t } = useTranslation();
@@ -188,7 +188,7 @@ const Education = () => {
           </button>
           {categoriesOpen && (
             <div className="flex flex-wrap gap-3 mt-4">
-              {EDUCATION_CATEGORIES.map((c) => (
+              {getSortedCategories(t).map((c) => (
                 <Link
                   key={c.value}
                   to={`/education/library?category=${c.value}`}

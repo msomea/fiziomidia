@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { fetchRequests } from "../../api/education";
 import ResourceSkeleton from "../../components/education/ResourceSkeleton";
-import { EDUCATION_CATEGORIES } from "../../constants/education";
+import { getSortedCategories } from "../../constants/education";
 import { BookOpen, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 const PAGE_SIZE = 12;
@@ -63,7 +63,7 @@ export default function ResourceNeeds() {
           >
             {t("edu_all_categories")}
           </button>
-          {EDUCATION_CATEGORIES.map((c) => (
+          {getSortedCategories(t).map((c) => (
             <button
               key={c.value}
               onClick={() => setParam("category", c.value === category ? "" : c.value)}

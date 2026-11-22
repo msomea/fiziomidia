@@ -31,6 +31,12 @@ import {
   deleteEducationFile,
 } from "../services/educationStorage.js";
 import config from "../config/index.js";
+import {
+  CacheService,
+  CacheKeys,
+  CacheTTL,
+  invalidateEducationCache,
+} from "../utils/redis.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -64,12 +70,27 @@ export const listResources = async (req, res) => {
 
     const pageNum = Math.max(parseInt(page, 10) || 1, 1);
     const limitNum = Math.min(
-      Math.max(
-        parseInt(limit, 10) || EDUCATION_LIMITS.defaultPageSize(),
-        1,
-      ),
+      Math.max(parseInt(limit, 10) || EDUCATION_LIMITS.defaultPageSize(), 1),
       EDUCATION_LIMITS.maxPageSize(),
     );
+
+    // Cache key from normalized query params (public payload is identical for all users).
+    const cacheKey = CacheKeys.EDU_RESOURCES(
+      JSON.stringify({
+        search: typeof search === "string" ? search.trim().slice(0, 100) : "",
+        category: category || "",
+        subCategory: subCategory || "",
+        language: language || "",
+        fileType: fileType || "",
+        sort,
+        page: pageNum,
+        limit: limitNum,
+      }),
+    );
+    const cached = await CacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     const filter = { status: "approved" };
 
@@ -103,7 +124,7 @@ export const listResources = async (req, res) => {
       EducationResource.countDocuments(filter),
     ]);
 
-    res.json({
+    const responseData = {
       resources: resources.map(publicResource),
       pagination: {
         total,
@@ -111,7 +132,11 @@ export const listResources = async (req, res) => {
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum),
       },
-    });
+    };
+    CacheService.set(cacheKey, responseData, CacheTTL.SHORT).catch(
+      console.error,
+    );
+    res.json(responseData);
   } catch (err) {
     console.error("Error listing education resources:", err);
     res.status(500).json({ error: "Failed to fetch resources" });
@@ -125,6 +150,13 @@ export const listRecentResources = async (req, res) => {
       parseInt(req.query.limit, 10) || 6,
       EDUCATION_LIMITS.maxPageSize(),
     );
+
+    const cacheKey = CacheKeys.EDU_RECENT(limit);
+    const cached = await CacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const resources = await EducationResource.find({
       status: "approved",
     })
@@ -133,7 +165,11 @@ export const listRecentResources = async (req, res) => {
       .limit(limit)
       .populate("uploadedBy", "fullName");
 
-    res.json({ resources: resources.map(publicResource) });
+    const responseData = { resources: resources.map(publicResource) };
+    CacheService.set(cacheKey, responseData, CacheTTL.SHORT).catch(
+      console.error,
+    );
+    res.json(responseData);
   } catch (err) {
     console.error("Error fetching recent resources:", err);
     res.status(500).json({ error: "Failed to fetch resources" });
@@ -148,18 +184,28 @@ export const getResource = async (req, res) => {
       return res.status(400).json({ error: "Invalid resource ID" });
     }
 
-    const resource = await EducationResource.findOne({
-      _id: id,
-      status: "approved",
-    })
-      .select(PUBLIC_RESOURCE_FIELDS)
-      .populate("uploadedBy", "fullName profileImageUrl");
-
+    // Cache only the public resource payload — downloadQuota is per-user and stays fresh.
+    const cacheKey = CacheKeys.EDU_RESOURCE(id);
+    let resource = await CacheService.get(cacheKey);
     if (!resource) {
-      return res.status(404).json({ error: "Resource not found" });
+      const doc = await EducationResource.findOne({
+        _id: id,
+        status: "approved",
+      })
+        .select(PUBLIC_RESOURCE_FIELDS)
+        .populate("uploadedBy", "fullName profileImageUrl");
+
+      if (!doc) {
+        return res.status(404).json({ error: "Resource not found" });
+      }
+
+      resource = publicResource(doc);
+      CacheService.set(cacheKey, resource, CacheTTL.MEDIUM).catch(
+        console.error,
+      );
     }
 
-    const payload = { resource: publicResource(resource) };
+    const payload = { resource };
 
     // Attach the caller's remaining daily download quota (authenticated only).
     if (req.user && req.user.role !== "admin") {
@@ -449,6 +495,7 @@ export const deleteResource = async (req, res) => {
       reason: req.body?.reason || undefined,
     });
     await resource.save();
+    invalidateEducationCache().catch(console.error);
 
     // Delete storage object; keep DB record for audit.
     if (resource.storageKey) {

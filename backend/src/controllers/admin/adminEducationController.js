@@ -20,6 +20,7 @@ import {
   educationFileExists,
 } from "../../services/educationStorage.js";
 import config from "../../config/index.js";
+import { invalidateEducationCache } from "../../utils/redis.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -102,7 +103,9 @@ export const adminReviewResource = async (req, res) => {
       const prevHold = resource.downloadHold;
       resource.downloadHold = !!downloadHold;
       resource.moderationHistory.push({
-        action: resource.downloadHold ? "download_hold_set" : "download_hold_released",
+        action: resource.downloadHold
+          ? "download_hold_set"
+          : "download_hold_released",
         actor: req.user._id,
         reason: reason || undefined,
       });
@@ -140,7 +143,9 @@ export const adminReviewResource = async (req, res) => {
         resource.approvedAt = new Date();
         resource.rejectionReason = undefined;
       } else if (targetStatus === "rejected") {
-        resource.rejectionReason = reason ? String(reason).slice(0, 1000) : undefined;
+        resource.rejectionReason = reason
+          ? String(reason).slice(0, 1000)
+          : undefined;
       } else if (targetStatus === "removed") {
         resource.removedAt = new Date();
       }
@@ -171,10 +176,15 @@ export const adminReviewResource = async (req, res) => {
     }
 
     await resource.save();
-// Notify uploader of moderation decision (in-app notification array).
-    if (["approved", "rejected", "suspended", "removed"].includes(resource.status)) {
+    invalidateEducationCache().catch(console.error);
+
+    // Notify uploader of moderation decision (in-app notification array).
+    if (
+      ["approved", "rejected", "suspended", "removed"].includes(resource.status)
+    ) {
       const messages = {
-        approved: "Your resource was approved and is now available in the library.",
+        approved:
+          "Your resource was approved and is now available in the library.",
         rejected: `Your resource was rejected.${resource.rejectionReason ? ` Reason: ${resource.rejectionReason}` : ""}`,
         suspended: "Your resource was suspended.",
         removed: "Your resource was removed.",
@@ -188,7 +198,8 @@ export const adminReviewResource = async (req, res) => {
                 {
                   type: "education_resource",
                   message: messages[resource.status],
-                  priority: resource.status === "approved" ? "update" : "important",
+                  priority:
+                    resource.status === "approved" ? "update" : "important",
                   read: false,
                 },
               ],
@@ -199,7 +210,7 @@ export const adminReviewResource = async (req, res) => {
       ).catch((e) => console.error("uploader notification failed:", e));
     }
 
-    // 
+    //
     // If removed, delete the storage object (best-effort, audited).
     if (resource.status === "removed" && resource.storageKey) {
       try {
@@ -301,6 +312,7 @@ export const adminUpdateRequest = async (req, res) => {
     }
 
     await request.save();
+    invalidateEducationCache().catch(console.error);
     logEduActivity(
       req,
       "EDUCATION_REQUEST_UPDATED",

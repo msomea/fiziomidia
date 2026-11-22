@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
-import { EDUCATION_CATEGORIES, EDUCATION_FILE_TYPES, EDUCATION_LANGUAGES } from "../../constants/education";
+import { EDUCATION_FILE_TYPES, EDUCATION_LANGUAGES, getSortedCategories } from "../../constants/education";
 
 export default function ResourceFilters({ params, onChange }) {
   const { t } = useTranslation();
@@ -22,7 +22,7 @@ export default function ResourceFilters({ params, onChange }) {
 
       <select className="select select-bordered select-sm" value={params.category || ""} onChange={handle("category")}>
         <option value="">{t("edu_all_categories")}</option>
-        {EDUCATION_CATEGORIES.map((c) => (
+        {getSortedCategories(t).map((c) => (
           <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
         ))}
       </select>

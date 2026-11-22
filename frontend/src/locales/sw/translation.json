@@ -1244,5 +1244,7 @@
   "edu_cat_pediatric": "Watoto",
   "edu_cat_radiology": "Rediolojia",
   "edu_downloads_remaining": "Upakuaji {{remaining}} kati ya {{limit}} umebaki leo",
-  "edu_daily_limit_reached": "Kikomo cha upakuaji cha kila siku kimefikiwa. Jaribu tena kesho."
+  "edu_daily_limit_reached": "Kikomo cha upakuaji cha kila siku kimefikiwa. Jaribu tena kesho.",
+  "edu_cat_patient_guidelines": "Miongozo ya Wagonjwa",
+  "edu_cat_publications": "Machapisho"
 }

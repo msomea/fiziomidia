@@ -47,6 +47,8 @@ export const EDUCATION_CATEGORIES = [
   "cardio_respiratory",
   "pediatric",
   "radiology",
+  "patient_guidelines",
+  "publications",
 ];
 
 export const EDUCATION_SUBCATEGORIES = {

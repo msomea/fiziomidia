@@ -7,6 +7,7 @@ import {
   REPORT_STATUSES,
   EDUCATION_LIMITS,
 } from "../constants/education.js";
+import { invalidateEducationCache } from "../utils/redis.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -194,6 +195,7 @@ export const adminUpdateReport = async (req, res) => {
               reason: `Copyright report ${report._id} ${status}`,
             });
             await resource.save();
+            invalidateEducationCache().catch(console.error);
           }
           if (status === "under_review" && !actionTaken) {
             report.actionTaken = "download_hold";

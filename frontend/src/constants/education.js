@@ -82,7 +82,15 @@ export const EDUCATION_CATEGORIES = [
   { value: "cardio_respiratory", labelKey: "edu_cat_cardio_respiratory" },
   { value: "pediatric", labelKey: "edu_cat_pediatric" },
   { value: "radiology", labelKey: "edu_cat_radiology" },
+  { value: "patient_guidelines", labelKey: "edu_cat_patient_guidelines" },
+  { value: "publications", labelKey: "edu_cat_publications" },
 ];
+
+// Categories sorted alphabetically by their translated label.
+export const getSortedCategories = (t) =>
+  [...EDUCATION_CATEGORIES].sort((a, b) =>
+    t(a.labelKey).localeCompare(t(b.labelKey)),
+  );
 
 export const EDUCATION_SUBCATEGORIES = {
   anatomy: ["musculoskeletal", "neuroanatomy", "other"],

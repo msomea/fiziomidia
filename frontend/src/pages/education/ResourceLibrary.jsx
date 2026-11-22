@@ -1,14 +1,41 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import ResourceFilters from "../../components/education/ResourceFilters";
 import ResourceCard from "../../components/education/ResourceCard";
 import ResourceSkeleton from "../../components/education/ResourceSkeleton";
 import { useEducationResources } from "../../hooks/useEducationResources";
 import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 
+const URL_FILTER_KEYS = ["search", "category", "subCategory", "language", "fileType", "sort"];
+
 export default function ResourceLibrary() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
+
+  // Initial params from URL (e.g. /education/library?category=anatomy)
+  const initialParams = { page: 1, limit: 12 };
+  URL_FILTER_KEYS.forEach((key) => {
+    const value = searchParams.get(key);
+    if (value) initialParams[key] = value;
+  });
+
   const { resources, pagination, loading, error, params, updateParams, goToPage } =
-    useEducationResources({ page: 1, limit: 12 });
+    useEducationResources(initialParams);
+
+  // Keep filters in sync when URL changes (e.g. category chip clicked while on library)
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const next = { page: 1 };
+    URL_FILTER_KEYS.forEach((key) => {
+      next[key] = searchParams.get(key) || undefined;
+    });
+    updateParams(next);
+  }, [searchParams, updateParams]);
 
   return (
     <div className="min-h-screen bg-alice mt-20 py-8 px-4">

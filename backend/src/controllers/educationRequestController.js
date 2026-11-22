@@ -8,6 +8,12 @@ import {
   REQUEST_STATUSES,
   EDUCATION_LIMITS,
 } from "../constants/education.js";
+import {
+  CacheService,
+  CacheKeys,
+  CacheTTL,
+  invalidateEducationCache,
+} from "../utils/redis.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
@@ -41,6 +47,26 @@ export const listRequests = async (req, res) => {
       filter.category = req.query.category;
     }
 
+    // Only cache the public guest view (open requests); authenticated users
+    // may query other statuses, so their responses stay uncached.
+    const isGuestView = !req.user;
+    const cacheKey = isGuestView
+      ? CacheKeys.EDU_REQUESTS(
+          JSON.stringify({
+            status,
+            category: filter.category || "",
+            page,
+            limit,
+          }),
+        )
+      : null;
+    if (cacheKey) {
+      const cached = await CacheService.get(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
+    }
+
     const [requests, total] = await Promise.all([
       ResourceRequest.find(filter)
         .select(REQUEST_FIELDS)
@@ -52,10 +78,16 @@ export const listRequests = async (req, res) => {
       ResourceRequest.countDocuments(filter),
     ]);
 
-    res.json({
+    const responseData = {
       requests,
       pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
-    });
+    };
+    if (cacheKey) {
+      CacheService.set(cacheKey, responseData, CacheTTL.SHORT).catch(
+        console.error,
+      );
+    }
+    res.json(responseData);
   } catch (err) {
     console.error("Error listing resource requests:", err);
     res.status(500).json({ error: "Failed to fetch requests" });
@@ -96,6 +128,7 @@ export const createRequest = async (req, res) => {
       status: "open",
     });
 
+    invalidateEducationCache().catch(console.error);
     res.status(201).json({ request });
   } catch (err) {
     console.error("Error creating resource request:", err);
@@ -143,6 +176,7 @@ export const closeRequest = async (req, res) => {
 
     request.status = "closed";
     await request.save();
+    invalidateEducationCache().catch(console.error);
 
     res.json({ request });
   } catch (err) {

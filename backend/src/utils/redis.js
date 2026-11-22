@@ -16,6 +16,10 @@ export const CacheKeys = {
   PT_PROMOTIONS: () => `home:pt-promotions`,
   CLINIC_PROMOTIONS: () => `home:clinic-promotions`,
   SPONSORED_PRODUCTS: () => `home:sponsored-products`,
+  EDU_RESOURCES: (q) => `edu:resources:${q}`,
+  EDU_RESOURCE: (id) => `edu:resource:${id}`,
+  EDU_RECENT: (limit) => `edu:recent:${limit}`,
+  EDU_REQUESTS: (q) => `edu:requests:${q}`,
 };
 
 // Cache TTL (Time To Live) in seconds
@@ -141,5 +145,9 @@ export class CacheService {
     }
   }
 }
+
+// Invalidate all education-related caches (resources, details, requests).
+export const invalidateEducationCache = () =>
+  CacheService.delPattern("edu:*");
 
 export default redisClient;

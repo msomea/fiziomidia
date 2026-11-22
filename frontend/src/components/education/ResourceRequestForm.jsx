@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { EDUCATION_CATEGORIES, EDUCATION_FILE_TYPES, EDUCATION_LANGUAGES } from "../../constants/education";
+import { EDUCATION_FILE_TYPES, EDUCATION_LANGUAGES, getSortedCategories } from "../../constants/education";
 import { createRequest } from "../../api/education";
 
 export default function ResourceRequestForm({ onCreated }) {
@@ -56,7 +56,7 @@ export default function ResourceRequestForm({ onCreated }) {
           <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_category")}</span></label>
           <select className="select select-bordered w-full" value={form.category} onChange={set("category")} required>
             <option value="">{t("edu_select_category")}</option>
-            {EDUCATION_CATEGORIES.map((c) => (
+            {getSortedCategories(t).map((c) => (
               <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
             ))}
           </select>

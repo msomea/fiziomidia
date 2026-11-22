@@ -5,12 +5,12 @@ import toast from "react-hot-toast";
 import { Upload, X } from "lucide-react";
 import { uploadResource } from "../../api/education";
 import {
-  EDUCATION_CATEGORIES,
   EDUCATION_SUBCATEGORIES,
   EDUCATION_LANGUAGES,
   EDUCATION_LICENSE_TYPES,
   MAX_FILE_SIZE_MB,
   ACCEPTED_FILE_TYPES,
+  getSortedCategories,
 } from "../../constants/education";
 
 export default function ResourceUploadForm() {
@@ -153,7 +153,7 @@ export default function ResourceUploadForm() {
           <label className="label"><span className="label-text font-medium text-tufts">{t("edu_upload_category")}</span></label>
           <select className="select select-bordered w-full" value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value, subCategory: "" }))} required>
             <option value="">{t("edu_select_category")}</option>
-            {EDUCATION_CATEGORIES.map((c) => (
+            {getSortedCategories(t).map((c) => (
               <option key={c.value} value={c.value}>{t(c.labelKey)}</option>
             ))}
           </select>
