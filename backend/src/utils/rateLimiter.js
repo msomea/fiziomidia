@@ -184,7 +184,7 @@ export const limiters = {
   */
   educationUpload: createLimiter({
     windowMs: 60 * 60 * 1000,
-    max: 10,
+    max: 100,
     keyGenerator: getUserKey,
     code: "RATE_LIMIT_EDUCATION_UPLOAD",
     message: "Too many resource uploads, please try again later.",

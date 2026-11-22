@@ -204,7 +204,7 @@ export default function ResourceUploadForm() {
       </div>
 
       <div className="flex justify-end gap-3">
-        <button type="button" className="btn btn-ghost" onClick={() => navigate("/education")}>
+        <button type="button" className="btn bg-red-600 hover:bg-red-900" onClick={() => navigate("/education")}>
           {t("cancel")}
         </button>
         <button type="submit" className="btn bg-caribbean text-white border-none hover:bg-tufts" disabled={submitting}>

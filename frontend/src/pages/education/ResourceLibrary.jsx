@@ -72,7 +72,7 @@ export default function ResourceLibrary() {
             {pagination.totalPages > 1 && (
               <div className="flex items-center justify-center gap-2">
                 <button
-                  className="btn btn-sm btn-ghost"
+                  className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
                   disabled={pagination.page <= 1}
                   onClick={() => goToPage(pagination.page - 1)}
                 >
@@ -82,7 +82,7 @@ export default function ResourceLibrary() {
                   {t("edu_page_of", { page: pagination.page, total: pagination.totalPages })}
                 </span>
                 <button
-                  className="btn btn-sm btn-ghost"
+                  className="btn btn-sm bg-caribbean text-white border-none hover:bg-tufts"
                   disabled={pagination.page >= pagination.totalPages}
                   onClick={() => goToPage(pagination.page + 1)}
                 >

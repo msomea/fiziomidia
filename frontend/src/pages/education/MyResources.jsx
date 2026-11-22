@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import toast from "react-hot-toast";
 import { useAuth } from "../../contexts/AuthContext";
 import { fetchMyResources, deleteResource } from "../../api/education";
 import ResourceCard from "../../components/education/ResourceCard";
 import ResourceSkeleton from "../../components/education/ResourceSkeleton";
 import ResourceStatusBadge from "../../components/education/ResourceStatusBadge";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 
 export default function MyResources() {
   const { t } = useTranslation();
@@ -56,8 +56,19 @@ export default function MyResources() {
   return (
     <div className="min-h-screen bg-alice mt-20 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-caribbean mb-2">{t("edu_my_title")}</h1>
-        <p className="text-gray-600 mb-6">{t("edu_my_desc")}</p>
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-3xl font-bold text-caribbean">{t("edu_my_title")}</h1>
+            <p className="text-gray-600 mt-1">{t("edu_my_desc")}</p>
+          </div>
+          <Link
+            to="/education/upload"
+            className="btn bg-caribbean text-white border-none hover:bg-tufts"
+          >
+            <Upload className="w-4 h-4" />
+            {t("edu_upload_resource")}
+          </Link>
+        </div>
 
         {loading ? (
           <ResourceSkeleton count={4} />
