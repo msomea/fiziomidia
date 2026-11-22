@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from "react";
-import { Search, Filter, RotateCcw } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { Search, RefreshCw } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
+import SectionSkeleton from "./SectionSkeleton";
 import { Link } from "react-router";
 import { useDashboard } from "../../contexts/DashboardContext";
 import { performUnifiedSearch } from "../../api/admin";
@@ -52,14 +53,14 @@ export default function AdminUsers() {
       role: roleFilter,
       licenseStatus: licenseFilter,
     };
-    
+
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
     try {
       setLoading(true);
-      const result = await refreshUsers(filters);
+      await refreshUsers(filters);
     } catch (error) {
       console.error('Failed to refresh users:', error);
       toast.error(t("failed_load_users"));
@@ -82,7 +83,7 @@ export default function AdminUsers() {
       role: roleFilter,
       licenseStatus: licenseFilter,
     };
-    
+
     // Trigger server-side search with debounce
     debouncedLoadUsers(filters);
 
@@ -102,20 +103,32 @@ export default function AdminUsers() {
   // Client-side filtering function
   const filteredUsers = allUsers.filter((user) => {
     // Search filter (case-insensitive search on fullName and email)
-    const matchesSearch = !search || 
+    const matchesSearch = !search ||
       user.fullName?.toLowerCase().includes(search.toLowerCase()) ||
       user.email?.toLowerCase().includes(search.toLowerCase());
-    
+
     // Role filter
     const matchesRole = !roleFilter || user.role === roleFilter;
-    
+
     // License filter
     const license = user?.ptProfile?.licenses?.[0];
-    const matchesLicense = !licenseFilter || 
+    const matchesLicense = !licenseFilter ||
       (license?.verificationStatus === licenseFilter);
-    
+
     return matchesSearch && matchesRole && matchesLicense;
   });
+
+  // Stats derived from loaded users
+  const stats = useMemo(() => {
+    const pts = allUsers.filter((u) => u.role === "physiotherapist").length;
+    const pendingPts = allUsers.filter((u) => u.role === "pendingPhysiotherapist").length;
+    const members = allUsers.filter((u) => u.role === "member").length;
+    const admins = allUsers.filter((u) => u.role === "admin").length;
+    const licensesPending = allUsers.filter(
+      (u) => u?.ptProfile?.licenses?.[0]?.verificationStatus === "pending"
+    ).length;
+    return { total: allUsers.length, pts, pendingPts, members, admins, licensesPending };
+  }, [allUsers]);
 
   // Use dashboard loading state for initial load, local loading for refreshes
   const isLoading = dashboardLoading || loading;
@@ -123,6 +136,31 @@ export default function AdminUsers() {
 
   return (
     <CollapsibleSection title={t('users_management')}>
+      <div className="flex justify-end mb-3">
+        <button onClick={loadUsers} className="btn btn-xs btn-ghost text-caribbean">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Stats */}
+      {allUsers.length > 0 && (
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+          {[
+            ["stat_total", stats.total],
+            ["physiotherapists", stats.pts],
+            ["pending_pt_request", stats.pendingPts],
+            ["members", stats.members],
+            ["admins", stats.admins],
+            ["pending_verification", stats.licensesPending],
+          ].map(([key, val]) => (
+            <div key={key} className="bg-alice rounded-lg p-2 text-center">
+              <p className="text-lg font-bold text-caribbean">{val}</p>
+              <p className="text-[10px] text-gray-500">{t(key)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Search + Filters */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -131,20 +169,11 @@ export default function AdminUsers() {
             <input
               type="text"
               placeholder={t('search_placeholder_users')}
-              className="w-full border rounded pl-8 p-2"
+              className="input input-bordered input-xs w-full pl-8"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-
-          <button
-            onClick={loadUsers}
-            disabled={loading}
-            className="px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean/80 disabled:opacity-50 flex items-center gap-2"
-          >
-            <RotateCcw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
 
           <button
             onClick={() => {
@@ -152,18 +181,16 @@ export default function AdminUsers() {
               setRoleFilter("");
               setLicenseFilter("");
             }}
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            className="btn btn-xs btn-outline border-gray-400 text-gray-600 hover:bg-gray-500 hover:text-white"
           >
-            Clear Filters
+            {t("filter_all")}
           </button>
         </div>
 
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-500" />
-
           {/* Role Filter */}
           <select
-            className="border p-2 rounded"
+            className="select select-bordered select-xs"
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
           >
@@ -176,20 +203,20 @@ export default function AdminUsers() {
 
           {/* License Verification Filter */}
           <select
-            className="border p-2 rounded"
+            className="select select-bordered select-xs"
             value={licenseFilter}
             onChange={(e) => setLicenseFilter(e.target.value)}
           >
             <option value="">{t('all_license_status')}</option>
             <option value="pending">{t('pending_verification')}</option>
             <option value="approved">{t('approved')}</option>
-            <option value="rejected">{t('rejected')}</option>
+            <option value="rejected">{t('status_rejected')}</option>
           </select>
         </div>
       </div>
 
       {/* Table */}
-      <div className="border rounded">
+      <div className="border border-gray-200 rounded-xl max-h-[500px] overflow-y-auto overflow-x-auto mt-4">
         <table className="w-full text-sm">
             <thead className="bg-gray-100 text-caribbean text-left">
             <tr>
@@ -205,11 +232,13 @@ export default function AdminUsers() {
           <tbody className="text-tufts">
             {isLoading ? (
               <tr>
-                <td className="p-4 text-center" colSpan="6">Loading...</td>
+                <td className="p-0" colSpan="6">
+                  <SectionSkeleton count={3} />
+                </td>
               </tr>
             ) : displayUsers.length === 0 ? (
               <tr>
-                <td className="p-4 text-center" colSpan="6">
+                <td className="p-4 text-center text-sm text-gray-500" colSpan="6">
                   {allUsers.length === 0 ? t('no_users_found') : t('no_users_match_filters')}
                 </td>
               </tr>
@@ -230,7 +259,7 @@ export default function AdminUsers() {
                       <Link
                         to={`/users/${u._id}/send-email`}
                         className="text-tufts underline hover:text-caribbean"
-                        
+
                       >
                         {u.email}
                       </Link>

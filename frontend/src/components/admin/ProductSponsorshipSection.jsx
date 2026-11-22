@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import CollapsibleSection from "./CollapsibleSection";
+import SectionSkeleton from "./SectionSkeleton";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
+import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
 
@@ -15,13 +17,6 @@ export default function ProductSponsorshipSection() {
   const [search, setSearch] = useState(""); // search by product name
   const [status, setStatus] = useState(""); // active/inactive
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Only load sponsored products when filters change or page changes (not on initial mount)
-    if (search || status || page > 1) {
-      loadSponsoredProducts();
-    }
-  }, [search, status, page]);
 
   const loadSponsoredProducts = async () => {
     try {
@@ -39,11 +34,47 @@ export default function ProductSponsorshipSection() {
     }
   };
 
-  // Use dashboard loading state for initial load, local loading for refreshes
+  useEffect(() => {
+    // Load sponsored products when filters or page change (also runs on mount)
+    loadSponsoredProducts();
+  }, [search, status, page]);
+
+  // Stats derived from the sponsored products dataset in context
+  const stats = useMemo(() => {
+    const source = Array.isArray(sponsoredProducts) ? sponsoredProducts : [];
+    return {
+      total: source.length,
+      active: source.filter((p) => p.isActive).length,
+      inactive: source.filter((p) => !p.isActive).length,
+    };
+  }, [sponsoredProducts]);
+
   const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t("sponsored_products")}>
+      <div className="flex justify-end mb-3">
+        <button onClick={loadSponsoredProducts} className="btn btn-xs btn-ghost text-caribbean">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Stats */}
+      {stats.total > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[
+            ["stat_total", stats.total],
+            ["status_active", stats.active],
+            ["status_inactive", stats.inactive],
+          ].map(([key, val]) => (
+            <div key={key} className="bg-alice rounded-lg p-2 text-center">
+              <p className="text-lg font-bold text-caribbean">{val}</p>
+              <p className="text-[10px] text-gray-500">{t(key)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* FILTERS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <input
@@ -51,13 +82,13 @@ export default function ProductSponsorshipSection() {
           placeholder={t("search_placeholder_products")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 rounded"
+          className="input input-bordered input-xs"
         />
 
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 rounded"
+          className="select select-bordered select-xs"
         >
           <option value="">{t("filter_all")}</option>
           <option value="active">{t("status_active")}</option>
@@ -67,79 +98,76 @@ export default function ProductSponsorshipSection() {
 
       {/* PRODUCT LIST */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean"></div>
-          <span className="ml-2 text-gray-500">Loading products...</span>
-        </div>
+        <SectionSkeleton count={3} />
       ) : sponsoredProducts.length === 0 ? (
-        <p className="text-gray-500 text-sm mt-4">{t("no_products_found")}</p>
+        <p className="text-sm text-gray-500 text-center py-4">{t("no_products_found")}</p>
       ) : (
-        sponsoredProducts.map((product) => (
-          <div
-            key={product._id}
-            className="mt-3 p-3 bg-gray-100 rounded text-tufts flex gap-4"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-20 h-20 rounded object-cover border"
-            />
-            <div className="text-sm flex-1">
-              <Link to={`/admin/sponsored-products/${product._id}`}>
-                <h3 className="font-bold text-caribbean text-lg">{product.name}</h3>
-              </Link>
-              <p>
-                <b>{t("owner_label")}</b> {product.owner?.fullName}
-              </p>
-              <p>
-                <b>{t("price_label")}</b> {product.price}
-              </p>
-              <p>
-                <b>{t("description_label")}</b> {product.description}
-              </p>
-              <p>
-                <b>{t("end_date")}</b> {product.endDate}
-              </p>
-              <p>
-                <b>{t("status_label")}</b>{" "}
-                {product.isActive ? t("status_active") : t("status_inactive")}
-              </p>
-              {product.link && (
-                <p>
-                  <b>{t("link_label")}</b>{" "}
-                  <a
-                    href={`https://${product.link}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline"
-                  >
-                    {t("visit_link")}
-                  </a>
-                </p>
-              )}
+        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+          {sponsoredProducts.map((product) => (
+            <div
+              key={product._id}
+              className="border border-gray-200 rounded-xl p-3 flex gap-4"
+            >
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-20 h-20 rounded object-cover border"
+              />
+              <div className="text-sm flex-1 min-w-0">
+                <Link to={`/admin/sponsored-products/${product._id}`}>
+                  <h3 className="font-bold text-caribbean text-lg">{product.name}</h3>
+                </Link>
+                <div className="text-tufts">
+                  <p>
+                    <b>{t("owner_label")}</b> {product.owner?.fullName}
+                  </p>
+                  <p>
+                    <b>{t("price_label")}</b> {product.price}
+                  </p>
+                  <p>
+                    <b>{t("description_label")}</b> {product.description}
+                  </p>
+                  <p>
+                    <b>{t("end_date")}</b> {product.endDate}
+                  </p>
+                  {product.link && (
+                    <p>
+                      <b>{t("link_label")}</b>{" "}
+                      <a
+                        href={`https://${product.link}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {t("visit_link")}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
 
-      {/* Pagination - simplified for dashboard preview */}
-      <div className="flex justify-center items-center gap-3 mt-4">
+      {/* Pagination */}
+      <div className="flex justify-center items-center gap-2 mt-4">
         <button
           onClick={() => setPage((p) => p - 1)}
           disabled={page === 1}
-          className="btn btn-sm bg-gray-200 text-accent disabled:opacity-50"
+          className="btn btn-xs btn-outline border-caribbean text-caribbean hover:bg-caribbean hover:text-white disabled:opacity-50"
         >
           {t("prev")}
         </button>
 
-        <span className="font-bold text-caribbean">
+        <span className="text-sm font-bold text-caribbean">
           {page} / {totalPages}
         </span>
 
         <button
           onClick={() => setPage((p) => p + 1)}
           disabled={page === totalPages}
-          className="btn btn-sm bg-caribbean text-white hover:bg-tufts"
+          className="btn btn-xs btn-outline border-caribbean text-caribbean hover:bg-caribbean hover:text-white disabled:opacity-50"
         >
           {t("next")}
         </button>

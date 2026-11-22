@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
-import { Activity, Users, Calendar, TrendingUp } from "lucide-react";
+import { Activity, Users, Calendar, TrendingUp, RefreshCw } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
+import SectionSkeleton from "./SectionSkeleton";
 import dayjs from "dayjs";
 import { useDashboard } from "../../contexts/DashboardContext";
 import { performUnifiedSearch } from "../../api/admin";
@@ -22,13 +23,10 @@ export default function AdminMonitoringSection() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-
   const [showStats, setShowStats] = useState(false);
   const [searchedLogs, setSearchedLogs] = useState([]);
 
-  // 🔥 Debounce search (performance boost)
+  // Debounce search (performance boost)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
@@ -36,13 +34,6 @@ export default function AdminMonitoringSection() {
 
     return () => clearTimeout(timer);
   }, [search]);
-
-  useEffect(() => {
-    // Load logs when filters change
-    if (debouncedSearch || adminFilter || actionFilter || targetFilter || startDate || endDate) {
-      loadActivityLogs();
-    }
-  }, [currentPage, debouncedSearch, adminFilter, actionFilter, targetFilter, startDate, endDate]);
 
   const loadActivityLogs = async () => {
     try {
@@ -55,8 +46,7 @@ export default function AdminMonitoringSection() {
           action: actionFilter,
           targetType: targetFilter
         },
-        page: currentPage,
-        limit: postsPerPage,
+        limit: 50,
         sortBy: 'createdAt',
         sortOrder: 'desc'
       });
@@ -69,7 +59,18 @@ export default function AdminMonitoringSection() {
     }
   };
 
-  // 🔥 Extract unique admins for dropdown
+  const reload = () => {
+    loadActivityLogs();
+    refreshAdminStats();
+    refreshActivityLogs();
+  };
+
+  useEffect(() => {
+    // Load logs on mount and whenever server-side filters change
+    loadActivityLogs();
+  }, [debouncedSearch, adminFilter, actionFilter, targetFilter]);
+
+  // Extract unique admins for dropdown
   const adminOptions = useMemo(() => {
     const map = new Map();
 
@@ -87,15 +88,8 @@ export default function AdminMonitoringSection() {
     }));
   }, [activityLogs]);
 
-  // 🔥 Optimized filtering
-  // When any filter/search is active, use server-side unified search results;
-  // otherwise fall back to the dashboard's initial activityLogs.
-  const hasActiveFilters = Boolean(
-    debouncedSearch || adminFilter || actionFilter || targetFilter || startDate || endDate
-  );
-
   const filteredLogs = useMemo(() => {
-    const sourceLogs = hasActiveFilters ? searchedLogs : activityLogs;
+    const sourceLogs = searchedLogs;
     if (!Array.isArray(sourceLogs)) {
       return [];
     }
@@ -132,9 +126,7 @@ export default function AdminMonitoringSection() {
       );
     });
   }, [
-    activityLogs,
     searchedLogs,
-    hasActiveFilters,
     debouncedSearch,
     actionFilter,
     adminFilter,
@@ -143,13 +135,19 @@ export default function AdminMonitoringSection() {
     endDate,
   ]);
 
-  // 🔥 Pagination AFTER filtering
-  const totalPages = Math.ceil(filteredLogs.length / postsPerPage);
-
-  const paginatedLogs = useMemo(() => {
-    const start = (currentPage - 1) * postsPerPage;
-    return filteredLogs.slice(start, start + postsPerPage);
-  }, [filteredLogs, currentPage]);
+  // Stats derived from the activity logs dataset in context
+  const stats = useMemo(() => {
+    const source = Array.isArray(activityLogs) ? activityLogs : [];
+    const today = dayjs().format("YYYY-MM-DD");
+    const uniqueAdmins = new Set(source.map((l) => l.admin?._id).filter(Boolean)).size;
+    const uniqueActions = new Set(source.map((l) => l.action).filter(Boolean)).size;
+    return {
+      total: source.length,
+      today: source.filter((l) => dayjs(l.createdAt).format("YYYY-MM-DD") === today).length,
+      admins: uniqueAdmins,
+      actions: uniqueActions,
+    };
+  }, [activityLogs]);
 
   const getActionIcon = (action) => {
     const iconMap = {
@@ -212,234 +210,226 @@ export default function AdminMonitoringSection() {
   const isLoading = dashboardLoading || loading;
   return (
     <CollapsibleSection title={t('admin_monitoring')}>
-      <div className="space-y-4 text-tufts">
+      <div className="flex justify-end mb-3">
+        <button onClick={reload} className="btn btn-xs btn-ghost text-caribbean">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Stats Toggle */}
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={() => setShowStats(!showStats)}
-            className="flex items-center gap-2 px-4 py-2 bg-caribbean text-white rounded hover:bg-caribbean-dark"
-          >
-            <Activity className="w-4 h-4" />
-            {showStats ? t('hide_stats') : t('show_stats')}
-          </button>
+      {/* Stats */}
+      {stats.total > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+          {[
+            ["stat_total", stats.total],
+            ["stat_today", stats.today],
+            ["admins", stats.admins],
+            ["actions", stats.actions],
+          ].map(([key, val]) => (
+            <div key={key} className="bg-alice rounded-lg p-2 text-center">
+              <p className="text-lg font-bold text-caribbean">{val}</p>
+              <p className="text-[10px] text-gray-500">{t(key)}</p>
+            </div>
+          ))}
         </div>
+      )}
 
-        {/* Stats Panel */}
-        {showStats && adminStats && adminStats.stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded">
-            {/* Action Stats */}
-            <div>
-              <h3 className="font-semibold text-caribbean mb-2">{t('action_statistics')}</h3>
-              <div className="space-y-1">
-                {adminStats.stats.actionStats?.slice(0, 6).map((action) => (
-                  <div key={action._id} className="flex justify-between text-sm">
-                    <span>{formatAction(action._id)}</span>
-                    <span className="font-medium">{action.count}</span>
-                  </div>
-                ))}
-                {(!adminStats.stats.actionStats || adminStats.stats.actionStats.length === 0) && (
-                  <div className="text-sm text-gray-500">{t('no_actions_found')}</div>
-                )}
-              </div>
-            </div>
+      {/* Stats Toggle */}
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => setShowStats(!showStats)}
+          className="btn btn-xs btn-outline border-caribbean text-caribbean hover:bg-caribbean hover:text-white flex items-center gap-2"
+        >
+          <Activity className="w-4 h-4" />
+          {showStats ? t('hide_stats') : t('show_stats')}
+        </button>
+      </div>
 
-            {/* Admin Stats */}
-            <div>
-              <h3 className="font-semibold text-caribbean mb-2">{t('admin_activity')}</h3>
-              <div className="space-y-1">
-                {adminStats.stats.adminStats?.map((admin) => (
-                  <div key={admin._id} className="flex justify-between text-sm">
-                    <span>{admin.adminName}</span>
-                    <span className="font-medium">{admin.count}</span>
-                  </div>
-                ))}
-                {(!adminStats.stats.adminStats || adminStats.stats.adminStats.length === 0) && (
-                  <div className="text-sm text-gray-500">{t('no_admin_activity')}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Daily Stats */}
-            <div>
-              <h3 className="font-semibold text-caribbean mb-2">{t('daily_activity')}</h3>
-              <div className="space-y-1">
-                {adminStats.stats.dailyStats?.map((day) => (
-                  <div key={`${day._id.year}-${day._id.month}-${day._id.day}`} className="flex justify-between text-sm">
-                    <span>{dayjs(`${day._id.year}-${day._id.month}-${day._id.day}`).format('MMM DD, YYYY')}</span>
-                    <span className="font-medium">{day.count}</span>
-                  </div>
-                ))}
-                {(!adminStats.stats.dailyStats || adminStats.stats.dailyStats.length === 0) && (
-                  <div className="text-sm text-gray-500">{t('no_daily_activity')}</div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-
-          {/* Search */}
-          <input
-            type="text"
-            placeholder={t('search_activities')}
-            className="border p-2 rounded"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          {/* Admin Filter */}
-          <select
-            className="border p-2 rounded"
-            value={adminFilter}
-            onChange={(e) => setAdminFilter(e.target.value)}
-          >
-            <option value="">{t('all_admins')}</option>
-            {adminOptions.map((admin) => (
-              <option key={admin.id} value={admin.id}>
-                {admin.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Action Filter */}
-          <select
-            className="border p-2 rounded"
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-          >
-            <option value="">{t('all_actions')}</option>
-            <option value="USER_ROLE_UPDATED">{t('user_role_updates')}</option>
-            <option value="LICENSE_VERIFIED">{t('license_verified')}</option>
-            <option value="LICENSE_REJECTED">{t('license_rejected')}</option>
-            <option value="APPOINTMENT_UPDATED">{t('appointment_updates')}</option>
-            <option value="PROMOTION_UPDATED">{t('promotion_updates')}</option>
-            <option value="PRODUCT_CREATED">{t('product_created')}</option>
-            <option value="EMAIL_SENT">{t('emails_sent')}</option>
-            <option value="EDUCATION_RESOURCE_APPROVED">{t('education_resource_approved')}</option>
-            <option value="EDUCATION_RESOURCE_REJECTED">{t('education_resource_rejected')}</option>
-            <option value="EDUCATION_RESOURCE_SUSPENDED">{t('education_resource_suspended')}</option>
-            <option value="EDUCATION_RESOURCE_REMOVED">{t('education_resource_removed')}</option>
-            <option value="EDUCATION_RESOURCE_RESTORED">{t('education_resource_restored')}</option>
-            <option value="EDUCATION_DOWNLOAD_HOLD_SET">{t('education_download_hold_set')}</option>
-            <option value="EDUCATION_DOWNLOAD_HOLD_RELEASED">{t('education_download_hold_released')}</option>
-            <option value="EDUCATION_REPORT_UPDATED">{t('education_report_updated')}</option>
-            <option value="EDUCATION_REQUEST_UPDATED">{t('education_request_updated')}</option>
-          </select>
-
-          {/* Target Filter */}
-          <select
-            className="border p-2 rounded"
-            value={targetFilter}
-            onChange={(e) => setTargetFilter(e.target.value)}
-          >
-            <option value="">{t('all_targets')}</option>
-            <option value="User">{t('users')}</option>
-            <option value="Appointment">{t('appointments')}</option>
-            <option value="Promotion">{t('promotions')}</option>
-            <option value="SponsoredProduct">{t('products')}</option>
-            <option value="EducationResource">{t('education_resources')}</option>
-            <option value="CopyrightReport">{t('copyright_reports')}</option>
-            <option value="ResourceRequest">{t('resource_requests')}</option>
-          </select>
-
-          {/* Dates */}
-          <div className="flex gap-2">
-            <input
-              type="date"
-              className="border p-2 rounded flex-1"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-            <input
-              type="date"
-              className="border p-2 rounded flex-1"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Logs */}
-        <div className="border rounded">
-          {isLoading ? (
-            <div className="p-8 text-center text-gray-500">
-              Loading...
-            </div>
-          ) : filteredLogs.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              {t('no_activities_found')}
-            </div>
-          ) : (
-            <div className="divide-y">
-              {paginatedLogs.map((log) => (
-                <div key={log._id} className="p-3 hover:bg-gray-50">
-                  <div className="flex items-start gap-3">
-                    <div className={getActionColor(log.action)}>
-                      {getActionIcon(log.action)}
-                    </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`font-medium ${getActionColor(log.action)}`}>
-                          {formatAction(log.action)}
-                        </span>
-                        <span className="text-gray-400 text-sm">
-                          {dayjs(log.createdAt).format('MMM DD, YYYY HH:mm')}
-                        </span>
-                      </div>
-
-                      <p className="text-sm text-gray-600 mb-1">{log.description}</p>
-
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>
-                          {t('by')}: <strong>{log.admin?.fullName || 'Unknown'}</strong>
-                        </span>
-                        {log.targetType && (
-                          <span>
-                            {t('target')}: <strong>{log.targetType}</strong>
-                          </span>
-                        )}
-                        {log.ipAddress && (
-                          <span>
-                            IP: <strong>{log.ipAddress}</strong>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+      {/* Stats Panel */}
+      {showStats && adminStats && adminStats.stats && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded">
+          {/* Action Stats */}
+          <div>
+            <h3 className="font-semibold text-caribbean mb-2">{t('action_statistics')}</h3>
+            <div className="space-y-1">
+              {adminStats.stats.actionStats?.slice(0, 6).map((action) => (
+                <div key={action._id} className="flex justify-between text-sm">
+                  <span>{formatAction(action._id)}</span>
+                  <span className="font-medium">{action.count}</span>
                 </div>
               ))}
+              {(!adminStats.stats.actionStats || adminStats.stats.actionStats.length === 0) && (
+                <div className="text-sm text-gray-500">{t('no_actions_found')}</div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              {t('previous')}
-            </button>
-
-            <span className="text-sm">
-              {t('page')} {currentPage} {t('of')} {totalPages}
-            </span>
-
-            <button
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              {t('next')}
-            </button>
           </div>
-        )}
+
+          {/* Admin Stats */}
+          <div>
+            <h3 className="font-semibold text-caribbean mb-2">{t('admin_activity')}</h3>
+            <div className="space-y-1">
+              {adminStats.stats.adminStats?.map((admin) => (
+                <div key={admin._id} className="flex justify-between text-sm">
+                  <span>{admin.adminName}</span>
+                  <span className="font-medium">{admin.count}</span>
+                </div>
+              ))}
+              {(!adminStats.stats.adminStats || adminStats.stats.adminStats.length === 0) && (
+                <div className="text-sm text-gray-500">{t('no_admin_activity')}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Daily Stats */}
+          <div>
+            <h3 className="font-semibold text-caribbean mb-2">{t('daily_activity')}</h3>
+            <div className="space-y-1">
+              {adminStats.stats.dailyStats?.map((day) => (
+                <div key={`${day._id.year}-${day._id.month}-${day._id.day}`} className="flex justify-between text-sm">
+                  <span>{dayjs(`${day._id.year}-${day._id.month}-${day._id.day}`).format('MMM DD, YYYY')}</span>
+                  <span className="font-medium">{day.count}</span>
+                </div>
+              ))}
+              {(!adminStats.stats.dailyStats || adminStats.stats.dailyStats.length === 0) && (
+                <div className="text-sm text-gray-500">{t('no_daily_activity')}</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+
+        {/* Search */}
+        <input
+          type="text"
+          placeholder={t('search_activities')}
+          className="input input-bordered input-xs"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* Admin Filter */}
+        <select
+          className="select select-bordered select-xs"
+          value={adminFilter}
+          onChange={(e) => setAdminFilter(e.target.value)}
+        >
+          <option value="">{t('all_admins')}</option>
+          {adminOptions.map((admin) => (
+            <option key={admin.id} value={admin.id}>
+              {admin.name}
+            </option>
+          ))}
+        </select>
+
+        {/* Action Filter */}
+        <select
+          className="select select-bordered select-xs"
+          value={actionFilter}
+          onChange={(e) => setActionFilter(e.target.value)}
+        >
+          <option value="">{t('all_actions')}</option>
+          <option value="USER_ROLE_UPDATED">{t('user_role_updates')}</option>
+          <option value="LICENSE_VERIFIED">{t('license_verified')}</option>
+          <option value="LICENSE_REJECTED">{t('license_rejected')}</option>
+          <option value="APPOINTMENT_UPDATED">{t('appointment_updates')}</option>
+          <option value="PROMOTION_UPDATED">{t('promotion_updates')}</option>
+          <option value="PRODUCT_CREATED">{t('product_created')}</option>
+          <option value="EMAIL_SENT">{t('emails_sent')}</option>
+          <option value="EDUCATION_RESOURCE_APPROVED">{t('education_resource_approved')}</option>
+          <option value="EDUCATION_RESOURCE_REJECTED">{t('education_resource_rejected')}</option>
+          <option value="EDUCATION_RESOURCE_SUSPENDED">{t('education_resource_suspended')}</option>
+          <option value="EDUCATION_RESOURCE_REMOVED">{t('education_resource_removed')}</option>
+          <option value="EDUCATION_RESOURCE_RESTORED">{t('education_resource_restored')}</option>
+          <option value="EDUCATION_DOWNLOAD_HOLD_SET">{t('education_download_hold_set')}</option>
+          <option value="EDUCATION_DOWNLOAD_HOLD_RELEASED">{t('education_download_hold_released')}</option>
+          <option value="EDUCATION_REPORT_UPDATED">{t('education_report_updated')}</option>
+          <option value="EDUCATION_REQUEST_UPDATED">{t('education_request_updated')}</option>
+        </select>
+
+        {/* Target Filter */}
+        <select
+          className="select select-bordered select-xs"
+          value={targetFilter}
+          onChange={(e) => setTargetFilter(e.target.value)}
+        >
+          <option value="">{t('all_targets')}</option>
+          <option value="User">{t('users')}</option>
+          <option value="Appointment">{t('appointments')}</option>
+          <option value="Promotion">{t('promotions')}</option>
+          <option value="SponsoredProduct">{t('products')}</option>
+          <option value="EducationResource">{t('education_resources')}</option>
+          <option value="CopyrightReport">{t('copyright_reports')}</option>
+          <option value="ResourceRequest">{t('resource_requests')}</option>
+        </select>
+
+        {/* Dates */}
+        <div className="flex gap-2">
+          <input
+            type="date"
+            className="input input-bordered input-xs flex-1"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="input input-bordered input-xs flex-1"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
       </div>
+
+      {/* Logs */}
+      {isLoading ? (
+        <SectionSkeleton count={3} />
+      ) : filteredLogs.length === 0 ? (
+        <p className="text-sm text-gray-500 text-center py-4">
+          {t('no_activities_found')}
+        </p>
+      ) : (
+        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+          {filteredLogs.map((log) => (
+            <div key={log._id} className="border border-gray-200 rounded-xl p-3 hover:bg-gray-50">
+              <div className="flex items-start gap-3">
+                <div className={getActionColor(log.action)}>
+                  {getActionIcon(log.action)}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`font-medium ${getActionColor(log.action)}`}>
+                      {formatAction(log.action)}
+                    </span>
+                    <span className="text-gray-400 text-sm">
+                      {dayjs(log.createdAt).format('MMM DD, YYYY HH:mm')}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-gray-600 mb-1">{log.description}</p>
+
+                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <span>
+                      {t('by')}: <strong>{log.admin?.fullName || 'Unknown'}</strong>
+                    </span>
+                    {log.targetType && (
+                      <span>
+                        {t('target')}: <strong>{log.targetType}</strong>
+                      </span>
+                    )}
+                    {log.ipAddress && (
+                      <span>
+                        IP: <strong>{log.ipAddress}</strong>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </CollapsibleSection>
   );
 }

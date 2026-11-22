@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import CollapsibleSection from "./CollapsibleSection";
+import SectionSkeleton from "./SectionSkeleton";
+import ResourceStatusBadge from "../education/ResourceStatusBadge";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
 import { Link } from "react-router";
+import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
 import { performUnifiedSearch } from "../../api/admin";
 
 export default function ClinicPromotionSection() {
   const { t } = useTranslation();
-  const { clinicPromotions, refreshClinicPromotions, loading: dashboardLoading } = useDashboard();
+  const { clinicPromotions, loading: dashboardLoading } = useDashboard();
 
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -17,20 +20,6 @@ export default function ClinicPromotionSection() {
   // Filters
   const [search, setSearch] = useState("");       // search clinic name or address
   const [status, setStatus] = useState("");       // sort/filter by status
-
-  useEffect(() => {
-    // Load promotions when filters change
-    if (search || status) {
-      loadClinicPromotions();
-    }
-  }, [search, status]);
-
-  // Initial data load if clinicPromotions is empty
-  useEffect(() => {
-    if (!clinicPromotions || clinicPromotions.length === 0) {
-      loadClinicPromotions();
-    }
-  }, []);
 
   const loadClinicPromotions = async () => {
     try {
@@ -50,29 +39,66 @@ export default function ClinicPromotionSection() {
     }
   };
 
-  // Use centralized data when no filters, otherwise use filtered data
-  const displayPromotions = (search || status) ? (Array.isArray(promotions) ? promotions : []) : (Array.isArray(clinicPromotions) ? clinicPromotions : []);
-  
-  // Use dashboard loading state for initial load, local loading for refreshes
+  useEffect(() => {
+    // Load promotions when filters change (also runs on mount)
+    loadClinicPromotions();
+  }, [search, status]);
+
+  // Stats derived from the full clinic promotions dataset in context
+  const stats = useMemo(() => {
+    const source = Array.isArray(clinicPromotions) ? clinicPromotions : [];
+    return {
+      total: source.length,
+      pending: source.filter((p) => p.status === "pending").length,
+      active: source.filter((p) => p.status === "active").length,
+      expired: source.filter((p) => p.status === "expired").length,
+      suspended: source.filter((p) => p.status === "suspended").length,
+    };
+  }, [clinicPromotions]);
+
   const isLoading = dashboardLoading || loading;
+  const displayPromotions = promotions;
 
   return (
     <CollapsibleSection title={t("clinic_promotions_section_title")}>
+      <div className="flex justify-end mb-3">
+        <button onClick={loadClinicPromotions} className="btn btn-xs btn-ghost text-caribbean">
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Stats */}
+      {stats.total > 0 && (
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+          {[
+            ["stat_total", stats.total],
+            ["status_pending", stats.pending],
+            ["status_active", stats.active],
+            ["status_expired", stats.expired],
+            ["status_suspended", stats.suspended],
+          ].map(([key, val]) => (
+            <div key={key} className="bg-alice rounded-lg p-2 text-center">
+              <p className="text-lg font-bold text-caribbean">{val}</p>
+              <p className="text-[10px] text-gray-500">{t(key)}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* FILTERS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
         <input
           type="text"
           placeholder={t("search_clinic_placeholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border p-2 rounded"
+          className="input input-bordered input-xs"
         />
 
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 rounded"
+          className="select select-bordered select-xs"
         >
           <option value="">{t("all_status")}</option>
           <option value="pending">{t("status_pending")}</option>
@@ -83,34 +109,37 @@ export default function ClinicPromotionSection() {
       </div>
 
       {/* CLINIC PROMOTIONS LIST */}
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-caribbean"></div>
-          <span className="ml-2 text-gray-500">Loading clinic promotions...</span>
-        </div>
+      {isLoading ? (
+        <SectionSkeleton count={3} />
       ) : displayPromotions.length === 0 ? (
-        <p className="text-gray-500 text-sm mt-4">{t("no_clinic_promotions_found")}</p>
+        <p className="text-sm text-gray-500 text-center py-4">{t("no_clinic_promotions_found")}</p>
       ) : (
-        displayPromotions.map((promo) => (
-          <div key={promo._id} className="mt-2 p-2 bg-gray-100 rounded text-tufts">
-            <Link to={`/admin/clinic-promotions/${promo._id}`}>
-              <h3 className="font-bold textarea-s text-caribbean">
-                {t("clinic_promotion_number", { id: promo._id })}
-              </h3>
-            </Link>
-            <div className="text-sm">
-              <p><b>{t("clinic_label")}:</b> {promo.clinic?.name}</p>
-              <p><b>{t("address_label")}:</b> {promo.clinic?.address}</p>
-              <p><b>{t("owner_label")}:</b> {promo.clinic?.ownerUserId?.fullName}</p>
-              <p><b>{t("status_label")}:</b> {promo.status || t("unknown")}</p>
-              <p><b>{t("tier_label")}:</b> {promo.title}</p>
-              <p><b>{t("due_date_label")}:</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>
-              {promo.customTitle && (
-                <p><b>{t("custom_title_label")}:</b> {promo.customTitle}</p>
-              )}
+        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+          {displayPromotions.map((promo) => (
+            <div key={promo._id} className="border border-gray-200 rounded-xl p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <Link to={`/admin/clinic-promotions/${promo._id}`}>
+                    <h3 className="font-bold text-caribbean">
+                      {t("clinic_promotion_number", { id: promo._id })}
+                    </h3>
+                  </Link>
+                  <div className="text-sm mt-1 text-tufts">
+                    <p><b>{t("clinic_label")}:</b> {promo.clinic?.name}</p>
+                    <p><b>{t("address_label")}:</b> {promo.clinic?.address}</p>
+                    <p><b>{t("owner_label")}:</b> {promo.clinic?.ownerUserId?.fullName}</p>
+                    <p><b>{t("tier_label")}:</b> {promo.title}</p>
+                    <p><b>{t("due_date_label")}:</b> {dayjs(promo.endAt).format("ddd, DD/MM/YYYY")}</p>
+                    {promo.customTitle && (
+                      <p><b>{t("custom_title_label")}:</b> {promo.customTitle}</p>
+                    )}
+                  </div>
+                </div>
+                <ResourceStatusBadge status={promo.status} />
+              </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
 
       <p className="text-xs text-gray-400 mt-2">{t("clinic_promotions_list_note")}</p>

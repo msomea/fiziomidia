@@ -20,8 +20,8 @@ export default function CollapsibleSection({ title, children }) {
 
       <div
         className={`transition-all duration-300 ${
-          open ? "max-h-screen p-4" : "max-h-0 p-0"
-        } overflow-hidden`}
+          open ? "max-h-[75vh] p-4 overflow-y-auto overflow-x-auto" : "max-h-0 p-0 overflow-hidden"
+        }`}
       >
         {open && children}
       </div>
