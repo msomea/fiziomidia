@@ -9,6 +9,8 @@ import {
   FolderOpen,
   Folder,
   ArrowRight,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchRecentResources } from "../api/education";
@@ -25,6 +27,8 @@ const Education = () => {
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -134,42 +138,67 @@ const Education = () => {
       </section>
 
       <div className="max-w-6xl mx-auto px-4 py-12 space-y-12">
-        {/* Action cards */}
+        {/* Action cards — collapsible menu */}
         <section>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {visibleActions.map((a) => (
-              <button
-                key={a.title}
-                onClick={() => handleAction(a)}
-                className={`${a.bg} rounded-2xl shadow p-6 text-left hover:shadow-lg transition-shadow group`}
-              >
-                <a.icon className={`w-8 h-8 ${a.color} mb-3`} />
-                <h3 className="font-semibold text-gray-800 group-hover:text-caribbean transition-colors">
-                  {a.title}
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">{a.desc}</p>
-                <span className={`inline-flex items-center gap-1 text-sm font-medium mt-3 ${a.color}`}>
-                  {t("edu_go")} <ArrowRight className="w-4 h-4" />
-                </span>
-              </button>
-            ))}
-          </div>
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <h2 className="text-2xl font-bold text-caribbean">{t("edu_menu")}</h2>
+            {menuOpen ? (
+              <ChevronUp className="w-6 h-6 text-caribbean" />
+            ) : (
+              <ChevronDown className="w-6 h-6 text-caribbean" />
+            )}
+          </button>
+          {menuOpen && (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-4">
+              {visibleActions.map((a) => (
+                <button
+                  key={a.title}
+                  onClick={() => handleAction(a)}
+                  className={`${a.bg} rounded-2xl shadow p-6 text-left hover:shadow-lg transition-shadow group`}
+                >
+                  <a.icon className={`w-8 h-8 ${a.color} mb-3`} />
+                  <h3 className="font-semibold text-gray-800 group-hover:text-caribbean transition-colors">
+                    {a.title}
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">{a.desc}</p>
+                  <span className={`inline-flex items-center gap-1 text-sm font-medium mt-3 ${a.color}`}>
+                    {t("edu_go")} <ArrowRight className="w-4 h-4" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
-        {/* Browse by category */}
+        {/* Browse by category — collapsed by default for mobile */}
         <section>
-          <h2 className="text-2xl font-bold text-caribbean mb-4">{t("edu_browse_categories")}</h2>
-          <div className="flex flex-wrap gap-3">
-            {EDUCATION_CATEGORIES.map((c) => (
-              <Link
-                key={c.value}
-                to={`/education/library?category=${c.value}`}
-                className="badge badge-lg bg-white text-tufts border border-gray-200 hover:border-caribbean hover:text-caribbean px-4 py-3"
-              >
-                {t(c.labelKey)}
-              </Link>
-            ))}
-          </div>
+          <button
+            onClick={() => setCategoriesOpen((o) => !o)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <h2 className="text-2xl font-bold text-caribbean">{t("edu_browse_categories")}</h2>
+            {categoriesOpen ? (
+              <ChevronUp className="w-6 h-6 text-caribbean" />
+            ) : (
+              <ChevronDown className="w-6 h-6 text-caribbean" />
+            )}
+          </button>
+          {categoriesOpen && (
+            <div className="flex flex-wrap gap-3 mt-4">
+              {EDUCATION_CATEGORIES.map((c) => (
+                <Link
+                  key={c.value}
+                  to={`/education/library?category=${c.value}`}
+                  className="badge badge-lg bg-white text-tufts border border-gray-200 hover:border-caribbean hover:text-caribbean px-4 py-3"
+                >
+                  {t(c.labelKey)}
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Recently approved */}

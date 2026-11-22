@@ -9,7 +9,79 @@ export const EDUCATION_CATEGORIES = [
   { value: "research", labelKey: "edu_cat_research" },
   { value: "clinical_practice", labelKey: "edu_cat_clinical_practice" },
   { value: "education", labelKey: "edu_cat_education" },
-  { value: "professional_development", labelKey: "edu_cat_professional_development" },
+  {
+    value: "professional_development",
+    labelKey: "edu_cat_professional_development",
+  },
+  {
+    value: "physiotherapy_assessment",
+    labelKey: "edu_cat_physiotherapy_assessment",
+  },
+  { value: "clinical_pathology", labelKey: "edu_cat_clinical_pathology" },
+  {
+    value: "physiotherapeutic_pharmacology",
+    labelKey: "edu_cat_physiotherapeutic_pharmacology",
+  },
+  {
+    value: "neuromuscular_physiotherapy",
+    labelKey: "edu_cat_neuromuscular_physiotherapy",
+  },
+  { value: "intensive_care", labelKey: "edu_cat_intensive_care" },
+  { value: "health_promotion", labelKey: "edu_cat_health_promotion" },
+  {
+    value: "soft_tissue_manipulation",
+    labelKey: "edu_cat_soft_tissue_manipulation",
+  },
+  { value: "electrotherapy", labelKey: "edu_cat_electrotherapy" },
+  { value: "sports_medicine", labelKey: "edu_cat_sports_medicine" },
+  { value: "counseling_skills", labelKey: "edu_cat_counseling_skills" },
+  { value: "database", labelKey: "edu_cat_database" },
+  { value: "communication_skills", labelKey: "edu_cat_communication_skills" },
+  { value: "microbiology", labelKey: "edu_cat_microbiology" },
+  { value: "parasitology", labelKey: "edu_cat_parasitology" },
+  {
+    value: "medical_ethics_and_professionalism",
+    labelKey: "edu_cat_medical_ethics_and_professionalism",
+  },
+  {
+    value: "entrepreneurship_and_life_skills",
+    labelKey: "edu_cat_entrepreneurship_and_life_skills",
+  },
+  {
+    value: "infection_prevention_and_control",
+    labelKey: "edu_cat_infection_prevention_and_control",
+  },
+  {
+    value: "epidemiology_and_biostatistics",
+    labelKey: "edu_cat_epidemiology_and_biostatistics",
+  },
+  {
+    value: "computer_application_and_health_information",
+    labelKey: "edu_cat_computer_application_and_health_information",
+  },
+  {
+    value: "emergency_preparedness_and_disaster_management",
+    labelKey: "edu_cat_emergency_preparedness_and_disaster_management",
+  },
+  { value: "nutrition", labelKey: "edu_cat_nutrition" },
+  { value: "movement_science", labelKey: "edu_cat_movement_science" },
+  { value: "patient_care", labelKey: "edu_cat_patient_care" },
+  { value: "psychology", labelKey: "edu_cat_psychology" },
+  { value: "sociology", labelKey: "edu_cat_sociology" },
+  { value: "nursing_and_first_aid", labelKey: "edu_cat_nursing_and_first_aid" },
+  { value: "manual_therapy", labelKey: "edu_cat_manual_therapy" },
+  { value: "ergonomics", labelKey: "edu_cat_ergonomics" },
+  { value: "thermotherapy", labelKey: "edu_cat_thermotherapy" },
+  { value: "psychiatry", labelKey: "edu_cat_psychiatry" },
+  { value: "pain_management", labelKey: "edu_cat_pain_management" },
+  {
+    value: "obstetrics_and_gynecology",
+    labelKey: "edu_cat_obstetrics_and_gynecology",
+  },
+  { value: "urology", labelKey: "edu_cat_urology" },
+  { value: "cardio_respiratory", labelKey: "edu_cat_cardio_respiratory" },
+  { value: "pediatric", labelKey: "edu_cat_pediatric" },
+  { value: "radiology", labelKey: "edu_cat_radiology" },
 ];
 
 export const EDUCATION_SUBCATEGORIES = {
