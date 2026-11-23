@@ -453,6 +453,7 @@
   "user_details": "User Details",
   "basic_info": "Basic Information",
   "id_label": "ID",
+  "name": "Name",
   "phone_label": "Phone",
   "role_pending_pt": "Pending PT verification",
   "role_physio": "Physiotherapist",
