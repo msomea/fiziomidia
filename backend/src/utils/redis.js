@@ -16,6 +16,7 @@ export const CacheKeys = {
   PT_PROMOTIONS: () => `home:pt-promotions`,
   CLINIC_PROMOTIONS: () => `home:clinic-promotions`,
   SPONSORED_PRODUCTS: () => `home:sponsored-products`,
+  TEAM_MEMBERS: () => `team:members`,
   EDU_RESOURCES: (q) => `edu:resources:${q}`,
   EDU_RESOURCE: (id) => `edu:resource:${id}`,
   EDU_RECENT: (limit) => `edu:recent:${limit}`,

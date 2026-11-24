@@ -87,9 +87,40 @@ const getCloudinaryFolder = (fieldname) => {
       return "clinic_promotions";
     case "ptPromotion":
       return "pt_promotions";
+    case "teamMemberImage":
+      return "team_members";
     default:
       return "others";
   }
+};
+
+const getCloudinaryTransformation = (fieldname) => {
+  const base = [
+    {
+      quality: "auto:good",
+      fetch_format: "auto",
+    },
+  ];
+
+  if (fieldname === "teamMemberImage") {
+    return [
+      ...base,
+      {
+        width: 600,
+        height: 600,
+        crop: "fill",
+      },
+    ];
+  }
+
+  return [
+    ...base,
+    {
+      width: 1200,
+      height: 1200,
+      crop: "limit",
+    },
+  ];
 };
 
 /* ------------------------------------------------------------------
@@ -109,17 +140,7 @@ const uploadToCloudinary = (file) => {
         resource_type: "auto",
         use_filename: true,
         unique_filename: true,
-        transformation: [
-          {
-            quality: "auto:good",
-            fetch_format: "auto",
-          },
-          {
-            width: 1200,
-            height: 1200,
-            crop: "limit",
-          },
-        ],
+        transformation: getCloudinaryTransformation(file.fieldname),
       },
       (error, result) => {
         if (error) return reject(error);

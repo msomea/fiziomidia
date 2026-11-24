@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { sendContactMessage } from "../api/contact";
+import TeamMembersSection from "../components/about/TeamMembersSection";
 
 const About = () => {
   const { t } = useTranslation();
@@ -71,6 +72,8 @@ const About = () => {
             ))}
           </div>
         </section>
+
+        <TeamMembersSection />
 
         {/* Get Involved / Support Section (moved from Education page) */}
         <section className="bg-white shadow-md rounded-2xl p-6 md:p-12">
