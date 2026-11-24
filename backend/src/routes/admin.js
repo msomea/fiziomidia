@@ -9,6 +9,7 @@ import * as monitoringController from "../controllers/admin/adminMonitoringContr
 import * as modReq from "../controllers/admin/adminForumModController.js";
 import * as clinicPromo from "../controllers/admin/adminClinicPromotionController.js";
 import * as educationAdmin from "../controllers/admin/adminEducationController.js";
+import * as teamMemberController from "../controllers/admin/adminTeamMemberController.js";
 import {
   adminListReports,
   adminUpdateReport,
@@ -90,6 +91,20 @@ router.delete(
   "/sponsored-products/:id",
   productController.deleteSponsoredProduct,
 );
+
+// Admin Team Members
+router.get("/team-members", teamMemberController.listTeamMembers);
+router.post(
+  "/team-members",
+  upload.single("teamMemberImage"),
+  teamMemberController.createTeamMember,
+);
+router.put(
+  "/team-members/:id",
+  upload.single("teamMemberImage"),
+  teamMemberController.updateTeamMember,
+);
+router.delete("/team-members/:id", teamMemberController.deleteTeamMember);
 
 //Admin Clinic Promotion Routes
 router.get("/clinic-promotions", clinicPromo.getAllClinicPromotionsAdmin);

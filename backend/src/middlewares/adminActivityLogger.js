@@ -99,6 +99,19 @@ export const getProductTargetInfo = (req, responseData) => {
   };
 };
 
+export const getTeamMemberTargetInfo = (req, responseData) => {
+  const isCreate = req.method === "POST";
+  const isDelete = req.method === "DELETE";
+
+  return {
+    targetId: isCreate ? responseData?.member?._id : req.params.id,
+    targetType: "TeamMember",
+    description:
+      `Team member ${isCreate ? "created" : isDelete ? "deleted" : "updated"} ${isCreate ? responseData?.member?._id || "" : req.params.id}`.trim(),
+    details: { memberData: req.body, member: responseData?.member },
+  };
+};
+
 export const getEmailTargetInfo = (req, responseData) => ({
   targetId: req.params.id,
   targetType: "User",
