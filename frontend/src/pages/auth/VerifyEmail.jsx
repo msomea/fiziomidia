@@ -24,7 +24,7 @@ export default function VerifyEmail() {
     };
 
     if (token) verify();
-  }, [token]);
+  }, [token, t]);
 
   // ---------- Loading ----------
   if (status === "loading") {

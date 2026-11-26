@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Plus, Edit2, Trash2, MapPin, Phone, Building, ChevronDown, X, Upload, Search, User, Clock, CheckCircle, XCircle } from "lucide-react";
 import { Link } from "react-router";
-import { createClinic, updateClinic, deleteClinic, getUserClinics, searchPhysiotherapists, sendPTRequest, getPTRequests, respondToPTRequest } from "../../api/clinics";
+import { createClinic, updateClinic, deleteClinic, getUserClinics, searchPhysiotherapists, sendPTRequest, getPTRequests } from "../../api/clinics";
 import toast from "react-hot-toast";
 import LocationSelector from "../location/LocationSelector";
 
@@ -46,17 +46,7 @@ const ClinicManagement = ({ user, t }) => {
     street: "",
   });
 
-  useEffect(() => {
-    fetchClinics();
-  }, [user]);
-
-  useEffect(() => {
-    if (editingClinic) {
-      fetchPTRequests(editingClinic._id);
-    }
-  }, [editingClinic]);
-
-  const fetchClinics = async () => {
+  const fetchClinics = useCallback(async () => {
     if (!user || !user._id) {
       setClinics([]);
       return;
@@ -69,7 +59,17 @@ const ClinicManagement = ({ user, t }) => {
       console.error("Error fetching clinics:", error);
       toast.error(t("failed_to_load_clinics"));
     }
-  };
+  }, [user, t]);
+
+  useEffect(() => {
+    fetchClinics();
+  }, [fetchClinics]);
+
+  useEffect(() => {
+    if (editingClinic) {
+      fetchPTRequests(editingClinic._id);
+    }
+  }, [editingClinic]);
 
   const fetchPTRequests = async (clinicId) => {
     try {
@@ -108,7 +108,7 @@ const ClinicManagement = ({ user, t }) => {
     }));
   };
 
-  const searchPTs = async (query) => {
+  const searchPTs = useCallback(async (query) => {
     if (!query.trim()) {
       setPtSearchResults([]);
       return;
@@ -121,7 +121,7 @@ const ClinicManagement = ({ user, t }) => {
       console.error("Error searching PTs:", error);
       toast.error(t("failed_to_search_pts"));
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -129,7 +129,7 @@ const ClinicManagement = ({ user, t }) => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [ptSearchQuery]);
+  }, [ptSearchQuery, searchPTs]);
 
   const selectPT = (pt) => {
     setSelectedPT(pt);
@@ -155,17 +155,6 @@ const ClinicManagement = ({ user, t }) => {
     } catch (error) {
       console.error("Error sending PT request:", error);
       toast.error(error.response?.data?.message || t("failed_to_send_request"));
-    }
-  };
-
-  const handlePTResponse = async (requestId, action) => {
-    try {
-      await respondToPTRequest(requestId, action);
-      toast.success(t(`request_${action}`));
-      fetchPTRequests(editingClinic._id);
-    } catch (error) {
-      console.error(`Error ${action} PT request:`, error);
-      toast.error(t(`failed_to_${action}_request`));
     }
   };
 
@@ -323,7 +312,7 @@ const ClinicManagement = ({ user, t }) => {
     
     let undoClicked = false;
 
-    const toastUndo = toast((tToast) => (
+    toast((tToast) => (
       <div className="flex items-center gap-3">
         <span>{t("clinic_deleted", { name: clinicToDelete?.name || "Clinic" })}</span>
         <button

@@ -2,11 +2,12 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import { fetchCurrentUser, loginUser, logoutUser } from "../api/auth";
 import { useTranslation } from "react-i18next";
 import { getSocket } from "../socket";
-import toast from "react-hot-toast";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
 
 //  Default guest user
+// eslint-disable-next-line react-refresh/only-export-components
 export const DEFAULT_USER = {
   _id: null,
   fullName: "Guest",
@@ -18,6 +19,7 @@ export const DEFAULT_USER = {
 };
 
 // Clear user cache utility
+// eslint-disable-next-line react-refresh/only-export-components
 export const clearUserCache = () => {
   const cachedUserElement = document.getElementById('cached-member-user');
   if (cachedUserElement) {
@@ -113,29 +115,25 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async ({ email, password }) => {
-    try {
-      if (!email || !password) throw new Error("Email and password required");
+    if (!email || !password) throw new Error("Email and password required");
 
-      const data = await loginUser({ email, password });
-      const newUser = { ...data.user, accessToken: data.accessToken };
+    const data = await loginUser({ email, password });
+    const newUser = { ...data.user, accessToken: data.accessToken };
 
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      localStorage.setItem("accessToken", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("refreshToken", data.refreshToken);
 
-      // Optional: reconnect socket with token
-      const socket = getSocket();
-      if (socket.connected) socket.disconnect(); // disconnect old socket
-      socket.connect(); // reconnect with new token
-      
-      // 🔥 Change language based on user preference
-      i18n.changeLanguage(data.user.language || "sw");
-  
-      return data.user;
-    } catch (error) {
-      throw error;
-    }
+    // Optional: reconnect socket with token
+    const socket = getSocket();
+    if (socket.connected) socket.disconnect(); // disconnect old socket
+    socket.connect(); // reconnect with new token
+    
+    // 🔥 Change language based on user preference
+    i18n.changeLanguage(data.user.language || "sw");
+
+    return data.user;
   };
 
   // Logout function
@@ -160,6 +158,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 // Custom hook
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context)

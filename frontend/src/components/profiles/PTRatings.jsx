@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -20,7 +20,7 @@ import { fetchPTById } from "../../api/pts";
 import StarRating from "../StarRating";
 import dayjs from "dayjs";
 
-const PTRatings = ({ ptId, isOwner = false }) => {
+const PTRatings = ({ ptId }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,14 +43,7 @@ const PTRatings = ({ ptId, isOwner = false }) => {
 
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  useEffect(() => {
-    if (physiotherapistId) {
-      fetchPTRatings();
-      fetchPTReviews();
-    }
-  }, [physiotherapistId]);
-
-  const fetchPTRatings = async () => {
+  const fetchPTRatings = useCallback(async () => {
     try {
       const response = await fetchPTById(physiotherapistId);
       setPtData({ ptProfile: response });
@@ -59,9 +52,9 @@ const PTRatings = ({ ptId, isOwner = false }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [physiotherapistId]);
 
-  const fetchPTReviews = async () => {
+  const fetchPTReviews = useCallback(async () => {
     try {
       setReviewsLoading(true);
       const response = await getPTReviews(physiotherapistId);
@@ -80,7 +73,14 @@ const PTRatings = ({ ptId, isOwner = false }) => {
     } finally {
       setReviewsLoading(false);
     }
-  };
+  }, [physiotherapistId, user]);
+
+  useEffect(() => {
+    if (physiotherapistId) {
+      fetchPTRatings();
+      fetchPTReviews();
+    }
+  }, [physiotherapistId, fetchPTRatings, fetchPTReviews]);
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();

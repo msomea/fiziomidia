@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
@@ -40,11 +40,7 @@ export default function ManageClinicPromotion() {
     Platinum: { duration: 30, price: 200000 },
   };
 
-  useEffect(() => {
-    fetchPromotion();
-  }, [promotionId]);
-
-  const fetchPromotion = async () => {
+  const fetchPromotion = useCallback(async () => {
     try {
       const promoData = await fetchClinicPromotionById(promotionId);
       
@@ -67,7 +63,11 @@ export default function ManageClinicPromotion() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [promotionId, user._id, t, navigate]);
+
+  useEffect(() => {
+    fetchPromotion();
+  }, [fetchPromotion]);
 
   const handleChange = (e) => {
     setFormData({
@@ -113,7 +113,7 @@ export default function ManageClinicPromotion() {
     let deleteCancelled = false;
     setPromotion(null);
 
-    const toastId = toast((tObj) => (
+    toast((tObj) => (
       <div className="flex items-center gap-3">
         <span>{t("promotion_deleted")}</span>
         <button
@@ -136,7 +136,7 @@ export default function ManageClinicPromotion() {
         await deleteClinicPromotion(promotionId);
         toast.success(t("promotion_deleted_success"));
         navigate("/dashboard");
-      } catch (error) {
+      } catch {
         setPromotion(backup);
         toast.error(t("failed_to_delete_promotion"));
       }

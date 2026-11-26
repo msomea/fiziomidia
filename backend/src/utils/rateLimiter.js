@@ -8,7 +8,7 @@ IP KEY GENERATOR (Cloudflare compatible)
 ========================================
 */
 const getIPKey = (req) => {
-  return ipKeyGenerator(req);
+  return ipKeyGenerator(req.ip);
 };
 
 /*
@@ -17,11 +17,11 @@ USER KEY GENERATOR (Authenticated users)
 ========================================
 */
 const getUserKey = (req) => {
-  if (req.user?.id) {
-    return `user:${req.user.id}`;
+  if (req.user?._id) {
+    return `user:${req.user._id}`;
   }
 
-  return `ip:${ipKeyGenerator(req)}`;
+  return `ip:${ipKeyGenerator(req.ip)}`;
 };
 
 /*

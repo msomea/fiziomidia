@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Building, MapPin, Phone, Globe, Users, Star, StarHalf, ChevronDown, ExternalLink } from "lucide-react";
 import { getClinicsPTWork } from "../../api/clinics";
 import { useTranslation } from "react-i18next";
@@ -23,22 +23,7 @@ const PTClinics = ({ clinicIds, ptId }) => {
     return stars;
   };
 
-  useEffect(() => {
-    fetchClinics();
-    
-    // Listen for clinic updates from other components
-    const handleClinicsUpdated = () => {
-      fetchClinics();
-    };
-    
-    window.addEventListener("clinicsUpdated", handleClinicsUpdated);
-    
-    return () => {
-      window.removeEventListener("clinicsUpdated", handleClinicsUpdated);
-    };
-  }, [clinicIds]);
-
-  const fetchClinics = async () => {
+  const fetchClinics = useCallback(async () => {
     try {
       if (!clinicIds || clinicIds.length === 0) {
         setClinics([]);
@@ -53,7 +38,22 @@ const PTClinics = ({ clinicIds, ptId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clinicIds, ptId]);
+
+  useEffect(() => {
+    fetchClinics();
+    
+    // Listen for clinic updates from other components
+    const handleClinicsUpdated = () => {
+      fetchClinics();
+    };
+    
+    window.addEventListener("clinicsUpdated", handleClinicsUpdated);
+    
+    return () => {
+      window.removeEventListener("clinicsUpdated", handleClinicsUpdated);
+    };
+  }, [fetchClinics]);
 
   return (
     <section className="bg-white shadow-sm rounded-2xl p-5">

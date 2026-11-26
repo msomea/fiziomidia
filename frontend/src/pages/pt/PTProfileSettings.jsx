@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { getProfile, updateProfile } from "../../api/users";
 import toast from "react-hot-toast";
@@ -20,7 +19,6 @@ import DefaultLanguageSection from "../../components/ptsetting/DefaultLanguageSe
 import ClinicManagement from "../../components/ptsetting/ClinicManagement";
 
 const PTProfileSettings = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -90,9 +88,7 @@ const PTProfileSettings = () => {
       }
     };
     loadProfile();
-  }, []); // Empty dependency array - only run once on mount
-
-  if (!formData) return <p>{t("loading")}</p>;
+  }, [t]); // Only run once on mount, t is stable
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -206,6 +202,8 @@ const PTProfileSettings = () => {
       setLoading(false);
     }
   };
+
+  if (!formData) return <p>{t("loading")}</p>;
 
   return (
     <div className="min-h-screen bg-gray-50 text-white mt-16">

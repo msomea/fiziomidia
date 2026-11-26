@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import toast from "react-hot-toast";
@@ -18,7 +18,7 @@ export default function ProductSponsorshipSection() {
   const [status, setStatus] = useState(""); // active/inactive
   const [loading, setLoading] = useState(false);
 
-  const loadSponsoredProducts = async () => {
+  const loadSponsoredProducts = useCallback(async () => {
     try {
       setLoading(true);
       const response = await refreshSponsoredProducts({ search, status, page });
@@ -32,12 +32,12 @@ export default function ProductSponsorshipSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, status, page, refreshSponsoredProducts, t]);
 
   useEffect(() => {
     // Load sponsored products when filters or page change (also runs on mount)
     loadSponsoredProducts();
-  }, [search, status, page]);
+  }, [loadSponsoredProducts]);
 
   // Stats derived from the sponsored products dataset in context
   const stats = useMemo(() => {

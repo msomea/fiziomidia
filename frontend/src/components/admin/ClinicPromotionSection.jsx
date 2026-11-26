@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
@@ -21,7 +21,7 @@ export default function ClinicPromotionSection() {
   const [search, setSearch] = useState("");       // search clinic name or address
   const [status, setStatus] = useState("");       // sort/filter by status
 
-  const loadClinicPromotions = async () => {
+  const loadClinicPromotions = useCallback(async () => {
     try {
       setLoading(true);
       const result = await performUnifiedSearch({
@@ -37,12 +37,12 @@ export default function ClinicPromotionSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, status, t]);
 
   useEffect(() => {
     // Load promotions when filters change (also runs on mount)
     loadClinicPromotions();
-  }, [search, status]);
+  }, [loadClinicPromotions]);
 
   // Stats derived from the full clinic promotions dataset in context
   const stats = useMemo(() => {

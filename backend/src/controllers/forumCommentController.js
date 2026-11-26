@@ -1,9 +1,7 @@
-import { error } from "node:console";
 import Comment from "../models/Comment.js";
 import Post from "../models/Post.js";
 import { CacheService } from "../utils/redis.js";
-import { buildCommentTree } from "../utils/comments.js"
-import { io } from "../config/socket.js";
+import { buildCommentTree } from "../utils/comments.js";
 
 // Get all comments for a post
 export const listComments = async (req, res, next) => {
@@ -90,8 +88,6 @@ export const addComment = async (req, res) => {
     res.status(500).json({ error: "❌ Failed to add comment" });
   }
 };
-
-
 
 // Update own comment
 export const updateComment = async (req, res) => {
@@ -193,6 +189,3 @@ export const deleteComment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-

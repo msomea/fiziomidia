@@ -2,7 +2,6 @@ import ForumSub from "../models/ForumSub.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
 import Post from "../models/Post.js";
 import Comment from "../models/Comment.js";
-import User from "../models/User.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../services/uploadService.js";
 import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";

@@ -16,7 +16,7 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
 
     if (pendingDelete.current) clearTimeout(pendingDelete.current.timer);
 
-    const toastId = toast(
+    toast(
       (tToast) => (
         <div className="flex items-center justify-between gap-4">
           <span>{t("removed_from_saved")}</span>
@@ -38,7 +38,7 @@ const MemberSavedPTs = ({ savedPTs = [] }) => {
     const timer = setTimeout(async () => {
       try {
         await toggleSavePT(pt._id);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_remove_pt"));
         setPts((prev) => [pt, ...prev]);
       }

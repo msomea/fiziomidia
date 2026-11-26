@@ -5,8 +5,6 @@ export const connectDB = async () => {
   try {
     await mongoose.connect(config.mongoUri, {
       dbName: "fiziomidia",
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
     });
 
     console.log("🗃️  MongoDB connected successfully");

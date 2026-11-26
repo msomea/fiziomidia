@@ -168,7 +168,7 @@ const uploadMultipleToCloudinary = async (files = []) => {
   files.forEach((file) => validateFileSize(file));
 
   return Promise.all(files.map((file) => uploadToCloudinary(file)));
-};;;;;;;;
+};
 
 /* ------------------------------------------------------------------
    Delete file from Cloudinary

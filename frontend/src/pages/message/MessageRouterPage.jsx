@@ -13,7 +13,7 @@ export default function MessageRouterPage() {
     const loadConversation = async () => {
       try {
         // 1. Try fetch existing conversation with this user
-        const conversation = await getConversationByUser(receiverId);
+        await getConversationByUser(receiverId);
         // Navigate using receiverId (otherUserId), not conversation._id
         return navigate(`/messages/${receiverId}`);
       } catch (err) {

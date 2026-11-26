@@ -47,7 +47,7 @@ export const HomePageProvider = ({ children }) => {
   const [state, dispatch] = useReducer(homePageReducer, initialState);
 
   // Fetch all home page data at once
-  const fetchHomePageData = useCallback(async (forceRefresh = false) => {
+  const fetchHomePageData = useCallback(async () => {
     try {
       const response = await API.get(`${API_URL}/home-page/data`);
       
@@ -101,6 +101,7 @@ export const HomePageProvider = ({ children }) => {
 };
 
 // Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useHomePage = () => {
   const context = useContext(HomePageContext);
   if (!context) {

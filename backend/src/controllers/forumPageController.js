@@ -1,7 +1,6 @@
 import ForumSub from "../models/ForumSub.js";
 import Post from "../models/Post.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
-import asyncHandler from "express-async-handler";
 import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
 
 // ============================================
@@ -111,46 +110,3 @@ export const getForumPageData = async (req, res) => {
     });
   }
 };
-
-// Helper function to invalidate forum cache
-async function invalidateForumCache(subId) {
-  try {
-    await CacheService.delPattern(`forum:sub:${subId}*`);
-  } catch (error) {
-    console.error('Error invalidating forum cache:', error);
-  }
-}
-
-// Helper function to get forum statistics
-async function getForumStats(subId) {
-  try {
-    const [
-      totalPosts,
-      totalMods,
-      activeModRequests
-    ] = await Promise.all([
-      Post.countDocuments({ sub: subId }),
-      ForumSub.findById(subId).then(sub => sub?.moderators?.length || 0),
-      ForumSubModRequest.countDocuments({ 
-        sub: subId, 
-        status: "pending" 
-      })
-    ]);
-
-    return {
-      totalPosts,
-      totalMods,
-      activeModRequests,
-      lastUpdated: new Date()
-    };
-  } catch (error) {
-    console.error("Error getting forum stats:", error);
-    return {
-      totalPosts: 0,
-      totalMods: 0,
-      activeModRequests: 0,
-      lastUpdated: new Date(),
-      error: "Failed to load some stats"
-    };
-  }
-}

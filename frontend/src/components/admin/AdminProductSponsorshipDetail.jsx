@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getSponsoredProductById, updateSponsoredProduct, updateSponsoredProductWithCacheInvalidation, deleteSponsoredProduct } from "../../api/admin";
+import { getSponsoredProductById, updateSponsoredProductWithCacheInvalidation, deleteSponsoredProduct } from "../../api/admin";
 
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
@@ -34,11 +34,7 @@ export default function AdminProductSponsorshipDetail() {
   const { t } = useTranslation()
   const { forceRefreshHomePage } = useHomePage();
 
-  useEffect(() => {
-    loadProduct();
-  }, []);
-
-  const loadProduct = async () => {
+  const loadProduct = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getSponsoredProductById(id);
@@ -54,13 +50,17 @@ export default function AdminProductSponsorshipDetail() {
         image: res.image || "",
         description: res.description || "",
       });
-    } catch (err) {
-      console.error(err);
+    } catch {
+      console.error('Error loading product');
       toast.error(t('failed_load_product'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadProduct();
+  }, [loadProduct]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -107,7 +107,7 @@ export default function AdminProductSponsorshipDetail() {
       await deleteSponsoredProduct(id);
       toast.success(t('product_deleted'));
       navigate(-1);
-    } catch (err) {
+    } catch {
       toast.error(t('delete_failed'));
     } finally {
       setDeleting(false);

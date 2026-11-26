@@ -6,27 +6,16 @@ import { toast } from "react-hot-toast";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+const promotionOptions = {
+  silver: { duration: "7_days", price: 20000 },
+  gold: { duration: "14_days", price: 50000 },
+  platinum: { duration: "30_days", price: 100000 },
+};
+
 export default function CreatePromotion() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  if (user.role !== "physiotherapist") {
-    return (
-      <div className="pt-24 pb-16 text-center">
-        <h2 className="text-2xl font-bold">{t("access_denied")}</h2>
-        <p className="text-gray-600">
-          {t("only_physio_create_promotion")}
-        </p>
-      </div>
-    );
-  }
-
-  const promotionOptions = {
-    silver: { duration: "7_days", price: 20000 },
-    gold: { duration: "14_days", price: 50000 },
-    platinum: { duration: "30_days", price: 100000 },
-  };
 
   const [form, setForm] = useState({
     title: "",
@@ -50,6 +39,17 @@ export default function CreatePromotion() {
       }));
     }
   }, [form.title, t]);
+
+  if (user.role !== "physiotherapist") {
+    return (
+      <div className="pt-24 pb-16 text-center">
+        <h2 className="text-2xl text-tufts font-bold">{t("access_denied")}</h2>
+        <p className="text-gray-600">
+          {t("only_physio_create_promotion")}
+        </p>
+      </div>
+    );
+  }
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

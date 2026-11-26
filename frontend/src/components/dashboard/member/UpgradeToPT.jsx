@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 const UpgradeToPT = () => {
   const { t } = useTranslation();
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const [licenseFile, setLicenseFile] = useState(null);

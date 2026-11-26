@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { getForumModRequestById, updateForumModRequestRole } from "../../api/admin";
 import toast from "react-hot-toast";
@@ -15,29 +15,29 @@ export default function ForumModRequestsDetail() {
 
   const { t } = useTranslation()
 
-  useEffect(() => {
-    loadRequest();
-  }, []);
-
-  const loadRequest = async () => {
+  const loadRequest = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getForumModRequestById(id);
       setRequest(data.request);
       setNewRole(data.request.role); // current requested role
-    } catch (err) {
+    } catch {
       toast.error(t('failed_load_request'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadRequest();
+  }, [loadRequest]);
 
   const updateRole = async () => {
     try {
       await updateForumModRequestRole(id, { role: newRole });
       toast.success(t('request_role_updated'));
       loadRequest();
-    } catch (err) {
+    } catch {
       toast.error(t('failed_update_role'));
     }
   };

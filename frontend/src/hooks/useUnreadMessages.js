@@ -67,7 +67,7 @@ export const useUnreadMessages = () => {
     };
 
     const handleDisconnect = () => {
-      console.log("Socket disconnected");
+      // Socket disconnected
     };
 
     socket.on("connect", handleConnect);

@@ -22,7 +22,7 @@ export default function PTClinicAppointmentPage() {
       try {
         const data = await getMemberClinicAppointments();
         setAppointments(data.appointments || []);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_appointments"));
       } finally {
         setLoading(false);

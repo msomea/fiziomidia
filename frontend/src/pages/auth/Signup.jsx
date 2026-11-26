@@ -3,7 +3,6 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { EyeOff, Eye } from "lucide-react";
 import { registerUser } from "../../api/auth";
-import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 
 export default function Signup() {
@@ -15,7 +14,6 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuth(); // optional
 
   const handleSubmit = async (e) => {
     e.preventDefault();

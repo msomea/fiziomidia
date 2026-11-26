@@ -10,6 +10,7 @@ import { setLogoutHandler } from "./api/axios";
 import { useEffect } from "react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 dayjs.extend(relativeTime);
 
@@ -36,13 +37,15 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ForumProvider>
-          <HomePageProvider>
-            <AppContent />
-          </HomePageProvider>
-        </ForumProvider>
-      </AuthProvider>
+      <ErrorBoundary>
+        <AuthProvider>
+          <ForumProvider>
+            <HomePageProvider>
+              <AppContent />
+            </HomePageProvider>
+          </ForumProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

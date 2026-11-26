@@ -3,7 +3,7 @@ import {
   ArrowBigRightIcon,
   Loader2,
 } from "lucide-react";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import SkeletonSponsoredCard from "./SkeletonSponsoredCard";
 
@@ -35,7 +35,7 @@ const SponsoredContent = ({ products = [] }) => {
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
   /* ---------- Scroll helper ---------- */
-  const goToPage = (newPage) => {
+  const goToPage = useCallback((newPage) => {
     if (!carouselRef.current) return;
 
     const card = carouselRef.current.firstChild;
@@ -51,7 +51,7 @@ const SponsoredContent = ({ products = [] }) => {
     });
 
     setPage(newPage);
-  };
+  }, [itemsPerPage]);
 
   const scrollLeft = () =>
     goToPage(page === 0 ? totalPages - 1 : page - 1);
@@ -72,7 +72,7 @@ const SponsoredContent = ({ products = [] }) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [totalPages, paused]);
+  }, [totalPages, paused, goToPage]);
 
   return (
     <section className="bg-white py-16 min-h-[25vh] flex items-center">

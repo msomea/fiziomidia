@@ -69,12 +69,24 @@ export class CacheService {
     }
   }
 
-  // Delete multiple cache keys (pattern matching)
+  // Delete multiple cache keys (pattern matching) using SCAN (non-blocking)
   static async delPattern(pattern) {
     try {
-      const keys = await redisClient.keys(pattern);
+      let cursor = "0";
+      const keys = [];
+      do {
+        const result = await redisClient.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100,
+        });
+        cursor = result.cursor;
+        keys.push(...result.keys);
+      } while (cursor !== "0");
+
       if (keys.length > 0) {
-        await redisClient.del(keys);
+        for (let i = 0; i < keys.length; i += 100) {
+          await redisClient.del(keys.slice(i, i + 100));
+        }
         console.log(
           `🗑️ Cache deleted ${keys.length} keys matching pattern: ${pattern}`,
         );

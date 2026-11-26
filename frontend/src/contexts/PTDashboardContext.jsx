@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
+import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { usePTDashboard as usePTDashboardData } from '../hooks/usePTDashboard';
-import { markNotificationRead, getNotifications } from '../api/notifications';
-import { fetchPromotions } from '../api/promotions';
-import { fetchPTById } from '../api/pts';
-import dayjs from 'dayjs';
+import { markNotificationRead } from '../api/notifications';
 import toast from 'react-hot-toast';
 
 // Context
@@ -11,39 +8,20 @@ const PTDashboardContext = createContext();
 
 // Provider component
 export const PTDashboardProvider = ({ children, ptId }) => {
-  const [notifications, setNotifications] = useState([]);
   const dashboardData = usePTDashboardData(ptId);
-
-  // Refresh notifications
-  const refreshNotifications = useCallback(async (ptId) => {
-    try {
-      const notificationsData = await getNotifications();
-      setNotifications(notificationsData || []);
-    } catch (error) {
-      console.error('Notifications refresh error:', error);
-      toast.error('Failed to refresh notifications');
-    }
-  }, []);
 
   // Mark notification as read
   const markNotificationReadHandler = useCallback(async (ptId, notificationId) => {
     try {
       await markNotificationRead(ptId, notificationId);
       
-      // Update local state to remove the read notification
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      // Refresh dashboard data to get updated notifications
+      dashboardData.refreshDashboard();
     } catch (error) {
       console.error('Mark notification as read error:', error);
       toast.error('Failed to mark notification as read');
     }
-  }, []);
-
-  // Refresh notifications when PT profile loads
-  useEffect(() => {
-    if (dashboardData.data?.ptProfile?._id) {
-      refreshNotifications(dashboardData.data.ptProfile._id);
-    }
-  }, [dashboardData.data?.ptProfile?._id, refreshNotifications]);
+  }, [dashboardData]);
 
   // Cache user data for AuthProvider to access
   useEffect(() => {
@@ -85,8 +63,6 @@ export const PTDashboardProvider = ({ children, ptId }) => {
     data: dashboardInfo,
     loading,
     error,
-    notifications,
-    refreshNotifications,
     markNotificationRead: markNotificationReadHandler,
     clearError: () => {}, // Keep for backward compatibility
     fetchDashboardData: fetchDashboardData,
@@ -106,6 +82,7 @@ export const PTDashboardProvider = ({ children, ptId }) => {
 };
 
 // Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePTDashboard = () => {
   const context = useContext(PTDashboardContext);
   if (!context) {

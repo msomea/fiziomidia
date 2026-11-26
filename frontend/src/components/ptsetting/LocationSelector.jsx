@@ -40,14 +40,14 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         const data = await fetchRegions();
         if (!Array.isArray(data)) return toast.error(t("invalid_region_response"));
         setRegions(data);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_regions"));
       } finally {
         setLoading(false);
       }
     };
     loadRegions();
-  }, []);
+  }, [t]);
 
   /* Fetch Districts */
   useEffect(() => {
@@ -57,14 +57,14 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         setLoading(true);
         const data = await fetchDistrictsByRegion(selectedRegion);
         setDistricts(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_districts"));
       } finally {
         setLoading(false);
       }
     };
     fetchDistricts();
-  }, [selectedRegion]);
+  }, [selectedRegion, t]);
 
   /* Fetch Wards */
   useEffect(() => {
@@ -74,14 +74,14 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         setLoading(true);
         const data = await fetchWardsByDistrict(selectedDistrict);
         setWards(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_wards"));
       } finally {
         setLoading(false);
       }
     };
     fetchWards();
-  }, [selectedDistrict]);
+  }, [selectedDistrict, t]);
 
   /* Fetch Streets */
   useEffect(() => {
@@ -91,14 +91,14 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
         setLoading(true);
         const data = await fetchStreetsByWard(selectedWard);
         setStreets(Array.isArray(data) ? data : []);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_streets"));
       } finally {
         setLoading(false);
       }
     };
     fetchStreets();
-  }, [selectedWard]);
+  }, [selectedWard, t]);
 
   /* Notify Parent */
   useEffect(() => {

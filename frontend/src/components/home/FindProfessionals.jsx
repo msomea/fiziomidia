@@ -2,7 +2,7 @@ import {
   ArrowBigLeftIcon,
   ArrowBigRightIcon,
 } from "lucide-react";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import avatar from "../../assets/avatar.jpg";
@@ -35,7 +35,7 @@ export default function FindProfessionals({ promotions = [] }) {
   const totalPages = Math.ceil(promotions.length / itemsPerPage);
 
   /* ---------- Scroll helper ---------- */
-  const goToPage = (newPage) => {
+  const goToPage = useCallback((newPage) => {
     if (!carouselRef.current) return;
 
     const card = carouselRef.current.firstChild;
@@ -51,7 +51,7 @@ export default function FindProfessionals({ promotions = [] }) {
     });
 
     setPage(newPage);
-  };
+  }, [itemsPerPage]);
 
   const scrollLeft = () =>
     goToPage(page === 0 ? totalPages - 1 : page - 1);
@@ -72,7 +72,7 @@ export default function FindProfessionals({ promotions = [] }) {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [totalPages, paused]);
+  }, [totalPages, paused, goToPage]);
 
   const showSkeletons = promotions.length < 1;
   return (

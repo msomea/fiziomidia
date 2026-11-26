@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { updateAppointmentStatus, deleteAppointment as deleteAppointmentApi } from "../../api/appointments";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -24,7 +24,7 @@ export default function AdminAppointments() {
   const [busy, setBusy] = useState(null);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
 
-  const loadAppointments = async () => {
+  const loadAppointments = useCallback(async () => {
     try {
       setLoading(true);
       const result = await performUnifiedSearch({
@@ -47,12 +47,12 @@ export default function AdminAppointments() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, clinic, pt, requester, status, t]);
 
   useEffect(() => {
     // Load appointments when filters change (also runs on mount)
     loadAppointments();
-  }, [search, clinic, pt, requester, status]);
+  }, [loadAppointments]);
 
   const updateStatus = async (id, newStatus) => {
     setBusy(id);

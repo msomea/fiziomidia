@@ -59,32 +59,36 @@ export const getUserTargetInfo = (req, responseData) => ({
   details: { newRole: req.body.role, user: responseData?.user }
 });
 
-export const getLicenseTargetInfo = (req, responseData) => ({
+export const getLicenseTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "User",
   description: `License ${req.body.status} for user ${req.params.id}`,
-  details: { status: req.body.status, notes: req.body.notes, index: req.body.index }
+  details: {
+    status: req.body.status,
+    notes: req.body.notes,
+    index: req.body.index,
+  },
 });
 
-export const getAppointmentTargetInfo = (req, responseData) => ({
+export const getAppointmentTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "Appointment",
-  description: `Appointment ${req.params.id} ${req.method === 'DELETE' ? 'deleted' : 'updated'}`,
-  details: { updates: req.body }
+  description: `Appointment ${req.params.id} ${req.method === "DELETE" ? "deleted" : "updated"}`,
+  details: { updates: req.body },
 });
 
-export const getPromotionTargetInfo = (req, responseData) => ({
+export const getPromotionTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "Promotion",
-  description: `Promotion ${req.params.id} ${req.method === 'DELETE' ? 'deleted' : 'updated'}`,
-  details: { updates: req.body }
+  description: `Promotion ${req.params.id} ${req.method === "DELETE" ? "deleted" : "updated"}`,
+  details: { updates: req.body },
 });
 
-export const getSponsorshipTargetInfo = (req, responseData) => ({
+export const getSponsorshipTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "ForumSub",
-  description: `Sponsorship ${req.body.isSponsored ? 'enabled' : 'disabled'} for forum sub ${req.params.id}`,
-  details: { sponsorshipData: req.body }
+  description: `Sponsorship ${req.body.isSponsored ? "enabled" : "disabled"} for forum sub ${req.params.id}`,
+  details: { sponsorshipData: req.body },
 });
 
 export const getProductTargetInfo = (req, responseData) => {
@@ -112,18 +116,18 @@ export const getTeamMemberTargetInfo = (req, responseData) => {
   };
 };
 
-export const getEmailTargetInfo = (req, responseData) => ({
+export const getEmailTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "User",
   description: `Email sent to user ${req.params.id}: ${req.body.title}`,
-  details: { emailTitle: req.body.title, emailBody: req.body.body }
+  details: { emailTitle: req.body.title, emailBody: req.body.body },
 });
 
-export const getModRequestTargetInfo = (req, responseData) => ({
+export const getModRequestTargetInfo = (req, _responseData) => ({
   targetId: req.params.id,
   targetType: "ModRequest",
   description: `Moderator request ${req.params.id} role updated to ${req.body.role}`,
-  details: { newRole: req.body.role }
+  details: { newRole: req.body.role },
 });
 
 export const getClinicPromotionTargetInfo = (req, responseData) => ({

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { X, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next'
@@ -9,7 +9,6 @@ export default function AdminAppointmentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [appointment, setAppointment] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
@@ -21,13 +20,11 @@ export default function AdminAppointmentDetails() {
   });
   const { t } = useTranslation()
 
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       const data = await fetchAppointmentById(id);
 
       if (!data.appointment) throw new Error();
-
-      setAppointment(data.appointment);
 
       setForm({
         status: data.appointment.status,
@@ -43,11 +40,11 @@ export default function AdminAppointmentDetails() {
       toast.error(t('failed_load_appointment'));
       setLoading(false);
     }
-  };
+  }, [id, t]);
 
   useEffect(() => {
     fetchDetails();
-  }, [id]);
+  }, [fetchDetails]);
 
   const handleSave = async () => {
     try {

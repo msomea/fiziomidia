@@ -1,6 +1,6 @@
 import config from "../config/index.js";
 
-export function errorHandler(err, req, res, next) {
+export function errorHandler(err, req, res, _next) {
   console.error(err);
   const status = err.status || 500;
   const message = config.debug

@@ -41,7 +41,7 @@ export default function ResourceDetails() {
       }
     };
     load();
-  }, [id]);
+  }, [id, t]);
 
   const handleDownload = async () => {
     if (!user || user.role === "guest") {

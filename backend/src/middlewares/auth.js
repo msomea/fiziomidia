@@ -47,6 +47,7 @@ export const authenticate = async (req, res, next) => {
 
 export const authenticateOptional = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
+  if (!authHeader.startsWith("Bearer ")) return next(); // anonymous user allowed
   const token = authHeader.trim().split(" ")[1];
 
   if (!token) return next(); // anonymous user allowed

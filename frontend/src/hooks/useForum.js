@@ -1,14 +1,12 @@
-import { useState, useCallback } from 'react';
-import { useApiData } from './useApiData';
-import toast from 'react-hot-toast';
-import API from '../api/axios';
-import { API_URL } from '../config/constants';
+import { useState, useCallback } from "react";
+import { useApiData } from "./useApiData";
+import toast from "react-hot-toast";
+import API from "../api/axios";
+import { API_URL } from "../config/constants";
 import {
   fetchForumSubs,
   fetchSubById,
-  fetchPostsInSub,
   votePost,
-  createPost,
   addComment,
   deleteComment,
 } from "../api/forum";
@@ -24,7 +22,7 @@ export const useForumData = () => {
   const [userPermissions, setUserPermissions] = useState({
     isMod: false,
     isOwner: false,
-    hasPendingRequest: false
+    hasPendingRequest: false,
   });
 
   // Consolidated fetch for forum page data (subforum + posts + permissions)
@@ -40,7 +38,9 @@ export const useForumData = () => {
         limit: options.limit || 10,
       });
 
-      const res = await API.get(`${API_URL}/forum/subs/${subId}/forum-page?${params}`);
+      const res = await API.get(
+        `${API_URL}/forum/subs/${subId}/forum-page?${params}`,
+      );
       const data = res.data;
 
       if (data.success) {
@@ -71,9 +71,11 @@ export const useForumData = () => {
         limit: options.limit || 10,
       });
 
-      const res = await API.get(`${API_URL}/forum/subs/${subId}/posts?${params}`);
+      const res = await API.get(
+        `${API_URL}/forum/subs/${subId}/posts?${params}`,
+      );
       setPosts(res.data.posts || []);
-      
+
       return res.data;
     } catch (err) {
       console.error("Error refreshing posts:", err);
@@ -86,15 +88,17 @@ export const useForumData = () => {
 
   // Check mod request status (for PT users)
   const checkModRequestStatus = useCallback(async (subId) => {
-    if (!subId || !userPermissions) return;
+    if (!subId) return;
 
     try {
-      const res = await API.get(`${API_URL}/forum/subs/${subId}/my-mod-request`);
+      const res = await API.get(
+        `${API_URL}/forum/subs/${subId}/my-mod-request`,
+      );
       const hasRequested = res.data.requested || res.data.alreadyMod || false;
-      
-      setUserPermissions(prev => ({
+
+      setUserPermissions((prev) => ({
         ...prev,
-        hasPendingRequest: hasRequested
+        hasPendingRequest: hasRequested,
       }));
 
       return hasRequested;
@@ -102,60 +106,69 @@ export const useForumData = () => {
       console.error("Failed to check mod request:", err);
       return false;
     }
-  }, [userPermissions]);
+  }, []);
 
   // Update a single post (after vote or comment)
   const updatePost = useCallback((updatedPost) => {
     setPosts((prev) =>
-      prev.map((p) => (p.postId === updatedPost.postId ? updatedPost : p))
+      prev.map((p) => (p.postId === updatedPost.postId ? updatedPost : p)),
     );
   }, []);
 
   // Update comment list only
   const updatePostComments = useCallback((postId, comments) => {
     setPosts((prev) =>
-      prev.map((p) => (p.postId === postId ? { ...p, comments } : p))
+      prev.map((p) => (p.postId === postId ? { ...p, comments } : p)),
     );
   }, []);
 
   // Vote on a post
-  const handleVotePost = useCallback(async (postId, voteType) => {
-    try {
-      const result = await votePost(postId, voteType);
-      updatePost(result.post || result);
-      return result;
-    } catch (err) {
-      toast.error("Failed to vote on post");
-      throw err;
-    }
-  }, [updatePost]);
+  const handleVotePost = useCallback(
+    async (postId, voteType) => {
+      try {
+        const result = await votePost(postId, voteType);
+        updatePost(result.post || result);
+        return result;
+      } catch (err) {
+        toast.error("Failed to vote on post");
+        throw err;
+      }
+    },
+    [updatePost],
+  );
 
   // Add a comment to a post
-  const handleAddComment = useCallback(async (postId, content) => {
-    try {
-      const result = await addComment(postId, content);
-      updatePostComments(postId, result.comments || []);
-      return result;
-    } catch (err) {
-      toast.error("Failed to add comment");
-      throw err;
-    }
-  }, [updatePostComments]);
+  const handleAddComment = useCallback(
+    async (postId, content) => {
+      try {
+        const result = await addComment(postId, content);
+        updatePostComments(postId, result.comments || []);
+        return result;
+      } catch (err) {
+        toast.error("Failed to add comment");
+        throw err;
+      }
+    },
+    [updatePostComments],
+  );
 
   // Delete a comment
-  const handleDeleteComment = useCallback(async (commentId) => {
-    try {
-      await deleteComment(commentId);
-      // Refresh posts to get updated comments
-      if (selectedSub) {
-        await refreshPosts(selectedSub._id);
+  const handleDeleteComment = useCallback(
+    async (commentId) => {
+      try {
+        await deleteComment(commentId);
+        // Refresh posts to get updated comments
+        if (selectedSub) {
+          await refreshPosts(selectedSub._id);
+        }
+        return true;
+      } catch (err) {
+        toast.error("Failed to delete comment");
+        throw err;
       }
-      return true;
-    } catch (err) {
-      toast.error("Failed to delete comment");
-      throw err;
-    }
-  }, [selectedSub, refreshPosts]);
+    },
+    [selectedSub, refreshPosts],
+  );
 
   return {
     posts,
@@ -173,7 +186,7 @@ export const useForumData = () => {
     updatePostComments,
     handleVotePost,
     handleAddComment,
-    handleDeleteComment
+    handleDeleteComment,
   };
 };
 
@@ -181,8 +194,13 @@ export const useForumData = () => {
  * Hook for forum subs (topics) management
  */
 export const useForumSubs = () => {
-  const { data: subs, loading, error, refetch } = useApiData(fetchForumSubs, {
-    showToast: false
+  const {
+    data: subs,
+    loading,
+    error,
+    refetch,
+  } = useApiData(fetchForumSubs, {
+    showToast: false,
   });
 
   return { subs, loading, error, refetch };
@@ -192,13 +210,15 @@ export const useForumSubs = () => {
  * Hook for single sub details
  */
 export const useForumSub = (subId) => {
-  const { data: sub, loading, error, refetch } = useApiData(
-    () => fetchSubById(subId),
-    {
-      immediate: !!subId,
-      dependencies: [subId]
-    }
-  );
+  const {
+    data: sub,
+    loading,
+    error,
+    refetch,
+  } = useApiData(() => fetchSubById(subId), {
+    immediate: !!subId,
+    dependencies: [subId],
+  });
 
   return { sub, loading, error, refetch };
 };

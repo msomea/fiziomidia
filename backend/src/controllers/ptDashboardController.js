@@ -3,8 +3,6 @@ import Appointment from "../models/Appointment.js";
 import Post from "../models/Post.js";
 import PTPromotion from "../models/PTPromotion.js";
 import Clinic from "../models/Clinic.js";
-import ClinicPromotion from "../models/ClinicPromotion.js";
-import asyncHandler from "express-async-handler";
 import dayjs from "dayjs";
 import {
   getClinicAppointmentsForPT,

@@ -3,7 +3,6 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { addComment, addReplyToComment, deleteCommentFromPost, updateComment } from "../../api/forum";
 import { useForum } from "../../contexts/ForumContext";
-import avatar from "../../assets/avatar.jpg";
 import CommentItem from "./CommentItem";
 import { useTranslation } from "react-i18next";
 
@@ -37,7 +36,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
       socket.off("comment:updated");
       socket.off("comment:deleted");
     };
-  }, [socket, post?.postId]);
+  }, [socket, post?.postId, fetchPost]);
 
   /* ---------------- Add Comment ---------------- */
   const handleAddComment = async (e) => {
@@ -86,7 +85,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
 
     let undoClicked = false;
 
-    const toastUndo = toast((tToast) => (
+    toast((tToast) => (
       <div className="flex items-center gap-3">
         <span>{t("comment_deleted")}</span>
         <button
@@ -102,7 +101,7 @@ const CommentsSection = ({ post, user, fetchPost, socket }) => {
       </div>
     ));
 
-    const timeoutId = setTimeout(async () => {
+    setTimeout(async () => {
       // Only proceed with delete if undo was not clicked
       if (undoClicked) return;
 

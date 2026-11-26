@@ -57,7 +57,7 @@ export default function EducationSection() {
     } finally {
       setLoading(false);
     }
-  }, [tab, statusFilter]);
+  }, [tab, statusFilter, t]);
 
   useEffect(() => { loadStats(); }, [loadStats]);
   useEffect(() => { loadTab(); }, [loadTab]);

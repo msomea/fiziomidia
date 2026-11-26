@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { fetchForumSubs } from "../../api/forum";
 import { updateSponsorship, removeSponsorship } from "../../api/admin";
 import { toast } from "react-hot-toast";
@@ -20,7 +20,7 @@ const AdminSponsorships = () => {
     endDate: "",
   });
 
-  const fetchSubs = async () => {
+  const fetchSubs = useCallback(async () => {
     try {
       const data = await fetchForumSubs();
       setSubs(data.subs || []);
@@ -30,11 +30,11 @@ const AdminSponsorships = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchSubs();
-  }, []);
+  }, [fetchSubs]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

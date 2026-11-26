@@ -1,9 +1,6 @@
 import User from "../models/User.js";
 import { CacheService } from "../utils/redis.js";
 import PTPromotion from "../models/PTPromotion.js";
-import Post from "../models/Post.js";
-import Appointment from "../models/Appointment.js";
-import dayjs from "dayjs";
 
 
 // GET /api/pts

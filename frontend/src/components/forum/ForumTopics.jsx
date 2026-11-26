@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { fetchForumSubsPaginated, createSub } from "../../api/forum";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import toast from "react-hot-toast";
@@ -30,7 +30,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
   });
   const [subSaving, setSubSaving] = useState(false);
 
-  const fetchPaginatedSubs = async (pageNum = 1, limit) => {
+  const fetchPaginatedSubs = useCallback(async (pageNum = 1, limit) => {
     try {
       const data = await fetchForumSubsPaginated(pageNum, limit);
 
@@ -46,11 +46,11 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
       console.error("Error fetching forum topics:", err);
       toast.error(t("failed_load_topics"));
     }
-  };
+  }, [activeTopic, onSelectTopic, t]);
 
   useEffect(() => {
     fetchPaginatedSubs(page, limit);
-  }, [page]);
+  }, [page, fetchPaginatedSubs]);
 
   useEffect(() => {
     if (!socket) return;
@@ -62,7 +62,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
       socket.off("post:created");
       socket.off("post:deleted");
     };
-  }, [socket, page, limit]);
+  }, [socket, page, limit, fetchPaginatedSubs]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -71,7 +71,7 @@ const ForumTopics = ({ onSelectTopic, user, socket }) => {
         setMinHeight(contentHeight);
       }
     }
-  }, [topics]);
+  }, [topics, minHeight]);
 
   const sortedTopics = [...topics].sort((a, b) => {
     if (sortType === "alphabet")

@@ -51,7 +51,7 @@ function MemberNavLink({ to, icon, label }) {
 
 function MemberDashboardContent() {
   const navigate = useNavigate();
-  const { user: authUser, logout, setUser } = useAuth();
+  const { user: authUser, logout } = useAuth();
   const { t } = useTranslation()
   const { 
     memberProfile, 
@@ -61,7 +61,6 @@ function MemberDashboardContent() {
     clinicAppointments,
     clinics,
     clinicPromotions,
-    stats, 
     loading, 
     error, 
     fetchMemberDashboardData,

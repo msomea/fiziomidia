@@ -1,6 +1,5 @@
 import React, { createContext, useContext } from "react";
 import { useForumData } from "../hooks/useForum";
-import { toast } from "react-hot-toast";
 
 const ForumContext = createContext();
 
@@ -14,4 +13,5 @@ export const ForumProvider = ({ children }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useForum = () => useContext(ForumContext);

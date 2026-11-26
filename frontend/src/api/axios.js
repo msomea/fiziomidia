@@ -51,7 +51,8 @@ API.interceptors.response.use(
           const u = JSON.parse(storedUser);
           u.accessToken = token;
           localStorage.setItem("user", JSON.stringify(u));
-        } catch (e) {
+        } catch {
+          // Ignore JSON parse errors
         }
       }
       API.defaults.headers.common["Authorization"] = `Bearer ${token}`;

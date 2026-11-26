@@ -1,6 +1,5 @@
-import { useState, useCallback } from 'react';
-import { useApiData } from './useApiData';
-import toast from 'react-hot-toast';
+import { useState, useCallback } from "react";
+import toast from "react-hot-toast";
 import {
   fetchDashboardData as fetchDashboardDataAPI,
   fetchAllUsers,
@@ -12,7 +11,6 @@ import {
   getAdminActivityLogs,
   getForumModRequests,
 } from "../api/admin";
-import { fetchForumSubs } from '../api/forum';
 
 /**
  * Hook for admin dashboard data management
@@ -160,4 +158,4 @@ export const useDashboardData = () => {
     activityLogs: data?.activityLogs || [],
     modRequests: data?.modRequests || [],
   };
-};;
+};

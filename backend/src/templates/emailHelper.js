@@ -8,9 +8,6 @@
  * @param {string} [options.logoURL] - Optional logo URL
  * @returns {string} - HTML email content
  */
-import dayjs from "dayjs";
-const currentYear = dayjs().year();
-
 export const generateFiziomidiaEmail = ({
   title,
   body,

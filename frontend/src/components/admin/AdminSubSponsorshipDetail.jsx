@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getAdminSubById, updateSubInfo, updateSponsorship, removeSponsorship } from "../../api/admin";
+import { getAdminSubById } from "../../api/admin";
 import { ASSET_URL } from "../../config/constants";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
@@ -37,11 +37,7 @@ export default function AdminSponsorshipDetail() {
   const [newLogo, setNewLogo] = useState(null);
   const { t } = useTranslation()
 
-  useEffect(() => {
-    loadSub();
-  }, []);
-
-  const loadSub = async () => {
+  const loadSub = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAdminSubById(id);
@@ -81,12 +77,16 @@ export default function AdminSponsorshipDetail() {
         },
         slug: s.slug || "",
       });
-    } catch (err) {
+    } catch {
       toast.error(t('failed_load_sub'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadSub();
+  }, [loadSub]);
 
   const handleBasicChange = (e, lang = null, field = null) => {
     if (lang && field) {
@@ -133,7 +133,7 @@ export default function AdminSponsorshipDetail() {
 
       toast.success(t('sub_information_updated'));
       loadSub();
-    } catch (err) {
+    } catch {
       toast.error(t('failed_update_sub_information'));
     } finally {
       setSavingBasic(false);
@@ -169,7 +169,7 @@ export default function AdminSponsorshipDetail() {
 
       toast.success(t('sponsorship_updated'));
       loadSub();
-    } catch (err) {
+    } catch {
       toast.error(t('update_failed'));
     } finally {
       setSavingSponsor(false);
@@ -183,7 +183,7 @@ export default function AdminSponsorshipDetail() {
       await removeSponsorship(id);
       toast.success(t('sponsorship_removed'));
       navigate(-1);
-    } catch (err) {
+    } catch {
       toast.error(t('failed_remove_sponsorship'));
     }
   };

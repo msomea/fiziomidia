@@ -1,3 +1,4 @@
+import "express-async-errors";
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -6,14 +7,13 @@ import cron from "node-cron";
 import { fileURLToPath } from "url";
 import helmet from "helmet";
 import { ENV } from "./config/env.js";
+import { allowedOrigins } from "./constants/allowedOrigins.js";
 import { limiters } from "./utils/rateLimiter.js";
 import ForumSub from "./models/ForumSub.js";
-import User from "./models/User.js";
 import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
 import { expireClinicPromotionsJob } from "./cron/expiredClinicPromotions.js";
 import { expirePTPromotionsJob } from "./cron/expiredPTPromotions.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
-
 
 // Routes
 import contactRoutes from "./routes/contact.js";
@@ -42,19 +42,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 /* ---------------------------------- */
-/* Allowed Origins (API only)          */
-/* ---------------------------------- */
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://fiziomidia.org",
-  "https://fiziomidia.org",
-  "https://www.fiziomidia.org",
-  "https://api.fiziomidia.org",
-  "https://fiziomidia.netlify.app",
-  "https://fiziomidia.pages.dev",
-];
-
-/* ---------------------------------- */
 /* Global Middleware                     */
 /* ---------------------------------- */
 app.use(
@@ -65,7 +52,7 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-  })
+  }),
 );
 app.use(helmet());
 app.set("trust proxy", "loopback, linklocal, uniquelocal");
@@ -87,7 +74,7 @@ app.use(
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     },
-  })
+  }),
 );
 
 /* ---------------------------------- */

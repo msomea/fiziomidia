@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import ResourceRequest from "../models/ResourceRequest.js";
-import EducationResource from "../models/EducationResource.js";
 import {
   EDUCATION_CATEGORIES,
   EDUCATION_FILE_TYPES,

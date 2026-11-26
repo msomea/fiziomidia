@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getPromotionById, updatePromotion as updatePromotionApi, updatePromotionWithCacheInvalidation, deletePromotion } from "../../api/admin";
+import { getPromotionById, updatePromotionWithCacheInvalidation } from "../../api/admin";
 import { X, Loader2 } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
@@ -19,11 +19,7 @@ export default function AdminPromotionDetail() {
   const { t } = useTranslation()
   const { forceRefreshHomePage } = useHomePage();
 
-  useEffect(() => {
-    loadPromotion();
-  }, []);
-
-  const loadPromotion = async () => {
+  const loadPromotion = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getPromotionById(id);
@@ -32,12 +28,16 @@ export default function AdminPromotionDetail() {
 
       // Convert to yyyy-mm-dd for HTML date input
       setEndAt(dayjs(data.promotion.endAt).format("YYYY-MM-DD"));
-    } catch (err) {
+    } catch {
       toast.error(t('failed_load_promotion'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadPromotion();
+  }, [loadPromotion]);
 
   const updatePromotion = async () => {
     try {
@@ -49,7 +49,7 @@ export default function AdminPromotionDetail() {
 
       toast.success(t('promotion_updated'));
       loadPromotion();
-    } catch (err) {
+    } catch {
       toast.error(t('update_failed'));
     } finally {
       setSaving(false);

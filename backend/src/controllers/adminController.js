@@ -126,16 +126,6 @@ export const getDashboardData = async (req, res) => {
   }
 };
 
-// Helper function to invalidate admin dashboard cache
-async function invalidateAdminDashboardCache(adminId) {
-  try {
-    await CacheService.delPattern(`dashboard:admin:${adminId}*`);
-    console.log(`🗑️ Admin dashboard cache invalidated for admin: ${adminId}`);
-  } catch (error) {
-    console.error('⚠️ Error invalidating admin dashboard cache:', error);
-  }
-}
-
 // ============================================
 // SHARED DATA FETCHING FUNCTIONS
 // ============================================

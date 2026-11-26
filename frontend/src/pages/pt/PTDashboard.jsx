@@ -36,7 +36,6 @@ function PTDashboardContent() {
     ptProfile, 
     clinics,
     appointments, 
-    forumPosts, 
     promotion, 
     notifications,
     stats,

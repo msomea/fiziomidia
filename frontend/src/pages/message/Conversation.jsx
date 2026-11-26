@@ -77,7 +77,7 @@ export default function ConversationPage() {
       socket.off("userWentOnline", handleUserOnline);
       socket.off("userWentOffline", handleUserOffline);
     };
-  }, [loggedInUser]);
+  }, [loggedInUser, socket]);
 
   // Update other user online status whenever onlineUsers change
   useEffect(() => {
@@ -188,7 +188,7 @@ export default function ConversationPage() {
   useEffect(() => {
     if (!socket) return;
 
-    const handleConversationRead = ({ conversationId, unread }) => {
+    const handleConversationRead = ({ conversationId }) => {
       if (conversationId !== conversation?._id) return;
 
       setMessages((prev) =>
@@ -248,7 +248,7 @@ export default function ConversationPage() {
     setTimeout(async () => {
       try {
         await deleteMessage(messageId);
-      } catch (error) {
+      } catch {
         setMessages(backup);
         toast.error(t("failed_delete_message"));
       }

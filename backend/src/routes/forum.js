@@ -1,7 +1,6 @@
 import express from "express";
-import { authenticate, authenticateAdmin } from "../middlewares/auth.js";
+import { authenticate } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/roles.js";
-import { requireForumPermission } from "../middlewares/forumPermissions.js";
 import * as forum from "../controllers/forumController.js";
 import * as comment from "../controllers/forumCommentController.js";
 import * as modReq from "../controllers/modReqController.js";

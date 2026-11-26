@@ -3,7 +3,7 @@ import { fetchRegions, fetchDistrictsByRegion, fetchWardsByDistrict, fetchStreet
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 
-export default function LocationSelector({ onLocationSelect, initialLocation }) {
+export default function LocationSelector({ onLocationSelect }) {
   const { t } = useTranslation();
 
   const [regions, setRegions] = useState([]);
@@ -113,7 +113,7 @@ export default function LocationSelector({ onLocationSelect, initialLocation }) 
       street: selectedStreet,
     };
     onLocationSelect(geoJson);
-  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet]);
+  }, [selectedRegion, selectedDistrict, selectedWard, selectedStreet, onLocationSelect]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1">

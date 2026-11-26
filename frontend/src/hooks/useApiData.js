@@ -20,33 +20,39 @@ export const useApiData = (apiFunction, options = {}) => {
     showToast = false,
   } = options;
 
-  const fetchData = useCallback(async (...args) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const result = await apiFunction(...args);
-      setData(result);
-      
-      if (onSuccess) onSuccess(result);
-      if (showToast) toast.success('Data loaded successfully');
-      
-      return result;
-    } catch (err) {
-      setError(err);
-      if (onError) onError(err);
-      if (showToast) toast.error(err.message || 'Failed to load data');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [apiFunction, onSuccess, onError, showToast]);
+  const fetchData = useCallback(
+    async (...args) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await apiFunction(...args);
+        setData(result);
+
+        if (onSuccess) onSuccess(result);
+        if (showToast) toast.success("Data loaded successfully");
+
+        return result;
+      } catch (err) {
+        setError(err);
+        if (onError) onError(err);
+        if (showToast) toast.error(err.message || "Failed to load data");
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiFunction, onSuccess, onError, showToast],
+  );
+
+  // Serialize dependencies for comparison
+  const depsString = JSON.stringify(dependencies);
 
   useEffect(() => {
     if (immediate) {
       fetchData();
     }
-  }, [fetchData, immediate, ...dependencies]);
+  }, [fetchData, immediate, depsString]);
 
   return { data, loading, error, refetch: fetchData };
 };

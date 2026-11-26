@@ -55,3 +55,4 @@ yarn.lock
 *.bak
 *.backup
 *.seed
+backend/scripts/createTestUser.js

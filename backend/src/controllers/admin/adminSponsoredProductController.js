@@ -1,6 +1,5 @@
 import SponsoredProduct from "../../models/SponsoredProduct.js";
 import { CacheService } from "../../utils/redis.js";
-import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
   getProductTargetInfo,

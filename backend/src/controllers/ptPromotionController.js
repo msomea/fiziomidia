@@ -3,7 +3,6 @@ import User from "../models/User.js";
 import Stripe from "stripe";
 import config from "../config/index.js";
 import { uploadToCloudinary } from "../services/uploadService.js";
-import dayjs from "dayjs"
 
 const stripe = new Stripe(config.stripe.secretKey);
 
@@ -91,10 +90,10 @@ export const stripeWebhook = async (req, res) => {
       const startAt = new Date();
       const endAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
-      const promotion = await PTPromotion.findByIdAndUpdate(
+      await PTPromotion.findByIdAndUpdate(
         promotionId,
         { status: "active", startAt, endAt },
-        { new: true }
+        { new: true },
       );
 
       // Update PT profile
@@ -133,7 +132,6 @@ export const getPTPromotion = async (req, res) => {
       }
 
       const endDate = promotion.endAt;
-      const today = dayjs();
       // Use the same calculation as dashboard controller for consistency
       const daysLeft = Math.ceil(
         (new Date(endDate) - new Date()) / (1000 * 60 * 60 * 24),

@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
@@ -20,7 +20,7 @@ export default function PromotionsSection() {
   const [loading, setLoading] = useState(false);
   const [filteredPromotions, setFilteredPromotions] = useState([]);
 
-  const loadPromotions = async () => {
+  const loadPromotions = useCallback(async () => {
     try {
       setLoading(true);
       const result = await performUnifiedSearch({
@@ -36,12 +36,12 @@ export default function PromotionsSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, status, t]);
 
   useEffect(() => {
     // Load promotions when filters change (also runs on mount)
     loadPromotions();
-  }, [search, status]);
+  }, [loadPromotions]);
 
   // Stats derived from the full promotions dataset in context
   const stats = useMemo(() => {

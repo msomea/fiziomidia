@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import EducationResource from "../models/EducationResource.js";
-import CopyrightReport from "../models/CopyrightReport.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import {
   sanitizeFileName,

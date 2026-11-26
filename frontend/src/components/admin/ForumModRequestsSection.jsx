@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -15,7 +15,7 @@ export default function ForumModRequestsSection() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     try {
       setLoading(true);
       const filters = status ? { status } : {};
@@ -25,12 +25,12 @@ export default function ForumModRequestsSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, refreshModRequests, t]);
 
   useEffect(() => {
     // Load requests when the status filter changes (also runs on mount)
     loadRequests();
-  }, [status]);
+  }, [loadRequests]);
 
   // Stats derived from moderator requests in context
   const stats = useMemo(() => {

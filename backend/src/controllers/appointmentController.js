@@ -110,61 +110,55 @@ const checkAppointmentConflict = async (
 
 // Validate PT availability for requested date and time
 const validatePTAvailability = async (ptId, date, time) => {
-  try {
-    const pt = await User.findById(ptId);
-    if (!pt || pt.role !== "physiotherapist") {
-      throw new Error("Physiotherapist not found");
-    }
-
-    // Check if PT is accepting new patients
-    if (!pt.ptProfile?.availability?.isAcceptingNewPatients) {
-      throw new Error("Physiotherapist is not accepting new patients");
-    }
-
-    // Check if next available date is set and in the future
-    if (pt.ptProfile?.availability?.nextAvailableDate) {
-      const nextAvailable = new Date(
-        pt.ptProfile.availability.nextAvailableDate,
-      );
-      const requestedDate = new Date(date);
-      if (requestedDate < nextAvailable) {
-        throw new Error(
-          `Physiotherapist is not available until ${nextAvailable.toDateString()}`,
-        );
-      }
-    }
-
-    // Check working hours for the requested day (use EAT timezone)
-    const scheduledDateTime = createEATDateTime(date, time);
-    const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
-      weekday: "long",
-      timeZone: "Africa/Dar_es_Salaam",
-    });
-
-    const workingHours = pt.ptProfile?.workingHours?.find(
-      (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable,
-    );
-
-    if (!workingHours) {
-      // If no working hours are configured, allow booking (more user-friendly)
-      // PTs should configure working hours in their profile for proper scheduling
-      console.log(
-        `[INFO] No working hours configured for ${dayOfWeek}, allowing booking`,
-      );
-      return { hasWorkingHours: false, isValid: true };
-    }
-
-    // Validate time is within working hours
-    if (time < workingHours.from || time > workingHours.to) {
-      throw new Error(
-        `Requested time ${time} is outside working hours (${workingHours.from} - ${workingHours.to})`,
-      );
-    }
-
-    return { hasWorkingHours: true, isValid: true };
-  } catch (error) {
-    throw error;
+  const pt = await User.findById(ptId);
+  if (!pt || pt.role !== "physiotherapist") {
+    throw new Error("Physiotherapist not found");
   }
+
+  // Check if PT is accepting new patients
+  if (!pt.ptProfile?.availability?.isAcceptingNewPatients) {
+    throw new Error("Physiotherapist is not accepting new patients");
+  }
+
+  // Check if next available date is set and in the future
+  if (pt.ptProfile?.availability?.nextAvailableDate) {
+    const nextAvailable = new Date(pt.ptProfile.availability.nextAvailableDate);
+    const requestedDate = new Date(date);
+    if (requestedDate < nextAvailable) {
+      throw new Error(
+        `Physiotherapist is not available until ${nextAvailable.toDateString()}`,
+      );
+    }
+  }
+
+  // Check working hours for the requested day (use EAT timezone)
+  const scheduledDateTime = createEATDateTime(date, time);
+  const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Africa/Dar_es_Salaam",
+  });
+
+  const workingHours = pt.ptProfile?.workingHours?.find(
+    (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable,
+  );
+
+  if (!workingHours) {
+    // If no working hours are configured, allow booking (more user-friendly)
+    // PTs should configure working hours in their profile for proper scheduling
+    console.log(
+      `[INFO] No working hours configured for ${dayOfWeek}, allowing booking`,
+    );
+    return { hasWorkingHours: false, isValid: true };
+  }
+
+  // Validate time is within working hours
+  if (time < workingHours.from || time > workingHours.to) {
+    throw new Error(
+      `Requested time ${time} is outside working hours (${workingHours.from} - ${workingHours.to})`,
+    );
+  }
+
+  return { hasWorkingHours: true, isValid: true };
 };
 
 // Request a new appointment
@@ -377,7 +371,6 @@ export const updateAppointmentStatus = async (req, res) => {
     const appt = await Appointment.findById(id);
     if (!appt) return res.status(404).json({ error: "Not found" });
 
-    const userId = req.user._id.toString();
     if (
       req.user.role !== "admin" &&
       req.user._id.toString() !== appt.pt.toString() &&

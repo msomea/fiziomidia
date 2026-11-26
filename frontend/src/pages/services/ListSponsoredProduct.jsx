@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { getSponsoredProducts } from "../../api/promotions";
 import { ArrowBigLeftIcon, ArrowBigRightIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -32,6 +32,19 @@ export default function SponsoredProductList() {
 
   const totalPages = Math.ceil(products.length / ITEMS_PER_PAGE);
 
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }, []);
+
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay();
+    if (totalPages > 1) {
+      intervalRef.current = setInterval(() => {
+        setPage((prev) => (prev + 1) % totalPages);
+      }, AUTO_PLAY_INTERVAL);
+    }
+  }, [totalPages, stopAutoPlay]);
+
   useEffect(() => {
     startAutoPlay();
     if (itemsRef.current) {
@@ -39,20 +52,7 @@ export default function SponsoredProductList() {
       if (height > containerHeight) setContainerHeight(height);
     }
     return () => stopAutoPlay();
-  }, [page, products, containerHeight]);
-
-  const startAutoPlay = () => {
-    stopAutoPlay();
-    if (totalPages > 1) {
-      intervalRef.current = setInterval(() => {
-        setPage((prev) => (prev + 1) % totalPages);
-      }, AUTO_PLAY_INTERVAL);
-    }
-  };
-
-  const stopAutoPlay = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+  }, [page, products, containerHeight, startAutoPlay, stopAutoPlay]);
 
   const handlePrev = () => {
     stopAutoPlay();

@@ -32,7 +32,7 @@ export default function Login() {
         navigate(`/dashboard/admin`);
       else navigate("/");
 
-    } catch (error) {
+    } catch {
       toast.error(t("login_fail"))
     } finally {
       setLoading(false);

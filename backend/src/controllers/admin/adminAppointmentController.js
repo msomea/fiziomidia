@@ -1,9 +1,6 @@
-import User from "../../models/User.js";
-import Clinic from "../../models/Clinic.js";
 import Appointment from "../../models/Appointment.js";
 import { CacheService } from "../../utils/redis.js";
 import mongoose from "mongoose";
-import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
   getAppointmentTargetInfo,
@@ -44,7 +41,9 @@ export const getAppointmentDetails = async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(400).json({ success: false, message: "Invalid appointment ID" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid appointment ID" });
 
     const appointment = await Appointment.findById(id)
       .populate("requester", "fullName email phone")
@@ -53,12 +52,16 @@ export const getAppointmentDetails = async (req, res) => {
       .lean();
 
     if (!appointment)
-      return res.status(404).json({ success: false, message: "Appointment not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Appointment not found" });
 
     return res.json({ success: true, appointment });
   } catch (err) {
     console.error("Admin appointment details error:", err);
-    return res.status(500).json({ success: false, message: "Failed to fetch appointment details" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch appointment details" });
   }
 };
 

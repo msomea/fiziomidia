@@ -12,7 +12,7 @@ import {
 export const sanitizeFileName = (name = "") => {
   const base = name.split(/[\\/]/).pop() || "file";
   return base
-    .replace(/[^\w.\- ()\[\]]+/g, "_")
+    .replace(/[^\w.\- ()[]]+/g, "_")
     .replace(/_{2,}/g, "_")
     .slice(0, 255);
 };

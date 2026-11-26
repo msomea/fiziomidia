@@ -1,7 +1,5 @@
 import express from "express";
 import { authenticate } from "../middlewares/auth.js";
-import { requireRole } from "../middlewares/roles.js";
-import Appointment from "../models/Appointment.js";
 import {
   requestClinicAppointment,
   getClinicAvailablePTs,

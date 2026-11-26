@@ -1,14 +1,13 @@
-import { useState, useCallback } from 'react';
-import { useApiData } from './useApiData';
-import toast from 'react-hot-toast';
-import API from '../api/axios';
-import { API_URL } from '../config/constants';
+import { useState, useCallback } from "react";
+import toast from "react-hot-toast";
+import API from "../api/axios";
+import { API_URL } from "../config/constants";
 import { getProfile, getAppointmentsByMember } from "../api/users";
 
 /**
  * Hook for member dashboard data management
  */
-export const useMemberDashboard = (memberId) => {
+export const useMemberDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -38,17 +37,17 @@ export const useMemberDashboard = (memberId) => {
   const refreshMemberProfile = useCallback(async () => {
     try {
       const response = await getProfile();
-      
+
       // Add timestamp to profile image URL to prevent caching
       const fullUserData = response;
       if (fullUserData.avatar) {
         fullUserData.avatar = `${fullUserData.avatar}?t=${Date.now()}`;
       }
-      
-      setData(prev => ({ ...prev, profile: fullUserData }));
+
+      setData((prev) => ({ ...prev, profile: fullUserData }));
       return fullUserData;
     } catch (err) {
-      toast.error('Failed to refresh profile');
+      toast.error("Failed to refresh profile");
       throw err;
     }
   }, []);
@@ -56,10 +55,10 @@ export const useMemberDashboard = (memberId) => {
   const refreshAppointments = useCallback(async (memberId) => {
     try {
       const response = await getAppointmentsByMember(memberId);
-      setData(prev => ({ ...prev, appointments: response.data || [] }));
+      setData((prev) => ({ ...prev, appointments: response.data || [] }));
       return response;
     } catch (error) {
-      toast.error('Failed to refresh appointments');
+      toast.error("Failed to refresh appointments");
       throw error;
     }
   }, []);
@@ -67,21 +66,23 @@ export const useMemberDashboard = (memberId) => {
   const refreshSavedPTs = useCallback(async (memberId) => {
     try {
       const response = await API.get(`${API_URL}/users/${memberId}/saved-pts`);
-      setData(prev => ({ ...prev, savedPTs: response.data || [] }));
+      setData((prev) => ({ ...prev, savedPTs: response.data || [] }));
       return response;
     } catch (error) {
-      toast.error('Failed to refresh saved PTs');
+      toast.error("Failed to refresh saved PTs");
       throw error;
     }
   }, []);
 
   const refreshStats = useCallback(async (memberId) => {
     try {
-      const response = await API.get(`${API_URL}/users/${memberId}/dashboard-stats`);
-      setData(prev => ({ ...prev, stats: response.data || {} }));
+      const response = await API.get(
+        `${API_URL}/users/${memberId}/dashboard-stats`,
+      );
+      setData((prev) => ({ ...prev, stats: response.data || {} }));
       return response;
     } catch (error) {
-      toast.error('Failed to refresh stats');
+      toast.error("Failed to refresh stats");
       throw error;
     }
   }, []);
@@ -94,6 +95,6 @@ export const useMemberDashboard = (memberId) => {
     refreshMemberProfile,
     refreshAppointments,
     refreshSavedPTs,
-    refreshStats
+    refreshStats,
   };
 };

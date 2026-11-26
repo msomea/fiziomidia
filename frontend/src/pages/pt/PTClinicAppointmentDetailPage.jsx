@@ -5,12 +5,10 @@ import { useTranslation } from "react-i18next";
 import { getClinicAppointmentById, updateClinicAppointmentStatus, getClinicPTsForAssignment } from "../../api/clinicAppointments";
 import { Loader2, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function PTClinicAppointmentDetailPage() {
   const { id } = useParams();
   const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +25,7 @@ export default function PTClinicAppointmentDetailPage() {
         setAppointment(data.appointment);
         setSelectedPT(data.appointment.pt?._id || "");
         setAdminNotes(data.appointment.adminNotes || "");
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_appointment"));
         navigate(-1);
       } finally {

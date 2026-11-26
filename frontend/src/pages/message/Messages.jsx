@@ -72,7 +72,7 @@ const MessagesPage = () => {
       socket.off("conversation:read", handleConversationRead);
       socket.off("conversation:updatePreview", handleConversationUpdate);
     };
-  }, [loggedInUser]);
+  }, [loggedInUser, socket]);
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -110,7 +110,7 @@ const MessagesPage = () => {
     const backup = [...conversations];
     setConversations((prev) => prev.filter((c) => c._id !== convId));
 
-    const toastUndo = toast((tObj) => (
+    toast((tObj) => (
       <div className="flex items-center gap-3">
         <span>{t("conversation_deleted")}</span>
         <button
@@ -128,7 +128,7 @@ const MessagesPage = () => {
     setTimeout(async () => {
       try {
         await deleteConversation(convId);
-      } catch (error) {
+      } catch {
         setConversations(backup);
         toast.error(t("failed_delete_conversation"));
       }

@@ -1,7 +1,5 @@
 import ForumSub from "../models/ForumSub.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
-import User from "../models/User.js";
-import asyncHandler from "express-async-handler";
 
 // ============================================
 // CONSOLIDATED PT SUBMANAGEMENT PAGE API
@@ -113,44 +111,6 @@ async function checkUserPermissions(subId, userId) {
       canEdit: false,
       canManageRequests: false,
       error: "Failed to check permissions"
-    };
-  }
-}
-
-// Helper function to get subforum statistics
-async function getSubforumStats(subId) {
-  try {
-    const [
-      totalPosts,
-      totalMods,
-      pendingRequests,
-      approvedRequests
-    ] = await Promise.all([
-      // Import Post model to count posts
-      import("../models/Post.js").then(m => m.default.countDocuments({ sub: subId })),
-      ForumSub.findById(subId).then(sub => sub?.moderators?.length || 0),
-      ForumSubModRequest.countDocuments({ sub: subId, status: "pending" }),
-      ForumSubModRequest.countDocuments({ sub: subId, status: "approved" })
-    ]);
-
-    return {
-      totalPosts,
-      totalMods,
-      pendingRequests,
-      approvedRequests,
-      totalRequests: pendingRequests + approvedRequests,
-      lastUpdated: new Date()
-    };
-  } catch (error) {
-    console.error("Error getting subforum stats:", error);
-    return {
-      totalPosts: 0,
-      totalMods: 0,
-      pendingRequests: 0,
-      approvedRequests: 0,
-      totalRequests: 0,
-      lastUpdated: new Date(),
-      error: "Failed to load some stats"
     };
   }
 }

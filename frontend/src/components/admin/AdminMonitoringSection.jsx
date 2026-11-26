@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Activity, Users, Calendar, TrendingUp, RefreshCw } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
@@ -35,7 +35,7 @@ export default function AdminMonitoringSection() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const loadActivityLogs = async () => {
+  const loadActivityLogs = useCallback(async () => {
     try {
       setLoading(true);
       const result = await performUnifiedSearch({
@@ -57,7 +57,7 @@ export default function AdminMonitoringSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedSearch, adminFilter, actionFilter, targetFilter]);
 
   const reload = () => {
     loadActivityLogs();
@@ -68,7 +68,7 @@ export default function AdminMonitoringSection() {
   useEffect(() => {
     // Load logs on mount and whenever server-side filters change
     loadActivityLogs();
-  }, [debouncedSearch, adminFilter, actionFilter, targetFilter]);
+  }, [loadActivityLogs]);
 
   // Extract unique admins for dropdown
   const adminOptions = useMemo(() => {

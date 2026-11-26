@@ -1,7 +1,5 @@
-import User from "../../models/User.js";
 import PTPromotion from "../../models/PTPromotion.js";
 import { CacheService } from "../../utils/redis.js";
-import escapeRegExp from "../../utils/escapeRegExp.js";
 import {
   logAdminActivity,
   getPromotionTargetInfo,
@@ -29,8 +27,10 @@ export const getAllPromotions = async (req, res) => {
 // Get one Promotion
 export const getAdminPromotion = async (req, res) => {
   try {
-    const promotion = await PTPromotion.findById(req.params.id)
-      .populate("pt", "fullName email");
+    const promotion = await PTPromotion.findById(req.params.id).populate(
+      "pt",
+      "fullName email",
+    );
 
     res.json({ promotion });
   } catch {

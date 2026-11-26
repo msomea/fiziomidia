@@ -1,9 +1,9 @@
 // src/pages/forum/PostDetailPage.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useForum } from "../../contexts/ForumContext";
-import { fetchPostById, updatePost } from "../../api/forum";
+import { fetchPostById, updatePost as updatePostApi } from "../../api/forum";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PostVote from "../../components/forum/PostVote";
@@ -46,7 +46,7 @@ const PostDetailPage = () => {
   const canEdit =
     user && user._id && (user.role === "admin" || user._id === post?.author?._id);
 
-  const fetchPost = async () => {
+  const fetchPost = useCallback(async () => {
     setLoading(true);
     try {
       const p = await fetchPostById(id);
@@ -62,7 +62,7 @@ const PostDetailPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, updatePost]);
 
   useEffect(() => {
     if (!id) return;
@@ -73,7 +73,7 @@ const PostDetailPage = () => {
     return () => {
       socket.emit("leavePostRoom", id);
     };
-  }, [id, socket]);
+  }, [id, socket, fetchPost]);
 
   const handleEditStart = () => {
     setEditTitle(post.title);
@@ -83,7 +83,7 @@ const PostDetailPage = () => {
 
   const handleEditSave = async () => {
     try {
-      const updatedPostData = await updatePost(id, {
+      const updatedPostData = await updatePostApi(id, {
         title: editTitle,
         body: editBody,
       });

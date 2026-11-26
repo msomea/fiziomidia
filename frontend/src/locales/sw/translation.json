@@ -392,6 +392,7 @@
   "select_district": "Chagua Wilaya",
   "select_ward": "Chagua Kata",
   "select_street": "Chagua Mtaa",
+  "create_clinic":"Tengeneza Klinic",
   "invalid_region_response": "Majibu ya mkoa si sahihi",
   "failed_load_regions": "Imeshindikana kupakua mikoa",
   "failed_load_districts": "Imeshindikana kupakua wilaya",

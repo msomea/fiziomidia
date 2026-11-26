@@ -2,7 +2,6 @@ import User from "../../models/User.js";
 import { CacheService } from "../../utils/redis.js";
 import mongoose from "mongoose";
 import asyncHandler from "express-async-handler";
-import escapeRegExp from "../../utils/escapeRegExp.js";
 import { sendEmail, EMAIL_FROM } from "../../services/sendEmailService.js";
 import { generateFiziomidiaEmail } from "../../templates/emailHelper.js";
 import {
@@ -236,7 +235,7 @@ export const sendEmailToUser = [
   logAdminActivity("EMAIL_SENT", getEmailTargetInfo),
   asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { title, body, buttonText, buttonURL, logoURL } = req.body;
+    const { title, body, buttonText, buttonURL } = req.body;
 
     // Validate required fields
     if (!title || !body) {

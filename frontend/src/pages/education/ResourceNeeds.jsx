@@ -32,7 +32,7 @@ export default function ResourceNeeds() {
     } finally {
       setLoading(false);
     }
-  }, [category, page]);
+  }, [category, page, t]);
 
   useEffect(() => { load(); }, [load]);
 

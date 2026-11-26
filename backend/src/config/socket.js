@@ -1,19 +1,12 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 import Message from "../models/Message.js";
 import Conversation from "../models/Conversation.js";
+import config from "./index.js";
+import { allowedOrigins } from "../constants/allowedOrigins.js";
 
 let onlineUsers = {};
 let io;
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://fiziomidia.org",
-  "https://fiziomidia.org",
-  "https://www.fiziomidia.org",
-  "https://api.fiziomidia.org",
-  "https://fiziomidia.netlify.app",
-  "https://fiziomidia.pages.dev",
-];
 
 export const initSocket = (server) => {
   io = new Server(server, {
@@ -24,12 +17,31 @@ export const initSocket = (server) => {
     },
   });
 
+  // Authenticate socket connections via JWT in handshake auth
+  io.use((socket, next) => {
+    try {
+      const token = socket.handshake.auth?.token;
+      if (!token) return next(new Error("Authentication required"));
+      const payload = jwt.verify(token, config.jwt.accessSecret);
+      socket.userId = payload.sub;
+      next();
+    } catch (err) {
+      next(new Error("Invalid or expired token"));
+    }
+  });
+
   io.on("connection", (socket) => {
-      // =============================
+    // =============================
     // JOIN PERSONAL ROOM
     // =============================
     socket.on("joinRoom", (userId) => {
-      socket.join(userId);
+      // Only allow joining your own room
+      if (userId !== socket.userId) {
+        return socket.emit("error", {
+          message: "Cannot join another user's room",
+        });
+      }
+      socket.join(String(userId));
 
       if (!onlineUsers[userId]) onlineUsers[userId] = [];
       if (!onlineUsers[userId].includes(socket.id)) {
@@ -53,6 +65,11 @@ export const initSocket = (server) => {
     socket.on("sendMessage", async (data) => {
       try {
         const { sender, receiver, content, conversationId } = data;
+
+        // Sender must match the authenticated socket user
+        if (sender !== socket.userId) {
+          return socket.emit("error", { message: "Sender mismatch" });
+        }
 
         const message = await Message.create({
           sender,
@@ -92,7 +109,7 @@ export const initSocket = (server) => {
         };
 
         // Send to receiver
-        io.to(receiver).emit("message:new", payload);
+        io.to(String(receiver)).emit("message:new", payload);
 
         // Confirmation to sender
         socket.emit("message:new", {
@@ -101,14 +118,14 @@ export const initSocket = (server) => {
         });
 
         // 🔥 IMPORTANT: Update chat list preview in real time
-        io.to(receiver).emit("conversation:updatePreview", {
+        io.to(String(receiver)).emit("conversation:updatePreview", {
           conversationId,
           userId: sender,
           lastMessage: content,
           updatedAt: conversation.updatedAt,
         });
 
-        io.to(sender).emit("conversation:updatePreview", {
+        io.to(String(sender)).emit("conversation:updatePreview", {
           conversationId,
           userId: receiver,
           lastMessage: content,
@@ -123,6 +140,7 @@ export const initSocket = (server) => {
     // MESSAGE STATUS (DELIVERED)
     // =============================
     socket.on("message:delivered", async ({ messageId, userId }) => {
+      if (userId !== socket.userId) return;
       const msg = await Message.findById(messageId);
       if (!msg) return;
 
@@ -144,6 +162,7 @@ export const initSocket = (server) => {
     // MESSAGE READ
     // =============================
     socket.on("message:read", async ({ messageId, userId }) => {
+      if (userId !== socket.userId) return;
       const msg = await Message.findById(messageId);
       if (!msg) return;
 
@@ -177,6 +196,7 @@ export const initSocket = (server) => {
     // CONVERSATION OPEN
     // =============================
     socket.on("conversation:open", async ({ conversationId, userId }) => {
+      if (userId !== socket.userId) return;
       const unreadMessages = await Message.find({
         conversation: conversationId,
         receiver: userId,

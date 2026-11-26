@@ -39,7 +39,7 @@ function AdminDashboardContent() {
   useEffect(() => {
     // Fetch all dashboard data at once - only run once on mount
     fetchDashboardData();
-  }, []); // Remove fetchDashboardData from dependency array
+  }, [fetchDashboardData]); // fetchDashboardData is stable due to useCallback
 
   return (
     <div className="p-6 mt-16">

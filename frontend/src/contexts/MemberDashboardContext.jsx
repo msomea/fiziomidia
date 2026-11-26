@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect } from 'react';
 import { useMemberDashboard as useMemberDashboardData } from '../hooks/useMemberDashboard';
-import { getNotifications, markNotificationRead } from '../api/notifications';
+import { markNotificationRead } from '../api/notifications';
 import toast from 'react-hot-toast';
 
 // Context
@@ -8,19 +8,7 @@ const MemberDashboardContext = createContext();
 
 // Provider component
 export const MemberDashboardProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([]);
   const dashboardData = useMemberDashboardData();
-
-  // Refresh notifications
-  const refreshNotifications = useCallback(async (memberId) => {
-    try {
-      const notificationsData = await getNotifications();
-      setNotifications(notificationsData || []);
-    } catch (error) {
-      console.error('Notifications refresh error:', error);
-      toast.error('Failed to refresh notifications');
-    }
-  }, []);
 
   // Mark notification as read
   const markNotificationReadHandler = useCallback(async (memberId, notificationId) => {
@@ -30,20 +18,13 @@ export const MemberDashboardProvider = ({ children }) => {
       // The backend will handle deletion, we need to trigger a refresh
       // to get the updated notifications list
       if (memberId) {
-        refreshNotifications(memberId);
+        dashboardData.refreshDashboard();
       }
     } catch (error) {
       console.error('Mark notification as read error:', error);
       toast.error('Failed to mark notification as read');
     }
-  }, [refreshNotifications]);
-
-  // Refresh notifications when dashboard data changes
-  useEffect(() => {
-    if (dashboardData.data?.profile?._id) {
-      refreshNotifications(dashboardData.data.profile._id);
-    }
-  }, [dashboardData.data?.profile?._id, refreshNotifications]);
+  }, [dashboardData]);
 
   // Cache user data for AuthProvider to access
   useEffect(() => {
@@ -86,7 +67,6 @@ export const MemberDashboardProvider = ({ children }) => {
     loading,
     error,
     notifications: notificationsFromBackend, // Directly use backend notifications
-    refreshNotifications,
     markNotificationRead: markNotificationReadHandler,
     clearError: () => {}, // Keep for backward compatibility
     fetchMemberDashboardData: fetchDashboardData,
@@ -105,6 +85,7 @@ export const MemberDashboardProvider = ({ children }) => {
 };
 
 // Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMemberDashboard = () => {
   const context = useContext(MemberDashboardContext);
   if (!context) {

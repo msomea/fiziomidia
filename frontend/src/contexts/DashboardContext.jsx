@@ -1,6 +1,5 @@
 import React, { createContext, useContext } from 'react';
 import { useDashboardData } from '../hooks/useDashboard';
-import toast from 'react-hot-toast';
 
 // Context
 const DashboardContext = createContext();
@@ -23,6 +22,7 @@ export const DashboardProvider = ({ children }) => {
 };
 
 // Hook to use the context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useDashboard = () => {
   const context = useContext(DashboardContext);
   if (!context) {

@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router";
+import ProtectedRoute from "../components/ProtectedRoute";
 import Home from "../pages/Home";
 import About from "../pages/About";
 import Forum from "../pages/forum/Forum";
@@ -73,10 +74,10 @@ export default function AppRoutes() {
       {/* Public Pages Routes */}
       <Route path="/education/library" element={<ResourceLibrary />} />
       <Route path="/education/resources/:id" element={<ResourceDetails />} />
-      <Route path="/education/upload" element={<UploadResource />} />
-      <Route path="/education/requests" element={<ResourceRequests />} />
-      <Route path="/education/needs" element={<ResourceNeeds />} />
-      <Route path="/education/my-uploads" element={<MyResources />} />
+      <Route path="/education/upload" element={<ProtectedRoute><UploadResource /></ProtectedRoute>} />
+      <Route path="/education/requests" element={<ProtectedRoute><ResourceRequests /></ProtectedRoute>} />
+      <Route path="/education/needs" element={<ProtectedRoute><ResourceNeeds /></ProtectedRoute>} />
+      <Route path="/education/my-uploads" element={<ProtectedRoute><MyResources /></ProtectedRoute>} />
       <Route path="/" element={<Home />} />
       <Route path="/about" element={<About />} />
       <Route path="/forum" element={<Forum />} />
@@ -89,16 +90,16 @@ export default function AppRoutes() {
       <Route path="/find-professionals" element={<FindProfessionals />} />
 
       {/* Services Routes */}
-      <Route path="/services/promotions/create" element={<CreatePromotion />} />
+      <Route path="/services/promotions/create" element={<ProtectedRoute><CreatePromotion /></ProtectedRoute>} />
       <Route path="/services" element={<Services />} />
       <Route path="/services/promotions" element={<ListPromotions />} />
       <Route path="/services/sponsored" element={<ListSponsoredProduct />} />
-      <Route path="/services/sponsored/create" element={<CreateSponsoredProduct />} />
+      <Route path="/services/sponsored/create" element={<ProtectedRoute><CreateSponsoredProduct /></ProtectedRoute>} />
       
       {/* Clinic Promotion Routes */}
-      <Route path="/services/clinic-promotions/create" element={<CreateClinicPromotion />} />
+      <Route path="/services/clinic-promotions/create" element={<ProtectedRoute><CreateClinicPromotion /></ProtectedRoute>} />
       <Route path="/services/clinic-promotions" element={<ListClinicPromotions />} />
-      <Route path="/clinic/promotions/manage/:promotionId" element={<ManageClinicPromotion />} />
+      <Route path="/clinic/promotions/manage/:promotionId" element={<ProtectedRoute><ManageClinicPromotion /></ProtectedRoute>} />
 
       {/* Clinic Routes */}
       <Route path="/clinic/:clinicId" element={<ClinicDetails />} />
@@ -106,48 +107,48 @@ export default function AppRoutes() {
 
 
       {/* Dashboard Routes */}
-      <Route path="/dashboard/pt/:_id" element={<PTDashboard />} />
-      <Route path="/dashboard/member/:id" element={<MemberDashboard />} />
-      <Route path="/upgrade-to-pt" element={<UpgradeToPT />} />
-      <Route path="/forum/sub/:subId/manage" element={<PTSubManagementPage />} />
+      <Route path="/dashboard/pt/:_id" element={<ProtectedRoute><PTDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard/member/:id" element={<ProtectedRoute><MemberDashboard /></ProtectedRoute>} />
+      <Route path="/upgrade-to-pt" element={<ProtectedRoute><UpgradeToPT /></ProtectedRoute>} />
+      <Route path="/forum/sub/:subId/manage" element={<ProtectedRoute><PTSubManagementPage /></ProtectedRoute>} />
 
       {/* Forum Routes */}
-      <Route path="/forum/edit/:ptId/:postId" element={<EditPostPage />} />
-      <Route path="/forum/create" element={<CreatePostPage />} />
+      <Route path="/forum/edit/:ptId/:postId" element={<ProtectedRoute><EditPostPage /></ProtectedRoute>} />
+      <Route path="/forum/create" element={<ProtectedRoute><CreatePostPage /></ProtectedRoute>} />
 
       {/* Appointment Routes */}
-      <Route path="/appointments/book/:ptId" element={<BookAppointment />} />
-      <Route path="/pt/:id/appointments" element={<PTAppointmentsPage />} />
-      <Route path="/pt/clinic-appointments" element={<PTClinicAppointmentPage />} />
-      <Route path="/pt/clinic-appointments/:id" element={<PTClinicAppointmentDetailPage />} />
-      <Route path="/pt/appointments/:id" element={<PTAppointmentDetailsPage />} />
-      <Route path="/appointments/member/:id" element={<MemberAppointmentsPage />} />
-      <Route path="/member/clinic-appointments" element={<MemberClinicAppointmentsPage />} />
-      <Route path="/member/clinic-appointments/:id" element={<MemberClinicAppointmentDetailPage />} />
+      <Route path="/appointments/book/:ptId" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} />
+      <Route path="/pt/:id/appointments" element={<ProtectedRoute><PTAppointmentsPage /></ProtectedRoute>} />
+      <Route path="/pt/clinic-appointments" element={<ProtectedRoute><PTClinicAppointmentPage /></ProtectedRoute>} />
+      <Route path="/pt/clinic-appointments/:id" element={<ProtectedRoute><PTClinicAppointmentDetailPage /></ProtectedRoute>} />
+      <Route path="/pt/appointments/:id" element={<ProtectedRoute><PTAppointmentDetailsPage /></ProtectedRoute>} />
+      <Route path="/appointments/member/:id" element={<ProtectedRoute><MemberAppointmentsPage /></ProtectedRoute>} />
+      <Route path="/member/clinic-appointments" element={<ProtectedRoute><MemberClinicAppointmentsPage /></ProtectedRoute>} />
+      <Route path="/member/clinic-appointments/:id" element={<ProtectedRoute><MemberClinicAppointmentDetailPage /></ProtectedRoute>} />
 
 
       {/* Message Routes */ }      
-      <Route path="/messages" element={<MessagesPage />} />
-      <Route path="/messages/user/:receiverId" element={<MessageRouterPage />} />
-      <Route path="/messages/:id" element={<ConversationPage />} />
-      <Route path="/messages/users" element={<UsersPage />} />
+      <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+      <Route path="/messages/user/:receiverId" element={<ProtectedRoute><MessageRouterPage /></ProtectedRoute>} />
+      <Route path="/messages/:id" element={<ProtectedRoute><ConversationPage /></ProtectedRoute>} />
+      <Route path="/messages/users" element={<ProtectedRoute><UsersPage /></ProtectedRoute>} />
 
       {/* Profile Settings Routes */}
-      <Route path="/settings/pt/:id" element={<PTProfileSettings />} />
-      <Route path="/settings/member/:id" element={<MemberProfileSettings  />} />
+      <Route path="/settings/pt/:id" element={<ProtectedRoute><PTProfileSettings /></ProtectedRoute>} />
+      <Route path="/settings/member/:id" element={<ProtectedRoute><MemberProfileSettings /></ProtectedRoute>} />
 
       {/* Admin Routes */}
-      <Route path="/subs/:id/sponsor" element={<AdminSponsorships />} />
-      <Route path="/dashboard/admin" element={<AdminDashboard />} />
-      <Route path="/admin/users/:id" element={<AdminUserDetails />} />
-      <Route path="/admin/appointments/:id" element={<AdminAppointmentDetails />} />
-      <Route path="/admin/promotions/:id" element={<AdminPromotionDetail />} />
-      <Route path="/admin/clinic-promotions/:id" element={<AdminClinicPromotionDetail />} />
-      <Route path="/admin/sponsorship/:id" element={<AdminSponsorshipDetail />} />
-      <Route path="/admin/sponsored-products/:id" element={<AdminProductSponsorshipDetail />} />
-      <Route path="/admin/forum/mod-requests/:id" element={<ForumModRequestsDetail />} />
-      <Route path="/users/:id/send-email" element={<AdminSendEmail />} />
-      <Route path="/settings/admin" element={<AdminProfileSettings />} />
+      <Route path="/subs/:id/sponsor" element={<ProtectedRoute allowedRoles={["admin"]}><AdminSponsorships /></ProtectedRoute>} />
+      <Route path="/dashboard/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/users/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminUserDetails /></ProtectedRoute>} />
+      <Route path="/admin/appointments/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminAppointmentDetails /></ProtectedRoute>} />
+      <Route path="/admin/promotions/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminPromotionDetail /></ProtectedRoute>} />
+      <Route path="/admin/clinic-promotions/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminClinicPromotionDetail /></ProtectedRoute>} />
+      <Route path="/admin/sponsorship/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminSponsorshipDetail /></ProtectedRoute>} />
+      <Route path="/admin/sponsored-products/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProductSponsorshipDetail /></ProtectedRoute>} />
+      <Route path="/admin/forum/mod-requests/:id" element={<ProtectedRoute allowedRoles={["admin"]}><ForumModRequestsDetail /></ProtectedRoute>} />
+      <Route path="/users/:id/send-email" element={<ProtectedRoute allowedRoles={["admin"]}><AdminSendEmail /></ProtectedRoute>} />
+      <Route path="/settings/admin" element={<ProtectedRoute allowedRoles={["admin"]}><AdminProfileSettings /></ProtectedRoute>} />
 
       {/* Temp routes for debugging */}
       

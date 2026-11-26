@@ -7,6 +7,12 @@ import { useTranslation } from "react-i18next";
 import { getClinicOwnedByPT } from "../../api/clinics";
 import { createClinicPromotion } from "../../api/promotions";
 
+const promotionTiers = {
+  Silver: { duration: 7, price: 50000 },
+  Gold: { duration: 14, price: 100000 },
+  Platinum: { duration: 30, price: 200000 },
+};
+
 export default function CreateClinicPromotion() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -15,12 +21,6 @@ export default function CreateClinicPromotion() {
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingClinics, setFetchingClinics] = useState(true);
-
-  const promotionTiers = {
-    Silver: { duration: 7, price: 50000 },
-    Gold: { duration: 14, price: 100000 },
-    Platinum: { duration: 30, price: 200000 },
-  };
 
   const [form, setForm] = useState({
     clinicId: "",
@@ -48,7 +48,7 @@ export default function CreateClinicPromotion() {
       }
     };
     fetchClinics();
-  }, [t]);
+  }, [user._id, t]);
 
   // Update price and duration when tier changes
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function CreateClinicPromotion() {
   if (clinics.length === 0) {
     return (
       <div className="pt-24 pb-16 text-center">
-        <h2 className="text-2xl font-bold mb-4">{t("no_clinics_found")}</h2>
+        <h2 className="text-2xl text-tufts font-bold mb-4">{t("no_clinics_found")}</h2>
         <p className="text-gray-600 mb-6">{t("need_clinic_to_create_promotion")}</p>
         <button
           onClick={() => navigate("/clinic/create")}

@@ -1,5 +1,4 @@
 import ForumSub from "../../models/ForumSub.js";
-import ForumSubModRequest from "../../models/ForumSubModRequest.js";
 import { CacheService } from "../../utils/redis.js";
 import {
   uploadToCloudinary,
@@ -23,10 +22,10 @@ export const getAllForumSubs = async (req, res) => {
     // Use shared fetchForumSubs function
     const subs = await fetchForumSubs();
 
-    res.json({ 
+    res.json({
       success: true,
       subs,
-      message: "Forum subs fetched successfully"
+      message: "Forum subs fetched successfully",
     });
   } catch (error) {
     console.error("Error fetching forum subs:", error);

@@ -1,6 +1,5 @@
 // middleware/forumPermission.js
 import ForumSub from "../models/ForumSub.js";
-import { getUserForumRole } from "../utils/forumPermissions.js";
 
 export const requireForumPermission = (allowedRoles = []) => {
   return async (req, res, next) => {

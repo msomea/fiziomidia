@@ -1,10 +1,6 @@
 import ClinicPromotion from "../../models/ClinicPromotion.js";
-import User from "../../models/User.js";
 import { CacheService } from "../../utils/redis.js";
-import {
-  deleteFromCloudinary,
-  uploadToCloudinary,
-} from "../../services/uploadService.js";
+import { deleteFromCloudinary } from "../../services/uploadService.js";
 import {
   logAdminActivity,
   getClinicPromotionTargetInfo,
@@ -17,16 +13,15 @@ GET SINGLE PROMOTION (ADMIN VIEW)
 */
 export const getClinicPromotionByIdAdmin = async (req, res) => {
   try {
-    const promotion = await ClinicPromotion.findById(req.params.id)
-    .populate({
+    const promotion = await ClinicPromotion.findById(req.params.id).populate({
       path: "clinic",
       select: "name address ownerUserId",
       populate: {
         path: "ownerUserId",
         select: "fullName email phone",
-        model: "User"
-      }
-    })
+        model: "User",
+      },
+    });
 
     if (!promotion) {
       return res.status(404).json({ message: "Promotion not found" });

@@ -14,48 +14,44 @@ const createEATDateTime = (date, time) => {
 
 // Check clinic working hours and availability
 const checkClinicAvailability = async (clinicId, date, time) => {
-  try {
-    const clinic = await Clinic.findById(clinicId);
-    if (!clinic) {
-      throw new Error("Clinic not found");
-    }
-
-    // Check if clinic has working hours configured
-    const hasWorkingHours = clinic.workingHours && clinic.workingHours.length > 0;
-
-    if (!hasWorkingHours) {
-      return { hasWorkingHours: false, isValid: true, clinic };
-    }
-
-    // Validate time is within working hours
-    const scheduledDateTime = createEATDateTime(date, time);
-    const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
-      weekday: "long",
-      timeZone: "Africa/Dar_es_Salaam",
-    });
-
-    const workingHours = clinic.workingHours.find(
-      (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable
-    );
-
-    if (!workingHours) {
-      return { hasWorkingHours: false, isValid: true, clinic };
-    }
-
-    // Check if requested time is within working hours
-    if (time < workingHours.from || time > workingHours.to) {
-      return { 
-        hasWorkingHours: true, 
-        isValid: false, 
-        clinic,
-        reason: `Requested time ${time} is outside clinic working hours (${workingHours.from} - ${workingHours.to})`
-      };
-    }
-
-    return { hasWorkingHours: true, isValid: true, clinic };
-  } catch (error) {
-    throw error;
+  const clinic = await Clinic.findById(clinicId);
+  if (!clinic) {
+    throw new Error("Clinic not found");
   }
+
+  // Check if clinic has working hours configured
+  const hasWorkingHours = clinic.workingHours && clinic.workingHours.length > 0;
+
+  if (!hasWorkingHours) {
+    return { hasWorkingHours: false, isValid: true, clinic };
+  }
+
+  // Validate time is within working hours
+  const scheduledDateTime = createEATDateTime(date, time);
+  const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Africa/Dar_es_Salaam",
+  });
+
+  const workingHours = clinic.workingHours.find(
+    (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable,
+  );
+
+  if (!workingHours) {
+    return { hasWorkingHours: false, isValid: true, clinic };
+  }
+
+  // Check if requested time is within working hours
+  if (time < workingHours.from || time > workingHours.to) {
+    return {
+      hasWorkingHours: true,
+      isValid: false,
+      clinic,
+      reason: `Requested time ${time} is outside clinic working hours (${workingHours.from} - ${workingHours.to})`,
+    };
+  }
+
+  return { hasWorkingHours: true, isValid: true, clinic };
 };
 
 // Check for conflicting appointments at clinic level
@@ -192,15 +188,7 @@ export const requestClinicAppointment = async (req, res) => {
         // Optional: Check PT working hours (but don't block if not configured)
         const hasPTWorkingHours = ptUser.ptProfile?.workingHours?.length > 0;
         if (hasPTWorkingHours) {
-          const scheduledDateTime = createEATDateTime(date, time);
-          const dayOfWeek = scheduledDateTime.toLocaleDateString("en-US", {
-            weekday: "long",
-            timeZone: "Africa/Dar_es_Salaam",
-          });
-
-          const ptWorkingHours = ptUser.ptProfile.workingHours.find(
-            (wh) => wh.dayOfWeek === dayOfWeek && wh.isAvailable
-          );
+          // PT working hours check is optional and doesn't block appointment
         }
       } catch (ptError) {
         return res.status(400).json({

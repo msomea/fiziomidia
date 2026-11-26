@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -47,12 +47,7 @@ const ClinicDetails = () => {
 
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  useEffect(() => {
-    fetchClinicDetails();
-    fetchReviews();
-  }, [clinicId]);
-
-  const fetchClinicDetails = async () => {
+  const fetchClinicDetails = useCallback(async () => {
     try {
       const response = await getClinicById(clinicId);
       setClinic(response);
@@ -62,9 +57,9 @@ const ClinicDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [clinicId]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       setReviewsLoading(true);
       const response = await getClinicReviews(clinicId);
@@ -82,7 +77,12 @@ const ClinicDetails = () => {
     } finally {
       setReviewsLoading(false);
     }
-  };
+  }, [clinicId, user]);
+
+  useEffect(() => {
+    fetchClinicDetails();
+    fetchReviews();
+  }, [fetchClinicDetails, fetchReviews]);
 
   const handleReviewSubmit = async (e) => {
     e.preventDefault();

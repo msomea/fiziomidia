@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { Send, Users, UserCheck, AlertCircle, MessageSquare } from "lucide-react";
 import CollapsibleSection from "./CollapsibleSection";
-import { useDashboard } from "../../contexts/DashboardContext";
 import { fetchAllUsers, sendSystemNotification } from "../../api/admin";
 
 /**
@@ -57,7 +56,7 @@ export default function SystemNotificationsSection() {
   };
 
   // Fetch users for targeted notifications
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setUsersLoading(true);
       const data = await fetchAllUsers();
@@ -68,13 +67,13 @@ export default function SystemNotificationsSection() {
     } finally {
       setUsersLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     if ((showUserSearch || roleFilter === "specific") && users.length === 0) {
       fetchUsers();
     }
-  }, [showUserSearch, roleFilter, users.length]);
+  }, [showUserSearch, roleFilter, users.length, fetchUsers]);
 
   // Filter users based on search term and role
   const filteredUsers = users.filter(user => {

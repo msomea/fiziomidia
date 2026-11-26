@@ -53,7 +53,7 @@ const PTProfile = () => {
     const prevState = isSaved;
     setIsSaved(!prevState);
 
-    const toastId = toast(
+    toast(
       (tObj) => (
         <div className="flex items-center justify-between gap-4">
           <span>{!prevState ? t("saved_pt") : t("removed_saved_pt")}</span>

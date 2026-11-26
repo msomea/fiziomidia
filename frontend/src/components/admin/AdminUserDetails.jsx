@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { X, Loader2 } from "lucide-react";
 import { getAdminUserById, updateUserRole, updateUserLicense } from "../../api/admin";
@@ -17,22 +17,22 @@ export default function AdminUserDetails() {
   const [updatingLicense, setUpdatingLicense] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
+  const loadUser = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAdminUserById(id);
       setUser(data.user);
       setNewRole(data.user.role);
-    } catch (err) {
+    } catch {
       toast.error(t("failed_load_user"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
 
   const updateRole = async () => {
     try {

@@ -20,7 +20,7 @@ export default function MemberAppointmentsPage() {
       try {
         const appointments = await getAppointmentsByMember(id);
         setAppointments(appointments);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_appointments"));
       } finally {
         setLoading(false);
@@ -47,7 +47,7 @@ export default function MemberAppointmentsPage() {
     setAppointments((prev) => prev.filter((a) => a._id !== appt._id));
 
     // Show toast with undo option
-    const toastUndo = toast((tObj) => (
+    toast((tObj) => (
       <div className="flex items-center gap-3">
         <span>{t("appointment_deleted")}</span>
         <button
@@ -77,7 +77,7 @@ export default function MemberAppointmentsPage() {
         await deleteAppointment(appt._id);
         // Clean up the timeout reference
         delete undoTimeouts.current[toastId];
-      } catch (error) {
+      } catch {
         // Restore the appointments on error
         setAppointments(backup);
         toast.error(t("failed_delete_appointment"));

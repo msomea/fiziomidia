@@ -10,7 +10,7 @@ export function useAuth() {
       try {
         const userData = await fetchCurrentUser();
         setUser(userData);
-      } catch (err) {
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);

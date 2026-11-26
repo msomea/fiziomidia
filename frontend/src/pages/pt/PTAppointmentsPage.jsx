@@ -22,7 +22,7 @@ export default function PTAppointmentsPage() {
       try {
         const data = await fetchAppointments();
         setAppointments(data.appointments);
-      } catch (err) {
+      } catch {
         toast.error(t("failed_load_appointments"));
       } finally {
         setLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ArrowBigLeftIcon, ArrowBigRightIcon, MapPin, Star, Clock } from "lucide-react";
@@ -33,6 +33,19 @@ export default function ListClinicPromotions() {
 
   const totalPages = Math.ceil(promotions.length / ITEMS_PER_PAGE);
 
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+  }, []);
+
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay();
+    if (totalPages > 1) {
+      intervalRef.current = setInterval(() => {
+        setPage((prev) => (prev + 1) % totalPages);
+      }, AUTO_PLAY_INTERVAL);
+    }
+  }, [totalPages, stopAutoPlay]);
+
   useEffect(() => {
     startAutoPlay();
 
@@ -41,20 +54,7 @@ export default function ListClinicPromotions() {
       if (height > containerHeight) setContainerHeight(height);
     }
     return () => stopAutoPlay();
-  }, [page, promotions]);
-
-  const startAutoPlay = () => {
-    stopAutoPlay();
-    if (totalPages > 1) {
-      intervalRef.current = setInterval(() => {
-        setPage((prev) => (prev + 1) % totalPages);
-      }, AUTO_PLAY_INTERVAL);
-    }
-  };
-
-  const stopAutoPlay = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-  };
+  }, [page, promotions, startAutoPlay, stopAutoPlay, containerHeight]);
 
   const handlePrev = () => {
     stopAutoPlay();

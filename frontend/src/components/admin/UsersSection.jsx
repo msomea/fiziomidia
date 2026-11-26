@@ -98,7 +98,7 @@ export default function AdminUsers() {
   // Initial load
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   // Client-side filtering function
   const filteredUsers = allUsers.filter((user) => {

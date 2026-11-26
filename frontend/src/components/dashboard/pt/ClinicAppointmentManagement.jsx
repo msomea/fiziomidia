@@ -55,7 +55,7 @@ export default function ClinicAppointmentManagement({ appointments, clinicId }) 
       if (assignedPT) updateData.assignedPT = assignedPT;
       if (notes) updateData.notes = notes;
 
-      const response = await updateClinicAppointmentStatus(id, updateData);
+      await updateClinicAppointmentStatus(id, updateData);
 
       toast.success(t("status_updated"));
       setShowAssignModal(false);

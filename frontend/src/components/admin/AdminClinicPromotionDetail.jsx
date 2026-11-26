@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
-import { getClinicPromotionById, updateClinicPromotion, updateClinicPromotionWithCacheInvalidation, deleteClinicPromotion } from "../../api/admin";
+import { getClinicPromotionById, updateClinicPromotionWithCacheInvalidation, deleteClinicPromotion } from "../../api/admin";
 import { X, Loader2, Building, MapPin, Calendar, User } from "lucide-react";
 import dayjs from "dayjs";
 import { useTranslation } from 'react-i18next'
@@ -19,11 +19,7 @@ export default function AdminClinicPromotionDetail() {
   const { t } = useTranslation()
   const { forceRefreshHomePage } = useHomePage();
 
-  useEffect(() => {
-    loadClinicPromotion();
-  }, []);
-
-  const loadClinicPromotion = async () => {
+  const loadClinicPromotion = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getClinicPromotionById(id);
@@ -32,12 +28,16 @@ export default function AdminClinicPromotionDetail() {
 
       // Convert to yyyy-mm-dd for HTML date input
       setEndAt(dayjs(data.promotion.endAt).format("YYYY-MM-DD"));
-    } catch (err) {
+    } catch {
       toast.error(t('failed_load_clinic_promotion'));
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, t]);
+
+  useEffect(() => {
+    loadClinicPromotion();
+  }, [loadClinicPromotion]);
 
   const updatePromotion = async () => {
     try {
@@ -49,7 +49,7 @@ export default function AdminClinicPromotionDetail() {
 
       toast.success(t('clinic_promotion_updated'));
       loadClinicPromotion();
-    } catch (err) {
+    } catch {
       toast.error(t('update_failed'));
     } finally {
       setSaving(false);

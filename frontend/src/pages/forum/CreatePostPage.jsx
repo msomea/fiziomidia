@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { fetchForumSubsPaginated, createPost } from "../../api/forum";
@@ -30,7 +30,7 @@ const CreatePost = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchTopics = async (pageNum = 1, searchTerm = "") => {
+  const fetchTopics = useCallback(async (pageNum = 1, searchTerm = "") => {
     setLoading(true);
     try {
       const data = await fetchForumSubsPaginated(pageNum, limit, searchTerm);
@@ -42,11 +42,11 @@ const CreatePost = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchTopics(page, search);
-  }, [page, search]);
+  }, [page, search, fetchTopics]);
 
   // 🆕 Handle image change
   const handleImageChange = (e) => {

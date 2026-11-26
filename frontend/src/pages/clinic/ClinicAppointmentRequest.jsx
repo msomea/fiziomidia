@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router";
 import { requestClinicAppointment, getClinicAvailablePTs } from "../../api/clinicAppointments";
 import { useAuth } from "../../contexts/AuthContext";
@@ -29,11 +29,7 @@ const ClinicAppointmentRequest = () => {
   const [loading, setLoading] = useState(false);
   const [clinicLoading, setClinicLoading] = useState(true);
 
-  useEffect(() => {
-    fetchClinicData();
-  }, [clinicId]);
-
-  const fetchClinicData = async () => {
+  const fetchClinicData = useCallback(async () => {
     try {
       setClinicLoading(true);
       const data = await getClinicAvailablePTs(clinicId);
@@ -50,7 +46,11 @@ const ClinicAppointmentRequest = () => {
     } finally {
       setClinicLoading(false);
     }
-  };
+  }, [clinicId, t]);
+
+  useEffect(() => {
+    fetchClinicData();
+  }, [fetchClinicData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

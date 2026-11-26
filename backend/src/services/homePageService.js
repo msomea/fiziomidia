@@ -1,9 +1,8 @@
-import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
+import { CacheService, CacheKeys } from "../utils/redis.js";
 import redisClient from "../utils/redis.js";
 import PTPromotion from "../models/PTPromotion.js";
 import ClinicPromotion from "../models/ClinicPromotion.js";
 import SponsoredProduct from "../models/SponsoredProduct.js";
-import Clinic from "../models/Clinic.js";
 
 /**
  * Get PT promotions for home page (without caching - for controller-level caching)
@@ -14,7 +13,7 @@ export const fetchPromotionsWithoutCache = async () => {
     const promotions = await PTPromotion.find({ status: "active" })
       .populate("pt", "fullName profileImageUrl ptProfile")
       .sort({ createdAt: -1 });
-    
+
     return promotions;
   } catch (error) {
     console.error("Error fetching PT promotions:", error);
@@ -47,7 +46,7 @@ export const fetchSponsoredProductsWithoutCache = async () => {
     const products = await SponsoredProduct.find({ isActive: true })
       .select("name description price image link")
       .sort({ createdAt: -1 });
-    
+
     return products;
   } catch (error) {
     console.error("Error fetching sponsored products:", error);
@@ -59,7 +58,7 @@ export const fetchPromotions = async () => {
     // Check cache first
     const cacheKey = CacheKeys.PT_PROMOTIONS;
     const cachedData = await CacheService.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -71,7 +70,7 @@ export const fetchPromotions = async () => {
 
     // Cache the result
     await redisClient.setEx(cacheKey, 15 * 60, JSON.stringify(promotions));
-    
+
     return promotions;
   } catch (error) {
     console.error("Error fetching PT promotions:", error);
@@ -87,7 +86,7 @@ export const fetchClinicPromotions = async () => {
     // Check cache first
     const cacheKey = CacheKeys.CLINIC_PROMOTIONS;
     const cachedData = await CacheService.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -99,7 +98,7 @@ export const fetchClinicPromotions = async () => {
 
     // Cache the result
     await redisClient.setEx(cacheKey, 15 * 60, JSON.stringify(promotions));
-    
+
     return promotions;
   } catch (error) {
     console.error("Error fetching clinic promotions:", error);
@@ -115,7 +114,7 @@ export const fetchSponsoredProducts = async () => {
     // Check cache first
     const cacheKey = CacheKeys.SPONSORED_PRODUCTS;
     const cachedData = await CacheService.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -127,7 +126,7 @@ export const fetchSponsoredProducts = async () => {
 
     // Cache the result
     await redisClient.setEx(cacheKey, 20 * 60, JSON.stringify(products));
-    
+
     return products;
   } catch (error) {
     console.error("Error fetching sponsored products:", error);

@@ -15,7 +15,15 @@ const requiredVars = [
   "REDIS_PASSWORD",
   "REDIS_HOST",
   "REDIS_PORT",
-  "REDIS_URL"
+  "REDIS_URL",
+  "R2_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_BUCKET_NAME",
+  "R2_ENDPOINT",
+  "R2_REGION",
+  "R2_TOKEN_VALUE",
+
 ];
 
 // Validate required environment variables
@@ -31,6 +39,8 @@ export const ENV = {
   // Server
   PORT: process.env.PORT,
   NODE_ENV: process.env.NODE_ENV,
+  env: process.env.NODE_ENV,
+  debug: process.env.DEBUG_MODE === "true",
 
   // Database
   MONGO_URI: process.env.MONGO_URI,

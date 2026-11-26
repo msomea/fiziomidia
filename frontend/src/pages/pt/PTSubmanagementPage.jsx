@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router";
 import { X, Trash2, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { usePTSubmanagement, PTSubmanagementProvider } from "../../contexts/PTSubmanagementContext";
+import toast from "react-hot-toast";
 
 function PTSubManagementContent() {
   const { t, i18n } = useTranslation();
@@ -16,10 +17,8 @@ function PTSubManagementContent() {
   const {
     subforum,
     modRequests,
-    userPermissions,
     loading,
     activeTab,
-    canManage,
     fetchSubmanagementData,
     refreshModRequests,
     updateSubforum,

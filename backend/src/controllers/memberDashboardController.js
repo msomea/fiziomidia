@@ -1,8 +1,6 @@
 import User from "../models/User.js";
 import Appointment from "../models/Appointment.js";
 import Clinic from "../models/Clinic.js";
-import ClinicPromotion from "../models/ClinicPromotion.js";
-import asyncHandler from "express-async-handler";
 import {
   getUserNotifications,
   getMemberClinicAppointments,

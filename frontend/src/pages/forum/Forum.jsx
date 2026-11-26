@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import ForumTopics from "../../components/forum/ForumTopics";
 import ForumList from "../../components/forum/ForumList";
 import { useNavigate, Link } from "react-router";
@@ -20,9 +20,7 @@ const Forum = () => {
   const { user } = useAuth();
   const {
     posts,
-    setPosts,
     fetchForumPageData,
-    fetchSub,
     selectedSub,
     setSelectedSub,
     loadingPosts,
@@ -52,12 +50,29 @@ const Forum = () => {
     setHasRequested(userPermissions?.hasPendingRequest || false);
   }, [userPermissions]);
 
+  /* ------------------ Moderator Request ------------------ */
+  // Note: This function is kept for individual mod requests, but checkModRequestStatus
+  // is now handled automatically by fetchForumPageData
+  const checkModRequestStatus = useCallback(async (subId) => {
+    if (!user || !user._id || user.role !== "physiotherapist") return;
+
+    try {
+      const data = await getModRequestStatus(subId);
+      // Set hasRequested to true if user has pending request OR is already a mod
+      setHasRequested(data.requested || data.alreadyMod || false);
+      setAlreadyMod(data.alreadyMod || false);
+      setIsOwnerFromAPI(data.isOwner || false);
+    } catch (err) {
+      console.error("Failed to check mod request:", err);
+    }
+  }, [user]);
+
   // Check mod request status when subforum changes
   useEffect(() => {
     if (selectedSub && user?.role === "physiotherapist") {
       checkModRequestStatus(selectedSub._id);
     }
-  }, [selectedSub, user]);
+  }, [selectedSub, user, checkModRequestStatus]);
 
   /* ------------------ Permissions ------------------ */
   const isMod = userPermissions?.isMod || (user?._id && selectedSub?.moderators?.some(
@@ -109,22 +124,6 @@ const Forum = () => {
   };
 
   /* ------------------ Moderator Request ------------------ */
-  // Note: This function is kept for individual mod requests, but checkModRequestStatus
-  // is now handled automatically by fetchForumPageData
-  const checkModRequestStatus = async (subId) => {
-    if (!user || !user._id || user.role !== "physiotherapist") return;
-
-    try {
-      const data = await getModRequestStatus(subId);
-      // Set hasRequested to true if user has pending request OR is already a mod
-      setHasRequested(data.requested || data.alreadyMod || false);
-      setAlreadyMod(data.alreadyMod || false);
-      setIsOwnerFromAPI(data.isOwner || false);
-    } catch (err) {
-      console.error("Failed to check mod request:", err);
-    }
-  };
-
   const requestModerator = async () => {
     if (!selectedSub) return;
     setRequesting(true);

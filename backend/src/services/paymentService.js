@@ -9,7 +9,11 @@ const stripe = new Stripe(
   },
 );
 
-async function createCheckoutSession({ priceId, successUrl, cancelUrl }) {
+async function createCheckoutSession({
+  priceId: _priceId,
+  successUrl,
+  cancelUrl: _cancelUrl,
+}) {
   // Real impl: stripe.checkout.sessions.create({...})
   return { id: "cs_test_dummy", url: successUrl };
 }

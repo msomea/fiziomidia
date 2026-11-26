@@ -128,13 +128,17 @@ export async function requestPasswordReset(req, res) {
     const { email } = req.body;
     if (!email) return fail(res, 400, "Email required");
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     // Always return success message to avoid revealing account existence
-    if (!user) return success(res, "Password reset link sent (if email exists)");
+    if (!user)
+      return success(res, "Password reset link sent (if email exists)");
 
-    // Simple throttle: if a valid token already exists and not expired, ask to wait
-    if (user.resetToken && user.resetTokenExpire && user.resetTokenExpire > Date.now() - 2 * 60 * 1000) {
-      // if a token was created less than 2 minutes ago, refuse to spam
+    // Simple throttle: if a token was created less than 2 minutes ago, refuse to spam
+    const tokenAge = user.resetTokenExpire
+      ? Date.now() - (user.resetTokenExpire - RESET_TOKEN_TTL)
+      : Infinity;
+    if (user.resetToken && tokenAge < 2 * 60 * 1000) {
       return success(res, "Password reset link sent (if email exists)");
     }
 
@@ -142,24 +146,22 @@ export async function requestPasswordReset(req, res) {
     user.resetToken = token;
     user.resetTokenExpire = Date.now() + RESET_TOKEN_TTL;
     await user.save();
-    
+
     const resetURL = `${config.clientUrl}/reset-password/${token}`;
     // Send Email
     const resetHTML = generateFiziomidiaEmail({
       title: "Reset Your Password",
       body: "<p>We received a request to reset your password. Click the button below to reset it. This link expires in 10 minutes.</p>",
       buttonText: "Reset Password",
-      buttonURL: resetURL
+      buttonURL: resetURL,
     });
 
     await sendEmail({
       from: EMAIL_FROM.SUPPORT,
       to: email,
       subject: "Reset your Fiziomidia password",
-      html: resetHTML
+      html: resetHTML,
     });
-    if (config.debug)
-      console.log("✅ ✅ ✅ Click to reset your Password", resetURL);
     return success(res, "Password reset link sent (if email exists)");
   } catch (err) {
     console.error("Request password reset error:", err);
@@ -227,8 +229,8 @@ export async function loginUser(req, res) {
   try {
     const { email, password, deviceName } = req.body;
     if (!email || !password) return fail(res, 400, "Email and password required");
-
-    const user = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return fail(res, 401, "Invalid credentials");
 
     // blocked / inactive checks
@@ -320,9 +322,8 @@ export async function refreshToken(req, res) {
     }
 
     // Verify token signature/expiry
-    let decoded;
     try {
-      decoded = verifyRefreshToken(token);
+      verifyRefreshToken(token);
     } catch (e) {
       // Token invalid; remove it if present
       user.refreshTokens = user.refreshTokens.filter((t) => t.token !== token);

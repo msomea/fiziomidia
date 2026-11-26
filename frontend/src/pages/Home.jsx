@@ -18,12 +18,12 @@ function HomeContent() {
 
   useEffect(() => {
     fetchHomePageData();
-  }, []); // Empty dependency array - only run once on mount
+  }, [fetchHomePageData]); // fetchHomePageData is stable due to useCallback
 
   return (
     <>
       {/* Debug button - remove in production */}
-      { 0 &&
+      {import.meta.env.DEV &&
       <div className="fixed top-4 right-4 z-50">
         <button
           onClick={forceRefreshHomePage}

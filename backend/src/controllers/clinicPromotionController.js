@@ -1,6 +1,5 @@
 import ClinicPromotion from "../models/ClinicPromotion.js";
 import Clinic from "../models/Clinic.js";
-import asyncHandler from "express-async-handler";
 import { getClinicPromotionsForPT } from "../services/clinicService.js";
 import {
   deleteFromCloudinary,

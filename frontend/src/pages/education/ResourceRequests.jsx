@@ -27,7 +27,7 @@ export default function ResourceRequests() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => { load(); }, [load]);
 

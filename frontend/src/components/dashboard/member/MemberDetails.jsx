@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { getUserById } from "../../../api/users";
 import { useAuth } from "../../../contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -7,14 +7,13 @@ import { ChevronsRight } from "lucide-react";
 const MemberDetails = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [details, setDetails] = useState({}); 
 
   useEffect(() => {
     const fetchDetails = async () => {
       if (!user?._id) return;
       try {
-        const data = await getUserById(user._id);
-        setDetails(data);
+        await getUserById(user._id);
+        // Data is fetched but not stored in state as it's not used
       } catch (err) {
         console.error(t("failed_fetch_member_details"), err);
       }

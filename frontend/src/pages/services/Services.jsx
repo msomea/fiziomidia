@@ -24,7 +24,7 @@ export default function Services() {
 
       <div className="gap-10 flex flex-col items-center text-center">
         {/* ------------------------------
-          1. PROMOTIONS (Physio + Member + Guest View)
+          1. PT PROMOTIONS (Physio + Member + Guest View)
         ------------------------------- */}
         <div className="w-full max-w-md flex flex-col items-center p-6 bg-white shadow-md rounded-xl border border-gray-100">
           <BadgePercent className="w-10 h-10 text-caribbean mb-4" />
@@ -63,7 +63,7 @@ export default function Services() {
             {t('view_clinic_promotions')}
           </Link>
 
-          {(role === "member" || role === "physiotherapist") && (
+          {role !== "guest" || role !== "admin" && (
             <Link
               to="/services/clinic-promotions/create"
               className="btn bg-tufts text-white mt-3 w-full"

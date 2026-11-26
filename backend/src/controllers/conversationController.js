@@ -1,7 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
 import { CacheService } from "../utils/redis.js";
-import User from "../models/User.js";
 import { io } from "../config/socket.js";
 
 export const createConversation = async (req, res) => {
