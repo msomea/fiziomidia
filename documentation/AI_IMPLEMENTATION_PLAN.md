@@ -1,6 +1,7 @@
 # FizioMidia Multi-Agent AI System — Implementation Plan (Archive)
 
 > Source document: `documentation/AI_GUIDELINE`
+> Ethics framework: `documentation/World Physiotherapy_Taipei_principles_for_the_responsible_use_of_AI_in_physiotherapy_0.pdf` (World Physiotherapy, v1 Nov 2026) — governs agent development; **not** part of the knowledge pool
 > Status: PLANNING — not yet implemented
 > Budget constraint: **$0/month** — free tiers and existing infrastructure only
 > Rule: Any task marked **[USER ACTION]** must be performed by the project owner. The AI assistant will NOT register accounts, create API keys, or accept terms of service on the owner's behalf. It will only prepare code/config that consumes credentials the owner supplies.
@@ -199,7 +200,30 @@ Atlas cluster is **free/shared tier (M0)** — Vector Search is unavailable, and
 5. **Cost guard** — `usageTracker` hard-caps daily calls below free-tier limits; config flag `AI_ENABLED=false` killswitch.
 
 ---
+6A. Governing Ethics Framework — World Physiotherapy "Taipei Principles"
 
+`documentation/World Physiotherapy_Taipei_principles_for_the_responsible_use_of_AI_in_physiotherapy_0.pdf` (v1, Nov 2026) is the **governing ethics reference for all agent development**. It is a policy/guideline document — it informs *how* we build and operate the agents, and is **never ingested into the knowledge base** (not patient-facing content; `documentType: policy`, `approvedForPublicDisplay: false` if ever catalogued).
+
+The 8 principles and how each binds our implementation:
+
+| Principle | Binding requirement for FizioMidia agents |
+|---|---|
+| **Purpose & Benefit** | Every agent must have a documented need vs. non-AI alternatives; benefits must justify cost/burden/risk. |
+| **Human-Centredness & Connection** | AI supplements, never replaces, therapist–patient relationship. Chat must offer a path to human care (escalation → contact a physiotherapist). |
+| **Equity & Accessibility** | EN + SW support is mandatory; consider low-literacy users; no feature gated behind payment/digital barriers. |
+| **Transparency & Informed Choice** | Users must know they are talking to AI; disclaimers visible in UI; users can question or decline AI use. |
+| **Evidence & Evaluation** | Risk-proportional evidence: only curated, approved knowledge sources; higher-risk outputs (clinical-sounding) require stronger sourcing or human review. |
+| **Professional Capability** | Agents must not erode clinical judgement; outputs are educational, never diagnostic; clinicians retain override authority. |
+| **Human Accountability & Shared Responsibility** | Humans remain accountable for AI-informed decisions; `AIActivityLog` + `requiresHumanReview` + admin approval gates are the accountability trail; escalation/stop processes must exist. |
+| **Governance & Lifecycle** | Ongoing governance: doc status workflow, licence tracking, `nextReviewAt`, PII stripping, `approvedForAI` gating, kill switch. |
+
+**Known gaps tracked against these principles** (address in Phase 4 or earlier if touched):
+- Chat UI lacks an explicit "you are talking to an AI" disclosure banner and a visible human-handoff CTA when `escalated: true`.
+- No accessibility audit (screen readers, low-literacy UX) performed.
+
+---
+
+## 
 ## 7. Gemini API — Verified Facts (tested 2026-11-27)
 
 - `GEMINI_API_KEY` is set in `backend/.env` and **works** (HTTP 200 on `generateContent`).
@@ -249,6 +273,6 @@ Each agent gets its own dedicated model, configured in `AIConfiguration` (per-ag
 
 - **Created:** 2026-11-26
 - **Source:** `documentation/AI_GUIDELINE` + `documentation/FizioMidia_Physiotherapy_Knowledge_Source_Register.md`
-- **Implementation status:** Phase 0 COMPLETE (2026-11-27, branch `feature/ai-agents`) — chat endpoint verified end-to-end against Gemini. Next: Phase 1 Physiotherapy Assistant hardening (safety classifier, knowledge retrieval)
+- **Implementation status:** Phase 0 + Phase 1 COMPLETE (2026-11-27, branch `feature/ai-agents`) — safety classifier, $text knowledge retrieval, PII stripping, ingest pipeline all verified live. Next: Phase 2 Forum Content Agent (scheduler, approval emails, publish-on-approve)
 - **Budget:** $0/month confirmed
 - **Next action:** Begin Phase 0 — AI foundation (`aiProvider.js`, `usageTracker.js`, models, routes)

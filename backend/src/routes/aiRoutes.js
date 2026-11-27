@@ -35,6 +35,8 @@ router.put("/content/:id/review", ai.reviewGeneratedContent);
 
 // Knowledge documents
 router.get("/knowledge", ai.listKnowledgeDocuments);
+router.post("/knowledge/ingest", ai.ingestKnowledgeDocument);
+router.post("/knowledge/upload", ai.uploadKnowledgeDocument);
 router.put("/knowledge/:id", ai.updateKnowledgeDocument);
 
 // Activity log

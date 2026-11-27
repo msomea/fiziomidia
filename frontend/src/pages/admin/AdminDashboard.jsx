@@ -16,6 +16,7 @@ import AdminMonitoringSection from "../../components/admin/AdminMonitoringSectio
 import SystemNotificationsSection from "../../components/admin/SystemNotificationsSection";
 import EducationSection from "../../components/admin/EducationSection";
 import TeamMembersSection from "../../components/admin/TeamMembersSection";
+import AiManagementSection from "../../components/admin/AiManagementSection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -94,6 +95,7 @@ function AdminDashboardContent() {
         <ForumModRequestsSection />
         <SponsoredProductsSection />
         <EducationSection />
+        <AiManagementSection />
         <TeamMembersSection />
       </div>
       <div className="flex justify-center items-center mt-4">

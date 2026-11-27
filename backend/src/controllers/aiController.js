@@ -8,6 +8,9 @@ import { handleChat } from "../ai/agents/physiotherapyAgent.js";
 import { generateDraft } from "../ai/agents/forumContentAgent.js";
 import { generateReport } from "../ai/agents/virtualAdminAgent.js";
 import { getAllUsage, getUsage, getDailyCap } from "../ai/core/usageTracker.js";
+import { ingestDocument } from "../ai/knowledge/ingestKnowledge.js";
+import { extractTextFromBuffer } from "../ai/knowledge/extractText.js";
+import { knowledgeUpload } from "../ai/knowledge/knowledgeUpload.js";
 import { isAIAvailable, getAgentConfig } from "../ai/core/promptManager.js";
 import { ping } from "../ai/core/aiProvider.js";
 import { AGENTS } from "../ai/core/agentManager.js";
@@ -55,6 +58,8 @@ export const chat = handle(async (req, res) => {
     reply: result.reply,
     model: result.model,
     language: result.language,
+    sources: result.sources || [],
+    escalated: result.escalated || false,
   });
 });
 
@@ -302,6 +307,136 @@ export const updateKnowledgeDocument = handle(async (req, res) => {
 
   res.json({ success: true, document: doc });
 });
+export const ingestKnowledgeDocument = handle(async (req, res) => {
+  const { text, ...meta } = req.body || {};
+  const required = [
+    "documentId",
+    "title",
+    "specialty",
+    "language",
+    "documentType",
+    "source",
+  ];
+  const missing = required.filter((k) => !meta[k]);
+  if (missing.length) {
+    return res
+      .status(400)
+      .json({ success: false, error: `Missing fields: ${missing.join(", ")}` });
+  }
+  if (!text || typeof text !== "string" || text.trim().length < 100) {
+    return res
+      .status(400)
+      .json({ success: false, error: "text content required (min 100 chars)" });
+  }
+  try {
+    const { document, chunkCount } = await ingestDocument({ ...meta, text });
+    await AIActivityLog.create({
+      agent: "system",
+      action: "KNOWLEDGE_INGESTED",
+      actor: req.user._id,
+      details: { documentId: document.documentId, chunkCount },
+    });
+    res.json({ success: true, document, chunkCount });
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+});
+const csv = (v) =>
+  typeof v === "string" && v.trim()
+    ? v
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
+export const uploadKnowledgeDocument = [
+  knowledgeUpload.single("file"),
+  handle(async (req, res) => {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, error: "No file uploaded (field name: file)" });
+    }
+    const b = req.body || {};
+    const required = [
+      "documentId",
+      "title",
+      "specialty",
+      "language",
+      "documentType",
+    ];
+    const missing = required.filter((k) => !b[k]);
+    if (missing.length) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: `Missing fields: ${missing.join(", ")}`,
+        });
+    }
+
+    let text;
+    try {
+      text = await extractTextFromBuffer(
+        req.file.buffer,
+        req.file.originalname,
+      );
+    } catch (err) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: `Text extraction failed: ${err.message}`,
+        });
+    }
+    if (!text || text.trim().length < 100) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          error: "Extracted text too short (min 100 chars)",
+        });
+    }
+
+    try {
+      const { document, chunkCount } = await ingestDocument({
+        documentId: b.documentId,
+        title: b.title,
+        specialty: b.specialty,
+        conditionTags: csv(b.conditionTags),
+        language: b.language,
+        documentType: b.documentType,
+        targetAudience: csv(b.targetAudience),
+        source: {
+          organization: b.sourceOrganization || "Unknown",
+          documentTitle: b.sourceDocumentTitle || null,
+          url: b.sourceUrl || null,
+          publicationDate: b.publicationDate
+            ? new Date(b.publicationDate)
+            : null,
+          licence: b.licence || "To be verified",
+        },
+        text,
+        fileRef: `upload:${req.file.originalname}`,
+      });
+      await AIActivityLog.create({
+        agent: "system",
+        action: "KNOWLEDGE_INGESTED",
+        actor: req.user._id,
+        details: {
+          documentId: document.documentId,
+          chunkCount,
+          file: req.file.originalname,
+        },
+      });
+      res.json({ success: true, document, chunkCount });
+    } catch (err) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  }),
+];
+
+
 
 /* ---------------- Admin: activity log ---------------- */
 

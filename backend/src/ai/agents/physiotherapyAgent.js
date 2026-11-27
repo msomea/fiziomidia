@@ -3,11 +3,16 @@ import AIMessage from "../../models/AIMessage.js";
 import AIActivityLog from "../../models/AIActivityLog.js";
 import { runAgent } from "../core/agentManager.js";
 import { scoreLanguage } from "../core/languageDetect.js";
+import { getAgentConfig } from "../core/promptManager.js";
+import { classifyEmergency, getEscalationMessage } from "../knowledge/safetyRules.js";
+import { retrieveKnowledge, formatKnowledgeContext } from "../knowledge/retrieveKnowledge.js";
+import { stripPII } from "../knowledge/privacy.js";
 
 /*
-Physiotherapy Assistant — Phase 0 implementation.
-Phase 1 will add: safetyRules classifier, retrieveKnowledge grounding,
-conversation history injection, feedback handling.
+Physiotherapy Assistant — Phase 1.
+Flow: resolve conversation → persist user msg → emergency classifier
+(hard stop, no LLM) → knowledge retrieval ($text over approved chunks)
+→ PII strip → Gemini → persist assistant msg with sources.
 */
 
 const MAX_HISTORY_MESSAGES = 10;
@@ -21,6 +26,8 @@ const MAX_HISTORY_MESSAGES = 10;
  * @param {string|null} [params.conversationId] - continue existing conversation
  */
 export const handleChat = async ({ message, user, language = null, conversationId = null }) => {
+  const agentCfg = await getAgentConfig("physiotherapy");
+
   // Resolve or create conversation
   let conversation;
   if (conversationId) {
@@ -40,7 +47,6 @@ export const handleChat = async ({ message, user, language = null, conversationI
     if (en > sw) detected = "en";
     else if (sw > 0) detected = "sw";
     else detected = user?.role === "admin" ? "en" : "sw";
-    // Explicit request language wins only if it matches a clear signal
     const effectiveLanguage = ["en", "sw"].includes(language) ? language : detected;
 
     conversation = await AIConversation.create({
@@ -50,23 +56,76 @@ export const handleChat = async ({ message, user, language = null, conversationI
     });
   }
 
-  // Persist user message
+  // Persist user message (original text — our DB, not sent externally raw)
   await AIMessage.create({
     conversation: conversation._id,
     role: "user",
     content: message,
   });
 
-  // Build prompt with recent history (Phase 1 adds knowledge grounding)
+  /* ---------- 1. Emergency classifier — hard stop before LLM ---------- */
+  if (agentCfg.safetyClassifierEnabled) {
+    const triage = classifyEmergency(message);
+    if (triage.emergency) {
+      const escalationText = getEscalationMessage(conversation.language);
+      const escalationMsg = await AIMessage.create({
+        conversation: conversation._id,
+        role: "assistant",
+        content: escalationText,
+        model: "safety-rules",
+      });
+      conversation.escalatedAt = new Date();
+      conversation.escalationReason = triage.ruleId;
+      conversation.status = "flagged";
+      await conversation.save();
+
+      await AIActivityLog.create({
+        agent: "physiotherapy",
+        action: "CHAT_ESCALATION",
+        actor: user?._id ?? null,
+        conversation: conversation._id,
+        details: { ruleId: triage.ruleId, matched: triage.matched },
+        requiresHumanReview: true,
+      });
+
+      return {
+        ok: true,
+        conversationId: conversation._id,
+        messageId: escalationMsg._id,
+        reply: escalationText,
+        model: "safety-rules",
+        language: conversation.language,
+        escalated: true,
+      };
+    }
+  }
+
+  /* ---------- 2. Knowledge retrieval ($text over approved chunks) ---------- */
+  let sources = [];
+  let knowledgeContext = "";
+  if (agentCfg.knowledgeRetrievalEnabled) {
+    try {
+      sources = await retrieveKnowledge({
+        query: message,
+        language: conversation.language,
+        limit: 5,
+      });
+      knowledgeContext = formatKnowledgeContext(sources, conversation.language);
+    } catch (err) {
+      console.warn("Knowledge retrieval failed:", err.message);
+    }
+  }
+
+  /* ---------- 3. Build prompt (history + knowledge + PII-stripped) ---------- */
   const history = await AIMessage.find({ conversation: conversation._id })
     .sort({ createdAt: -1 })
-    .limit(MAX_HISTORY_MESSAGES + 1) // +1 for the message just saved
+    .limit(MAX_HISTORY_MESSAGES + 1)
     .lean();
   history.reverse();
 
   const historyText = history
-    .slice(0, -1) // exclude the just-saved user message (it's the prompt)
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .slice(0, -1)
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${stripPII(m.content)}`)
     .join("\n");
 
   const langInstruction =
@@ -74,10 +133,18 @@ export const handleChat = async ({ message, user, language = null, conversationI
       ? "Respond entirely in Kiswahili (Swahili)."
       : "Respond in English.";
 
-  const prompt = historyText
-    ? `Conversation so far:\n${historyText}\n\nUser: ${message}\n\n${langInstruction}`
-    : `${message}\n\n${langInstruction}`;
+  const knowledgeBlock = knowledgeContext
+    ? `\n\n${knowledgeContext}\n\nIf the knowledge base above is relevant, ground your answer in it and mention the source title. If it is not relevant, answer from general knowledge and add a brief disclaimer that this is general information, not a medical diagnosis.`
+    : "\n\nNo verified knowledge-base entries matched this question. Answer from general knowledge and clearly state this is general educational information, not a medical diagnosis or treatment plan.";
 
+  const rawPrompt = historyText
+    ? `Conversation so far:\n${historyText}\n\nUser: ${message}`
+    : message;
+
+  // PII strip before anything leaves the platform
+  const prompt = stripPII(`${rawPrompt}\n\n${langInstruction}${knowledgeBlock}`);
+
+  /* ---------- 4. Call model ---------- */
   const result = await runAgent("physiotherapy", prompt, {
     maxOutputTokens: 800,
     temperature: 0.5,
@@ -95,11 +162,17 @@ export const handleChat = async ({ message, user, language = null, conversationI
     return { ok: false, error: result.error, code: result.code, conversationId: conversation._id };
   }
 
-  // Persist assistant reply
+  // Persist assistant reply with retrieval sources
   const assistantMsg = await AIMessage.create({
     conversation: conversation._id,
     role: "assistant",
     content: result.text,
+    sources: sources.map((s) => ({
+      documentId: s.documentId,
+      chunkId: s.chunkId,
+      title: s.title,
+      url: s.sourceUrl,
+    })),
     model: result.model,
     promptTokens: result.promptTokens,
     completionTokens: result.completionTokens,
@@ -118,6 +191,7 @@ export const handleChat = async ({ message, user, language = null, conversationI
     conversation: conversation._id,
     model: result.model,
     tokensUsed: (result.promptTokens || 0) + (result.completionTokens || 0),
+    details: { sourcesUsed: sources.length },
   });
 
   return {
@@ -127,6 +201,7 @@ export const handleChat = async ({ message, user, language = null, conversationI
     reply: result.text,
     model: result.model,
     language: conversation.language,
+    sources: sources.map((s) => ({ title: s.title, url: s.sourceUrl })),
     quota: result.quota,
   };
 };

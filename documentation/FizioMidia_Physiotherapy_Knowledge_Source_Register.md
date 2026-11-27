@@ -321,6 +321,18 @@ document-discovery starting points. Before ingestion, verify that the
 page still represents the current guideline, inspect update history and
 record any relevant recommendations accurately.
 
+**⚠ Licence restriction (verified 2026-11-28):** NICE content **cannot
+be used outside the UK** — including Tanzania — without written
+permission supported by a signed licence agreement. Personal
+educational use only is exempt. All NICE entries (INT-006–INT-009,
+KB-005–KB-007) are **blocked pending a licence application** via the
+NICE Permission Request Form
+(`documentation/international-use-of-nice-content-form.pdf`, return
+to reuseofcontent@nice.org.uk). Do **not** ingest NICE PDFs into the
+knowledge base until a licence is granted; the local copy of NG59
+(`documentation/low-back-pain-and-sciatica-...pdf`) is held for
+reference only.
+
 ### 4.3 Research and academic discovery sources
 
   -----------------------------------------------------------------------------------------------
@@ -749,17 +761,17 @@ after the exact document has been found and assessed.
               rehabilitation                                          
               resource                                                
 
-  KB-005      NICE low back pain No           No          No          Not started
-              and sciatica                                            
-              guideline                                               
+  KB-005      NICE low back pain Yes (NG59)  Yes — blocked  No          Blocked: intl
+              and sciatica                          licence                  licence
+              guideline                                                required
 
-  KB-006      NICE stroke        No           No          No          Not started
-              rehabilitation                                          
-              guideline                                               
+  KB-006      NICE stroke        No           Yes — blocked No          Blocked: intl
+              rehabilitation                          licence                  licence
+              guideline                                                required 
 
-  KB-007      NICE               No           No          No          Not started
-              osteoarthritis                                          
-              guideline                                               
+  KB-007      NICE               No           Yes — blocked No          Blocked: intl
+              osteoarthritis                          licence                  licence
+              guideline                                                required 
 
   KB-008      World              No           No          No          Not started
               Physiotherapy                                           
