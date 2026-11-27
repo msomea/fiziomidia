@@ -6,13 +6,24 @@ import i18n from "i18next";
 let isRefreshing = false;
 let failedQueue = [];
 let logoutHandler = null;
+let isRedirectingHome = false;
+
+const redirectHomeOnSessionExpiry = () => {
+  if (isRedirectingHome) return;
+  isRedirectingHome = true;
+  // Clear auth state so a reload boots as guest
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("user");
+  window.location.assign("/");
+};
 
 export const setLogoutHandler = (handler) => {
   logoutHandler = handler;
 };
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) prom.reject(error);
     else prom.resolve(token);
   });
@@ -31,7 +42,7 @@ API.interceptors.request.use(
     if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor
@@ -69,7 +80,7 @@ API.interceptors.response.use(
       const code = error.response?.data?.code;
       const message = error.response?.data?.message;
       const retryAfter = error.response?.data?.retryAfter;
-      
+
       if (code === "RATE_LIMIT_LOGIN") {
         toast.error(message || i18n.t("rate_limit_login"));
       } else if (code === "RATE_LIMIT_REGISTER") {
@@ -90,8 +101,7 @@ API.interceptors.response.use(
         toast.error(message || i18n.t("rate_limit_forum_comment"));
       } else if (code === "RATE_LIMIT_ADMIN") {
         toast.error(message || i18n.t("rate_limit_admin"));
-      }
-       else if (code === "RATE_LIMIT_GENERAL") {
+      } else if (code === "RATE_LIMIT_GENERAL") {
         toast.error(message || i18n.t("rate_limit_general"));
       }
 
@@ -106,7 +116,12 @@ API.interceptors.response.use(
     // 401 REFRESH LOGIC
     // ------------------------------
     if (error.response?.status === 401 && !originalRequest._retry) {
-      const authSkip = ["/auth/login", "/auth/register", "/auth/logout"];
+      const authSkip = [
+        "/auth/login",
+        "/auth/register",
+        "/auth/logout",
+        "/auth/refresh",
+      ];
       if (
         originalRequest.url &&
         authSkip.some((r) => originalRequest.url.includes(r))
@@ -131,27 +146,31 @@ API.interceptors.response.use(
       const refreshToken = localStorage.getItem("refreshToken");
       if (!refreshToken) {
         isRefreshing = false;
-        if (logoutHandler) {
-          // Show toast BEFORE navigation so UI remains mounted long enough
-          toast.error("Session expired. Please log in again.");
-
-          // Delay logout slightly so toast becomes visible
-          setTimeout(() => {
-            logoutHandler(); // Will use navigate() internally
-          }, 800);
-        } else {
-          toast.error("Session expired. Please log in again.");
-        }
-
+        toast.error("Session expired. Please log in again.");
+        redirectHomeOnSessionExpiry();
         return Promise.reject(error);
       }
 
       try {
-        const res = await axios.post("/auth/refresh", {
+        const res = await API.post("/auth/refresh", {
           token: refreshToken,
         });
         const newAccessToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
         localStorage.setItem("accessToken", newAccessToken);
+        if (newRefreshToken) {
+          localStorage.setItem("refreshToken", newRefreshToken);
+        }
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const u = JSON.parse(storedUser);
+            u.accessToken = newAccessToken;
+            localStorage.setItem("user", JSON.stringify(u));
+          } catch {
+            // Ignore JSON parse errors
+          }
+        }
         API.defaults.headers.common["Authorization"] =
           `Bearer ${newAccessToken}`;
         originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
@@ -160,7 +179,11 @@ API.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
         isRefreshing = false;
-        if (logoutHandler) {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          toast.error("Session expired. Please log in again.");
+          redirectHomeOnSessionExpiry();
+        } else if (logoutHandler) {
           logoutHandler();
         } else {
           toast.error("Session expired. Please log in again.");
