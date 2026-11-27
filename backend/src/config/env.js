@@ -110,5 +110,9 @@ export const ENV = {
     process.env.EDUCATION_DOWNLOAD_URL_TTL_SECONDS,
   EDUCATION_DEFAULT_PAGE_SIZE: process.env.EDUCATION_DEFAULT_PAGE_SIZE,
   EDUCATION_MAX_PAGE_SIZE: process.env.EDUCATION_MAX_PAGE_SIZE,
+
+  // AI (Gemini) — optional; AI features disabled when absent
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_MODEL_DEFAULT: process.env.GEMINI_MODEL_DEFAULT,
 };
 

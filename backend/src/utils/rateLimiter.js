@@ -205,6 +205,17 @@ export const limiters = {
     code: "RATE_LIMIT_EDUCATION_REPORT",
     message: "Too many reports submitted, please try again later.",
   }),
+
+  /*
+  AI endpoints — stricter than general; protects Gemini quota
+  */
+  aiChat: createLimiter({
+    windowMs: 60 * 1000,
+    max: 10, // 10 chat messages/min per user/IP
+    keyGenerator: getUserKey,
+    code: "RATE_LIMIT_AI_CHAT",
+    message: "Too many AI requests, please slow down.",
+  }),
 };
 
 export default createLimiter;

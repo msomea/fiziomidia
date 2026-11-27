@@ -35,6 +35,7 @@ import clinicAppointmentRoutes from "./routes/clinicAppointments.js";
 import homePageRoutes from "./routes/homePage.js";
 import educationRoutes from "./routes/education.js";
 import teamMemberRoutes from "./routes/teamMembers.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -129,6 +130,7 @@ app.use("/api/clinic-appointments", clinicAppointmentRoutes);
 app.use("/api/education", educationRoutes);
 app.use("/api/home-page", homePageRoutes);
 app.use("/api/team-members", teamMemberRoutes);
+app.use("/api/ai", aiRoutes);
 
 /* ---------------------------------- */
 /* Health Check                        */

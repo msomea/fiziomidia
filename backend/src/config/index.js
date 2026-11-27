@@ -83,6 +83,13 @@ export default {
 
   // Production Settings
   productionClientUrl: ENV.PRODUCTION_CLIENT_URL || null,
+
+  // AI (Gemini) — optional, AI disabled when no API key
+  gemini: {
+    apiKey: ENV.GEMINI_API_KEY || null,
+    defaultModel: ENV.GEMINI_MODEL_DEFAULT || "gemini-flash-latest",
+    enabled: Boolean(ENV.GEMINI_API_KEY),
+  },
 };
 
 // --- Optional Logging (credentials masked) ---

@@ -41,9 +41,14 @@ These items CANNOT be done by the AI assistant. Complete them before the depende
 - [ ] Confirm which email address receives forum-content approval requests and daily admin reports (likely the existing admin account email)
 - [ ] Verify Resend domain `mail.fiziomidia.org` is already verified (it is, since `sendEmailService` is in production use)
 
-### UA-3. Knowledge base content review (blocks Phase 2 production use)
-- [ ] Identify or recruit a qualified physiotherapist to review seed knowledge documents before they are marked `verified: true`
-- [ ] Provide source materials (guidelines, leaflets, existing `EducationResource` content) for ingestion
+### UA-3. Knowledge base reviewers & curation (blocks Phase 1 production use)
+Per `FizioMidia_Physiotherapy_Knowledge_Source_Register.md` §13/§15:
+- [ ] Appoint a **clinical editor / physiotherapy reviewer** (checks clinical accuracy + local applicability)
+- [ ] Appoint a **Kiswahili language reviewer** (checks translation quality — no unreviewed machine translation)
+- [ ] Act as or appoint **knowledge curator** to find documents, record metadata, verify licences
+- [ ] Work through the §11 curation tracker (12 initial docs) and §5 acquisition plan (~38 docs target)
+- [ ] Verify WHO licence terms per document — CC BY-NC-SA 3.0 IGO is **non-commercial**; FizioMidia has sponsored products, so commercial-use compatibility must be confirmed before adaptation
+- [ ] Provide source materials for ingestion once documents reach `approved` status
 
 ### UA-4. Optional — WhatsApp Business (only if desired later)
 - [ ] Register at https://developers.facebook.com/ → create Meta app → add WhatsApp product
@@ -70,7 +75,8 @@ backend/src/
 │   │   ├── forumContentAgent.js
 │   │   └── virtualAdminAgent.js
 │   ├── knowledge/
-│   │   ├── retrieveKnowledge.js   # MongoDB vector/keyword retrieval over AIKnowledgeDocuments
+│   │   ├── retrieveKnowledge.js   # retrieval over approved AIKnowledgeDocuments only
+│   │   ├── ingestKnowledge.js     # PDF/text extraction → chunking → $text-indexed chunks
 │   │   └── safetyRules.js         # emergency-symptom classifier + forbidden-topic rules
 │   ├── jobs/
 │   │   ├── forumScheduler.js      # node-cron, per-subcategory schedules
@@ -85,7 +91,7 @@ backend/src/
 │   ├── AIGeneratedContent.js
 │   ├── AIActivityLog.js
 │   ├── AIConfiguration.js
-│   └── AIKnowledgeDocument.js
+│   └── AIKnowledgeDocument.js    # schema per Source Register §6 — see below
 ├── controllers/aiController.js
 └── routes/aiRoutes.js
 ```
@@ -120,7 +126,7 @@ backend/src/
 | # | Task | Notes |
 |---|---|---|
 | 1.1 | `safetyRules.js` — emergency keyword/regex classifier (stroke signs, chest pain, severe trauma) runs BEFORE main model; hard-coded escalation message in EN + SW |
-| 1.2 | `retrieveKnowledge.js` — keyword search over `AIKnowledgeDocument` (verified docs only); fallback to model's general knowledge with disclaimer |
+| 1.2 | `retrieveKnowledge.js` — MongoDB `$text` keyword search over approved chunks (decision: no vector search on M0). Filter `status: "approved"` AND `approvedForAI: true`, boost by `specialty`/`conditionTags` match. Fallback to model's general knowledge with disclaimer |
 | 1.3 | `physiotherapyAgent.js` — bilingual (EN/SW) system prompt enforcing: no diagnosis, no prescriptions, no individualized exercise plans, "not a substitute for professional assessment" disclaimer |
 | 1.4 | Chat endpoints: `POST /api/ai/chat` (guest + auth), history via `AIConversation`/`AIMessage`, per-user rate limit |
 | 1.5 | Feedback endpoint (`POST /api/ai/feedback`) + admin view of flagged conversations |
@@ -161,17 +167,40 @@ backend/src/
 
 ---
 
-## 5. Non-Negotiable Safeguards (carried from AI_GUIDELINE)
+## 5. Knowledge Library Schema & Retrieval
+
+Governed by `documentation/FizioMidia_Physiotherapy_Knowledge_Source_Register.md`. The `AIKnowledgeDocument` model MUST implement the §6 metadata record:
+
+- `documentId` (e.g. `FM-KB-MS-0001`), `title`, `specialty`, `conditionTags[]`, `language` (`en`/`sw`), `documentType`, `targetAudience[]`
+- `source: { organization, documentTitle, url, publicationDate, edition, accessedAt, licence }`
+- `evidenceType` (guideline / systematic-review / patient-guide / research / original)
+- `clinicalReviewer`, `reviewedAt`, `nextReviewAt`
+- `status` enum: `discovered`, `pending_licence_review`, `pending_clinical_review`, `pending_language_review`, `approved`, `restricted`, `rejected`, `superseded`, `under_review`
+- `approvedForAI` (boolean) and `approvedForPublicDisplay` (boolean) — **separate approvals**
+- Chunk-level subdocuments/embed refs for retrieval
+
+**Retrieval rule (hard):** only chunks whose parent doc has `status: "approved"` AND `approvedForAI: true` may be passed to Gemini. Unreviewed material never grounds an answer.
+
+### ✅ Retrieval decision — keyword search (confirmed 2026-11-27)
+
+Atlas cluster is **free/shared tier (M0)** — Vector Search is unavailable, and upgrading would break the $0/month constraint. Decision:
+
+- Retrieval uses **MongoDB `$text` index + keyword scoring** over approved knowledge chunks — $0, no external services.
+- `ingestKnowledge.js` handles PDF/text extraction → chunking → store chunks with `text` index fields. **No embeddings** — `gemini-embedding-001` not used.
+- Retrieval quality is keyword-based; mitigate with good `conditionTags`/`specialty` metadata filtering before text search.
+- If Atlas is ever upgraded to M10+, vector search can be added later without schema changes (chunks already store `content` + metadata).
+
+## 6. Non-Negotiable Safeguards (carried from AI_GUIDELINE)
 
 1. **Patient privacy** — no identifiable patient data sent to Gemini; minimization + retention policy documented before Phase 1 production.
-2. **Medical accuracy** — only `verified: true` knowledge docs retrieved; AI output never represented as clinical advice.
+2. **Medical accuracy** — only docs with `status: "approved"` + `approvedForAI: true` are retrieved; AI output never represented as clinical advice.
 3. **Security** — `GEMINI_API_KEY` server-side only; admin endpoints behind existing admin auth; signed, expiring review tokens for approval links.
 4. **Human authority** — agents are read-only by default; every mutating action requires admin approval; no direct DB write access for agents.
 5. **Cost guard** — `usageTracker` hard-caps daily calls below free-tier limits; config flag `AI_ENABLED=false` killswitch.
 
 ---
 
-## 6. Gemini API — Verified Facts (tested 2026-11-27)
+## 7. Gemini API — Verified Facts (tested 2026-11-27)
 
 - `GEMINI_API_KEY` is set in `backend/.env` and **works** (HTTP 200 on `generateContent`).
 - `gemini-2.5-flash` and `gemini-2.5-flash-lite` return **404 for new users** — do not use.
@@ -210,16 +239,16 @@ Each agent gets its own dedicated model, configured in `AIConfiguration` (per-ag
 | Physiotherapy Assistant (chat) | `gemini-3.5-flash-lite` | 15 RPM / 250K TPM / **500 RPD** | Highest text RPD — only tier that supports member chat volume at $0. Fallback: `gemini-3.1-flash-lite` (same limits) |
 | Forum Content Agent | `gemini-3.5-flash` | 5 RPM / 250K TPM / 20 RPD | Quality matters more than volume; 1–5 posts/day fits easily. Fallback: `gemini-flash-latest` |
 | Virtual Administrator | `gemini-3.5-flash-lite` | 15 RPM / 250K TPM / 500 RPD | Summarization task, 1 call/day — lite is sufficient and cheap on quota |
-| Knowledge base embeddings (optional RAG) | `gemini-embedding-001` | 100 RPM / 30K TPM / 1K RPD | Dedicated embedding model, not a chat model |
+| ~~Knowledge base embeddings~~ | — | — | **Not used** — Atlas M0 has no Vector Search; keyword `$text` retrieval instead (§5) |
 
 - `usageTracker` caps are keyed by **agent + model** (`ai:usage:{date}:{agent}`), since each agent has independent quotas.
 - Safety classifier (emergency detection) runs as a lightweight pre-check — either regex rules in `safetyRules.js` (no API call, $0) or a flash-lite call only when rules are ambiguous.
 - If a chat agent ever needs higher quality for complex questions, it can escalate to `gemini-3.5-flash` — but that shares the 20 RPD pool, so escalation must be rate-limited in `usageTracker`.
 
-## 7. Document Archive Metadata
+## 8. Document Archive Metadata
 
 - **Created:** 2026-11-26
-- **Source:** `documentation/AI_GUIDELINE`
-- **Implementation status:** Phase 0 ready — UA-1 (Gemini API key) completed and verified 2026-11-27
+- **Source:** `documentation/AI_GUIDELINE` + `documentation/FizioMidia_Physiotherapy_Knowledge_Source_Register.md`
+- **Implementation status:** Phase 0 COMPLETE (2026-11-27, branch `feature/ai-agents`) — chat endpoint verified end-to-end against Gemini. Next: Phase 1 Physiotherapy Assistant hardening (safety classifier, knowledge retrieval)
 - **Budget:** $0/month confirmed
 - **Next action:** Begin Phase 0 — AI foundation (`aiProvider.js`, `usageTracker.js`, models, routes)
