@@ -15,6 +15,7 @@ const redirectHomeOnSessionExpiry = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");
+  localStorage.removeItem("ai_guest_token");
   window.location.assign("/");
 };
 

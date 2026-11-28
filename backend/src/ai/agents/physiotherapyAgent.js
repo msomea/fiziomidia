@@ -24,19 +24,32 @@ const MAX_HISTORY_MESSAGES = 10;
  * @param {Object|null} params.user - authenticated user or null (guest)
  * @param {string} [params.language] - explicit 'en'|'sw'; null → auto-detect
  * @param {string|null} [params.conversationId] - continue existing conversation
+ * @param {string|null} [params.guestToken] - scopes guest conversations to one browser
  */
-export const handleChat = async ({ message, user, language = null, conversationId = null }) => {
+export const handleChat = async ({
+  message,
+  user,
+  language = null,
+  conversationId = null,
+  guestToken = null,
+}) => {
   const agentCfg = await getAgentConfig("physiotherapy");
 
   // Resolve or create conversation
+  const ownerFilter = user?._id ?? null;
   let conversation;
   if (conversationId) {
     conversation = await AIConversation.findOne({
       _id: conversationId,
-      user: user?._id ?? null,
+      user: ownerFilter,
+      ...(ownerFilter ? {} : { guestToken }),
     });
     if (!conversation) {
-      return { ok: false, error: "Conversation not found", code: "AI_CONVERSATION_NOT_FOUND" };
+      return {
+        ok: false,
+        error: "Conversation not found",
+        code: "AI_CONVERSATION_NOT_FOUND",
+      };
     }
   } else {
     // Language: detect from first message. Default Kiswahili unless the
@@ -47,10 +60,13 @@ export const handleChat = async ({ message, user, language = null, conversationI
     if (en > sw) detected = "en";
     else if (sw > 0) detected = "sw";
     else detected = user?.role === "admin" ? "en" : "sw";
-    const effectiveLanguage = ["en", "sw"].includes(language) ? language : detected;
+    const effectiveLanguage = ["en", "sw"].includes(language)
+      ? language
+      : detected;
 
     conversation = await AIConversation.create({
-      user: user?._id ?? null,
+      user: ownerFilter,
+      guestToken: ownerFilter ? null : guestToken,
       agent: "physiotherapy",
       language: effectiveLanguage,
     });
@@ -125,13 +141,36 @@ export const handleChat = async ({ message, user, language = null, conversationI
 
   const historyText = history
     .slice(0, -1)
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${stripPII(m.content)}`)
+    .map(
+      (m) =>
+        `${m.role === "user" ? "User" : "Assistant"}: ${stripPII(m.content)}`,
+    )
     .join("\n");
 
   const langInstruction =
     conversation.language === "sw"
       ? "Respond entirely in Kiswahili (Swahili)."
       : "Respond in English.";
+
+  const formatRule =
+    "\n\nFormatting rules: plain text only — never use markdown (no **bold**, no # headings, no `code`, no [links](url)). For lists, use simple lines starting with '- '. Keep paragraphs short.";
+
+  const termRule =
+    "\n\nMandatory terminology: when responding in Kiswahili, always use 'Fiziotherapia' for physiotherapy, 'Mfiziotherapia' for physiotherapist, and 'Wafiziotherapia' for physiotherapists — never the English words or other spellings.";
+
+  const siteKnowledge = `
+
+You are Fizio AI, the official assistant of FizioMidia (fiziomidia.org), a platform connecting people in Tanzania with physiotherapists.
+
+FizioMidia platform facts (use these for any question about the website, accounts, or procedures):
+- Opening an account: anyone can sign up free at the Sign Up page with full name, email, and password. Guests can also chat with you without an account (limited to 10 messages per day).
+- Becoming a verified physiotherapist (Mfiziotherapia): log in, go to your profile and choose "Become a Physiotherapist". You must provide: your professional license number, a photo/scanned copy of your license document, your institution, years of experience, and at least one speciality. The admin team reviews and approves licenses — once approved your account becomes a verified physiotherapist profile.
+- Official communication: for site-specific questions, account problems, verification issues, or anything not covered here, direct the user to email admin@fiziomidia.com.
+- Languages: the platform and you support English and Kiswahili.
+
+Answering rules:
+- If the question is about FizioMidia, accounts, verification, or site procedures, answer from the facts above — NO medical disclaimer is needed for these platform questions.
+- If the question is medical/physiotherapy-related, the medical disclaimer rules below still apply.`;
 
   const knowledgeBlock = knowledgeContext
     ? `\n\n${knowledgeContext}\n\nIf the knowledge base above is relevant, ground your answer in it and mention the source title. If it is not relevant, answer from general knowledge and add a brief disclaimer that this is general information, not a medical diagnosis.`
@@ -142,7 +181,9 @@ export const handleChat = async ({ message, user, language = null, conversationI
     : message;
 
   // PII strip before anything leaves the platform
-  const prompt = stripPII(`${rawPrompt}\n\n${langInstruction}${knowledgeBlock}`);
+  const prompt = stripPII(
+    `${rawPrompt}\n\n${langInstruction}${formatRule}${termRule}${siteKnowledge}${knowledgeBlock}`,
+  );
 
   /* ---------- 4. Call model ---------- */
   const result = await runAgent("physiotherapy", prompt, {
@@ -159,14 +200,21 @@ export const handleChat = async ({ message, user, language = null, conversationI
       details: { code: result.code, error: result.error },
       requiresHumanReview: result.code === "AI_QUOTA_EXCEEDED",
     });
-    return { ok: false, error: result.error, code: result.code, conversationId: conversation._id };
+    return {
+      ok: false,
+      error: result.error,
+      code: result.code,
+      conversationId: conversation._id,
+    };
   }
 
-  // Persist assistant reply with retrieval sources
+  // Persist assistant reply with retrieval sources.
+  // Safety net: strip any residual markdown bold markers the model ignored.
+  const cleanReply = result.text.replace(/\*\*(.+?)\*\*/g, "$1");
   const assistantMsg = await AIMessage.create({
     conversation: conversation._id,
     role: "assistant",
-    content: result.text,
+    content: cleanReply,
     sources: sources.map((s) => ({
       documentId: s.documentId,
       chunkId: s.chunkId,
@@ -198,10 +246,10 @@ export const handleChat = async ({ message, user, language = null, conversationI
     ok: true,
     conversationId: conversation._id,
     messageId: assistantMsg._id,
-    reply: result.text,
+    reply: cleanReply,
     model: result.model,
     language: conversation.language,
     sources: sources.map((s) => ({ title: s.title, url: s.sourceUrl })),
     quota: result.quota,
   };
-};
+};;;;;;;;

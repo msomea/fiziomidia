@@ -12,7 +12,7 @@ import {
   updateKnowledgeDocument,
   uploadKnowledgeDocument,
 } from "../../api/ai";
-import { DAYS, parseSchedule, buildCron } from "./AiContentSection";
+import { DAYS, parseSchedule, buildCron } from "./aiSchedule";
 
 const SPECIALTIES = [
   "musculoskeletal",

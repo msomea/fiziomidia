@@ -60,6 +60,7 @@ import UploadResource from "../pages/education/UploadResource";
 import ResourceRequests from "../pages/education/ResourceRequests";
 import ResourceNeeds from "../pages/education/ResourceNeeds";
 import MyResources from "../pages/education/MyResources";
+import Assistant from "../pages/assistant/Assistant";
 
 export default function AppRoutes() {
   return (
@@ -83,6 +84,7 @@ export default function AppRoutes() {
       <Route path="/forum" element={<Forum />} />
       <Route path="/forum/post/:id" element={<PostDetailPage />} />
       <Route path="/education" element={<Education />} />
+      <Route path="/assistant" element={<Assistant />} />
 
       {/* Dynamic Public Profile Routes */}
       <Route path="/profile/pt/:id" element={<PTProfile />} />

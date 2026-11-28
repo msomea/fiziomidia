@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 
 const aiConversationSchema = new mongoose.Schema(
   {
-    // null userId = guest conversation
+    // null userId = guest conversation; guestToken scopes it to one browser
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
+    guestToken: { type: String, default: null, index: true },
     agent: {
       type: String,
       enum: ["physiotherapy", "forumContent", "virtualAdmin"],

@@ -13,9 +13,19 @@ router.post(
   ai.chat,
 );
 
+router.get("/chat/quota", authenticateOptional, ai.getGuestQuota);
 router.get("/conversations", authenticateOptional, ai.listConversations);
 router.get("/conversations/:id", authenticateOptional, ai.getConversation);
+router.patch("/conversations/:id", authenticateOptional, ai.renameConversation);
+router.delete(
+  "/conversations/:id",
+  authenticateOptional,
+  ai.deleteConversation,
+);
 router.post("/feedback", authenticateOptional, ai.submitFeedback);
+
+// Authenticated: transfer guest conversations into the user's account
+router.post("/conversations/claim", authenticate, ai.claimGuestConversations);
 
 /* ---------------- Admin-only ---------------- */
 router.use(authenticate, authenticateAdmin, limiters.admin);

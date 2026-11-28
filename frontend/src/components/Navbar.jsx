@@ -40,6 +40,7 @@ export default function Navbar() {
     { key: 'forum', path: "/forum" },
     { key: 'services', path: "/services" },
     { key: 'education', path: "/education" },
+    { key: 'assistant', path: "/assistant" },
   ];
 
   const handleLogout = async () => {
