@@ -84,7 +84,7 @@ export default function Assistant() {
         .catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?._id]);
+  }, []);
 
   const send = async (e, presetText = null) => {
     e?.preventDefault();

@@ -118,3 +118,9 @@ export const claimGuestConversations = async () => {
   });
   return data;
 };
+
+// Admin — token/quota usage dashboard (Phase 4)
+export const getAIUsageDashboard = async () => {
+  const { data } = await API.get(`${API_URL}/ai/usage`);
+  return data;
+};

@@ -306,6 +306,81 @@ export const getStatus = handle(async (req, res) => {
   });
 });
 
+/* ---------------- Admin: usage dashboard ---------------- */
+
+// Local-day boundary matching usageTracker's todayKey (server-local date)
+const startOfToday = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+export const getUsageDashboard = handle(async (req, res) => {
+  const usage = await getAllUsage();
+  const today = startOfToday();
+  const weekStart = new Date(today);
+  weekStart.setDate(weekStart.getDate() - 6);
+
+  const [todayAgg, weekAgg] = await Promise.all([
+    AIActivityLog.aggregate([
+      { $match: { createdAt: { $gte: today } } },
+      {
+        $group: {
+          _id: "$agent",
+          requests: { $sum: 1 },
+          tokens: { $sum: { $ifNull: ["$tokensUsed", 0] } },
+        },
+      },
+    ]),
+    AIActivityLog.aggregate([
+      { $match: { createdAt: { $gte: weekStart } } },
+      {
+        $group: {
+          _id: {
+            agent: "$agent",
+            day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          },
+          requests: { $sum: 1 },
+          tokens: { $sum: { $ifNull: ["$tokensUsed", 0] } },
+        },
+      },
+      { $sort: { "_id.day": 1 } },
+    ]),
+  ]);
+
+  const todayByAgent = Object.fromEntries(todayAgg.map((a) => [a._id, a]));
+
+  const agents = {};
+  for (const name of AGENTS) {
+    const q = usage[name] || { used: 0, cap: 0, remaining: 0 };
+    const t = todayByAgent[name] || { requests: 0, tokens: 0 };
+    agents[name] = {
+      quotaUsed: q.used,
+      dailyCap: q.cap,
+      quotaRemaining: q.remaining,
+      loggedRequests: t.requests,
+      tokensToday: t.tokens,
+      avgTokensPerRequest:
+        t.requests > 0 ? Math.round(t.tokens / t.requests) : 0,
+    };
+  }
+
+  const daily = weekAgg.map((d) => ({
+    date: d._id.day,
+    agent: d._id.agent,
+    requests: d.requests,
+    tokens: d.tokens,
+  }));
+
+  const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  res.json({
+    success: true,
+    date: localDate,
+    agents,
+    daily,
+  });
+});
+
 export const getConfig = handle(async (req, res) => {
   let config = await AIConfiguration.findOne().lean();
   if (!config) {

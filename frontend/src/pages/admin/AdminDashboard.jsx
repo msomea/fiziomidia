@@ -18,6 +18,7 @@ import EducationSection from "../../components/admin/EducationSection";
 import TeamMembersSection from "../../components/admin/TeamMembersSection";
 import AiManagementSection from "../../components/admin/AiManagementSection";
 import AiContentSection from "../../components/admin/AiContentSection";
+import AiUsageSection from "../../components/admin/AiUsageSection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -102,6 +103,7 @@ function AdminDashboardContent() {
         <EducationSection />
         <AiContentSection />
         <AiManagementSection />
+        <AiUsageSection />
         <TeamMembersSection />
       </div>
       <div className="flex justify-center items-center mt-4">

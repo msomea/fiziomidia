@@ -31,6 +31,7 @@ router.post("/conversations/claim", authenticate, ai.claimGuestConversations);
 router.use(authenticate, authenticateAdmin, limiters.admin);
 
 router.get("/status", ai.getStatus);
+router.get("/usage", ai.getUsageDashboard);
 router.get("/config", ai.getConfig);
 router.put("/config", ai.updateConfig);
 router.post("/test-connection", ai.testConnection);
