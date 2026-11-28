@@ -40,6 +40,9 @@ const PostDetailPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
+  const [editImage, setEditImage] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const socket = getSocket();
 
@@ -78,15 +81,50 @@ const PostDetailPage = () => {
   const handleEditStart = () => {
     setEditTitle(post.title);
     setEditBody(post.body);
+    setEditImage(null);
+    setEditImagePreview(null);
+    setRemoveImage(false);
     setIsEditing(true);
+  };
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      return toast.error(t("invalid_image_type"));
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error(t("image_size_limit"));
+    }
+
+    setEditImage(file);
+    setEditImagePreview(URL.createObjectURL(file));
+    setRemoveImage(false);
+  };
+
+  const handleRemoveImage = () => {
+    setEditImage(null);
+    setEditImagePreview(null);
+    setRemoveImage(true);
+  };
+
+  const handleEditCancel = () => {
+    setEditImage(null);
+    setEditImagePreview(null);
+    setRemoveImage(false);
+    setIsEditing(false);
   };
 
   const handleEditSave = async () => {
     try {
-      const updatedPostData = await updatePostApi(id, {
+      const data = {
         title: editTitle,
         body: editBody,
-      });
+      };
+      if (removeImage) data.removeImage = "true";
+
+      const updatedPostData = await updatePostApi(id, data, editImage);
 
       const updatedPost = {
         ...updatedPostData.post,
@@ -96,6 +134,9 @@ const PostDetailPage = () => {
       setPost(updatedPost);
       updatePost(updatedPost);
       toast.success("Post updated successfully");
+      setEditImage(null);
+      setEditImagePreview(null);
+      setRemoveImage(false);
       setIsEditing(false);
     } catch (err) {
       console.error(err);
@@ -143,16 +184,75 @@ const PostDetailPage = () => {
             )}
 
             {/* ✅ Centered Image */}
-            {post.image?.url && (
-              <div className="flex justify-center my-6">
-                <div className="w-full max-w-2xl rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
-                  <img
-                    src={post.image.url}
-                    alt="Post"
-                    className="w-full object-contain max-h-[600px]"
-                  />
+            {isEditing ? (
+              <div className="my-6">
+                {editImagePreview ? (
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-2xl rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                      <img
+                        src={editImagePreview}
+                        alt="Preview"
+                        className="w-full object-contain max-h-[600px]"
+                      />
+                    </div>
+                  </div>
+                ) : !removeImage && post.image?.url ? (
+                  <div className="flex justify-center">
+                    <div className="w-full max-w-2xl rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                      <img
+                        src={post.image.url}
+                        alt="Post"
+                        className="w-full object-contain max-h-[600px]"
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="flex items-center gap-3 mt-3">
+                  <label className="text-sm px-4 py-1.5 bg-gray-200 rounded-lg hover:bg-gray-300 transition cursor-pointer">
+                    {post.image?.url && !removeImage ? t("replace_image") : t("upload_image_optional")}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleEditImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {(post.image?.url || editImagePreview) && !editImagePreview && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="text-sm px-4 py-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                    >
+                      {t("remove_image")}
+                    </button>
+                  )}
+                  {editImagePreview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditImage(null);
+                        setEditImagePreview(null);
+                      }}
+                      className="text-sm px-4 py-1.5 bg-gray-200 rounded-lg hover:bg-gray-300 transition"
+                    >
+                      {t("cancel")}
+                    </button>
+                  )}
                 </div>
               </div>
+            ) : (
+              post.image?.url && (
+                <div className="flex justify-center my-6">
+                  <div className="w-full max-w-2xl rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                    <img
+                      src={post.image.url}
+                      alt="Post"
+                      className="w-full object-contain max-h-[600px]"
+                    />
+                  </div>
+                </div>
+              )
             )}
 
             {/* Body */}
@@ -187,7 +287,7 @@ const PostDetailPage = () => {
                   {t("save_changes")}
                 </button>
                 <button
-                  onClick={() => setIsEditing(false)}
+                  onClick={handleEditCancel}
                   className="text-sm px-4 py-1.5 bg-gray-300 rounded-lg hover:bg-gray-400 transition"
                 >
                   {t("cancel")}

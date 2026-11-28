@@ -943,6 +943,8 @@
   "language_updated_success": "Language updated successfully",
   "failed_update_language": "Failed to update language",
   "upload_image_optional": "Upload Image (Optional)",
+  "replace_image": "Replace Image",
+  "remove_image": "Remove Image",
   "avatar_selected": "Image selected successfully",
   "invalid_image_type": "Invalid Image type",
   "change_profile_image": "Change profile Image",

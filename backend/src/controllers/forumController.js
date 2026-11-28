@@ -449,7 +449,7 @@ export const votePost = async (req, res) => {
 export const updatePost = async (req, res) => {
   try {
     const postId = req.params.id;
-    const { title, body } = req.body;
+    const { title, body, removeImage } = req.body;
 
     const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ error: "Post not found" });
@@ -461,6 +461,26 @@ export const updatePost = async (req, res) => {
 
     post.title = title ?? post.title;
     post.body = body ?? post.body;
+
+    // Handle image changes
+    if (req.file) {
+      // New image uploaded -> delete old one from Cloudinary
+      if (post.image?.public_id) {
+        await deleteFromCloudinary(post.image.public_id);
+      }
+      const result = await uploadToCloudinary(req.file);
+      post.image = {
+        url: result.secure_url,
+        public_id: result.public_id,
+      };
+    } else if (removeImage === "true" || removeImage === true) {
+      // Image explicitly removed -> delete from Cloudinary
+      if (post.image?.public_id) {
+        await deleteFromCloudinary(post.image.public_id);
+      }
+      post.image = null;
+    }
+
     post.updatedAt = new Date();
 
     await post.save();

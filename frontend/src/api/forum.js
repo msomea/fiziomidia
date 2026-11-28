@@ -75,9 +75,17 @@ export const fetchForumSubsPaginated = async (page = 1, limit = 10, search = "")
   return res.data;
 };
 
-// Update post by ID
-export const updatePost = async (postId, data) => {
-  const res = await API.put(`${API_URL}/forum/posts/${postId}`, data);
+// Update post by ID (supports optional image file via FormData)
+export const updatePost = async (postId, data, imageFile = null) => {
+  let payload = data;
+  if (imageFile) {
+    payload = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) payload.append(key, value);
+    });
+    payload.append("post", imageFile);
+  }
+  const res = await API.put(`${API_URL}/forum/posts/${postId}`, payload);
   return res.data;
 };
 

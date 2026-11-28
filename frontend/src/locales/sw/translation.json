@@ -940,6 +940,8 @@
   "language_updated_success": "Lugha imesasishwa kikamilifu",
   "failed_update_language": "Imeshindikana kusasisha lugha",
   "upload_image_optional": "Tuma Picha (Hiari)",
+  "replace_image": "Badilisha Picha",
+  "remove_image": "Ondoa Picha",
   "avatar_selected": "Picha imechaguliwa",
   "invalid_image_type": "Aina ya picha sio sahihi",
   "change_profile_image": "Badilisha Picha",

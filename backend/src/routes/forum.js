@@ -38,7 +38,7 @@ router.post(
   forum.createPost,
 );
 router.delete("/posts/:id", authenticate, forum.deletePost);
-router.put("/posts/:id", authenticate, forum.updatePost);
+router.put("/posts/:id", authenticate, upload.single("post"), forum.updatePost);
 router.get("/my-subs", authenticate, forum.getMySubs);
 // Check if current user is already a mod or has pending request
 router.get("/subs/:subId/my-mod-request", authenticate, modReq.checkMyModStatus);
