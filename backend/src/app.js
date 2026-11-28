@@ -13,6 +13,7 @@ import ForumSub from "./models/ForumSub.js";
 import { expireSponsoredProductsJob } from "./cron/expiredSponsoredProducts.js";
 import { expireClinicPromotionsJob } from "./cron/expiredClinicPromotions.js";
 import { expirePTPromotionsJob } from "./cron/expiredPTPromotions.js";
+import { registerForumScheduler } from "./ai/agents/forumScheduler.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Routes
@@ -88,6 +89,9 @@ cron.schedule("0 0 * * *", async () => {
 
 expireSponsoredProductsJob();
 expireClinicPromotionsJob();
+registerForumScheduler().catch((err) =>
+  console.error("AI forum scheduler registration failed:", err),
+);
 expirePTPromotionsJob();
 
 /* ---------------------------------- */

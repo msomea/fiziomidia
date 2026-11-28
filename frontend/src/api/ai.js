@@ -29,3 +29,30 @@ export const listAIActivity = async (params = {}) => {
   const { data } = await API.get(`${API_URL}/ai/activity`, { params });
   return data;
 };
+
+// Agent configuration (models, schedules, toggles)
+export const getAIConfig = async () => {
+  const { data } = await API.get(`${API_URL}/ai/config`);
+  return data;
+};
+
+export const updateAIConfig = async (patch) => {
+  const { data } = await API.put(`${API_URL}/ai/config`, patch);
+  return data;
+};
+
+// Generated content review workflow (forum content agent)
+export const listGeneratedContent = async (params = {}) => {
+  const { data } = await API.get(`${API_URL}/ai/content`, { params });
+  return data;
+};
+
+export const reviewGeneratedContent = async (id, payload) => {
+  const { data } = await API.put(`${API_URL}/ai/content/${id}/review`, payload);
+  return data;
+};
+
+export const triggerForumDraft = async (forumSubId) => {
+  const { data } = await API.post(`${API_URL}/ai/forum/draft`, { forumSubId });
+  return data;
+};

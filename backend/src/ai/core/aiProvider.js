@@ -1,7 +1,7 @@
 import config from "../../config/index.js";
 
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
-const REQUEST_TIMEOUT_MS = 30_000;
+const REQUEST_TIMEOUT_MS = 60_000;
 
 /**
  * Call Gemini generateContent.

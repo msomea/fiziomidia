@@ -273,6 +273,6 @@ Each agent gets its own dedicated model, configured in `AIConfiguration` (per-ag
 
 - **Created:** 2026-11-26
 - **Source:** `documentation/AI_GUIDELINE` + `documentation/FizioMidia_Physiotherapy_Knowledge_Source_Register.md`
-- **Implementation status:** Phase 0 + Phase 1 COMPLETE (2026-11-27, branch `feature/ai-agents`) — safety classifier, $text knowledge retrieval, PII stripping, ingest pipeline all verified live. Next: Phase 2 Forum Content Agent (scheduler, approval emails, publish-on-approve)
+- **Implementation status:** Phase 0 + Phase 1 COMPLETE (2026-11-27) — safety classifier, $text knowledge retrieval, PII stripping, ingest pipeline all verified live. Phase 2 COMPLETE (2026-11-28) — forum scheduler (cron from AIConfiguration), approval email service with signed review tokens, publish-on-approve → real Post, regenerate-on-request, all verified end-to-end. Admin UI: AI management section (agent status, knowledge upload, doc approval). Next: Phase 3 Virtual Administrator (daily monitoring report).
 - **Budget:** $0/month confirmed
 - **Next action:** Begin Phase 0 — AI foundation (`aiProvider.js`, `usageTracker.js`, models, routes)

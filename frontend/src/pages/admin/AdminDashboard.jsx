@@ -17,6 +17,7 @@ import SystemNotificationsSection from "../../components/admin/SystemNotificatio
 import EducationSection from "../../components/admin/EducationSection";
 import TeamMembersSection from "../../components/admin/TeamMembersSection";
 import AiManagementSection from "../../components/admin/AiManagementSection";
+import AiContentSection from "../../components/admin/AiContentSection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -79,7 +80,11 @@ function AdminDashboardContent() {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           <p className="font-medium">{t('error_loading_dashboard')}</p>
-          <p className="text-sm">{error}</p>
+          <p className="text-sm">
+            {typeof error === "string"
+              ? error
+              : error?.response?.data?.error || error?.message || "Unknown error"}
+          </p>
         </div>
       )}
 
@@ -95,6 +100,7 @@ function AdminDashboardContent() {
         <ForumModRequestsSection />
         <SponsoredProductsSection />
         <EducationSection />
+        <AiContentSection />
         <AiManagementSection />
         <TeamMembersSection />
       </div>

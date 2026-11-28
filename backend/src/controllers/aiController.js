@@ -4,6 +4,10 @@ import AIMessage from "../models/AIMessage.js";
 import AIGeneratedContent from "../models/AIGeneratedContent.js";
 import AIActivityLog from "../models/AIActivityLog.js";
 import AIKnowledgeDocument from "../models/AIKnowledgeDocument.js";
+import Post from "../models/Post.js";
+import ForumSub from "../models/ForumSub.js";
+import { CacheService } from "../utils/redis.js";
+import { notifyContentReview } from "../ai/services/approvalService.js";
 import { handleChat } from "../ai/agents/physiotherapyAgent.js";
 import { generateDraft } from "../ai/agents/forumContentAgent.js";
 import { generateReport } from "../ai/agents/virtualAdminAgent.js";
@@ -200,6 +204,7 @@ export const triggerForumDraft = handle(async (req, res) => {
     const status = result.code === "AI_QUOTA_EXCEEDED" ? 429 : 502;
     return res.status(status).json({ success: false, error: result.error, code: result.code });
   }
+  await notifyContentReview(result.draft);
   res.json({ success: true, draft: result.draft });
 });
 
@@ -225,7 +230,7 @@ export const listGeneratedContent = handle(async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit, 10))
-      .populate("forumSub", "name")
+      .populate("forumSub", "title")
       .populate("reviewedBy", "name email")
       .lean(),
     AIGeneratedContent.countDocuments(filter),
@@ -236,18 +241,65 @@ export const listGeneratedContent = handle(async (req, res) => {
 export const reviewGeneratedContent = handle(async (req, res) => {
   const { action, notes, title, body } = req.body || {};
   if (!["approve", "reject", "regenerate"].includes(action)) {
-    return res.status(400).json({ success: false, error: "action must be approve|reject|regenerate" });
+    return res.status(400).json({
+      success: false,
+      error: "action must be approve|reject|regenerate",
+    });
   }
   const content = await AIGeneratedContent.findById(req.params.id);
-  if (!content) return res.status(404).json({ success: false, error: "Content not found" });
+  if (!content)
+    return res.status(404).json({ success: false, error: "Content not found" });
 
-  const statusMap = { approve: "approved", reject: "rejected", regenerate: "regeneration_requested" };
+  const statusMap = {
+    approve: "approved",
+    reject: "rejected",
+    regenerate: "regeneration_requested",
+  };
   content.status = statusMap[action];
   content.reviewedBy = req.user._id;
   content.reviewedAt = new Date();
   content.reviewNotes = notes || null;
   if (typeof title === "string" && title.trim()) content.title = title.trim();
   if (typeof body === "string" && body.trim()) content.body = body.trim();
+
+  // Approve → publish as a real forum post (forumContent agent only).
+  // The approving admin is recorded as author; the AIActivityLog entry
+  // below preserves the AI provenance trail.
+  if (
+    action === "approve" &&
+    content.agent === "forumContent" &&
+    content.forumSub
+  ) {
+    const post = new Post({
+      title: content.title,
+      body: content.body,
+      sub: content.forumSub,
+      author: req.user._id,
+    });
+    await post.save();
+    await ForumSub.findByIdAndUpdate(content.forumSub, {
+      $inc: { totalPosts: 1 },
+    });
+    await CacheService.delPattern(`forum:sub:${content.forumSub}*`);
+    content.publishedPost = post._id;
+    content.status = "published";
+  }
+
+  // Regenerate → produce a fresh draft for the same subcategory and
+  // notify admins again. Old draft stays as regeneration_requested.
+  let newDraft = null;
+  if (
+    action === "regenerate" &&
+    content.agent === "forumContent" &&
+    content.forumSub
+  ) {
+    const result = await generateDraft(content.forumSub);
+    if (result.ok) {
+      newDraft = result.draft;
+      await notifyContentReview(newDraft);
+    }
+  }
+
   await content.save();
 
   await AIActivityLog.create({
@@ -255,10 +307,14 @@ export const reviewGeneratedContent = handle(async (req, res) => {
     action: `CONTENT_${action.toUpperCase()}ED`,
     actor: req.user._id,
     generatedContent: content._id,
-    details: { notes },
+    details: {
+      notes,
+      publishedPost: content.publishedPost || null,
+      newDraftId: newDraft?._id || null,
+    },
   });
 
-  res.json({ success: true, content });
+  res.json({ success: true, content, newDraft });
 });
 
 /* ---------------- Admin: knowledge documents ---------------- */

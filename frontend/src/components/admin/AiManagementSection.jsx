@@ -6,6 +6,8 @@ import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import {
   getAIStatus,
+  getAIConfig,
+  updateAIConfig,
   listKnowledgeDocuments,
   updateKnowledgeDocument,
   uploadKnowledgeDocument,
@@ -68,16 +70,20 @@ export default function AiManagementSection() {
   const [showUpload, setShowUpload] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const [st, docRes] = await Promise.all([
+      const [st, docRes, cfg] = await Promise.all([
         getAIStatus(),
         listKnowledgeDocuments({ limit: 100 }),
+        getAIConfig(),
       ]);
       setStatus(st);
       setDocs(docRes.items || []);
+      setAdminEmail(cfg?.config?.adminEmail || "");
     } catch (err) {
       console.error("AI management load failed:", err);
       toast.error(err?.response?.data?.error || "Failed to load AI data");
@@ -129,6 +135,18 @@ export default function AiManagementSection() {
     }
   };
 
+  const saveAdminEmail = async () => {
+    setSavingEmail(true);
+    try {
+      await updateAIConfig({ adminEmail: adminEmail.trim() || null });
+      toast.success(t("ai_email_saved"));
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Save failed");
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
   const setApproval = async (doc, patch) => {
     try {
       await updateKnowledgeDocument(doc._id, patch);
@@ -173,6 +191,30 @@ export default function AiManagementSection() {
           ))}
         </div>
       )}
+
+      {/* Review notification emails */}
+      <div className="border border-gray-200 rounded-xl p-3 mb-4 bg-alice">
+        <h3 className="text-sm font-semibold text-caribbean mb-1">
+          {t("ai_review_emails_title")}
+        </h3>
+        <p className="text-[11px] text-gray-500 mb-2">{t("ai_review_emails_hint")}</p>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            className="input input-bordered input-xs flex-1"
+            placeholder="admin@fiziomidia.org, reviewer@example.com"
+            value={adminEmail}
+            onChange={(e) => setAdminEmail(e.target.value)}
+          />
+          <button
+            onClick={saveAdminEmail}
+            className="btn btn-xs bg-caribbean hover:bg-tufts text-white"
+            disabled={savingEmail}
+          >
+            {savingEmail ? t("ai_saving") : t("ai_save")}
+          </button>
+        </div>
+      </div>
 
       {/* Upload form */}
       <div className="mb-4">

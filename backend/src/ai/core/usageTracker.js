@@ -19,7 +19,14 @@ const DEFAULT_CAPS = {
 
 const memoryCounters = new Map(); // fallback when Redis unavailable
 
-const todayKey = () => new Date().toISOString().slice(0, 10);
+// Local server date (YYYY-MM-DD) — "today" should match the admin's day,
+// not UTC midnight (EAT is UTC+3, so UTC rollover happens at 3am local).
+const todayKey = () => {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${mm}-${dd}`;
+};
 
 const redisKey = (agent) => `ai:usage:${todayKey()}:${agent}`;
 
