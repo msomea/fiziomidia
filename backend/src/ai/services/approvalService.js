@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import AIConfiguration from "../../models/AIConfiguration.js";
 import ForumSub from "../../models/ForumSub.js";
 import { sendEmail, EMAIL_FROM } from "../../services/sendEmailService.js";
@@ -7,11 +6,9 @@ import config from "../../config/index.js";
 /*
 Approval notification service — emails admins when AI-generated
 content is ready for review. Review itself happens in the admin
-dashboard (authenticated); the email carries a signed, expiring
-deep-link token so the link can't be forged or replayed forever.
+dashboard (authenticated), so the email links to the login page;
+after signing in, admins land on /dashboard/admin.
 */
-
-const TOKEN_TTL = "7d";
 
 const escapeHtml = (s) =>
   String(s ?? "")
@@ -19,13 +16,6 @@ const escapeHtml = (s) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-
-export const signReviewToken = (contentId) =>
-  jwt.sign(
-    { purpose: "ai-content-review", cid: String(contentId) },
-    config.jwt.accessSecret,
-    { expiresIn: TOKEN_TTL },
-  );
 
 // Predefined review recipients — domain mailboxes, not personal admin
 // accounts (not all admins have @fiziomidia.org access). Extra addresses
@@ -57,16 +47,19 @@ export const notifyContentReview = async (content) => {
   try {
     const to = await resolveAdminEmails();
     if (to.length === 0) {
-      console.warn("AI approval: no admin email resolved — skipping notification");
+      console.warn(
+        "AI approval: no admin email resolved — skipping notification",
+      );
       return { ok: false, reason: "no-admin-email" };
     }
 
-    const token = signReviewToken(content._id);
     const base = config.clientUrl || "https://fiziomidia.org";
-    const link = `${base}/admin?aiReview=${token}`;
-let subLabel = String(content.forumSub || "n/a");
+    const link = `${base}/login`;
+    let subLabel = String(content.forumSub || "n/a");
     if (content.forumSub) {
-      const sub = await ForumSub.findById(content.forumSub).select("title").lean();
+      const sub = await ForumSub.findById(content.forumSub)
+        .select("title")
+        .lean();
       if (sub?.title) {
         const t = sub.title;
         subLabel =
@@ -91,7 +84,7 @@ let subLabel = String(content.forumSub || "n/a");
           <p style="margin-top:16px">Please review accuracy, language and appropriateness before approving.
              Nothing is published until a human approves it.</p>
           <p><a href="${link}" style="background:#0d6e6e;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none">Review in Admin Dashboard</a></p>
-          <p style="color:#888;font-size:12px">This link expires in 7 days. You can also review all drafts under Admin → AI Agents &amp; Knowledge Base.</p>
+          <p style="color:#888;font-size:12px">Sign in with an admin account to review. You can also find all drafts under Admin → AI Agents &amp; Knowledge Base.</p>
         </div>`,
     });
     return { ok: true };

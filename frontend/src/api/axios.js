@@ -40,7 +40,14 @@ const API = axios.create({
 API.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem("accessToken");
-    if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    } else {
+      // Remove any stale Authorization left in axios defaults
+      // (set on login/refresh) so logged-out requests stay anonymous.
+      delete config.headers.Authorization;
+      delete API.defaults.headers.common["Authorization"];
+    }
     return config;
   },
   (error) => Promise.reject(error),

@@ -173,6 +173,11 @@ export const listConversations = handle(async (req, res) => {
   const guestToken =
     typeof req.query.guestToken === "string" ? req.query.guestToken : null;
   const filter = userId ? { user: userId } : { user: null, guestToken };
+  // Guests without a token must not see pooled legacy conversations
+  // (guestToken: null also matches docs where the field is missing).
+  if (!userId && !guestToken) {
+    return res.json({ success: true, conversations: [] });
+  }
   const conversations = await AIConversation.find(filter)
     .sort({ updatedAt: -1 })
     .limit(50)
@@ -185,6 +190,8 @@ export const getConversation = handle(async (req, res) => {
   const userId = req.user?._id;
   const guestToken =
     typeof req.query.guestToken === "string" ? req.query.guestToken : null;
+  if (!userId && !guestToken)
+    return res.status(404).json({ success: false, error: "Not found" });
   const conversation = await AIConversation.findOne({
     _id: req.params.id,
     user: userId ?? null,
@@ -217,6 +224,8 @@ export const renameConversation = handle(async (req, res) => {
   const userId = req.user?._id;
   const guestToken =
     typeof req.query.guestToken === "string" ? req.query.guestToken : null;
+  if (!userId && !guestToken)
+    return res.status(404).json({ success: false, error: "Not found" });
   const filter = {
     _id: req.params.id,
     user: userId ?? null,
@@ -239,6 +248,8 @@ export const deleteConversation = handle(async (req, res) => {
   const userId = req.user?._id;
   const guestToken =
     typeof req.query.guestToken === "string" ? req.query.guestToken : null;
+  if (!userId && !guestToken)
+    return res.status(404).json({ success: false, error: "Not found" });
   const filter = {
     _id: req.params.id,
     user: userId ?? null,

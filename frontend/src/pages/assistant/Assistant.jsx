@@ -73,6 +73,13 @@ export default function Assistant() {
   }, [messages]);
 
   useEffect(() => {
+    // Reset transient state on login/logout so a previous session's
+    // messages, quota and conversation never leak into the new one.
+    setMessages([]);
+    setConversationId(null);
+    setGuestLimited(false);
+    setGuestQuota(null);
+    setClaimPrompt(false);
     refreshConversations();
     refreshQuota();
     // Logged-in user with a stored guest token → offer to claim guest chats
@@ -84,7 +91,7 @@ export default function Assistant() {
         .catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?._id]);
 
   const send = async (e, presetText = null) => {
     e?.preventDefault();
