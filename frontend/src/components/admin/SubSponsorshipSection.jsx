@@ -1,32 +1,55 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import { useTranslation } from 'react-i18next';
 import { Link } from "react-router";
 import { RefreshCw } from "lucide-react";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { fetchForumSubs } from "../../api/forum";
 
 export default function SponsorshipSection() {
   const { t, i18n } = useTranslation();
   const currentLang = i18n.language || "en";
   const fallbackLang = "en";
-  const { forumSubs, fetchDashboardData, loading: dashboardLoading } = useDashboard();
+  const { forumSubs, loading: dashboardLoading } = useDashboard();
 
+  const [subs, setSubs] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Stats derived from forum subs in context
+  // Seed local list from dashboard context
+  useEffect(() => {
+    if (Array.isArray(forumSubs) && forumSubs.length > 0) {
+      setSubs(forumSubs);
+    }
+  }, [forumSubs]);
+
+  const loadSubs = async () => {
+    try {
+      setLoading(true);
+      const result = await fetchForumSubs();
+      const list = Array.isArray(result) ? result : result?.subs || result?.data || [];
+      setSubs(list);
+    } catch (err) {
+      console.error("Failed to refresh forum subs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Stats derived from forum subs
   const stats = useMemo(() => {
-    const source = Array.isArray(forumSubs) ? forumSubs : [];
+    const source = Array.isArray(subs) ? subs : [];
     return {
       total: source.length,
       sponsored: source.filter((s) => s.isSponsored === true).length,
       notSponsored: source.filter((s) => s.isSponsored !== true).length,
     };
-  }, [forumSubs]);
+  }, [subs]);
 
   // 🔎 Filter logic (applied instantly in UI)
-  const filteredSubs = forumSubs.filter((sub) => {
+  const filteredSubs = subs.filter((sub) => {
     const titleText = sub.title?.[currentLang] || sub.title?.[fallbackLang] || "";
     const matchesSearch =
       titleText.toLowerCase().includes(searchQuery.toLowerCase());
@@ -41,12 +64,12 @@ export default function SponsorshipSection() {
     return matchesSearch && matchesStatus;
   });
 
-  const isLoading = dashboardLoading;
+  const isLoading = dashboardLoading || loading;
 
   return (
     <CollapsibleSection title={t('forum_sponsorships')}>
       <div className="flex justify-end mb-3">
-        <button onClick={() => fetchDashboardData()} className="btn btn-xs btn-ghost text-caribbean">
+        <button onClick={loadSubs} className="btn btn-xs btn-ghost text-caribbean">
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>

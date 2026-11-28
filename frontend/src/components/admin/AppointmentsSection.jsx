@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { updateAppointmentStatus, deleteAppointment as deleteAppointmentApi } from "../../api/appointments";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -23,6 +23,15 @@ export default function AdminAppointments() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(null);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
+  const isFirstRender = useRef(true);
+  const hasLoadedRef = useRef(false);
+
+  // Seed local list from dashboard context until this section fetches its own data
+  useEffect(() => {
+    if (!hasLoadedRef.current && Array.isArray(appointments) && appointments.length > 0) {
+      setFilteredAppointments(appointments);
+    }
+  }, [appointments]);
 
   const loadAppointments = useCallback(async () => {
     try {
@@ -40,6 +49,7 @@ export default function AdminAppointments() {
       });
 
       // Update local state with filtered results
+      hasLoadedRef.current = true;
       setFilteredAppointments(result.appointments || []);
     } catch (error) {
       console.error('Failed to load appointments via unified search:', error);
@@ -50,7 +60,11 @@ export default function AdminAppointments() {
   }, [search, clinic, pt, requester, status, t]);
 
   useEffect(() => {
-    // Load appointments when filters change (also runs on mount)
+    // Load appointments when filters change — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadAppointments();
   }, [loadAppointments]);
 

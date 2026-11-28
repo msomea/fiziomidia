@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import toast from "react-hot-toast";
@@ -6,12 +6,22 @@ import { Link } from "react-router";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { getSponsoredProducts } from "../../api/admin";
 
 export default function ProductSponsorshipSection() {
   const { t } = useTranslation();
-  const { sponsoredProducts, refreshSponsoredProducts, loading: dashboardLoading } = useDashboard();
+  const { sponsoredProducts, loading: dashboardLoading } = useDashboard();
+  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const isFirstRender = useRef(true);
+
+  // Seed local list from dashboard context
+  useEffect(() => {
+    if (Array.isArray(sponsoredProducts) && sponsoredProducts.length > 0) {
+      setProducts(sponsoredProducts);
+    }
+  }, [sponsoredProducts]);
 
   // Filters
   const [search, setSearch] = useState(""); // search by product name
@@ -21,7 +31,8 @@ export default function ProductSponsorshipSection() {
   const loadSponsoredProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await refreshSponsoredProducts({ search, status, page });
+      const response = await getSponsoredProducts({ search, status, page });
+      setProducts(response.products || []);
       // Update totalPages from response if available
       if (response && response.totalPages) {
         setTotalPages(response.totalPages);
@@ -32,10 +43,14 @@ export default function ProductSponsorshipSection() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page, refreshSponsoredProducts, t]);
+  }, [search, status, page, t]);
 
   useEffect(() => {
-    // Load sponsored products when filters or page change (also runs on mount)
+    // Load sponsored products when filters or page change — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadSponsoredProducts();
   }, [loadSponsoredProducts]);
 
@@ -99,11 +114,11 @@ export default function ProductSponsorshipSection() {
       {/* PRODUCT LIST */}
       {isLoading ? (
         <SectionSkeleton count={3} />
-      ) : sponsoredProducts.length === 0 ? (
+      ) : products.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-4">{t("no_products_found")}</p>
       ) : (
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
-          {sponsoredProducts.map((product) => (
+          {products.map((product) => (
             <div
               key={product._id}
               className="border border-gray-200 rounded-xl p-3 flex gap-4"
@@ -174,7 +189,7 @@ export default function ProductSponsorshipSection() {
       </div>
 
       <p className="text-xs text-gray-400 mt-2">
-        {t("showing_sponsored_products", { count: sponsoredProducts.length })}
+        {t("showing_sponsored_products", { count: products.length })}
       </p>
     </CollapsibleSection>
   );

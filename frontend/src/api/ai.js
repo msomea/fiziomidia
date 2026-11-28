@@ -124,3 +124,9 @@ export const getAIUsageDashboard = async () => {
   const { data } = await API.get(`${API_URL}/ai/usage`);
   return data;
 };
+
+// Admin — mark an AI activity log entry as reviewed
+export const reviewAIActivity = async (id) => {
+  const { data } = await API.patch(`${API_URL}/ai/activity/${id}/review`);
+  return data;
+};

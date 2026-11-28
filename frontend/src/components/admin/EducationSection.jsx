@@ -15,12 +15,14 @@ import ResourceStatusBadge from "../education/ResourceStatusBadge";
 import ResourceSkeleton from "../education/ResourceSkeleton";
 import { REPORT_REASONS } from "../../constants/education";
 import CollapsibleSection from "./CollapsibleSection";
+import { useDashboard } from "../../contexts/DashboardContext";
 import { CheckCircle, XCircle, PauseCircle, PlayCircle, Trash2, RefreshCw, Eye } from "lucide-react";
 
 const TABS = ["resources", "reports", "requests"];
 
 export default function EducationSection() {
   const { t } = useTranslation();
+  const { educationStats } = useDashboard();
   const [tab, setTab] = useState("resources");
   const [stats, setStats] = useState(null);
   const [resources, setResources] = useState([]);
@@ -59,8 +61,11 @@ export default function EducationSection() {
     }
   }, [tab, statusFilter, t]);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
+  // Tab data loads when the section is expanded (children mount lazily) or tab/filter changes.
+  // Stats come from the dashboard endpoint; loadStats is only called on refresh/mutations.
   useEffect(() => { loadTab(); }, [loadTab]);
+
+  const displayStats = stats || educationStats;
 
   const review = async (id, action, reason, holdToggle) => {
     setBusy(id);
@@ -129,15 +134,15 @@ export default function EducationSection() {
       </div>
 
       {/* Stats */}
-      {stats && (
+      {displayStats && (
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
           {[
-            ["edu_admin_pending", stats.pendingUploads],
-            ["edu_admin_approved", stats.approvedResources],
-            ["edu_admin_suspended", stats.suspendedResources],
-            ["edu_admin_reports", stats.openReports],
-            ["edu_admin_requests", stats.openRequests],
-            ["edu_admin_downloads", stats.totalDownloads],
+            ["edu_admin_pending", displayStats.pendingUploads],
+            ["edu_admin_approved", displayStats.approvedResources],
+            ["edu_admin_suspended", displayStats.suspendedResources],
+            ["edu_admin_reports", displayStats.openReports],
+            ["edu_admin_requests", displayStats.openRequests],
+            ["edu_admin_downloads", displayStats.totalDownloads],
           ].map(([key, val]) => (
             <div key={key} className="bg-alice rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-caribbean">{val}</p>

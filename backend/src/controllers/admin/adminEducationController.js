@@ -328,39 +328,43 @@ export const adminUpdateRequest = async (req, res) => {
   }
 };
 
+// Shared stats builder — used by the admin route and the consolidated dashboard endpoint
+export const getEducationStatsData = async () => {
+  const [
+    pendingUploads,
+    approvedResources,
+    suspendedResources,
+    openReports,
+    openRequests,
+    totalDownloads,
+  ] = await Promise.all([
+    EducationResource.countDocuments({ status: "pending" }),
+    EducationResource.countDocuments({ status: "approved" }),
+    EducationResource.countDocuments({ status: "suspended" }),
+    CopyrightReport.countDocuments({
+      status: { $in: ["pending", "under_review"] },
+    }),
+    ResourceRequest.countDocuments({ status: "open" }),
+    EducationResource.aggregate([
+      { $group: { _id: null, total: { $sum: "$downloadCount" } } },
+    ]),
+  ]);
+
+  return {
+    pendingUploads,
+    approvedResources,
+    suspendedResources,
+    openReports,
+    openRequests,
+    totalDownloads: totalDownloads[0]?.total || 0,
+  };
+};
+
 // GET /api/admin/education/stats — dashboard metrics
 export const adminEducationStats = async (req, res) => {
   try {
-    const [
-      pendingUploads,
-      approvedResources,
-      suspendedResources,
-      openReports,
-      openRequests,
-      totalDownloads,
-    ] = await Promise.all([
-      EducationResource.countDocuments({ status: "pending" }),
-      EducationResource.countDocuments({ status: "approved" }),
-      EducationResource.countDocuments({ status: "suspended" }),
-      CopyrightReport.countDocuments({
-        status: { $in: ["pending", "under_review"] },
-      }),
-      ResourceRequest.countDocuments({ status: "open" }),
-      EducationResource.aggregate([
-        { $group: { _id: null, total: { $sum: "$downloadCount" } } },
-      ]),
-    ]);
-
-    res.json({
-      stats: {
-        pendingUploads,
-        approvedResources,
-        suspendedResources,
-        openReports,
-        openRequests,
-        totalDownloads: totalDownloads[0]?.total || 0,
-      },
-    });
+    const stats = await getEducationStatsData();
+    res.json({ stats });
   } catch (err) {
     console.error("Error fetching education stats:", err);
     res.status(500).json({ error: "Failed to fetch stats" });

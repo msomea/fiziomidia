@@ -56,5 +56,6 @@ router.put("/knowledge/:id", ai.updateKnowledgeDocument);
 
 // Activity log
 router.get("/activity", ai.listActivity);
+router.patch("/activity/:id/review", ai.reviewActivity);
 
 export default router;

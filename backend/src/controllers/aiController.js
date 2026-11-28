@@ -286,7 +286,8 @@ export const submitFeedback = handle(async (req, res) => {
 
 /* ---------------- Admin: status & config ---------------- */
 
-export const getStatus = handle(async (req, res) => {
+// Data builders shared by admin routes and the consolidated dashboard endpoint
+export const buildAIStatusData = async () => {
   const availability = await isAIAvailable();
   const usage = await getAllUsage();
   const agents = {};
@@ -298,12 +299,16 @@ export const getStatus = handle(async (req, res) => {
       ...usage[name],
     };
   }
-  res.json({
-    success: true,
+  return {
     available: availability.ok,
     reason: availability.reason,
     agents,
-  });
+  };
+};
+
+export const getStatus = handle(async (req, res) => {
+  const data = await buildAIStatusData();
+  res.json({ success: true, ...data });
 });
 
 /* ---------------- Admin: usage dashboard ---------------- */
@@ -315,7 +320,7 @@ const startOfToday = () => {
   return d;
 };
 
-export const getUsageDashboard = handle(async (req, res) => {
+export const buildAIUsageData = async () => {
   const usage = await getAllUsage();
   const today = startOfToday();
   const weekStart = new Date(today);
@@ -373,15 +378,19 @@ export const getUsageDashboard = handle(async (req, res) => {
   }));
 
   const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  res.json({
-    success: true,
+  return {
     date: localDate,
     agents,
     daily,
-  });
+  };
+};
+
+export const getUsageDashboard = handle(async (req, res) => {
+  const data = await buildAIUsageData();
+  res.json({ success: true, ...data });
 });
 
-export const getConfig = handle(async (req, res) => {
+export const buildAIConfigData = async () => {
   let config = await AIConfiguration.findOne().lean();
   if (!config) {
     config = {
@@ -399,6 +408,11 @@ export const getConfig = handle(async (req, res) => {
       adminEmail: null,
     };
   }
+  return config;
+};
+
+export const getConfig = handle(async (req, res) => {
+  const config = await buildAIConfigData();
   res.json({ success: true, config });
 });
 
@@ -812,6 +826,7 @@ export const listActivity = handle(async (req, res) => {
     agent,
     action,
     requiresHumanReview,
+    unreviewed,
     page = 1,
     limit = 50,
   } = req.query;
@@ -819,6 +834,7 @@ export const listActivity = handle(async (req, res) => {
   if (agent) filter.agent = agent;
   if (action) filter.action = action;
   if (requiresHumanReview === "true") filter.requiresHumanReview = true;
+  if (unreviewed === "true") filter.reviewedAt = null;
   const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
   const [items, total] = await Promise.all([
     AIActivityLog.find(filter)
@@ -859,4 +875,24 @@ export const getDailyReport = handle(async (req, res) => {
       model: log.model,
     },
   });
+});
+
+// Mark an activity log entry as reviewed by an admin
+export const reviewActivity = handle(async (req, res) => {
+  const log = await AIActivityLog.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        reviewedBy: req.user._id,
+        reviewedAt: new Date(),
+      },
+    },
+    { new: true },
+  ).select("agent action reviewedAt reviewedBy");
+  if (!log) {
+    return res
+      .status(404)
+      .json({ success: false, error: "Activity log not found" });
+  }
+  res.json({ success: true, log });
 });

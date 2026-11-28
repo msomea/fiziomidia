@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
@@ -19,6 +19,15 @@ export default function PromotionsSection() {
   const [status, setStatus] = useState("");       // sort/filter by status
   const [loading, setLoading] = useState(false);
   const [filteredPromotions, setFilteredPromotions] = useState([]);
+  const isFirstRender = useRef(true);
+  const hasLoadedRef = useRef(false);
+
+  // Seed local list from dashboard context until this section fetches its own data
+  useEffect(() => {
+    if (!hasLoadedRef.current && Array.isArray(promotions) && promotions.length > 0) {
+      setFilteredPromotions(promotions);
+    }
+  }, [promotions]);
 
   const loadPromotions = useCallback(async () => {
     try {
@@ -29,6 +38,7 @@ export default function PromotionsSection() {
         filters: { status },
         limit: 20
       });
+      hasLoadedRef.current = true;
       setFilteredPromotions(result.promotions || []);
     } catch (error) {
       console.error('Failed to load promotions via unified search:', error);
@@ -39,7 +49,11 @@ export default function PromotionsSection() {
   }, [search, status, t]);
 
   useEffect(() => {
-    // Load promotions when filters change (also runs on mount)
+    // Load promotions when filters change — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadPromotions();
   }, [loadPromotions]);
 

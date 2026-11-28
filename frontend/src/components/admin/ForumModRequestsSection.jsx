@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -7,41 +7,56 @@ import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
 import { useDashboard } from "../../contexts/DashboardContext";
+import { getForumModRequests } from "../../api/admin";
 
 export default function ForumModRequestsSection() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { modRequests, refreshModRequests, loading: dashboardLoading } = useDashboard();
+  const { modRequests, loading: dashboardLoading } = useDashboard();
+  const [requests, setRequests] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const isFirstRender = useRef(true);
+
+  // Seed local list from dashboard context
+  useEffect(() => {
+    if (Array.isArray(modRequests) && modRequests.length > 0) {
+      setRequests(modRequests);
+    }
+  }, [modRequests]);
 
   const loadRequests = useCallback(async () => {
     try {
       setLoading(true);
       const filters = status ? { status } : {};
-      await refreshModRequests(filters);
+      const result = await getForumModRequests(filters);
+      setRequests(result.modRequests || []);
     } catch {
       toast.error(t("failed_load_mod_requests"));
     } finally {
       setLoading(false);
     }
-  }, [status, refreshModRequests, t]);
+  }, [status, t]);
 
   useEffect(() => {
-    // Load requests when the status filter changes (also runs on mount)
+    // Load requests when the status filter changes — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadRequests();
   }, [loadRequests]);
 
-  // Stats derived from moderator requests in context
+  // Stats derived from moderator requests
   const stats = useMemo(() => {
-    const source = Array.isArray(modRequests) ? modRequests : [];
+    const source = Array.isArray(requests) ? requests : [];
     return {
       total: source.length,
       pending: source.filter((r) => r.status === "pending").length,
       approved: source.filter((r) => r.status === "approved").length,
       rejected: source.filter((r) => r.status === "rejected").length,
     };
-  }, [modRequests]);
+  }, [requests]);
 
   const isLoading = dashboardLoading || loading;
   return (
@@ -84,13 +99,13 @@ export default function ForumModRequestsSection() {
       {/* RESULTS */}
       {isLoading ? (
         <SectionSkeleton count={3} />
-      ) : !Array.isArray(modRequests) || modRequests.length === 0 ? (
+      ) : !Array.isArray(requests) || requests.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-4">
           {t("no_mod_requests")}
         </p>
       ) : (
         <div className="space-y-3 max-h-[500px] overflow-y-auto">
-          {modRequests.map((req) => (
+          {requests.map((req) => (
             <div
               key={req._id}
               className="border border-gray-200 rounded-xl p-3 cursor-pointer hover:bg-gray-50"

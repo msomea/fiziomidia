@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useDashboard } from "../../contexts/DashboardContext";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { RefreshCw, BarChart3 } from "lucide-react";
@@ -14,8 +15,14 @@ const AGENT_LABELS = {
 
 export default function AiUsageSection() {
   const { t } = useTranslation();
+  const { aiUsage } = useDashboard();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // Seed from dashboard context; refresh calls this section's own API
+  useEffect(() => {
+    if (aiUsage && !data) setData(aiUsage);
+  }, [aiUsage, data]);
 
   const load = useCallback(async () => {
     try {
@@ -30,9 +37,7 @@ export default function AiUsageSection() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // No mount fetch — data comes from the dashboard endpoint
 
   const agents = data?.agents || {};
   const daily = data?.daily || [];
@@ -53,6 +58,8 @@ export default function AiUsageSection() {
       </div>
 
       {loading && !data ? (
+        <SectionSkeleton count={1} />
+      ) : !data ? (
         <SectionSkeleton count={1} />
       ) : (
         <>

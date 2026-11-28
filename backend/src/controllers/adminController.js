@@ -6,8 +6,15 @@ import SponsoredProduct from "../models/SponsoredProduct.js";
 import AdminActivityLog from "../models/AdminActivityLog.js";
 import ForumSubModRequest from "../models/ForumSubModRequest.js";
 import Clinic from "../models/Clinic.js";
+import TeamMember from "../models/TeamMember.js";
 import escapeRegExp from "../utils/escapeRegExp.js";
 import { CacheService, CacheKeys, CacheTTL } from "../utils/redis.js";
+import { getEducationStatsData } from "./admin/adminEducationController.js";
+import {
+  buildAIStatusData,
+  buildAIUsageData,
+  buildAIConfigData,
+} from "./aiController.js";
 
 // ============================================
 // CONSOLIDATED ADMIN DASHBOARD API
@@ -54,6 +61,11 @@ export const getDashboardData = async (req, res) => {
       adminStats,
       recentActivityLogs,
       clinicPromotions,
+      educationStats,
+      teamMembers,
+      aiStatus,
+      aiUsage,
+      aiConfig,
     ] = await Promise.all([
       // Users query
       fetchUsers({ search, role, licenseStatus, limit: 50 }),
@@ -96,6 +108,22 @@ export const getDashboardData = async (req, res) => {
 
       // Clinic Promotions
       fetchClinicPromotions({ limit: 20 }),
+
+      // Education stats (counts only — resource lists stay lazy per-section)
+      getEducationStatsData(),
+
+      // Team members
+      TeamMember.find({})
+        .select(
+          "_id name title email bio image isActive sortOrder createdAt updatedAt",
+        )
+        .sort({ sortOrder: 1, createdAt: 1 })
+        .lean(),
+
+      // AI status, usage and config (knowledge/content/activity lists stay lazy)
+      buildAIStatusData(),
+      buildAIUsageData(),
+      buildAIConfigData(),
     ]);
 
     const responseData = {
@@ -104,6 +132,11 @@ export const getDashboardData = async (req, res) => {
       appointments,
       promotions,
       sponsoredProducts,
+      educationStats, // Education moderation counts
+      teamMembers, // Team members list
+      aiStatus, // AI agent availability + quota usage
+      aiUsage, // AI token/request usage dashboard
+      aiConfig, // AI agent configuration
       forumSubs, // All forum subs for sponsorship management
       modRequests, // Forum moderator requests
       adminStats,

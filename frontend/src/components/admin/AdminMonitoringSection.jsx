@@ -1,15 +1,15 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Activity, Users, Calendar, TrendingUp, RefreshCw } from "lucide-react";
 import { useTranslation } from 'react-i18next'
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import dayjs from "dayjs";
 import { useDashboard } from "../../contexts/DashboardContext";
-import { performUnifiedSearch } from "../../api/admin";
+import { performUnifiedSearch, getAdminStats } from "../../api/admin";
 
 export default function AdminMonitoringSection() {
   const { t } = useTranslation()
-  const { activityLogs, adminStats, refreshAdminStats, refreshActivityLogs, loading: dashboardLoading } = useDashboard();
+  const { activityLogs, adminStats, loading: dashboardLoading } = useDashboard();
 
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +25,16 @@ export default function AdminMonitoringSection() {
 
   const [showStats, setShowStats] = useState(false);
   const [searchedLogs, setSearchedLogs] = useState([]);
+  const [localStats, setLocalStats] = useState(null);
+  const isFirstRender = useRef(true);
+  const hasLoadedRef = useRef(false);
+
+  // Seed local logs from dashboard context until this section fetches its own data
+  useEffect(() => {
+    if (!hasLoadedRef.current && Array.isArray(activityLogs) && activityLogs.length > 0) {
+      setSearchedLogs(activityLogs);
+    }
+  }, [activityLogs]);
 
   // Debounce search (performance boost)
   useEffect(() => {
@@ -51,6 +61,7 @@ export default function AdminMonitoringSection() {
         sortOrder: 'desc'
       });
 
+      hasLoadedRef.current = true;
       setSearchedLogs(result.activityLogs || []);
     } catch (error) {
       console.error('Failed to load activity logs via unified search:', error);
@@ -59,14 +70,21 @@ export default function AdminMonitoringSection() {
     }
   }, [debouncedSearch, adminFilter, actionFilter, targetFilter]);
 
-  const reload = () => {
-    loadActivityLogs();
-    refreshAdminStats();
-    refreshActivityLogs();
+  const reload = async () => {
+    await Promise.all([
+      loadActivityLogs(),
+      getAdminStats()
+        .then((stats) => setLocalStats(stats))
+        .catch((err) => console.error('Failed to refresh admin stats:', err)),
+    ]);
   };
 
   useEffect(() => {
-    // Load logs on mount and whenever server-side filters change
+    // Load logs when server-side filters change — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadActivityLogs();
   }, [loadActivityLogs]);
 
@@ -245,19 +263,21 @@ export default function AdminMonitoringSection() {
       </div>
 
       {/* Stats Panel */}
-      {showStats && adminStats && adminStats.stats && (
+      {showStats && (localStats || adminStats)?.stats && (() => {
+        const statsData = localStats || adminStats;
+        return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded">
           {/* Action Stats */}
           <div>
             <h3 className="font-semibold text-caribbean mb-2">{t('action_statistics')}</h3>
             <div className="space-y-1">
-              {adminStats.stats.actionStats?.slice(0, 6).map((action) => (
+              {statsData.stats.actionStats?.slice(0, 6).map((action) => (
                 <div key={action._id} className="flex justify-between text-sm">
                   <span>{formatAction(action._id)}</span>
                   <span className="font-medium">{action.count}</span>
                 </div>
               ))}
-              {(!adminStats.stats.actionStats || adminStats.stats.actionStats.length === 0) && (
+              {(!statsData.stats.actionStats || statsData.stats.actionStats.length === 0) && (
                 <div className="text-sm text-gray-500">{t('no_actions_found')}</div>
               )}
             </div>
@@ -267,13 +287,13 @@ export default function AdminMonitoringSection() {
           <div>
             <h3 className="font-semibold text-caribbean mb-2">{t('admin_activity')}</h3>
             <div className="space-y-1">
-              {adminStats.stats.adminStats?.map((admin) => (
+              {statsData.stats.adminStats?.map((admin) => (
                 <div key={admin._id} className="flex justify-between text-sm">
                   <span>{admin.adminName}</span>
                   <span className="font-medium">{admin.count}</span>
                 </div>
               ))}
-              {(!adminStats.stats.adminStats || adminStats.stats.adminStats.length === 0) && (
+              {(!statsData.stats.adminStats || statsData.stats.adminStats.length === 0) && (
                 <div className="text-sm text-gray-500">{t('no_admin_activity')}</div>
               )}
             </div>
@@ -283,19 +303,20 @@ export default function AdminMonitoringSection() {
           <div>
             <h3 className="font-semibold text-caribbean mb-2">{t('daily_activity')}</h3>
             <div className="space-y-1">
-              {adminStats.stats.dailyStats?.map((day) => (
+              {statsData.stats.dailyStats?.map((day) => (
                 <div key={`${day._id.year}-${day._id.month}-${day._id.day}`} className="flex justify-between text-sm">
                   <span>{dayjs(`${day._id.year}-${day._id.month}-${day._id.day}`).format('MMM DD, YYYY')}</span>
                   <span className="font-medium">{day.count}</span>
                 </div>
               ))}
-              {(!adminStats.stats.dailyStats || adminStats.stats.dailyStats.length === 0) && (
+              {(!statsData.stats.dailyStats || statsData.stats.dailyStats.length === 0) && (
                 <div className="text-sm text-gray-500">{t('no_daily_activity')}</div>
               )}
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">

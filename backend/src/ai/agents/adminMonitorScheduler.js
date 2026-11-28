@@ -5,6 +5,7 @@ import { generateReport } from "./virtualAdminAgent.js";
 import { resolveAdminEmails } from "../services/approvalService.js";
 import { sendEmail, EMAIL_FROM } from "../../services/sendEmailService.js";
 import config from "../../config/index.js";
+import { CRON_TIMEZONE } from "../../utils/cronTimezone.js";
 
 /*
 Virtual Administrator Scheduler — Phase 3.
@@ -94,14 +95,18 @@ export const registerAdminScheduler = async () => {
     return;
   }
 
-  cron.schedule(expr, async () => {
-    try {
-      const result = await runAdminReportJob();
-      console.log("🗓️  Admin report job:", result);
-    } catch (err) {
-      console.error("🗓️  Admin report job failed:", err);
-    }
-  });
+  cron.schedule(
+    expr,
+    async () => {
+      try {
+        const result = await runAdminReportJob();
+        console.log("🗓️  Admin report job:", result);
+      } catch (err) {
+        console.error("🗓️  Admin report job failed:", err);
+      }
+    },
+    { timezone: CRON_TIMEZONE },
+  );
   scheduled = true;
   console.log(`🗓️  Admin report scheduler registered: "${expr}"`);
 };

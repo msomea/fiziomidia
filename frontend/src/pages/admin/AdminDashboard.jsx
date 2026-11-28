@@ -19,6 +19,7 @@ import TeamMembersSection from "../../components/admin/TeamMembersSection";
 import AiManagementSection from "../../components/admin/AiManagementSection";
 import AiContentSection from "../../components/admin/AiContentSection";
 import AiUsageSection from "../../components/admin/AiUsageSection";
+import AiActivitySection from "../../components/admin/AiActivitySection";
 
 function AdminDashboardContent() {
   const [user, setUser] = useState(null);
@@ -103,6 +104,7 @@ function AdminDashboardContent() {
         <EducationSection />
         <AiContentSection />
         <AiManagementSection />
+        <AiActivitySection />
         <AiUsageSection />
         <TeamMembersSection />
       </div>

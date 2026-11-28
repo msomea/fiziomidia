@@ -157,5 +157,10 @@ export const useDashboardData = () => {
     clinicPromotions: data?.clinicPromotions || [],
     activityLogs: data?.activityLogs || [],
     modRequests: data?.modRequests || [],
+    educationStats: data?.educationStats || null,
+    teamMembers: data?.teamMembers || [],
+    aiStatus: data?.aiStatus || null,
+    aiUsage: data?.aiUsage || null,
+    aiConfig: data?.aiConfig || null,
   };
 };

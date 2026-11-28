@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import ResourceStatusBadge from "../education/ResourceStatusBadge";
@@ -16,6 +16,15 @@ export default function ClinicPromotionSection() {
 
   const [promotions, setPromotions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const isFirstRender = useRef(true);
+  const hasLoadedRef = useRef(false);
+
+  // Seed local list from dashboard context until this section fetches its own data
+  useEffect(() => {
+    if (!hasLoadedRef.current && Array.isArray(clinicPromotions) && clinicPromotions.length > 0) {
+      setPromotions(clinicPromotions);
+    }
+  }, [clinicPromotions]);
 
   // Filters
   const [search, setSearch] = useState("");       // search clinic name or address
@@ -30,6 +39,7 @@ export default function ClinicPromotionSection() {
         filters: { status },
         limit: 20
       });
+      hasLoadedRef.current = true;
       setPromotions(result.clinicPromotions || []);
     } catch (error) {
       console.error('Failed to load clinic promotions via unified search:', error);
@@ -40,7 +50,11 @@ export default function ClinicPromotionSection() {
   }, [search, status, t]);
 
   useEffect(() => {
-    // Load promotions when filters change (also runs on mount)
+    // Load promotions when filters change — skipped on mount (context provides initial data)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     loadClinicPromotions();
   }, [loadClinicPromotions]);
 

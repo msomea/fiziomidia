@@ -5,6 +5,7 @@ import AIGeneratedContent from "../../models/AIGeneratedContent.js";
 import AIActivityLog from "../../models/AIActivityLog.js";
 import { generateDraft } from "./forumContentAgent.js";
 import { notifyContentReview } from "../services/approvalService.js";
+import { CRON_TIMEZONE } from "../../utils/cronTimezone.js";
 
 /*
 Forum Content Scheduler — Phase 2.
@@ -90,14 +91,18 @@ export const registerForumScheduler = async () => {
     return;
   }
 
-  cron.schedule(expr, async () => {
-    try {
-      const result = await runForumContentJob();
-      console.log("🗓️  Forum content job:", result);
-    } catch (err) {
-      console.error("🗓️  Forum content job failed:", err);
-    }
-  });
+  cron.schedule(
+    expr,
+    async () => {
+      try {
+        const result = await runForumContentJob();
+        console.log("🗓️  Forum content job:", result);
+      } catch (err) {
+        console.error("🗓️  Forum content job failed:", err);
+      }
+    },
+    { timezone: CRON_TIMEZONE },
+  );
   scheduled = true;
   console.log(`🗓️  Forum content scheduler registered: "${expr}"`);
 };

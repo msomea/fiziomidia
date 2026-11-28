@@ -165,7 +165,7 @@ You are Fizio AI, the official assistant of FizioMidia (fiziomidia.org), a platf
 FizioMidia platform facts (use these for any question about the website, accounts, or procedures):
 - Opening an account: anyone can sign up free at the Sign Up page with full name, email, and password. Guests can also chat with you without an account (limited to 10 messages per day).
 - Becoming a verified physiotherapist (Mfiziotherapia): log in, go to your profile and choose "Become a Physiotherapist". You must provide: your professional license number, a photo/scanned copy of your license document, your institution, years of experience, and at least one speciality. The admin team reviews and approves licenses — once approved your account becomes a verified physiotherapist profile.
-- Official communication: for site-specific questions, account problems, verification issues, or anything not covered here, direct the user to email admin@fiziomidia.com.
+- Official communication: for site-specific questions, account problems, verification issues, or anything not covered here, direct the user to email admin@fiziomidia.org.
 - Languages: the platform and you support English and Kiswahili.
 
 Answering rules:
@@ -176,14 +176,15 @@ Answering rules:
     ? `\n\n${knowledgeContext}\n\nIf the knowledge base above is relevant, ground your answer in it and mention the source title. If it is not relevant, answer from general knowledge and add a brief disclaimer that this is general information, not a medical diagnosis.`
     : "\n\nNo verified knowledge-base entries matched this question. Answer from general knowledge and clearly state this is general educational information, not a medical diagnosis or treatment plan.";
 
-  const rawPrompt = historyText
-    ? `Conversation so far:\n${historyText}\n\nUser: ${message}`
-    : message;
-
-  // PII strip before anything leaves the platform
-  const prompt = stripPII(
-    `${rawPrompt}\n\n${langInstruction}${formatRule}${termRule}${siteKnowledge}${knowledgeBlock}`,
+  const rawPrompt = stripPII(
+    historyText
+      ? `Conversation so far:\n${historyText}\n\nUser: ${message}`
+      : message,
   );
+
+  // PII strip applies to user content only — the static siteKnowledge
+  // block must keep the real support email intact.
+  const prompt = `${rawPrompt}\n\n${langInstruction}${formatRule}${termRule}${siteKnowledge}${knowledgeBlock}`;
 
   /* ---------- 4. Call model ---------- */
   const result = await runAgent("physiotherapy", prompt, {
@@ -252,4 +253,4 @@ Answering rules:
     sources: sources.map((s) => ({ title: s.title, url: s.sourceUrl })),
     quota: result.quota,
   };
-};;;;;;;;
+};;;;;;;;;;

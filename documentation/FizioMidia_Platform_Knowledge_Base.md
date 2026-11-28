@@ -13,7 +13,7 @@ an AI assistant (Fizio AI).
 
 - **Languages:** English and Kiswahili
 - **Timezone:** Africa/Dar_es_Salaam (EAT, UTC+3)
-- **Official contact email:** admin@fiziomidia.com
+- **Official contact email:** admin@fiziomidia.org
 
 ## 2. User roles
 
@@ -120,10 +120,10 @@ an AI assistant (Fizio AI).
   Fiziotherapia / Mfiziotherapia / Wafiziotherapia).
 - Emergency screening runs before the AI model; medical answers carry
   disclaimers; platform questions do not.
-- Official escalation contact: admin@fiziomidia.com.
+- Official escalation contact: admin@fiziomidia.org.
 
 ## 13. Support & contact
 
 - For account problems, verification issues, or anything not covered:
-  email **admin@fiziomidia.com**.
+  email **admin@fiziomidia.org**.
 - Contact form endpoint exists (`/api/contact`).

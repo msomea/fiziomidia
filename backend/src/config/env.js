@@ -23,6 +23,7 @@ const requiredVars = [
   "R2_ENDPOINT",
   "R2_REGION",
   "R2_TOKEN_VALUE",
+  "GEMINI_API_KEY",
 
 ];
 

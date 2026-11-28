@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDashboard } from "../../contexts/DashboardContext";
 import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -12,8 +13,9 @@ import {
 
 export default function TeamMembersSection() {
   const { t } = useTranslation();
+  const { teamMembers, loading: dashboardLoading } = useDashboard();
   const [members, setMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
@@ -31,9 +33,15 @@ export default function TeamMembersSection() {
     }
   }, [t]);
 
+  // Seed local list from dashboard context
   useEffect(() => {
-    loadMembers();
-  }, [loadMembers]);
+    if (Array.isArray(teamMembers) && teamMembers.length > 0) {
+      setMembers(teamMembers);
+    }
+  }, [teamMembers]);
+
+  // No mount fetch — data comes from the dashboard endpoint; refresh/save/delete call this section's API
+
 
   const stats = useMemo(() => {
     return {
@@ -104,7 +112,7 @@ export default function TeamMembersSection() {
         </div>
       )}
 
-      {loading ? (
+      {loading || (dashboardLoading && members.length === 0) ? (
         <SectionSkeleton count={3} />
       ) : members.length === 0 ? (
         <p className="text-sm text-gray-500 text-center py-4">

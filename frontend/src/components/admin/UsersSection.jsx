@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 export default function AdminUsers() {
   const { t } = useTranslation()
-  const { users, refreshUsers, loading: dashboardLoading } = useDashboard();
+  const { users, loading: dashboardLoading } = useDashboard();
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [licenseFilter, setLicenseFilter] = useState("");
@@ -46,7 +46,7 @@ export default function AdminUsers() {
     }, 300); // 300ms debounce delay
   }, [t]);
 
-  // Load users function for manual refresh
+  // Load users function for manual refresh — calls this section's own API
   const loadUsers = useCallback(async () => {
     const filters = {
       search,
@@ -60,14 +60,23 @@ export default function AdminUsers() {
 
     try {
       setLoading(true);
-      await refreshUsers(filters);
+      const result = await performUnifiedSearch({
+        types: ['users'],
+        search: filters.search,
+        filters: {
+          role: filters.role,
+          licenseStatus: filters.licenseStatus
+        },
+        limit: 50
+      });
+      setAllUsers(result.users || []);
     } catch (error) {
       console.error('Failed to refresh users:', error);
       toast.error(t("failed_load_users"));
     } finally {
       setLoading(false);
     }
-  }, [search, roleFilter, licenseFilter, refreshUsers, t]);
+  }, [search, roleFilter, licenseFilter, t]);
 
   // Store all users when they change
   useEffect(() => {
@@ -76,8 +85,13 @@ export default function AdminUsers() {
     }
   }, [users]);
 
-  // Real-time search effect
+  // Real-time search effect — skipped on mount (data comes from dashboard context)
+  const isFirstRender = useRef(true);
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const filters = {
       search,
       role: roleFilter,
@@ -94,11 +108,6 @@ export default function AdminUsers() {
       }
     };
   }, [search, roleFilter, licenseFilter, debouncedLoadUsers]);
-
-  // Initial load
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
 
   // Client-side filtering function
   const filteredUsers = allUsers.filter((user) => {
