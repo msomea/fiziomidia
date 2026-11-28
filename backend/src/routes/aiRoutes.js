@@ -29,6 +29,10 @@ router.post("/test-connection", ai.testConnection);
 router.post("/forum/draft", ai.triggerForumDraft);
 router.post("/admin/report", ai.triggerAdminReport);
 
+// Virtual Administrator — daily report + activity (Phase 3, read-only)
+router.get("/admin/daily-report", ai.getDailyReport);
+router.get("/admin/activity", ai.listActivity);
+
 // Generated content review workflow
 router.get("/content", ai.listGeneratedContent);
 router.put("/content/:id/review", ai.reviewGeneratedContent);

@@ -22,7 +22,7 @@ import {
 } from "../../api/ai";
 import { fetchForumSubs } from "../../api/forum";
 
-const DAYS = [
+export const DAYS = [
   { value: "daily", labelKey: "ai_day_daily" },
   { value: "1", labelKey: "ai_day_mon" },
   { value: "2", labelKey: "ai_day_tue" },
@@ -46,7 +46,7 @@ const statusBadge = (status) => {
 };
 
 // Parse "M H * * D" cron → { day, time }
-const parseSchedule = (cron) => {
+export const parseSchedule = (cron) => {
   if (!cron) return { day: "daily", time: "08:00" };
   const parts = cron.trim().split(/\s+/);
   if (parts.length !== 5) return { day: "daily", time: "08:00" };
@@ -63,7 +63,7 @@ const subTitle = (s) => {
   return s.title?.sw || s.title?.en || s.name || "—";
 };
 
-const buildCron = (day, time) => {
+export const buildCron = (day, time) => {
   const [hour, min] = time.split(":");
   return `${parseInt(min, 10)} ${parseInt(hour, 10)} * * ${day === "daily" ? "*" : day}`;
 };
@@ -335,7 +335,7 @@ export default function AiContentSection() {
       {/* Manual generation */}
       <div className="border rounded-lg p-4 mb-4 bg-white">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={18} className="text-tufts" />
+          <Sparkles size={18} className="text-caribbean" />
           <h3 className="font-semibold text-caribbean">{t("ai_generate_now")}</h3>
         </div>
         <div className="flex flex-wrap items-end gap-3">

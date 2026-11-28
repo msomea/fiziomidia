@@ -514,3 +514,26 @@ export const listActivity = handle(async (req, res) => {
   ]);
   res.json({ success: true, items, total, page: parseInt(page, 10), pages: Math.ceil(total / parseInt(limit, 10)) });
 });
+
+// Latest stored daily report (Phase 3) — read-only
+export const getDailyReport = handle(async (req, res) => {
+  const log = await AIActivityLog.findOne({
+    agent: "virtualAdmin",
+    action: "REPORT_GENERATED",
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+  if (!log) {
+    return res.json({ success: true, report: null });
+  }
+  res.json({
+    success: true,
+    report: {
+      text: log.details?.report || null,
+      stats: log.details?.stats || null,
+      anomalies: log.details?.anomalies || [],
+      generatedAt: log.createdAt,
+      model: log.model,
+    },
+  });
+});

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { RefreshCw, Upload, Bot } from "lucide-react";
+import { RefreshCw, Upload, Bot, CalendarClock } from "lucide-react";
 import CollapsibleSection from "./CollapsibleSection";
 import SectionSkeleton from "./SectionSkeleton";
 import {
@@ -12,6 +12,7 @@ import {
   updateKnowledgeDocument,
   uploadKnowledgeDocument,
 } from "../../api/ai";
+import { DAYS, parseSchedule, buildCron } from "./AiContentSection";
 
 const SPECIALTIES = [
   "musculoskeletal",
@@ -72,6 +73,11 @@ export default function AiManagementSection() {
   const [uploading, setUploading] = useState(false);
   const [adminEmail, setAdminEmail] = useState("");
   const [savingEmail, setSavingEmail] = useState(false);
+  const [reportEnabled, setReportEnabled] = useState(false);
+  const [reportDay, setReportDay] = useState("daily");
+  const [reportTime, setReportTime] = useState("07:00");
+  const [savingReport, setSavingReport] = useState(false);
+  const [togglingAgent, setTogglingAgent] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -84,6 +90,11 @@ export default function AiManagementSection() {
       setStatus(st);
       setDocs(docRes.items || []);
       setAdminEmail(cfg?.config?.adminEmail || "");
+      const vaCfg = cfg?.config?.agents?.find((a) => a.name === "virtualAdmin");
+      const parsed = parseSchedule(vaCfg?.schedule);
+      setReportEnabled(Boolean(vaCfg?.schedule));
+      setReportDay(parsed.day);
+      setReportTime(parsed.time);
     } catch (err) {
       console.error("AI management load failed:", err);
       toast.error(err?.response?.data?.error || "Failed to load AI data");
@@ -147,6 +158,39 @@ export default function AiManagementSection() {
     }
   };
 
+  const saveReportSchedule = async () => {
+    setSavingReport(true);
+    try {
+      await updateAIConfig({
+        agents: [
+          {
+            name: "virtualAdmin",
+            schedule: reportEnabled ? buildCron(reportDay, reportTime) : null,
+          },
+        ],
+      });
+      toast.success(t("ai_schedule_saved"));
+      toast(t("ai_schedule_restart_note"), { icon: "ℹ️" });
+    } catch (err) {
+      toast.error(err?.response?.data?.error || t("ai_save_error"));
+    } finally {
+      setSavingReport(false);
+    }
+  };
+
+  const toggleAgent = async (name, enabled) => {
+    setTogglingAgent(name);
+    try {
+      await updateAIConfig({ agents: [{ name, enabled }] });
+      toast.success(t("ai_agent_toggled"));
+      await load();
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Update failed");
+    } finally {
+      setTogglingAgent(null);
+    }
+  };
+
   const setApproval = async (doc, patch) => {
     try {
       await updateKnowledgeDocument(doc._id, patch);
@@ -180,13 +224,22 @@ export default function AiManagementSection() {
               <p className="text-xs font-semibold text-caribbean capitalize">
                 {name.replace(/-/g, " ")}
               </p>
-              <p className="text-[11px] text-gray-500 truncate" title={a.model}>
+              <p className="text-[11px] text-gray-500">
                 {t("ai_model")}: {a.model}
               </p>
               <p className="text-[11px] text-gray-500">
-                {a.enabled ? t("ai_enabled") : t("ai_disabled")} ·{" "}
                 {t("ai_requests_today")}: {a.used ?? 0}/{a.cap ?? "—"}
               </p>
+              <label className="flex items-center gap-1.5 mt-2 text-[11px] text-tufts cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-xs"
+                  checked={Boolean(a.enabled)}
+                  disabled={togglingAgent === name}
+                  onChange={(e) => toggleAgent(name, e.target.checked)}
+                />
+                {a.enabled ? t("ai_enabled") : t("ai_disabled")}
+              </label>
             </div>
           ))}
         </div>
@@ -212,6 +265,56 @@ export default function AiManagementSection() {
             disabled={savingEmail}
           >
             {savingEmail ? t("ai_saving") : t("ai_save")}
+          </button>
+        </div>
+      </div>
+
+      {/* Daily report schedule (Virtual Administrator) */}
+      <div className="border border-gray-200 rounded-xl p-3 mb-4 bg-alice">
+        <h3 className="text-sm font-semibold text-caribbean mb-1 flex items-center gap-1">
+          <CalendarClock size={15} /> {t("ai_report_schedule_title")}
+        </h3>
+        <p className="text-[11px] text-gray-500 mb-2">{t("ai_report_schedule_hint")}</p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex items-center gap-2 text-sm text-tufts">
+            <input
+              type="checkbox"
+              checked={reportEnabled}
+              onChange={(e) => setReportEnabled(e.target.checked)}
+            />
+            {t("ai_schedule_enabled")}
+          </label>
+          <label className="text-sm text-tufts">
+            {t("ai_schedule_day")}
+            <select
+              className="select select-bordered select-sm ml-2"
+              value={reportDay}
+              onChange={(e) => setReportDay(e.target.value)}
+              disabled={!reportEnabled}
+            >
+              {DAYS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {t(d.labelKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm text-tufts">
+            {t("ai_schedule_time")}
+            <input
+              type="time"
+              className="input input-bordered input-sm ml-2"
+              value={reportTime}
+              onChange={(e) => setReportTime(e.target.value)}
+              disabled={!reportEnabled}
+            />
+          </label>
+          <button
+            onClick={saveReportSchedule}
+            className="btn btn-xs btn-outline border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
+            disabled={savingReport}
+          >
+            {savingReport ? t("ai_saving") : t("ai_save_schedule")}
           </button>
         </div>
       </div>
